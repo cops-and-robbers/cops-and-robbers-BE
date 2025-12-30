@@ -1,4 +1,3 @@
-README.md
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
@@ -7,8 +6,8 @@ build/
 
 .DS_Store
 *.env
-mysql_data/
-
+postgres-data/
+redis-data/
 
 ### STS ###
 .apt_generated

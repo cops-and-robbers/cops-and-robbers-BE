@@ -1,0 +1,42 @@
+services:
+
+  postgres-main:
+    image: postgres:15
+    container_name: postgres-main
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+
+  postgres-test:
+    image: postgres:15
+    container_name: postgres-test
+    environment:
+      POSTGRES_DB: ${POSTGRES_TEST_DB}
+      POSTGRES_USER: ${POSTGRES_TEST_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_TEST_PASSWORD}
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+
+
+  redis-main:
+    image: redis:7
+    container_name: redis-main
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - ./redis-data:/data
+
+  redis-test:
+    image: redis:7
+    container_name: redis-test
+    ports:
+      - "6380:6379"
+    command: redis-server --save "" --appendonly no
