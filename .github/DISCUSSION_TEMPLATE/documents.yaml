@@ -1,0 +1,71 @@
+title: "📄 [문서] {제목을 작성해주세요}"
+labels:
+  - "기술 문서"
+body:
+  # 안내 문구(마크다운)
+  - type: markdown
+    attributes:
+      value: |
+        <!-- 
+        📚 구현 내역 정리, 기술 공유, 회고 등을 위한 템플릿입니다.
+        아래 항목에 맞춰 자유롭게 작성해주세요.
+        -->
+
+  # 요약
+  - type: textarea
+    id: summary
+    attributes:
+      label: "📌 요약"
+      description: "무엇을 다루는 문서인지 한 줄로 요약해주세요."
+      placeholder: |
+        - 특정 기능 구현기
+        - 라이브러리 적용 후기
+        - 기술적 의사결정 회고 등
+    validations:
+      required: true
+
+  # 세부 내용
+  - type: textarea
+    id: details
+    attributes:
+      label: "🔍 세부 내용"
+      description: "기술적인 설명, 구현 방법, 고려 사항 등을 자세히 작성해주세요."
+      placeholder: |
+        - 설계 방향, 코드 구조
+        - 사용한 기술 및 이유
+        - 적용 결과
+    validations:
+      required: true
+
+  # 트러블슈팅 / 회고 (선택)
+  - type: textarea
+    id: troubleshooting
+    attributes:
+      label: "🧯 트러블슈팅 / 회고 (선택)"
+      placeholder: |
+        - 어떤 문제가 있었고 어떻게 해결했는지
+        - 개선하고 싶은 점
+    validations:
+      required: false
+
+  # 참고 자료 (선택)
+  - type: textarea
+    id: references
+    attributes:
+      label: "🔗 참고 자료 (선택)"
+      placeholder: |
+        - [공식 문서](https://example.com)
+        - 참고한 글이나 이슈 번호 등
+    validations:
+      required: false
+
+  # 담당자 (선택)
+  - type: textarea
+    id: assignees
+    attributes:
+      label: "🙋 담당자 (선택)"
+      placeholder: |
+        - 백엔드:
+        - 프론트엔드:
+    validations:
+      required: false
