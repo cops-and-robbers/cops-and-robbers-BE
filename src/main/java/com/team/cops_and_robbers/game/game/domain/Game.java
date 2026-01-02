@@ -1,7 +1,6 @@
-package com.team.cops_and_robbers.game.result.domain;
+package com.team.cops_and_robbers.game.game.domain;
 
 import com.team.cops_and_robbers.common.BaseTimeEntity;
-import com.team.cops_and_robbers.game.participant.domain.Team;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -15,39 +14,41 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.locationtech.jts.geom.Point;
+
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "game_results")
+@Table(name = "games")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class GameResult extends BaseTimeEntity {
+public class Game extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
+    private String inviteCode;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Team winningTeam;
+    private GameStatus status;
 
     @Column(nullable = false)
-    private Integer totalPoliceCount;
+    private Integer roundDurationMinutes;
 
     @Column(nullable = false)
-    private Integer totalRobberCount;
+    private Integer locationRevealIntervalMinutes;
 
     @Column(nullable = false)
-    private Integer capturedRobberCount;
+    private Integer policeWaitMinutes;
 
     @Column(nullable = false)
-    private Integer durationSeconds;
+    private Integer maxParticipants;
 
-    @Column(nullable = false, columnDefinition = "GEOMETRY(POINT, 4326)")
-    private Point playgroundCenter;
+    private LocalDateTime startedAt;
 
-    @Column(nullable = false)
-    private Integer playgroundRadiusInMeters;
+    private LocalDateTime endedAt;
 }

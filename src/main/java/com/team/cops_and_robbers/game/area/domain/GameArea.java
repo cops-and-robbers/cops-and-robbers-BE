@@ -1,7 +1,7 @@
 package com.team.cops_and_robbers.game.area.domain;
 
 import com.team.cops_and_robbers.common.BaseTimeEntity;
-import com.team.cops_and_robbers.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.Game;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

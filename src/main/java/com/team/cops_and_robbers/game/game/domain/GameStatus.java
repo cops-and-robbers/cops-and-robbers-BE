@@ -1,4 +1,4 @@
-package com.team.cops_and_robbers.game.domain;
+package com.team.cops_and_robbers.game.game.domain;
 
 public enum GameStatus {
     WAITING,
