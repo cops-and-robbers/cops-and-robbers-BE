@@ -48,8 +48,8 @@ public class GameParticipant extends BaseTimeEntity {
     private ParticipantStatus status;
 
     @Column(nullable = false)
-    private Boolean isReady;
+    private boolean isReady;
 
     @Column(nullable = false)
-    private Boolean isHost;
+    private boolean isHost;
 }

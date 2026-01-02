@@ -37,13 +37,13 @@ public class Game extends BaseTimeEntity {
     private GameStatus status;
 
     @Column(nullable = false)
-    private Integer roundDurationMin;
+    private Integer roundDurationMinutes;
 
     @Column(nullable = false)
-    private Integer locationRevealIntervalMin;
+    private Integer locationRevealIntervalMinutes;
 
     @Column(nullable = false)
-    private Integer policeWaitMin;
+    private Integer policeWaitMinutes;
 
     @Column(nullable = false)
     private Integer maxParticipants;
