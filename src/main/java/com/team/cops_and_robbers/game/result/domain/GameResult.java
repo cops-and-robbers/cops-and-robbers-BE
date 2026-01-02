@@ -47,4 +47,7 @@ public class GameResult extends BaseTimeEntity {
 
     @Column(nullable = false, columnDefinition = "GEOMETRY(POINT, 4326)")
     private Point playgroundCenter;
+
+    @Column(nullable = false)
+    private Integer playgroundRadiusInMeters;
 }

@@ -38,11 +38,11 @@ public class GameArea extends BaseTimeEntity {
     private Point playgroundCenter;
 
     @Column(nullable = false)
-    private Double playgroundRadius;
+    private Integer playgroundRadiusInMeters;
 
     @Column(nullable = false, columnDefinition = "GEOMETRY(POINT, 4326)")
     private Point jailCenter;
 
     @Column(nullable = false)
-    private Double jailRadius;
+    private Integer jailRadiusInMeters;
 }
