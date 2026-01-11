@@ -2,8 +2,11 @@ package com.team.cops_and_robbers.auth.presentation;
 
 import com.team.cops_and_robbers.auth.application.AuthService;
 import com.team.cops_and_robbers.auth.application.dto.result.LoginResult;
+import com.team.cops_and_robbers.auth.domain.Tokens;
 import com.team.cops_and_robbers.auth.presentation.dto.request.LoginRequest;
+import com.team.cops_and_robbers.auth.presentation.dto.request.ReissueRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.response.LoginResponse;
+import com.team.cops_and_robbers.auth.presentation.dto.response.ReissueResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -33,6 +36,15 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 2. Refresh token 으로 access token 을 재발급합니다.
+     */
+    @PostMapping("/reissue")
+    public ResponseEntity<ReissueResponse> reissue(@RequestBody @Valid ReissueRequest request) {
+        Tokens tokens = authService.reissueTokens(request.refreshToken());
+        return ResponseEntity.ok(ReissueResponse.from(tokens));
     }
 
 }

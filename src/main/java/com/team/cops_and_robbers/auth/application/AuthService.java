@@ -26,7 +26,6 @@ public class AuthService {
 
     private static final int MAXIMUM_NICKNAME_GENERATE_RETRY_COUNT = 10;
 
-
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
@@ -106,7 +105,22 @@ public class AuthService {
     }
 
 
+    /**
+     * 2. Access token 재발급
+     * - refresh token 으로 억세스 토큰을 재발급
+     */
+    @Transactional(readOnly = true)
+    public Tokens reissueTokens(String refreshToken) {
+        Long userId = jwtTokenProvider.getUserIdFromRefreshToken(refreshToken);
 
+        String storedRefreshToken = refreshTokenRepository.findByUserId(userId);
+        if (!refreshToken.equals(storedRefreshToken)) {
+            throw new ApplicationException(AuthException.INVALID_TOKEN);
+        }
+
+        User user = userRepository.getByUserId(userId);
+        return issueTokens(user);
+    }
 
 
     private record AuthUserData(
