@@ -21,6 +21,9 @@ public class AuthController {
 
     private final AuthService authService;
 
+    /**
+     * 1. 소셜 로그인을 진행합니다.
+     */
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
         LoginResult loginResult = authService.login(request.toCommand());
