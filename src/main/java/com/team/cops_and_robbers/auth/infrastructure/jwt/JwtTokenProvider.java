@@ -1,4 +1,4 @@
-package com.team.cops_and_robbers.auth.jwt;
+package com.team.cops_and_robbers.auth.infrastructure.jwt;
 
 
 import com.team.cops_and_robbers.auth.exception.AuthException;

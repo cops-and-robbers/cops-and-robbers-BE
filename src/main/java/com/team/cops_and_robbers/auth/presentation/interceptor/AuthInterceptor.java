@@ -1,7 +1,7 @@
 package com.team.cops_and_robbers.auth.presentation.interceptor;
 
 import com.team.cops_and_robbers.auth.exception.AuthException;
-import com.team.cops_and_robbers.auth.jwt.JwtTokenProvider;
+import com.team.cops_and_robbers.auth.infrastructure.jwt.JwtTokenProvider;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.util.AuthorizationExtractor;

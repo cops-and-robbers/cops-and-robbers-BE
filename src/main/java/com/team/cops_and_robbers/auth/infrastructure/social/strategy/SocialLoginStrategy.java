@@ -1,4 +1,4 @@
-package com.team.cops_and_robbers.auth.social.strategy;
+package com.team.cops_and_robbers.auth.infrastructure.social.strategy;
 
 import com.team.cops_and_robbers.user.domain.SocialType;
 
