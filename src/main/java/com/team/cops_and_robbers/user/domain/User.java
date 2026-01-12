@@ -35,7 +35,7 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false, length = 10)
     private SocialType socialType;
 
-    @Column(nullable = false, unique = true, length = 10)
+    @Column(nullable = false, unique = true, length = 30)
     private String nickname;
 
     @Column(nullable = false)
