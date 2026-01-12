@@ -1,3 +1,11 @@
 spring:
   application:
     name: cops-and-robbers
+
+jwt:
+  access:
+    secret: ${ACCESS_SECRET_KEY}
+    expiration: ${ACCESS_EXPIRATION}
+  refresh:
+    secret: ${REFRESH_SECRET_KEY}
+    expiration: ${REFRESH_EXPIRATION}
