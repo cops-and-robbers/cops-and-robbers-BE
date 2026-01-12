@@ -39,43 +39,19 @@ public class User extends BaseTimeEntity {
     private String nickname;
 
     @Column(nullable = false)
-    private String deviceId;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10)
-    private DeviceType deviceType;
-
-    @Column(nullable = false)
-    private String fcmToken;
-
-    @Column(nullable = false)
     private boolean allowGamePush;
 
     @Column(nullable = false)
     private boolean allowMarketingPush;
 
-    public static User signUp(
-            String socialId, SocialType socialType, String nickname,
-            String deviceId, DeviceType deviceType, String fcmToken
-    ) {
+    public static User signUp(String socialId, SocialType socialType, String nickname) {
         return User.builder()
                 .socialId(socialId)
                 .socialType(socialType)
                 .nickname(nickname)
-                .deviceId(deviceId)
-                .deviceType(deviceType)
-                .fcmToken(fcmToken)
                 .allowGamePush(true)
                 .allowMarketingPush(false)
                 .build();
-    }
-
-    public void updateDeviceAndFcmToken(
-            String deviceId, DeviceType deviceType, String fcmToken
-    ) {
-        this.deviceId = deviceId;
-        this.deviceType = deviceType;
-        this.fcmToken = fcmToken;
     }
 
 }

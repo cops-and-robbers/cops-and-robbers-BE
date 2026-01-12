@@ -11,6 +11,8 @@ import com.team.cops_and_robbers.auth.infrastructure.social.strategy.SocialLogin
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.user.domain.SocialType;
 import com.team.cops_and_robbers.user.domain.User;
+import com.team.cops_and_robbers.user.domain.UserDevice;
+import com.team.cops_and_robbers.user.repository.UserDeviceRepository;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,7 @@ public class AuthService {
     private static final int MAXIMUM_NICKNAME_GENERATE_RETRY_COUNT = 10;
 
     private final UserRepository userRepository;
+    private final UserDeviceRepository userDeviceRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final RandomNicknameGenerator randomNicknameGenerator;
@@ -34,14 +37,15 @@ public class AuthService {
 
     /**
      * 1. 소셜 로그인 진행
-     *  - 처음 로그인한 사용자의 경우 랜덤 닉네임 부여 후 DB 추가
-     *  - 기 가입자는 로그인한 핸드폰의 device, fcm 정보로 DB 업데이트
+     * - 신규 사용자: 랜덤 닉네임 부여 후 DB insert
+     * - 기 가입자: 로그인한 핸드폰의 device, fcm 정보로 DB 업데이트
      */
     @Transactional
     public LoginResult login(LoginCommand command) {
         String socialId = getSocialId(command.socialType(), command.idToken());
-        AuthUserData authUserData = findOrRegisterUser(command, socialId);
+        AuthUserData authUserData = findOrRegisterUser(socialId, command.socialType());
         User user = authUserData.user;
+        syncDeviceConnection(user, command);
         Tokens tokens = issueTokens(user);
 
         return new LoginResult(
@@ -59,27 +63,44 @@ public class AuthService {
         return strategy.validateAndGetSocialId(idToken);
     }
 
-    private AuthUserData findOrRegisterUser(LoginCommand command, String socialId) {
-        return userRepository.findBySocialIdAndSocialType(socialId, command.socialType())
-                .map(user -> {
-                    user.updateDeviceAndFcmToken(
-                            command.deviceId(), command.deviceType(), command.fcmToken()
-                    );
-                    return new AuthUserData(user, false);
-                })
-
+    private AuthUserData findOrRegisterUser(String socialId, SocialType socialType) {
+        return userRepository.findBySocialIdAndSocialType(socialId, socialType)
+                .map(user -> new AuthUserData(user, false))
                 .orElseGet(() -> {
                     String nickname = generateUniqueNickname();
-                    User newUser = User.signUp(
-                            socialId, command.socialType(), nickname,
-                            command.deviceId(), command.deviceType(), command.fcmToken()
-                    );
+                    User newUser = User.signUp(socialId, socialType, nickname);
                     userRepository.save(newUser);
 
                     log.info("[SignUp] 신규 회원가입 성공 | userId={}, nickname={}, socialType={}",
-                            newUser.getId(), nickname, command.socialType());
+                            newUser.getId(), nickname, socialType);
                     return new AuthUserData(newUser, true);
                 });
+    }
+
+    /**
+     * 2. 로그인 기기 정보 동기화
+     * - 기존 기기 정보 존재 시: 토큰 및 기기 정보 업데이트
+     * - 기기 정보 존재 x: 새로운 기기 정보 생성 및 연결 (UserDevice.connect)
+     */
+    private void syncDeviceConnection(User user, LoginCommand command) {
+        userDeviceRepository.findByUser(user)
+                .ifPresentOrElse(
+                        // 기기 정보 존재 시
+                        existingDevice -> existingDevice.updateDeviceAndFcmToken(
+                                command.deviceId(),
+                                command.deviceType(),
+                                command.fcmToken()
+                        ),
+                        // 기기 정보 존재 x
+                        () -> userDeviceRepository.save(
+                                UserDevice.connect(
+                                        user,
+                                        command.deviceId(),
+                                        command.deviceType(),
+                                        command.fcmToken()
+                                )
+                        )
+                );
     }
 
     private String generateUniqueNickname() {
@@ -106,7 +127,7 @@ public class AuthService {
 
 
     /**
-     * 2. Access token 재발급
+     * 3. Access token 재발급
      * - refresh token 으로 억세스 토큰을 재발급
      */
     @Transactional(readOnly = true)
@@ -126,5 +147,6 @@ public class AuthService {
     private record AuthUserData(
             User user,
             boolean isNewUser
-    ) {}
+    ) {
+    }
 }

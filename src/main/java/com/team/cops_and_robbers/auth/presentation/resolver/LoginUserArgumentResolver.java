@@ -31,7 +31,7 @@ public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver 
                                   NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
         HttpServletRequest request = webRequest.getNativeRequest(HttpServletRequest.class);
 
-        LoginUser loginUser = (LoginUser) request.getAttribute("loginUser");    // 앞선 인터셉터에서 이미 파싱했었따면
+        LoginUser loginUser = (LoginUser) request.getAttribute("loginUser");    // 앞선 인터셉터에서 이미 파싱했었다면
         if (loginUser != null) {
             return loginUser;
         }
