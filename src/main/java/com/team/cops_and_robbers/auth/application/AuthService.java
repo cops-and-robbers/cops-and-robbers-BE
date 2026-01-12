@@ -88,7 +88,7 @@ public class AuthService {
 
         if (deviceOptional.isPresent()) {
             UserDevice existingDevice = deviceOptional.get();
-            existingDevice.updateDeviceAndFcmToken(
+            existingDevice.reconnect(
                     command.deviceId(),
                     command.deviceType(),
                     command.fcmToken()

@@ -42,7 +42,7 @@ public class UserDevice extends BaseTimeEntity {
                 .build();
     }
 
-    public void updateDeviceAndFcmToken(String deviceId, DeviceType deviceType, String fcmToken) {
+    public void reconnect(String deviceId, DeviceType deviceType, String fcmToken) {
         this.deviceId = deviceId;
         this.deviceType = deviceType;
         this.fcmToken = fcmToken;
