@@ -6,8 +6,8 @@ import com.team.cops_and_robbers.auth.application.dto.result.LoginResult;
 import com.team.cops_and_robbers.auth.domain.Tokens;
 import com.team.cops_and_robbers.auth.exception.AuthException;
 import com.team.cops_and_robbers.auth.infrastructure.jwt.JwtTokenProvider;
-import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
 import com.team.cops_and_robbers.auth.infrastructure.social.strategy.SocialLoginStrategy;
+import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.user.domain.SocialType;
 import com.team.cops_and_robbers.user.domain.User;
@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -48,7 +49,7 @@ public class AuthService {
         syncDeviceConnection(user, command);
         Tokens tokens = issueTokens(user);
 
-        return new LoginResult(
+        return LoginResult.of(
                 user,
                 authUserData.isNewUser,
                 tokens
@@ -83,24 +84,25 @@ public class AuthService {
      * - 기기 정보 존재 x: 새로운 기기 정보 생성 및 연결 (UserDevice.connect)
      */
     private void syncDeviceConnection(User user, LoginCommand command) {
-        userDeviceRepository.findByUser(user)
-                .ifPresentOrElse(
-                        // 기기 정보 존재 시
-                        existingDevice -> existingDevice.updateDeviceAndFcmToken(
-                                command.deviceId(),
-                                command.deviceType(),
-                                command.fcmToken()
-                        ),
-                        // 기기 정보 존재 x
-                        () -> userDeviceRepository.save(
-                                UserDevice.connect(
-                                        user,
-                                        command.deviceId(),
-                                        command.deviceType(),
-                                        command.fcmToken()
-                                )
-                        )
-                );
+        Optional<UserDevice> deviceOptional = userDeviceRepository.findByUser(user);
+
+        if (deviceOptional.isPresent()) {
+            UserDevice existingDevice = deviceOptional.get();
+            existingDevice.updateDeviceAndFcmToken(
+                    command.deviceId(),
+                    command.deviceType(),
+                    command.fcmToken()
+            );
+            return;
+        }
+
+        UserDevice newUserDevice = UserDevice.connect(
+                user,
+                command.deviceId(),
+                command.deviceType(),
+                command.fcmToken()
+        );
+        userDeviceRepository.save(newUserDevice);
     }
 
     private String generateUniqueNickname() {

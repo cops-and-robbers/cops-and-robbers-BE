@@ -8,4 +8,7 @@ public record LoginResult(
         boolean isNewUser,
         Tokens tokens
 ) {
+    public static LoginResult of(User user, boolean isNewUser, Tokens tokens) {
+        return new LoginResult(user, isNewUser, tokens);
+    }
 }
