@@ -3,7 +3,7 @@ package com.team.cops_and_robbers.game.game.presentation;
 import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.game.game.application.GameService;
-import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.application.dto.result.GameCreateResult;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameCreateRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameCreateResponse;
 import jakarta.validation.Valid;
@@ -30,8 +30,8 @@ public class GameController {
             @AuthUser LoginUser loginUser,
             @RequestBody @Valid GameCreateRequest request
     ) {
-        Game game = gameService.createGame(loginUser.userId(), request.toCommand());
-        GameCreateResponse response = GameCreateResponse.from(game);
+        GameCreateResult result = gameService.createGame(loginUser.userId(), request.toCommand());
+        GameCreateResponse response = GameCreateResponse.from(result);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

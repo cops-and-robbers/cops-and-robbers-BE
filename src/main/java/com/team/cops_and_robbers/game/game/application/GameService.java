@@ -5,6 +5,7 @@ import com.team.cops_and_robbers.game.area.domain.GameArea;
 import com.team.cops_and_robbers.game.area.domain.GameAreaDomainService;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameCreateCommand;
+import com.team.cops_and_robbers.game.game.application.dto.result.GameCreateResult;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.game.exception.GameException;
@@ -40,7 +41,7 @@ public class GameService {
 
 
     @Transactional
-    public Game createGame(Long hostUserId, GameCreateCommand command) {
+    public GameCreateResult createGame(Long hostUserId, GameCreateCommand command) {
         command.validate();
 
         String inviteCode = generateInviteCode();
@@ -48,7 +49,7 @@ public class GameService {
         saveGameArea(game, command);
         saveHostAsParticipant(game, hostUserId);
 
-        return game;
+        return GameCreateResult.from(game);
     }
 
     private Game saveGame(GameCreateCommand command, String inviteCode) {
