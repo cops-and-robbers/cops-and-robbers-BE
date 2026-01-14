@@ -7,12 +7,9 @@ import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameCreateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameCreateResult;
 import com.team.cops_and_robbers.game.game.domain.Game;
-import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
-import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
-import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.user.domain.User;
@@ -53,14 +50,7 @@ public class GameService {
     }
 
     private Game saveGame(GameCreateCommand command, String inviteCode) {
-        Game game = Game.builder()
-                .inviteCode(inviteCode)
-                .status(GameStatus.WAITING)
-                .roundDurationMinutes(command.roundDurationMinutes())
-                .locationRevealIntervalMinutes(command.locationRevealIntervalMinutes())
-                .policeWaitMinutes(command.policeWaitMinutes())
-                .maxParticipants(command.maxParticipants())
-                .build();
+        Game game = Game.createGame(inviteCode, command);
         return gameRepository.save(game);
     }
 
@@ -74,13 +64,13 @@ public class GameService {
                 new Coordinate(command.playgroundLng(), command.playgroundLat()));
         Point jailCenter = geometryFactory.createPoint(new Coordinate(command.jailLng(), command.jailLat()));
 
-        GameArea gameArea = GameArea.builder()
-                .game(game)
-                .playgroundCenter(playgroundCenter)
-                .playgroundRadiusInMeters(command.playgroundRadius())
-                .jailCenter(jailCenter)
-                .jailRadiusInMeters(command.jailRadius())
-                .build();
+        GameArea gameArea = GameArea.createGameArea(
+                game,
+                playgroundCenter,
+                command.playgroundRadius(),
+                jailCenter,
+                command.jailRadius()
+        );
 
         gameAreaRepository.save(gameArea);
     }
@@ -92,14 +82,7 @@ public class GameService {
             throw new ApplicationException(GameParticipantException.ALREADY_PARTICIPATING);
         }
 
-        GameParticipant hostParticipant = GameParticipant.builder()
-                .game(game)
-                .user(host)
-                .team(Team.getRandomTeam())
-                .status(ParticipantStatus.WAITING)
-                .isReady(false)
-                .isHost(true)
-                .build();
+        GameParticipant hostParticipant = GameParticipant.createParticipant(game, host, true);
         gameParticipantRepository.save(hostParticipant);
     }
 
