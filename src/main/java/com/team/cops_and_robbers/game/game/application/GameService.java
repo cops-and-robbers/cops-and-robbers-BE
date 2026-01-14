@@ -56,20 +56,20 @@ public class GameService {
 
     private void saveGameArea(Game game, GameCreateCommand command) {
         gameAreaDomainService.validateAreaContainment(
-                command.playgroundLng(), command.playgroundLat(), command.playgroundRadius(),
-                command.jailLng(), command.jailLat(), command.jailRadius()
+                command.playgroundLongitude(), command.playgroundLatitude(), command.playgroundRadiusInMeters(),
+                command.jailLongitude(), command.jailLatitude(), command.jailRadiusInMeters()
         );
 
         Point playgroundCenter = geometryFactory.createPoint(
-                new Coordinate(command.playgroundLng(), command.playgroundLat()));
-        Point jailCenter = geometryFactory.createPoint(new Coordinate(command.jailLng(), command.jailLat()));
+                new Coordinate(command.playgroundLongitude(), command.playgroundLatitude()));
+        Point jailCenter = geometryFactory.createPoint(new Coordinate(command.jailLongitude(), command.jailLatitude()));
 
         GameArea gameArea = GameArea.createGameArea(
                 game,
                 playgroundCenter,
-                command.playgroundRadius(),
+                command.playgroundRadiusInMeters(),
                 jailCenter,
-                command.jailRadius()
+                command.jailRadiusInMeters()
         );
 
         gameAreaRepository.save(gameArea);

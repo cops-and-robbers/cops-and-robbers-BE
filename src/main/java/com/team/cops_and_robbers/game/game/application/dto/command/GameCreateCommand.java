@@ -4,12 +4,12 @@ import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 
 public record GameCreateCommand(
-        Double playgroundLat,
-        Double playgroundLng,
-        Integer playgroundRadius,
-        Double jailLat,
-        Double jailLng,
-        Integer jailRadius,
+        Double playgroundLatitude,
+        Double playgroundLongitude,
+        Integer playgroundRadiusInMeters,
+        Double jailLatitude,
+        Double jailLongitude,
+        Integer jailRadiusInMeters,
 
         Integer roundDurationMinutes,
         Integer locationRevealIntervalMinutes,
