@@ -4,7 +4,7 @@ import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 
-public record CoordinateRequest(
+public record CoordinatesRequest(
         @NotNull(message = "위도를 입력해주세요.")
         @DecimalMin(value = "-90", message = "위도는 -90 이상이어야 합니다.")
         @DecimalMax(value = "90", message = "위도는 90 이하여야 합니다.")
