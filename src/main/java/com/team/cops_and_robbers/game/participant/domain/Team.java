@@ -1,18 +1,15 @@
-    package com.team.cops_and_robbers.game.participant.domain;
+package com.team.cops_and_robbers.game.participant.domain;
 
-    import java.util.Arrays;
-    import java.util.Collections;
-    import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
-    public enum Team {
-        POLICE,
-        ROBBER;
+public enum Team {
+    POLICE,
+    ROBBER;
 
-        private static final List<Team> VALUES = Collections.unmodifiableList(Arrays.asList(values()));
-        private static final int SIZE = VALUES.size();
-        private static final java.util.Random RANDOM = new java.util.Random();
+    private static final Team[] VALUES = values();
 
-        public static Team getRandomTeam() {
-            return VALUES.get(RANDOM.nextInt(SIZE));
-        }
+    public static Team getRandomTeam() {
+        int randomIndex = ThreadLocalRandom.current().nextInt(VALUES.length);
+        return VALUES[randomIndex];
     }
+}
