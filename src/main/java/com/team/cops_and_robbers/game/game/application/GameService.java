@@ -39,7 +39,6 @@ public class GameService {
 
     @Transactional
     public GameCreateResult createGame(Long hostUserId, GameCreateCommand command) {
-        command.validate();
 
         String inviteCode = generateInviteCode();
         Game game = saveGame(command, inviteCode);

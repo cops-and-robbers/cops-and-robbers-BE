@@ -17,7 +17,7 @@ public record GameCreateCommand(
         Integer maxParticipants
 ) {
 
-    public void validate() {
+    public GameCreateCommand {
         if (locationRevealIntervalMinutes >= roundDurationMinutes) {
             throw new ApplicationException(GameException.INVALID_LOCATION_INTERVAL);
         }
