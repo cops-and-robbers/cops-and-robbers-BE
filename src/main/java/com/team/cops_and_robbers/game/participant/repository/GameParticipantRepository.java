@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 public interface GameParticipantRepository extends JpaRepository<GameParticipant, Long> {
 
     /**
-     * 유저가 진행 중인 게임에 참가하고 있는지 확인
+     * 유저가 참여 중인 활성 게임 여부 조회
      */
     @Query("""
         select exists(

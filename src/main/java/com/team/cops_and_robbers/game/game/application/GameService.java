@@ -54,6 +54,7 @@ public class GameService {
     }
 
     private void saveGameArea(Game game, GameCreateCommand command) {
+
         gameAreaDomainService.validateAreaContainment(
                 command.playgroundLongitude(), command.playgroundLatitude(), command.playgroundRadiusInMeters(),
                 command.jailLongitude(), command.jailLatitude(), command.jailRadiusInMeters()
