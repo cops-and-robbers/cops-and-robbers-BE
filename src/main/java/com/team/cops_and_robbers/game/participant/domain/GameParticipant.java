@@ -52,4 +52,15 @@ public class GameParticipant extends BaseTimeEntity {
 
     @Column(nullable = false)
     private boolean isHost;
+
+    public static GameParticipant createParticipant(Game game, User user, boolean isHost) {
+        return GameParticipant.builder()
+                .game(game)
+                .user(user)
+                .team(Team.getRandomTeam())
+                .status(ParticipantStatus.WAITING)
+                .isReady(true)
+                .isHost(isHost)
+                .build();
+    }
 }

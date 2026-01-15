@@ -45,4 +45,20 @@ public class GameArea extends BaseTimeEntity {
 
     @Column(nullable = false)
     private Integer jailRadiusInMeters;
+
+    public static GameArea createGameArea(
+            Game game,
+            Point playgroundCenter,
+            Integer playgroundRadiusInMeters,
+            Point jailCenter,
+            Integer jailRadiusInMeters
+    ) {
+        return GameArea.builder()
+                .game(game)
+                .playgroundCenter(playgroundCenter)
+                .playgroundRadiusInMeters(playgroundRadiusInMeters)
+                .jailCenter(jailCenter)
+                .jailRadiusInMeters(jailRadiusInMeters)
+                .build();
+    }
 }

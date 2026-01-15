@@ -1,7 +1,7 @@
 services:
 
   postgres-main:
-    image: postgres:15
+    image: postgis/postgis:15-3.3
     container_name: postgres-main
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -13,7 +13,7 @@ services:
       - ./postgres-data:/var/lib/postgresql/data
 
   postgres-test:
-    image: postgres:15
+    image: postgis/postgis:15-3.3
     container_name: postgres-test
     environment:
       POSTGRES_DB: ${POSTGRES_TEST_DB}

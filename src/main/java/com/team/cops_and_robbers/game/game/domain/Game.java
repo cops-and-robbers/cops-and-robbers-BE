@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.game.game.domain;
 
 import com.team.cops_and_robbers.common.BaseTimeEntity;
+import com.team.cops_and_robbers.game.game.application.dto.command.GameCreateCommand;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -9,13 +10,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "games")
@@ -51,4 +51,15 @@ public class Game extends BaseTimeEntity {
     private LocalDateTime startedAt;
 
     private LocalDateTime endedAt;
+
+    public static Game createGame(String inviteCode, GameCreateCommand command) {
+        return Game.builder()
+                .inviteCode(inviteCode)
+                .status(GameStatus.WAITING)
+                .roundDurationMinutes(command.roundDurationMinutes())
+                .locationRevealIntervalMinutes(command.locationRevealIntervalMinutes())
+                .policeWaitMinutes(command.policeWaitMinutes())
+                .maxParticipants(command.maxParticipants())
+                .build();
+    }
 }
