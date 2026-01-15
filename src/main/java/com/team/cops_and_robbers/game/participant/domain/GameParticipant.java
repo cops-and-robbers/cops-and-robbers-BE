@@ -59,7 +59,7 @@ public class GameParticipant extends BaseTimeEntity {
                 .user(user)
                 .team(Team.getRandomTeam())
                 .status(ParticipantStatus.WAITING)
-                .isReady(false)
+                .isReady(true)
                 .isHost(isHost)
                 .build();
     }
