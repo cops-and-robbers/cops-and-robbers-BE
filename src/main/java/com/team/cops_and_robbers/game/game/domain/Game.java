@@ -10,12 +10,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "games")
@@ -51,6 +52,10 @@ public class Game extends BaseTimeEntity {
     private LocalDateTime startedAt;
 
     private LocalDateTime endedAt;
+
+    public boolean isSameInviteCode(String inviteCode) {
+        return this.inviteCode.equals(inviteCode);
+    }
 
     public static Game createGame(String inviteCode, GameCreateCommand command) {
         return Game.builder()
