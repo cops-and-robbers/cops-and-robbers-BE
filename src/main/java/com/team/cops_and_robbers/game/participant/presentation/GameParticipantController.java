@@ -4,12 +4,15 @@ import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.game.participant.application.GameParticipantService;
 import com.team.cops_and_robbers.game.participant.application.dto.result.GameJoinResult;
+import com.team.cops_and_robbers.game.participant.application.dto.result.GameLeaveResult;
 import com.team.cops_and_robbers.game.participant.presentation.dto.request.GameJoinRequest;
 import com.team.cops_and_robbers.game.participant.presentation.dto.response.GameJoinResponse;
+import com.team.cops_and_robbers.game.participant.presentation.dto.response.GameLeaveResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,6 +37,19 @@ public class GameParticipantController {
     ) {
         GameJoinResult result = gameParticipantService.joinGame(loginUser.userId(), gameId, request.toCommand());
         GameJoinResponse response = GameJoinResponse.from(result);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    /**
+     * 2. 게임 방에서 퇴장합니다.
+     */
+    @DeleteMapping
+    public ResponseEntity<GameLeaveResponse> leaveGame(
+            @AuthUser LoginUser loginUser,
+            @PathVariable Long gameId
+    ) {
+        GameLeaveResult result = gameParticipantService.leaveGame(loginUser.userId(), gameId);
+        GameLeaveResponse response = GameLeaveResponse.from(result);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }
