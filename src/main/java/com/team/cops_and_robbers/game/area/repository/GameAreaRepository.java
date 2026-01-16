@@ -3,13 +3,16 @@ package com.team.cops_and_robbers.game.area.repository;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.area.domain.GameArea;
 import com.team.cops_and_robbers.game.area.exception.GameAreaException;
-import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+
+import java.util.Optional;
 
 public interface GameAreaRepository extends JpaRepository <GameArea, Long>{
 
     Optional<GameArea> findByGameId(Long gameId);
+
+    void deleteByGameId(Long gameId);
 
     default GameArea getByGameId(Long gameId) {
         return findByGameId(gameId)
