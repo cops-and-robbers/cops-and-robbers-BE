@@ -19,5 +19,7 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
         )
         """)
     boolean existsActiveGameByUserId(Long userId);
+
+    int countByGameId(Long gameId);
 }
 
