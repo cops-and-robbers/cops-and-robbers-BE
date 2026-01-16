@@ -6,7 +6,9 @@ import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.application.dto.command.GameJoinCommand;
 import com.team.cops_and_robbers.game.participant.application.dto.result.GameJoinResult;
+import com.team.cops_and_robbers.game.participant.application.dto.result.GameLeaveResult;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
+import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.user.domain.User;
@@ -53,6 +55,44 @@ public class GameParticipantService {
         int participantCount = gameParticipantRepository.countByGameId(game.getId());
         if (participantCount >= game.getMaxParticipants()) {
             throw new ApplicationException(GameParticipantException.GAME_FULL);
+        }
+    }
+
+    @Transactional
+    public GameLeaveResult leaveGame(Long userId, Long gameId) {
+        GameParticipant participant = gameParticipantRepository.getByGameIdAndUserId(gameId, userId);
+        validateLeavable(participant.getStatus());
+
+        boolean wasHost = participant.isHost();
+        gameParticipantRepository.delete(participant);
+
+        // 1. 마지막 사람이 나갈 경우 방을 삭제한다.
+        int remainingCount = gameParticipantRepository.countByGameId(gameId);
+        if (remainingCount == NO_PARTICIPANTS) {
+            gameAreaRepository.deleteByGameId(gameId);
+            gameRepository.deleteById(gameId);
+
+            // TODO : GameDeleted 도메인 이벤트 publish
+
+            return GameLeaveResult.from(userId, NO_PARTICIPANTS);
+        }
+
+        // 2. 방장이 나갈 경우 방장 다음 들어온 사람에게 방장을 위임한다.
+        if (wasHost) {
+            GameParticipant newHost = gameParticipantRepository.getNextParticipant(gameId);
+            newHost.promoteToHost();
+
+            // TODO : HostChanged 도메인 이벤트 publish
+        }
+
+        // TODO : ParticipantLeft 도메인 이벤트 publish
+
+        return GameLeaveResult.from(userId, remainingCount);
+    }
+
+    private void validateLeavable(ParticipantStatus status) {
+        if (status != ParticipantStatus.WAITING) {
+            throw new ApplicationException(GameParticipantException.CANNOT_LEAVE_DURING_GAME);
         }
     }
 }
