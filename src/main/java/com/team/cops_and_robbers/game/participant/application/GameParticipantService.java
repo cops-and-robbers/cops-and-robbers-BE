@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.game.participant.application;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.application.dto.command.GameJoinCommand;
 import com.team.cops_and_robbers.game.participant.application.dto.result.GameJoinResult;
@@ -46,6 +47,10 @@ public class GameParticipantService {
     private void validateJoinable(Long userId, Game game, String inviteCode) {
         if (gameParticipantRepository.existsActiveGameByUserId(userId)) {
             throw new ApplicationException(GameParticipantException.ALREADY_PARTICIPATING);
+        }
+
+        if (game.getStatus() != GameStatus.WAITING) {
+            throw new ApplicationException(GameParticipantException.GAME_ALREADY_STARTED);
         }
 
         if (!game.isSameInviteCode(inviteCode)) {
