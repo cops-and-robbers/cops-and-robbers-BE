@@ -3,13 +3,11 @@ package com.team.cops_and_robbers.game.participant.application;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.domain.Game;
-import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.application.dto.command.GameJoinCommand;
 import com.team.cops_and_robbers.game.participant.application.dto.result.GameJoinResult;
 import com.team.cops_and_robbers.game.participant.application.dto.result.GameLeaveResult;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
-import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.user.domain.User;
@@ -50,7 +48,7 @@ public class GameParticipantService {
             throw new ApplicationException(GameParticipantException.ALREADY_PARTICIPATING);
         }
 
-        if (game.getStatus() != GameStatus.WAITING) {
+        if (game.isWaiting()) {
             throw new ApplicationException(GameParticipantException.GAME_ALREADY_STARTED);
         }
 
@@ -67,7 +65,7 @@ public class GameParticipantService {
     @Transactional
     public GameLeaveResult leaveGame(Long userId, Long gameId) {
         GameParticipant participant = gameParticipantRepository.getByGameIdAndUserId(gameId, userId);
-        validateLeavable(participant.getStatus());
+        validateLeavable(participant);
 
         boolean wasHost = participant.isHost();
         gameParticipantRepository.delete(participant);
@@ -96,8 +94,8 @@ public class GameParticipantService {
         return GameLeaveResult.from(userId, remainingCount);
     }
 
-    private void validateLeavable(ParticipantStatus status) {
-        if (status != ParticipantStatus.WAITING) {
+    private void validateLeavable(GameParticipant participant) {
+        if (participant.isWaiting()) {
             throw new ApplicationException(GameParticipantException.CANNOT_LEAVE_DURING_GAME);
         }
     }

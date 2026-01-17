@@ -53,6 +53,10 @@ public class Game extends BaseTimeEntity {
 
     private LocalDateTime endedAt;
 
+    public boolean isWaiting() {
+        return this.status == GameStatus.WAITING;
+    }
+
     public boolean isSameInviteCode(String inviteCode) {
         return this.inviteCode.equals(inviteCode);
     }

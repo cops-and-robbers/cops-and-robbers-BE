@@ -53,6 +53,10 @@ public class GameParticipant extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean isHost;
 
+    public boolean isWaiting() {
+        return this.status == ParticipantStatus.WAITING;
+    }
+
     public void promoteToHost() {
         this.isHost = true;
     }
