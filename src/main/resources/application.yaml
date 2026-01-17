@@ -9,3 +9,10 @@ jwt:
   refresh:
     secret: ${REFRESH_SECRET_KEY}
     expiration: ${REFRESH_EXPIRATION}
+
+springdoc:
+  swagger-ui:
+    path: /docs/swagger
+    display-request-duration: true
+    persist-authorization: true
+    filter: true
