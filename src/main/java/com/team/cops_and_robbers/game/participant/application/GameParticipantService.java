@@ -23,12 +23,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class GameParticipantService {
 
+    private static final int NO_PARTICIPANTS = 0;
+    
     private final GameRepository gameRepository;
     private final UserRepository userRepository;
     private final GameAreaRepository gameAreaRepository;
     private final GameParticipantRepository gameParticipantRepository;
 
-    private static final int NO_PARTICIPANTS = 0;
 
     @Transactional
     public GameJoinResult joinGame(Long userId, Long gameId, GameJoinCommand command) {

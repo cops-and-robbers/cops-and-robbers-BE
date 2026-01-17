@@ -27,13 +27,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class GameService {
 
+    private static final int MAX_ATTEMPTS = 10;
+
     private final GameRepository gameRepository;
     private final GameAreaRepository gameAreaRepository;
     private final GameParticipantRepository gameParticipantRepository;
     private final UserRepository userRepository;
     private final GameAreaDomainService gameAreaDomainService;
 
-    private static final int MAX_ATTEMPTS = 10;
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
 
