@@ -3,6 +3,8 @@ package com.team.cops_and_robbers.game.participant.presentation;
 import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.game.participant.application.GameParticipantService;
+import com.team.cops_and_robbers.game.participant.application.dto.command.GameJoinCommand;
+import com.team.cops_and_robbers.game.participant.application.dto.command.GameLeaveCommand;
 import com.team.cops_and_robbers.game.participant.application.dto.result.GameJoinResult;
 import com.team.cops_and_robbers.game.participant.application.dto.result.GameLeaveResult;
 import com.team.cops_and_robbers.game.participant.presentation.dto.request.GameJoinRequest;
@@ -35,7 +37,8 @@ public class GameParticipantController {
             @PathVariable Long gameId,
             @RequestBody @Valid GameJoinRequest request
     ) {
-        GameJoinResult result = gameParticipantService.joinGame(loginUser.userId(), gameId, request.toCommand());
+        GameJoinCommand command = GameJoinCommand.of(loginUser.userId(), gameId, request.inviteCode());
+        GameJoinResult result = gameParticipantService.joinGame(command);
         GameJoinResponse response = GameJoinResponse.from(result);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
@@ -48,7 +51,8 @@ public class GameParticipantController {
             @AuthUser LoginUser loginUser,
             @PathVariable Long gameId
     ) {
-        GameLeaveResult result = gameParticipantService.leaveGame(loginUser.userId(), gameId);
+        GameLeaveCommand command = GameLeaveCommand.of(loginUser.userId(), gameId);
+        GameLeaveResult result = gameParticipantService.leaveGame(command);
         GameLeaveResponse response = GameLeaveResponse.from(result);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }

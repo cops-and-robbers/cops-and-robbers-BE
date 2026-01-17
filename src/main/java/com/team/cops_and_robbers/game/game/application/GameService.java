@@ -39,12 +39,12 @@ public class GameService {
 
 
     @Transactional
-    public GameCreateResult createGame(Long hostUserId, GameCreateCommand command) {
+    public GameCreateResult createGame(GameCreateCommand command) {
 
         String inviteCode = generateInviteCode();
         Game game = saveGame(command, inviteCode);
         saveGameArea(game, command);
-        saveHostAsParticipant(game, hostUserId);
+        saveHostAsParticipant(game, command.hostUserId());
 
         return GameCreateResult.from(game);
     }
