@@ -1,6 +1,5 @@
 package com.team.cops_and_robbers.game.game.presentation.dto.request;
 
-import com.team.cops_and_robbers.game.game.application.dto.command.GameCreateCommand;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
@@ -12,18 +11,4 @@ public record GameCreateRequest(
         GameSettingsRequest settings
 ) {
 
-    public GameCreateCommand toCommand() {
-        return new GameCreateCommand(
-                area.playgroundCenter().latitude(),
-                area.playgroundCenter().longitude(),
-                area.playgroundRadiusInMeters(),
-                area.jailCenter().latitude(),
-                area.jailCenter().longitude(),
-                area.jailRadiusInMeters(),
-                settings.roundDurationMinutes(),
-                settings.locationRevealIntervalMinutes(),
-                settings.policeWaitMinutes(),
-                settings.maxParticipants()
-        );
-    }
 }

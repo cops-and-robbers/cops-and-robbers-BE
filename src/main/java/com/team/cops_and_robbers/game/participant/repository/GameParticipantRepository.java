@@ -1,8 +1,12 @@
 package com.team.cops_and_robbers.game.participant.repository;
 
+import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
+import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+
+import java.util.Optional;
 
 public interface GameParticipantRepository extends JpaRepository<GameParticipant, Long> {
 
@@ -19,5 +23,26 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
         )
         """)
     boolean existsActiveGameByUserId(Long userId);
+
+    int countByGameId(Long gameId);
+
+
+    Optional<GameParticipant> findByGameIdAndUserId(Long gameId, Long userId);
+
+    Optional<GameParticipant> findFirstByGameIdOrderByCreatedAtAsc(Long gameId);
+
+    default GameParticipant getByGameIdAndUserId(Long gameId, Long userId) {
+        return findByGameIdAndUserId(gameId, userId)
+                .orElseThrow(() ->
+                        new ApplicationException(GameParticipantException.PARTICIPANT_NOT_FOUND)
+                );
+    }
+
+    default GameParticipant getNextParticipant(Long gameId) {
+        return findFirstByGameIdOrderByCreatedAtAsc(gameId)
+                .orElseThrow(() ->
+                        new ApplicationException(GameParticipantException.PARTICIPANT_NOT_FOUND)
+                );
+    }
 }
 
