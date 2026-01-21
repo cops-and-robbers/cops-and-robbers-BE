@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/games/{gameId}/participants")
 @RequiredArgsConstructor
-public class GameParticipantController {
+public class GameParticipantController implements GameParticipantControllerDocs {
 
     private final GameParticipantService gameParticipantService;
 
