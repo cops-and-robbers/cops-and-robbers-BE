@@ -62,7 +62,7 @@ jobs:
             REFRESH_EXPIRATION=${{ secrets.REFRESH_EXPIRATION }}
             EOF
 
-            docker-compose -f docker-compose-prod.yml pull
-            docker-compose -f docker-compose-prod.yml up -d
-
-            docker image prune -f
+            sudo docker compose -f docker-compose-prod.yml pull
+            sudo docker compose -f docker-compose-prod.yml down --remove-orphans
+            sudo docker compose -f docker-compose-prod.yml up -d
+            sudo docker image prune -f
