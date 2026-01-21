@@ -16,10 +16,10 @@ public abstract class ServiceUnitTest {
     protected GameRepository gameRepository;
 
     @Mock
-    protected GameParticipantRepository participantRepository;
+    protected GameParticipantRepository gameParticipantRepository;
 
     @Mock
-    protected GameAreaRepository areaRepository;
+    protected GameAreaRepository gameAreaRepository;
 
     @Mock
     protected UserRepository userRepository;

@@ -24,10 +24,10 @@ public abstract class ControllerTest {
     protected GameRepository gameRepository;
 
     @Autowired
-    protected GameParticipantRepository participantRepository;
+    protected GameParticipantRepository gameParticipantRepository;
 
     @Autowired
-    protected GameAreaRepository areaRepository;
+    protected GameAreaRepository gameAreaRepository;
 
     @LocalServerPort
     protected int port;
