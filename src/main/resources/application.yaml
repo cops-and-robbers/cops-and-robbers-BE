@@ -16,3 +16,12 @@ springdoc:
     display-request-duration: true
     persist-authorization: true
     filter: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
