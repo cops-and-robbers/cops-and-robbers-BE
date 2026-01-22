@@ -36,13 +36,13 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/cops-and-robbers:latest
 
-      - name: 🚚 docker-compose 파일 EC2로 전송
+      - name: 🚚 배포 파일 전송 (Compose & Script)
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-          source: "docker-compose-prod.yml"
+          source: "docker-compose-prod.yml,scripts/deploy.sh"
           target: "/home/${{ secrets.EC2_USER }}/"
 
       - name: 🚀 EC2 배포 및 실행
@@ -51,18 +51,14 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
+          envs: DB_PASSWORD,ACCESS_SECRET_KEY,REFRESH_SECRET_KEY,ACCESS_EXPIRATION,REFRESH_EXPIRATION
           script: |
-            cd /home/${{ secrets.EC2_USER }}
-
-            cat > .env << EOF
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            ACCESS_SECRET_KEY=${{ secrets.ACCESS_SECRET_KEY }}
-            REFRESH_SECRET_KEY=${{ secrets.REFRESH_SECRET_KEY }}
-            ACCESS_EXPIRATION=${{ secrets.ACCESS_EXPIRATION }}
-            REFRESH_EXPIRATION=${{ secrets.REFRESH_EXPIRATION }}
-            EOF
-
-            sudo docker compose -f docker-compose-prod.yml pull
-            sudo docker compose -f docker-compose-prod.yml down --remove-orphans
-            sudo docker compose -f docker-compose-prod.yml up -d
-            sudo docker image prune -f
+            chmod +x /home/${{ secrets.EC2_USER }}/scripts/deploy.sh
+            
+            /home/${{ secrets.EC2_USER }}/scripts/deploy.sh
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          ACCESS_SECRET_KEY: ${{ secrets.ACCESS_SECRET_KEY }}
+          REFRESH_SECRET_KEY: ${{ secrets.REFRESH_SECRET_KEY }}
+          ACCESS_EXPIRATION: ${{ secrets.ACCESS_EXPIRATION }}
+          REFRESH_EXPIRATION: ${{ secrets.REFRESH_EXPIRATION }}
