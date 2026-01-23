@@ -27,21 +27,26 @@ sudo docker compose -f docker-compose-prod.yml pull
 sudo docker compose -f docker-compose-prod.yml down --remove-orphans
 sudo docker compose -f docker-compose-prod.yml up -d
 
-echo "⏳ Health check 대기 중 (30초)"
-sleep 30
+echo "🔍 Health Check 시작..."
+MAX_RETRY=10
+RETRY_INTERVAL=3
 
-if curl -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
-    echo "✅ 배포 성공!"
-    sudo docker image prune -f
-    rm -f .env.backup
-else
-    echo "❌ Health check 실패! 롤백 시작"
+for i in $(seq 1 $MAX_RETRY); do
+    echo "Health Check 시도 $i/$MAX_RETRY..."
 
-    if [ -f .env.backup ]; then
-        mv .env.backup .env
+    if curl -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
+        echo "✅ 배포 성공! (${i}번째 시도에서 성공)"
+        sudo docker image prune -f
+        rm -f .env.backup
+        exit 0
     fi
-    sudo docker compose -f docker-compose-prod.yml up -d
 
-    echo "⚠️ 롤백 완료. 서버 상태를 점검 바람"
-    exit 1
+    if [ $i -lt $MAX_RETRY ]; then
+        sleep $RETRY_INTERVAL
+    fi
+done
+
+echo "❌ Health check 실패! 롤백 시작"
+if [ -f .env.backup ]; then
+    mv .env.backup .env
 fi
