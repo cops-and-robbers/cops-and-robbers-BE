@@ -33,7 +33,6 @@ log "INFO" "CONTAINER_STOP_SUCCESS"
 sudo docker compose -f docker-compose-prod.yml up -d
 log "INFO" "CONTAINER_START_SUCCESS"
 
-log "INFO" "HEALTH_CHECK_START"
 MAX_RETRY=10
 RETRY_INTERVAL=3
 
@@ -54,7 +53,6 @@ for i in $(seq 1 $MAX_RETRY); do
 done
 
 log "ERROR" "HEALTH_CHECK_FAILED"
-log "INFO" "ROLLBACK_START"
 if [ -f .env.backup ]; then
     mv .env.backup .env
     log "INFO" "ROLLBACK_SUCCESS"

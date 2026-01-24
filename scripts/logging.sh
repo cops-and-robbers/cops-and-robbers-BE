@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LOG_DIR="/log/deploy"
+LOG_DIR="/home/ubuntu/log/deploy"
 LOG_RETENTION_DAYS=30
 LOG_FILE=""
 
