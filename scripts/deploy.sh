@@ -37,10 +37,8 @@ MAX_RETRY=10
 RETRY_INTERVAL=3
 
 for i in $(seq 1 $MAX_RETRY); do
-    log "INFO" "HEALTH_CHECK_ATTEMPT count=$i"
-
     if curl -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
-        log "INFO" "HEALTH_CHECK_SUCCESS"
+        log "INFO" "HEALTH_CHECK_SUCCESS attempt=$i"
         sudo docker image prune -f
         rm -f .env.backup
         finish_logging "INFO"

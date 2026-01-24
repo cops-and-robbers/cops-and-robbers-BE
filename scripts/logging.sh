@@ -7,8 +7,7 @@ LOG_FILE=""
 # 로깅 초기화
 init_logging() {
     sudo mkdir -p "$LOG_DIR"
-    local timestamp
-    timestamp=$(date '+%Y%m%d_%H%M%S')
+    local timestamp=$(date '+%Y%m%d_%H%M%S')
     LOG_FILE="$LOG_DIR/deploy_${timestamp}.log"
 
     log "INFO" "DEPLOY_START"
@@ -19,8 +18,7 @@ init_logging() {
 log() {
     local level="$1"
     local event="$2"
-    local timestamp
-    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
 
     echo "[${timestamp}] [${level}] ${event}" | sudo tee -a "$LOG_FILE"
 }
