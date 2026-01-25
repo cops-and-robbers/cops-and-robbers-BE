@@ -8,6 +8,9 @@ public enum CommonException implements ExceptionCode {
 
     MISSING_REQUEST_PART(HttpStatus.BAD_REQUEST, "필수 요청 파트 누락", "요청에 필요한 파트가 누락되었습니다."),
     ENDPOINT_NOT_FOUND(HttpStatus.NOT_FOUND, "요청 경로를 찾을 수 없음", "요청한 URL에 해당하는 API를 찾을 수 없습니다."),
+    INVALID_DESTINATION(HttpStatus.BAD_REQUEST, "잘못된 경로 요청", "요청하신 STOMP 경로가 올바르지 않습니다. 주소를 다시 확인해주세요."),
+    INVALID_SOCKET_SESSION(HttpStatus.UNAUTHORIZED, "소켓 연결 오류", "세션 정보를 찾을 수 없습니다. 다시 연결해주세요."),
+    UNAUTHORIZED_SUBSCRIPTION(HttpStatus.FORBIDDEN, "구독 권한 없음", "해당 팀 전용 채널을 구독할 권한이 없습니다."),
     INVALID_REQUEST_BODY(HttpStatus.BAD_REQUEST, "잘못된 요청 본문", "요청 본문의 형식이 잘못되었습니다."),
     INVALID_QUERY_PARAMETER(HttpStatus.BAD_REQUEST, "잘못된 쿼리 파라미터", "쿼리 파라미터의 형식이 잘못되었습니다."),
     QUERY_PARAMETER_TYPE_MISMATCH(HttpStatus.BAD_REQUEST, "쿼리 파라미터 타입 불일치", "요청 파라미터의 타입이 잘못되었습니다."),

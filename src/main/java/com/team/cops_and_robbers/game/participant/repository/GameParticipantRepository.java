@@ -5,6 +5,7 @@ import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
@@ -24,8 +25,29 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
         """)
     boolean existsActiveGameByUserId(Long userId);
 
+    @Query("""
+       select gp
+       from GameParticipant gp
+       join fetch gp.user
+       where gp.game.id = :gameId
+            and gp.user.id = :userId
+       """)
+    Optional<GameParticipant> findWithUserByGameIdAndUserId(
+            @Param("gameId") Long gameId,
+            @Param("userId") Long userId
+    );
+
+    @Query("""
+        select gp
+        from GameParticipant gp
+        join fetch gp.user
+        where gp.id = :id
+    """)
+    Optional<GameParticipant> findByIdWithUser(@Param("id") Long id);
+
     int countByGameId(Long gameId);
 
+    boolean existsByGame_IdAndUser_Id(Long gameId, Long userId);
 
     Optional<GameParticipant> findByGameIdAndUserId(Long gameId, Long userId);
 
