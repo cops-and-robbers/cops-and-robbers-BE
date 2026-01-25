@@ -14,14 +14,9 @@ public class AuthorizationExtractor {
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
 
-    public static String extractToken(HttpServletRequest request) {
+    public static Optional<String> extractToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
-            return bearerToken.substring(BEARER_PREFIX.length());
-        }
-
-        return null;
+        return parseToken(bearerToken);
     }
 
     public static Optional<String> extractToken(StompHeaderAccessor accessor) {
@@ -34,5 +29,4 @@ public class AuthorizationExtractor {
         }
         return Optional.empty();
     }
-
 }

@@ -40,10 +40,8 @@ public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver 
     }
 
     private LoginUser getLoginUserFromAccessToken(HttpServletRequest request) {
-        String accessToken = AuthorizationExtractor.extractToken(request);
-        if (accessToken == null) {
-            throw new ApplicationException(AuthException.UNAUTHENTICATED_REQUEST);
-        }
+        String accessToken = AuthorizationExtractor.extractToken(request)
+                .orElseThrow(() -> new ApplicationException(AuthException.UNAUTHENTICATED_REQUEST));
         Long loginUserId = jwtTokenProvider.getUserIdFromAccessToken(accessToken);
         return new LoginUser(loginUserId);
     }
