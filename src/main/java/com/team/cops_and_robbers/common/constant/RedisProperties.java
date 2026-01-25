@@ -1,4 +1,4 @@
-package com.team.cops_and_robbers.common.config;
+package com.team.cops_and_robbers.common.constant;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
