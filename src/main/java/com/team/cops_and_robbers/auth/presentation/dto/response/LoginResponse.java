@@ -6,13 +6,15 @@ import com.team.cops_and_robbers.auth.domain.Tokens;
 public record LoginResponse(
         Long userId,
         String nickname,
-        Tokens tokens
+        Tokens tokens,
+        boolean isNewUser
 ) {
     public static LoginResponse from(LoginResult result) {
         return new LoginResponse(
                 result.user().getId(),
                 result.user().getNickname(),
-                result.tokens()
+                result.tokens(),
+                result.isNewUser()
         );
     }
 }
