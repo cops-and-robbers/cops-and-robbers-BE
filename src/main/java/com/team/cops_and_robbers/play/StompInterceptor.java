@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class StompHandler implements ChannelInterceptor {
+public class StompInterceptor implements ChannelInterceptor {
 
     private static final String POLICE_CHANNEL_SUFFIX = "/police";
     private static final String ROBBER_CHANNEL_SUFFIX = "/robber";
