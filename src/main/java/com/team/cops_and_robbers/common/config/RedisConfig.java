@@ -30,13 +30,6 @@ import java.util.Map;
 public class RedisConfig {
 
     private static final String LISTENER_METHOD_NAME = "onMessage";
-    private static final String TOPIC_LOBBY = "game:*:lobby";
-    private static final String TOPIC_SYSTEM = "game:*:system";
-    private static final String TOPIC_CHAT_ALL = "game:*:chat:all";
-    private static final String TOPIC_CHAT_POLICE = "game:*:chat:police";
-    private static final String TOPIC_CHAT_ROBBER = "game:*:chat:robber";
-    private static final String TOPIC_LOCATION_POLICE = "game:*:location:police";
-    private static final String TOPIC_LOCATION_ROBBER = "game:*:location:robber";
 
     private final RedisProperties redisProperties;
 
