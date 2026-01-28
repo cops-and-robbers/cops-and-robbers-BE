@@ -1,4 +1,4 @@
-package com.team.cops_and_robbers.play;
+package com.team.cops_and_robbers.play.common;
 
 import com.team.cops_and_robbers.auth.exception.AuthException;
 import com.team.cops_and_robbers.auth.infrastructure.jwt.JwtTokenProvider;

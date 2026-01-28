@@ -1,7 +1,7 @@
 package com.team.cops_and_robbers.common.config;
 
 import com.team.cops_and_robbers.common.exception.StompExceptionHandler;
-import com.team.cops_and_robbers.play.StompInterceptor;
+import com.team.cops_and_robbers.play.common.StompInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
