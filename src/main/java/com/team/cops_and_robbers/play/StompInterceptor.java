@@ -39,12 +39,12 @@ public class StompInterceptor implements ChannelInterceptor {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         StompCommand stompCommand = accessor.getCommand();
 
-        if (StompCommand.CONNECT.equals(stompCommand)) {
-            handleConnect(accessor);
-        } else if (StompCommand.SUBSCRIBE.equals(stompCommand)) {
-            handleSubscribe(accessor);
-        } else if (StompCommand.SEND.equals(stompCommand)) {
-            handlePublish(accessor);
+        if (stompCommand == null) return message;
+
+        switch (stompCommand) {
+            case CONNECT -> handleConnect(accessor);
+            case SUBSCRIBE -> handleSubscribe(accessor);
+            case SEND -> handlePublish(accessor);
         }
 
         return message;
@@ -56,8 +56,7 @@ public class StompInterceptor implements ChannelInterceptor {
      * (DB 조회)
      */
     private void handleConnect(StompHeaderAccessor accessor) {
-        String accessToken = AuthorizationExtractor.extractToken(accessor)
-                .orElseThrow(() -> new ApplicationException(AuthException.UNAUTHENTICATED_REQUEST));
+        String accessToken = getAccessToken(accessor);
         Long userId = jwtTokenProvider.getUserIdFromAccessToken(accessToken);
 
         if (!userRepository.existsById(userId)) {
@@ -75,12 +74,9 @@ public class StompInterceptor implements ChannelInterceptor {
      * (추후 redis 조회로 변경 예정)
      */
     private void handleSubscribe(StompHeaderAccessor accessor) {
-        Long userId = StompSessionHelper.getUserId(accessor)
-                .orElseThrow(() -> new ApplicationException(CommonException.INVALID_SOCKET_SESSION));
-        Long gameId = StompPathUtil.getGameId(accessor.getDestination())
-                .orElseThrow(() -> new ApplicationException(CommonException.INVALID_DESTINATION));
-        GameParticipant participant = gameParticipantRepository.findByGameIdAndUserId(gameId, userId)
-                .orElseThrow(() -> new ApplicationException(GameParticipantException.NOT_A_PARTICIPANT));
+        Long userId = getUserIdFromSession(accessor);
+        Long gameId = getGameIdFromPath(accessor);
+        GameParticipant participant = getParticipant(gameId, userId);
 
         validateSubscriptionPermission(accessor.getDestination(), participant.getTeam());
 
@@ -94,10 +90,8 @@ public class StompInterceptor implements ChannelInterceptor {
      * - 소켓 세션의 유저, 게임방 정보로 publish 권한을 검증합니다.
      */
     private void handlePublish(StompHeaderAccessor accessor) {
-        Long sessionGameId = StompSessionHelper.getGameId(accessor)
-                .orElseThrow(() -> new ApplicationException(CommonException.INVALID_SOCKET_SESSION));
-        Long targetGameId = StompPathUtil.getGameId(accessor.getDestination())
-                .orElseThrow(() -> new ApplicationException(CommonException.INVALID_DESTINATION));
+        Long sessionGameId = getGameIdFromSession(accessor);
+        Long targetGameId = getGameIdFromPath(accessor);
 
         if (!sessionGameId.equals(targetGameId)) {
             throw new ApplicationException(GameParticipantException.NOT_A_PARTICIPANT);
@@ -118,5 +112,30 @@ public class StompInterceptor implements ChannelInterceptor {
                 throw new ApplicationException(CommonException.UNAUTHORIZED_SUBSCRIPTION);
             }
         }
+    }
+
+    private String getAccessToken(StompHeaderAccessor accessor) {
+        return AuthorizationExtractor.extractToken(accessor)
+                .orElseThrow(() -> new ApplicationException(AuthException.UNAUTHENTICATED_REQUEST));
+    }
+
+    private Long getUserIdFromSession(StompHeaderAccessor accessor) {
+        return StompSessionHelper.getUserId(accessor)
+                .orElseThrow(() -> new ApplicationException(CommonException.INVALID_SOCKET_SESSION));
+    }
+
+    private Long getGameIdFromPath(StompHeaderAccessor accessor) {
+        return StompPathUtil.getGameId(accessor.getDestination())
+                .orElseThrow(() -> new ApplicationException(CommonException.INVALID_DESTINATION));
+    }
+
+    private Long getGameIdFromSession(StompHeaderAccessor accessor) {
+        return StompSessionHelper.getGameId(accessor)
+                .orElseThrow(() -> new ApplicationException(CommonException.INVALID_DESTINATION));
+    }
+
+    private GameParticipant getParticipant(Long gameId, Long userId) {
+        return gameParticipantRepository.findByGameIdAndUserId(gameId, userId)
+                .orElseThrow(() -> new ApplicationException(GameParticipantException.NOT_A_PARTICIPANT));
     }
 }
