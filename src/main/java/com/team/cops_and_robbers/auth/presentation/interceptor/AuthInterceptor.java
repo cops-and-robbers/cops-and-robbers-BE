@@ -22,15 +22,12 @@ public class AuthInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-
         if (HttpMethod.OPTIONS.matches(request.getMethod())) {
             return true;
         }
 
-        String accessToken = AuthorizationExtractor.extractToken(request);
-        if (accessToken == null) {
-            throw new ApplicationException(AuthException.UNAUTHENTICATED_REQUEST);
-        }
+        String accessToken = AuthorizationExtractor.extractToken(request)
+                .orElseThrow(() -> new ApplicationException(AuthException.UNAUTHENTICATED_REQUEST));
 
         Long userId = jwtTokenProvider.getUserIdFromAccessToken(accessToken);
         request.setAttribute("loginUser", new LoginUser(userId));

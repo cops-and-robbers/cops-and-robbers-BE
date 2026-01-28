@@ -49,7 +49,7 @@ public class GameParticipantService {
             throw new ApplicationException(GameParticipantException.ALREADY_PARTICIPATING);
         }
 
-        if (game.isWaiting()) {
+        if (!game.isWaiting()) {
             throw new ApplicationException(GameParticipantException.GAME_ALREADY_STARTED);
         }
 
