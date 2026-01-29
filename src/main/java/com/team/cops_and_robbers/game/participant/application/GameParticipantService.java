@@ -11,6 +11,9 @@ import com.team.cops_and_robbers.game.participant.application.dto.result.GameLea
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
+import com.team.cops_and_robbers.play.lobby.application.LobbyEventFactory;
+import com.team.cops_and_robbers.play.lobby.application.LobbyPublisher;
+import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,12 +26,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class GameParticipantService {
 
     private static final int NO_PARTICIPANTS = 0;
-    
+
     private final GameRepository gameRepository;
     private final UserRepository userRepository;
     private final GameAreaRepository gameAreaRepository;
     private final GameParticipantRepository gameParticipantRepository;
 
+    private final LobbyPublisher lobbyPublisher;
+    private final LobbyEventFactory lobbyEventFactory;
 
     @Transactional
     public GameJoinResult joinGame(GameJoinCommand command) {
@@ -39,7 +44,11 @@ public class GameParticipantService {
         GameParticipant participant = GameParticipant.createParticipant(game, user, false);
         gameParticipantRepository.save(participant);
 
-        // TODO : ParticipantJoined 도메인 이벤트 publish
+        int currentCount = gameParticipantRepository.countByGameId(game.getId());
+        int maxCount = game.getMaxParticipants();
+
+        LobbyEvent enterEvent = lobbyEventFactory.createEnterEvent(game.getId(), participant, currentCount, maxCount);
+        lobbyPublisher.publish(enterEvent);
 
         return GameJoinResult.from(participant);
     }
@@ -69,6 +78,10 @@ public class GameParticipantService {
         validateLeavable(participant);
 
         boolean wasHost = participant.isHost();
+
+        Long exitedParticipantId = participant.getId();
+        int maxCount = participant.getGame().getMaxParticipants();
+
         gameParticipantRepository.delete(participant);
 
         // 1. 마지막 사람이 나갈 경우 방을 삭제한다.
@@ -90,13 +103,14 @@ public class GameParticipantService {
             // TODO : HostChanged 도메인 이벤트 publish
         }
 
-        // TODO : ParticipantLeft 도메인 이벤트 publish
+        LobbyEvent exitEvent = lobbyEventFactory.createExitEvent(command.gameId(), exitedParticipantId, remainingCount, maxCount);
+        lobbyPublisher.publish(exitEvent);
 
         return GameLeaveResult.from(command.userId(), remainingCount);
     }
 
     private void validateLeavable(GameParticipant participant) {
-        if (participant.isWaiting()) {
+        if (!participant.isWaiting()) {
             throw new ApplicationException(GameParticipantException.CANNOT_LEAVE_DURING_GAME);
         }
     }
