@@ -71,4 +71,13 @@ public class GameParticipant extends BaseTimeEntity {
                 .isHost(isHost)
                 .build();
     }
+
+    public void changeTeam(Team targetTeam) {
+        this.team = targetTeam;
+        this.isReady = false;
+    }
+
+    public void updateReady(boolean ready) {
+        this.isReady = ready;
+    }
 }
