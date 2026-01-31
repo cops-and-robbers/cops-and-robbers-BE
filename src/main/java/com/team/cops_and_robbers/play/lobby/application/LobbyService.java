@@ -11,6 +11,7 @@ import com.team.cops_and_robbers.play.lobby.application.dto.command.ReadyUpdateC
 import com.team.cops_and_robbers.play.lobby.application.dto.command.TeamChangeCommand;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +23,7 @@ public class LobbyService {
     private final GameRepository gameRepository;
     private final GameParticipantRepository gameParticipantRepository;
 
-    private final LobbyPublisher lobbyPublisher;
+    private final ApplicationEventPublisher eventPublisher;
     private final LobbyEventFactory lobbyEventFactory;
 
     /**
@@ -39,7 +40,7 @@ public class LobbyService {
         int robberCount = gameParticipantRepository.countByGameIdAndTeam(command.gameId(), Team.ROBBER);
 
         LobbyEvent event = lobbyEventFactory.createTeamUpdateEvent(game.getId(), participant, policeCount, robberCount);
-        lobbyPublisher.publish(event);
+        eventPublisher.publishEvent(event);
     }
 
     /**
@@ -53,7 +54,7 @@ public class LobbyService {
         participant.updateReady(command.isReady());
 
         LobbyEvent event = lobbyEventFactory.createReadyUpdateEvent(command.gameId(), participant);
-        lobbyPublisher.publish(event);
+        eventPublisher.publishEvent(event);
     }
 
     private Game getWaitingGame(Long gameId) {

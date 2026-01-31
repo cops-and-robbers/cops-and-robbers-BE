@@ -12,11 +12,11 @@ import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.play.lobby.application.LobbyEventFactory;
-import com.team.cops_and_robbers.play.lobby.application.LobbyPublisher;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +32,7 @@ public class GameParticipantService {
     private final GameAreaRepository gameAreaRepository;
     private final GameParticipantRepository gameParticipantRepository;
 
-    private final LobbyPublisher lobbyPublisher;
+    private final ApplicationEventPublisher eventPublisher;
     private final LobbyEventFactory lobbyEventFactory;
 
     @Transactional
@@ -48,7 +48,7 @@ public class GameParticipantService {
         int maxCount = game.getMaxParticipants();
 
         LobbyEvent enterEvent = lobbyEventFactory.createEnterEvent(game.getId(), participant, currentCount, maxCount);
-        lobbyPublisher.publish(enterEvent);
+        eventPublisher.publishEvent(enterEvent);
 
         return GameJoinResult.from(participant);
     }
@@ -99,11 +99,11 @@ public class GameParticipantService {
             newHost.promoteToHost();
 
             LobbyEvent hostEvent = lobbyEventFactory.createHostChangedEvent(command.gameId(), newHost);
-            lobbyPublisher.publish(hostEvent);
+            eventPublisher.publishEvent(hostEvent);
         }
 
         LobbyEvent exitEvent = lobbyEventFactory.createExitEvent(command.gameId(), exitedParticipantId, remainingCount, maxCount);
-        lobbyPublisher.publish(exitEvent);
+        eventPublisher.publishEvent(exitEvent);
 
         return GameLeaveResult.from(command.userId(), remainingCount);
     }
