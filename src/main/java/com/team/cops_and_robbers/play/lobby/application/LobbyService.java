@@ -52,7 +52,7 @@ public class LobbyService {
 
         participant.updateReady(command.isReady());
 
-        LobbyEvent event = lobbyEventFactory.createReadyUpdateEvent(command.gameId(), participant.getId(), command.isReady());
+        LobbyEvent event = lobbyEventFactory.createReadyUpdateEvent(command.gameId(), participant);
         lobbyPublisher.publish(event);
     }
 

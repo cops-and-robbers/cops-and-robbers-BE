@@ -11,8 +11,7 @@ public sealed interface LobbyEventData permits
         LobbyEventData.LobbyGameStartData {
 
     record LobbyParticipantInfo(Long participantId, String nickname, Team team, boolean isReady) {
-
-        public static LobbyParticipantInfo from(GameParticipant participant) { // ✅ 추가
+        public static LobbyParticipantInfo from(GameParticipant participant) {
             return new LobbyParticipantInfo(
                     participant.getId(),
                     participant.getUser().getNickname(),
@@ -24,14 +23,12 @@ public sealed interface LobbyEventData permits
 
     record LobbyEnterData(LobbyParticipantInfo newParticipant, int currentCount,
                           int maxCount) implements LobbyEventData {
-
         public static LobbyEnterData of(GameParticipant participant, int currentCount, int maxCount) {
             return new LobbyEnterData(LobbyParticipantInfo.from(participant), currentCount, maxCount);
         }
     }
 
     record LobbyExitData(Long exitedParticipantId, int currentCount, int maxCount) implements LobbyEventData {
-
         public static LobbyExitData of(Long exitedParticipantId, int currentCount, int maxCount) {
             return new LobbyExitData(exitedParticipantId, currentCount, maxCount);
         }
@@ -39,25 +36,18 @@ public sealed interface LobbyEventData permits
 
     record LobbyTeamUpdateData(LobbyParticipantInfo participant, int policeCount,
                                int robberCount) implements LobbyEventData {
-
         public static LobbyTeamUpdateData of(GameParticipant participant, int policeCount, int robberCount) {
             return new LobbyTeamUpdateData(LobbyParticipantInfo.from(participant), policeCount, robberCount);
         }
     }
 
-    record LobbyReadyUpdateData(Long participantId, boolean isReady) implements LobbyEventData {
-
-        public static LobbyReadyUpdateData of(Long participantId, boolean isReady) {
-            return new LobbyReadyUpdateData(participantId, isReady);
-        }
-
+    record LobbyReadyUpdateData(LobbyParticipantInfo participant) implements LobbyEventData {
         public static LobbyReadyUpdateData from(GameParticipant participant) {
-            return new LobbyReadyUpdateData(participant.getId(), participant.isReady());
+            return new LobbyReadyUpdateData(LobbyParticipantInfo.from(participant));
         }
     }
 
     record LobbyGameStartData(String message, String startTime) implements LobbyEventData {
-
         public static LobbyGameStartData of(String message, String startTime) {
             return new LobbyGameStartData(message, startTime);
         }
