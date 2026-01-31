@@ -36,15 +36,6 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
 
     int countByGameId(Long gameId);
 
-    /**
-     * 팀별 인원 수
-     */
-    @Query("""
-        select count(gp)
-        from GameParticipant gp
-        where gp.game.id = :gameId
-          and gp.team = :team
-    """)
     int countByGameIdAndTeam(Long gameId, Team team);
 
     Optional<GameParticipant> findByGameIdAndUserId(Long gameId, Long userId);

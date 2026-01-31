@@ -90,8 +90,6 @@ public class GameParticipantService {
             gameAreaRepository.deleteByGameId(command.gameId());
             gameRepository.deleteById(command.gameId());
 
-            // TODO : GameDeleted 도메인 이벤트 publish
-
             return GameLeaveResult.from(command.userId(), NO_PARTICIPANTS);
         }
 
@@ -100,7 +98,8 @@ public class GameParticipantService {
             GameParticipant newHost = gameParticipantRepository.getNextParticipant(command.gameId());
             newHost.promoteToHost();
 
-            // TODO : HostChanged 도메인 이벤트 publish
+            LobbyEvent hostEvent = lobbyEventFactory.createHostChangedEvent(command.gameId(), newHost);
+            lobbyPublisher.publish(hostEvent);
         }
 
         LobbyEvent exitEvent = lobbyEventFactory.createExitEvent(command.gameId(), exitedParticipantId, remainingCount, maxCount);

@@ -28,4 +28,9 @@ public class LobbyEventFactory {
         LobbyEventData.LobbyReadyUpdateData data = LobbyEventData.LobbyReadyUpdateData.from(participant);
         return LobbyEvent.of(gameId, LobbyEventType.READY_UPDATE, data);
     }
+
+    public LobbyEvent createHostChangedEvent(Long gameId, GameParticipant newHost) {
+        LobbyEventData.LobbyHostChangedData data = LobbyEventData.LobbyHostChangedData.from(newHost);
+        return LobbyEvent.of(gameId, LobbyEventType.HOST_CHANGED, data);
+    }
 }

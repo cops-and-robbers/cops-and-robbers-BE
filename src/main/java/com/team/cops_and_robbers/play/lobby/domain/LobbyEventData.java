@@ -8,6 +8,7 @@ public sealed interface LobbyEventData permits
         LobbyEventData.LobbyExitData,
         LobbyEventData.LobbyTeamUpdateData,
         LobbyEventData.LobbyReadyUpdateData,
+        LobbyEventData.LobbyHostChangedData,
         LobbyEventData.LobbyGameStartData {
 
     record LobbyParticipantInfo(Long participantId, String nickname, Team team, boolean isReady) {
@@ -44,6 +45,12 @@ public sealed interface LobbyEventData permits
     record LobbyReadyUpdateData(LobbyParticipantInfo participant) implements LobbyEventData {
         public static LobbyReadyUpdateData from(GameParticipant participant) {
             return new LobbyReadyUpdateData(LobbyParticipantInfo.from(participant));
+        }
+    }
+
+    record LobbyHostChangedData(LobbyParticipantInfo newHost) implements LobbyEventData {
+        public static LobbyHostChangedData from(GameParticipant participant) {
+            return new LobbyHostChangedData(LobbyParticipantInfo.from(participant));
         }
     }
 
