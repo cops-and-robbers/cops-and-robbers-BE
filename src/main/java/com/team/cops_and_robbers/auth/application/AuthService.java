@@ -145,6 +145,19 @@ public class AuthService {
         return issueTokens(user);
     }
 
+    /**
+     * 4. 로그아웃
+     * - 저장된 리프레시 토큰과 유저 디바이스 정보를 삭제
+     * - 만료된 리프레시 토큰 전달 시에도 유저 아이디 파싱 후 디바이스 정보 삭제
+     */
+    @Transactional
+    public void logout(String refreshToken) {
+        jwtTokenProvider.getUserIdFromRefreshTokenLogout(refreshToken)
+                .ifPresent(userId -> {
+                    refreshTokenRepository.delete(userId);
+                    userDeviceRepository.deleteByUserId(userId);
+                });
+    }
 
     private record AuthUserData(
             User user,
