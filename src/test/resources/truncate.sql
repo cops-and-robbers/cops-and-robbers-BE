@@ -1,9 +1,8 @@
-set session_replication_role = 'replica';
-
-truncate table game_areas;
-truncate table participants;
-truncate table user_devices;
-truncate table games;
-truncate table users;
-
-set session_replication_role = 'origin';
+TRUNCATE TABLE
+    game_areas,
+    participants,
+    user_devices,
+    game_results,
+    games,
+    users
+RESTART IDENTITY;

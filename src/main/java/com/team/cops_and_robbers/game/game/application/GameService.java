@@ -41,10 +41,16 @@ public class GameService {
     @Transactional
     public GameCreateResult createGame(GameCreateCommand command) {
 
+        User host = userRepository.getByUserId(command.hostUserId());
+
+        if (gameParticipantRepository.existsActiveGameByUserId(host.getId())) {
+            throw new ApplicationException(GameParticipantException.ALREADY_PARTICIPATING);
+        }
+
         String inviteCode = generateInviteCode();
         Game game = saveGame(command, inviteCode);
         saveGameArea(game, command);
-        saveHostAsParticipant(game, command.hostUserId());
+        saveHostAsParticipant(game, host);
 
         return GameCreateResult.from(game);
     }
@@ -76,13 +82,7 @@ public class GameService {
         gameAreaRepository.save(gameArea);
     }
 
-    private void saveHostAsParticipant(Game game, Long hostUserId) {
-        User host = userRepository.getByUserId(hostUserId);
-
-        if (gameParticipantRepository.existsActiveGameByUserId(hostUserId)) {
-            throw new ApplicationException(GameParticipantException.ALREADY_PARTICIPATING);
-        }
-
+    private void saveHostAsParticipant(Game game, User host) {
         GameParticipant hostParticipant = GameParticipant.createParticipant(game, host, true);
         gameParticipantRepository.save(hostParticipant);
     }
