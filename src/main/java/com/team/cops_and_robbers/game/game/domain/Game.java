@@ -61,6 +61,11 @@ public class Game extends BaseTimeEntity {
         return this.inviteCode.equals(inviteCode);
     }
 
+    public void startGame(LocalDateTime startTime) {
+        this.startedAt = startTime;
+        this.status = GameStatus.IN_PROGRESS;
+    }
+
     public static Game createGame(String inviteCode, GameCreateCommand command) {
         return Game.builder()
                 .inviteCode(inviteCode)

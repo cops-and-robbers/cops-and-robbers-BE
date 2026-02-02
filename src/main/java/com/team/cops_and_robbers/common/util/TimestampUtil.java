@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TimestampUtil {
@@ -13,5 +14,9 @@ public class TimestampUtil {
 
     public static String nowKstIso() {
         return OffsetDateTime.now(KST).toString();
+    }
+
+    public static ZonedDateTime nowKstZoned() {
+        return ZonedDateTime.now(KST);
     }
 }
