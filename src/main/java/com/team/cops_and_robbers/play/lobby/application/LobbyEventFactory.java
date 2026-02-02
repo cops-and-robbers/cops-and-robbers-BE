@@ -6,6 +6,9 @@ import com.team.cops_and_robbers.play.lobby.domain.LobbyEventData;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEventType;
 import org.springframework.stereotype.Component;
 
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+
 @Component
 public class LobbyEventFactory {
 
@@ -32,5 +35,11 @@ public class LobbyEventFactory {
     public LobbyEvent createHostChangedEvent(Long gameId, GameParticipant newHost) {
         LobbyEventData.LobbyHostChangedData data = LobbyEventData.LobbyHostChangedData.from(newHost);
         return LobbyEvent.of(gameId, LobbyEventType.HOST_CHANGED, data);
+    }
+
+    public LobbyEvent createGameStartEvent(Long gameId, ZonedDateTime startedAt) {
+        String startTimeStr = startedAt.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        LobbyEventData.LobbyGameStartData data = LobbyEventData.LobbyGameStartData.of(startTimeStr);
+        return LobbyEvent.of(gameId, LobbyEventType.GAME_START, data);
     }
 }

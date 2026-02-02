@@ -54,9 +54,9 @@ public sealed interface LobbyEventData permits
         }
     }
 
-    record LobbyGameStartData(String message, String startTime) implements LobbyEventData {
-        public static LobbyGameStartData of(String message, String startTime) {
-            return new LobbyGameStartData(message, startTime);
+    record LobbyGameStartData(String startTime) implements LobbyEventData {
+        public static LobbyGameStartData of(String startTime) {
+            return new LobbyGameStartData(startTime);
         }
     }
 }
