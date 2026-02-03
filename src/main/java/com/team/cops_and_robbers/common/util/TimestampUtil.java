@@ -3,6 +3,8 @@ package com.team.cops_and_robbers.common.util;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -18,5 +20,13 @@ public class TimestampUtil {
 
     public static ZonedDateTime nowKstZoned() {
         return ZonedDateTime.now(KST);
+    }
+
+    public static LocalDateTime nowKstLocal() {
+        return LocalDateTime.now(KST);
+    }
+
+    public static Instant toInstant(LocalDateTime localDateTime) {
+        return localDateTime.atZone(KST).toInstant();
     }
 }
