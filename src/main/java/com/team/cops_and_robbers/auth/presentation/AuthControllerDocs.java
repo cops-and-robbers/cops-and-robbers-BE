@@ -36,7 +36,8 @@ public interface AuthControllerDocs {
                                                 "tokens": {
                                                     "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzY4NDk1MDA1LCJleHAiOjE3Njg0OTg2MDV9...",
                                                     "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzY4NDk1MDA1LCJleHAiOjE3Njk3MDQ2MDV9..."
-                                                }
+                                                },
+                                                "isNewUser": false
                                             }
                                             """
                             )
@@ -54,7 +55,8 @@ public interface AuthControllerDocs {
                                                 "tokens": {
                                                     "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzY4NDk1MDEwLCJleHAiOjE3Njg0OTg2MTB9...",
                                                     "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzY4NDk1MDEwLCJleHAiOjE3Njk3MDQ2MTB9..."
-                                                }
+                                                },
+                                                "isNewUser": true
                                             }
                                             """
                             )
