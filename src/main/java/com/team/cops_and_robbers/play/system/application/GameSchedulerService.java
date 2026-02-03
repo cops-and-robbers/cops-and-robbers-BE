@@ -73,8 +73,8 @@ public class GameSchedulerService {
         LocalDateTime policeMoveStartTime = game.getStartedAt()
                 .plusMinutes(game.getPoliceWaitMinutes());
 
-        Runnable task = new PoliceMoveStartTask(game.getId());
-        register(scheduledTasks, policeMoveStartTime, now, task);
+        register(scheduledTasks, policeMoveStartTime, now,
+                () -> publishPoliceMoveStart(game.getId()));
     }
 
     private void scheduleRobberLocationReveals(
@@ -94,10 +94,12 @@ public class GameSchedulerService {
                 plusMinutes(revealIntervalMinutes);
 
         while (revealTime.isBefore(gameOverTime)) {
-            Runnable task = new RobberLocationRevealTask(game.getId());
-            register(scheduledTasks, revealTime, now, task);
+            LocalDateTime finalRevealTime = revealTime;
 
-            revealTime = revealTime.plusMinutes(game.getLocationRevealIntervalMinutes());
+            register(scheduledTasks, finalRevealTime, now,
+                    () -> publishRobberLocationReveal(game.getId()));
+
+            revealTime = revealTime.plusMinutes(revealIntervalMinutes);
         }
     }
 
@@ -114,33 +116,15 @@ public class GameSchedulerService {
         }
     }
 
-    /**
-     * 경찰 이동 시작
-     */
-    @RequiredArgsConstructor
-    private class PoliceMoveStartTask implements Runnable {
-        private final Long gameId;
-
-        @Override
-        public void run() {
-            SystemEvent event = systemEventFactory.createPoliceMoveStartEvent(gameId);
-            systemPublisher.publish(event);
-        }
+    private void publishPoliceMoveStart(Long gameId) {
+        SystemEvent event = systemEventFactory.createPoliceMoveStartEvent(gameId);
+        systemPublisher.publish(event);
     }
 
-    /**
-     * 도둑 위치 공개
-     */
-    @RequiredArgsConstructor
-    private class RobberLocationRevealTask implements Runnable {
-        private final Long gameId;
+    private void publishRobberLocationReveal(Long gameId) {
+        List<SystemEventData.RobberLocation> locations = robberLocationService.getCurrentRobberLocations(gameId);
 
-        @Override
-        public void run() {
-            List<SystemEventData.RobberLocation> locations = robberLocationService.getCurrentRobberLocations(gameId);
-
-            SystemEvent event = systemEventFactory.createRobberLocationRevealEvent(gameId, locations);
-            systemPublisher.publish(event);
-        }
+        SystemEvent event = systemEventFactory.createRobberLocationRevealEvent(gameId, locations);
+        systemPublisher.publish(event);
     }
 }
