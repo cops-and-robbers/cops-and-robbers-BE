@@ -13,6 +13,7 @@ import com.team.cops_and_robbers.play.lobby.application.dto.command.GameStartCom
 import com.team.cops_and_robbers.play.lobby.application.dto.command.ReadyUpdateCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.TeamChangeCommand;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
+import com.team.cops_and_robbers.play.system.application.GameSchedulerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ public class LobbyService {
 
     private final ApplicationEventPublisher eventPublisher;
     private final LobbyEventFactory lobbyEventFactory;
+    private final GameSchedulerService gameSchedulerService;
 
     /**
      * 팀 변경 (경찰 <-> 도둑)
@@ -70,9 +72,7 @@ public class LobbyService {
         Game game = getWaitingGame(command.gameId());
         GameParticipant participant = getWaitingParticipant(game.getId(), command.userId());
 
-        validateHostPermission(participant);
-        validateTeamComposition(command.gameId());
-        validateAllParticipantsReady(command.gameId());
+        validateGameStart(game, participant);
 
         ZonedDateTime nowKst = TimestampUtil.nowKstZoned();
 
@@ -81,6 +81,8 @@ public class LobbyService {
 
         LobbyEvent event = lobbyEventFactory.createGameStartEvent(command.gameId(), nowKst);
         eventPublisher.publishEvent(event);
+
+        gameSchedulerService.scheduleAllEvents(command.gameId());
     }
 
     private Game getWaitingGame(Long gameId) {
@@ -97,6 +99,12 @@ public class LobbyService {
             throw new ApplicationException(GameParticipantException.LOBBY_ACTION_NOT_ALLOWED);
         }
         return participant;
+    }
+
+    private void validateGameStart(Game game, GameParticipant participant) {
+        validateHostPermission(participant);
+        validateTeamComposition(game.getId());
+        validateAllParticipantsReady(game.getId());
     }
 
     private void validateHostPermission(GameParticipant participant) {
