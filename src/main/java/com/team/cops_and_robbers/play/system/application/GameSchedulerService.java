@@ -55,14 +55,13 @@ public class GameSchedulerService {
     }
 
     private void scheduleGame(Game game) {
-        Long gameId = game.getId();
         List<ScheduledFuture> scheduledTasks = new ArrayList<>();
         LocalDateTime now = TimestampUtil.nowKstLocal();
 
         schedulePoliceMoveStart(scheduledTasks, game, now);
         scheduleRobberLocationReveals(scheduledTasks, game, now);
 
-        gameSchedules.put(gameId, scheduledTasks);
+        gameSchedules.put(game.getId(), scheduledTasks);
     }
 
     private void schedulePoliceMoveStart(

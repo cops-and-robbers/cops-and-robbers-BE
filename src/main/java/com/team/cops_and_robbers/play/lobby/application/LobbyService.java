@@ -13,7 +13,6 @@ import com.team.cops_and_robbers.play.lobby.application.dto.command.GameStartCom
 import com.team.cops_and_robbers.play.lobby.application.dto.command.ReadyUpdateCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.TeamChangeCommand;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
-import com.team.cops_and_robbers.play.system.application.GameSchedulerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -31,7 +30,6 @@ public class LobbyService {
 
     private final ApplicationEventPublisher eventPublisher;
     private final LobbyEventFactory lobbyEventFactory;
-    private final GameSchedulerService gameSchedulerService;
 
     /**
      * 팀 변경 (경찰 <-> 도둑)
@@ -75,14 +73,11 @@ public class LobbyService {
         validateGameStart(game, participant);
 
         ZonedDateTime nowKst = TimestampUtil.nowKstZoned();
-
         game.startGame(nowKst.toLocalDateTime());
         gameParticipantRepository.updateStatusByGameId(command.gameId(), ParticipantStatus.ALIVE);
 
         LobbyEvent event = lobbyEventFactory.createGameStartEvent(command.gameId(), nowKst);
         eventPublisher.publishEvent(event);
-
-        gameSchedulerService.scheduleAllEvents(command.gameId());
     }
 
     private Game getWaitingGame(Long gameId) {
