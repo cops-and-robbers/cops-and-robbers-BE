@@ -23,18 +23,24 @@ public class FirebaseConfig {
     @Bean
     public FirebaseApp firebaseApp() {
         try {
+
+            if (!FirebaseApp.getApps().isEmpty()) {
+                return FirebaseApp.getInstance();
+            }
+
             ClassPathResource resource = new ClassPathResource(CONFIG_KEY_PATH);
 
             if (!resource.exists()) {
                 throw new ApplicationException(CommonException.FIREBASE_CONFIG_NOT_FOUND);
             }
 
-            InputStream serviceAccount = resource.getInputStream();
-            FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .build();
+            try (InputStream serviceAccount = resource.getInputStream()) {
+                FirebaseOptions options = FirebaseOptions.builder()
+                        .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                        .build();
 
-            return FirebaseApp.initializeApp(options);
+                return FirebaseApp.initializeApp(options);
+            }
 
         } catch (IOException e) {
             log.error("Failed to initialize Firebase SDK. Error: {}", e.getMessage(), e);
@@ -43,7 +49,7 @@ public class FirebaseConfig {
     }
 
     @Bean
-    public FirebaseAuth firebaseAuth() {
-        return FirebaseAuth.getInstance(firebaseApp());
+    public FirebaseAuth firebaseAuth(FirebaseApp firebaseApp) {
+        return FirebaseAuth.getInstance(firebaseApp);
     }
 }
