@@ -8,7 +8,7 @@ public class UserFixture {
     public static User USER() {
         return User.builder()
                 .socialId("123456789")
-                .socialType(SocialType.KAKAO)
+                .socialType(SocialType.GOOGLE)
                 .nickname("testUser")
                 .allowGamePush(true)
                 .allowMarketingPush(false)
