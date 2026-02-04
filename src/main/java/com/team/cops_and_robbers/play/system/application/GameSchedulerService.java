@@ -70,8 +70,7 @@ public class GameSchedulerService {
             Game game,
             LocalDateTime now
     ) {
-        LocalDateTime policeMoveStartTime = game.getStartedAt()
-                .plusMinutes(game.getPoliceWaitMinutes());
+        LocalDateTime policeMoveStartTime = policeMoveStartTime(game);
 
         register(scheduledTasks, policeMoveStartTime, now,
                 () -> publishPoliceMoveStart(game.getId()));
@@ -82,16 +81,8 @@ public class GameSchedulerService {
             Game game,
             LocalDateTime now
     ) {
-        int policeWaitMinutes = game.getPoliceWaitMinutes();
-        int roundDurationMinutes = game.getRoundDurationMinutes();
-        int revealIntervalMinutes = game.getLocationRevealIntervalMinutes();
-
-        LocalDateTime policeMoveStartTime = game.getStartedAt()
-                .plusMinutes(policeWaitMinutes);
-        LocalDateTime gameOverTime = game.getStartedAt()
-                .plusMinutes(roundDurationMinutes);
-        LocalDateTime revealTime = policeMoveStartTime.
-                plusMinutes(revealIntervalMinutes);
+        LocalDateTime revealTime = firstRobberRevealTime(game);
+        LocalDateTime gameOverTime = gameOverTime(game);
 
         while (revealTime.isBefore(gameOverTime)) {
             LocalDateTime finalRevealTime = revealTime;
@@ -99,7 +90,7 @@ public class GameSchedulerService {
             register(scheduledTasks, finalRevealTime, now,
                     () -> publishRobberLocationReveal(game.getId()));
 
-            revealTime = revealTime.plusMinutes(revealIntervalMinutes);
+            revealTime = revealTime.plusMinutes(game.getLocationRevealIntervalMinutes());
         }
     }
 
@@ -114,6 +105,21 @@ public class GameSchedulerService {
             ScheduledFuture scheduledTask = taskScheduler.schedule(task, instant);
             scheduledTasks.add(scheduledTask);
         }
+    }
+
+    private LocalDateTime policeMoveStartTime(Game game) {
+        return game.getStartedAt()
+                .plusMinutes(game.getPoliceWaitMinutes());
+    }
+
+    private LocalDateTime gameOverTime(Game game) {
+        return game.getStartedAt()
+                .plusMinutes(game.getRoundDurationMinutes());
+    }
+
+    private LocalDateTime firstRobberRevealTime(Game game) {
+        return policeMoveStartTime(game)
+                .plusMinutes(game.getLocationRevealIntervalMinutes());
     }
 
     private void publishPoliceMoveStart(Long gameId) {
