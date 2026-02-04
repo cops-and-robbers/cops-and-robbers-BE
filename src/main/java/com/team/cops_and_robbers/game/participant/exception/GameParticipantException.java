@@ -19,7 +19,8 @@ public enum GameParticipantException implements ExceptionCode {
     LOBBY_ACTION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "로비 조작 불가", "게임이 시작된 이후에는 로비 상태를 변경할 수 없습니다."),
     NOT_HOST(HttpStatus.FORBIDDEN, "호스트 권한 필요", "게임을 시작할 수 있는 권한이 없습니다. 방장만 게임을 시작할 수 있습니다."),
     INVALID_TEAM_COMPOSITION(HttpStatus.BAD_REQUEST, "팀 구성 오류", "게임을 시작하려면 경찰과 도둑 팀에 각각 최소 1명 이상의 참가자가 필요합니다."),
-    NOT_ALL_READY(HttpStatus.BAD_REQUEST, "준비 미완료", "모든 참가자가 준비 상태여야 게임을 시작할 수 있습니다.");
+    NOT_ALL_READY(HttpStatus.BAD_REQUEST, "준비 미완료", "모든 참가자가 준비 상태여야 게임을 시작할 수 있습니다."),
+    NOT_ROBBER_TEAM(HttpStatus.BAD_REQUEST, "도둑 팀이 아님", "도둑 팀만 위치를 전송할 수 있습니다.");
 
     private final HttpStatus httpStatus;
     private final String title;

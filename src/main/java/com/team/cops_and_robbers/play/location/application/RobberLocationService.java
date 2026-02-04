@@ -1,7 +1,9 @@
 package com.team.cops_and_robbers.play.location.application;
 
+import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.Team;
+import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.play.location.application.dto.command.LocationUpdateCommand;
 import com.team.cops_and_robbers.play.system.domain.SystemEventData;
@@ -30,7 +32,9 @@ public class RobberLocationService {
         if (optionalParticipant.isEmpty()) return;
 
         GameParticipant participant = optionalParticipant.get();
-        if (participant.getTeam() != Team.ROBBER) return;
+        if (participant.getTeam() != Team.ROBBER) {
+            throw new ApplicationException(GameParticipantException.NOT_ROBBER_TEAM);
+        }
 
         SystemEventData.RobberLocation location =
                 SystemEventData.RobberLocation.of(
@@ -56,7 +60,6 @@ public class RobberLocationService {
         Map<Long, SystemEventData.RobberLocation> locations = locationCache.get(gameId);
 
         if (locations == null) {
-            log.warn("No locations found for game: {}", gameId);
             return List.of();
         }
 
