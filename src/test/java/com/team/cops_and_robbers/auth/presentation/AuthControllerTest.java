@@ -14,8 +14,6 @@ import com.team.cops_and_robbers.user.domain.DeviceType;
 import com.team.cops_and_robbers.user.domain.SocialType;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.domain.UserDevice;
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.DisplayName;
@@ -43,13 +41,7 @@ class AuthControllerTest extends ControllerTest {
             LoginRequest request = new LoginRequest(SocialType.GOOGLE, "valid_token", "fcm_token", DeviceType.IOS, "device_123");
 
             // when
-            ExtractableResponse<Response> extract = RestAssured.given().log().all()
-                    .contentType(ContentType.JSON)
-                    .body(request)
-                    .when()
-                    .post("/api/auth/login")
-                    .then().log().all()
-                    .extract();
+            ExtractableResponse<Response> extract = postWithoutAuthorization("/api/auth/login", request);
 
             // then
             LoginResponse response = extract.as(LoginResponse.class);
@@ -74,13 +66,7 @@ class AuthControllerTest extends ControllerTest {
             LoginRequest request = new LoginRequest(SocialType.GOOGLE, "valid_token", "fcm", DeviceType.IOS, "device_456");
 
             // when
-            ExtractableResponse<Response> extract = RestAssured.given().log().all()
-                    .contentType(ContentType.JSON)
-                    .body(request)
-                    .when()
-                    .post("/api/auth/login")
-                    .then().log().all()
-                    .extract();
+            ExtractableResponse<Response> extract = postWithoutAuthorization("/api/auth/login", request);
 
             // then
             LoginResponse response = extract.as(LoginResponse.class);
@@ -98,13 +84,7 @@ class AuthControllerTest extends ControllerTest {
             LoginRequest request = new LoginRequest(SocialType.KAKAO, null, "fcm", DeviceType.IOS, "device");
 
             // when
-            ExtractableResponse<Response> extract = RestAssured.given().log().all()
-                    .contentType(ContentType.JSON)
-                    .body(request)
-                    .when()
-                    .post("/api/auth/login")
-                    .then().log().all()
-                    .extract();
+            ExtractableResponse<Response> extract = postWithoutAuthorization("/api/auth/login", request);
 
             // then
             ErrorResponse response = extract.as(ErrorResponse.class);
@@ -128,13 +108,7 @@ class AuthControllerTest extends ControllerTest {
             ReissueRequest request = new ReissueRequest(tokens.refreshToken());
 
             // when
-            ExtractableResponse<Response> extract = RestAssured.given().log().all()
-                    .contentType(ContentType.JSON)
-                    .body(request)
-                    .when()
-                    .post("/api/auth/reissue")
-                    .then().log().all()
-                    .extract();
+            ExtractableResponse<Response> extract = postWithoutAuthorization("/api/auth/reissue", request);
 
             // then
             ReissueResponse response = extract.as(ReissueResponse.class);
@@ -153,13 +127,8 @@ class AuthControllerTest extends ControllerTest {
             ReissueRequest request = new ReissueRequest("mismatched_refresh_token");
 
             // when
-            ExtractableResponse<Response> extract = RestAssured.given().log().all()
-                    .contentType(ContentType.JSON)
-                    .body(request)
-                    .when()
-                    .post("/api/auth/reissue")
-                    .then().log().all()
-                    .extract();
+            ExtractableResponse<Response> extract = postWithoutAuthorization("/api/auth/reissue", request);
+
 
             // then
             ErrorResponse response = extract.as(ErrorResponse.class);
@@ -182,13 +151,7 @@ class AuthControllerTest extends ControllerTest {
             LogoutRequest request = new LogoutRequest(tokens.refreshToken());
 
             // when
-            ExtractableResponse<Response> extract = RestAssured.given().log().all()
-                    .contentType(ContentType.JSON)
-                    .body(request)
-                    .when()
-                    .post("/api/auth/logout")
-                    .then().log().all()
-                    .extract();
+            ExtractableResponse<Response> extract = postWithoutAuthorization("/api/auth/logout", request);
 
             // then
             assertSoftly(softly -> {

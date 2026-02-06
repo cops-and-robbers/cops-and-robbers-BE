@@ -1,5 +1,6 @@
 package com.team.cops_and_robbers.common;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.team.cops_and_robbers.auth.domain.Tokens;
 import com.team.cops_and_robbers.auth.infrastructure.jwt.JwtTokenProvider;
 import com.team.cops_and_robbers.auth.infrastructure.social.strategy.AppleLoginStrategy;
@@ -16,6 +17,9 @@ import com.team.cops_and_robbers.user.domain.UserDevice;
 import com.team.cops_and_robbers.user.repository.UserDeviceRepository;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import io.restassured.response.ExtractableResponse;
+import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Answers;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +35,7 @@ import org.springframework.test.context.jdbc.Sql;
 public abstract class ControllerTest {
 
     @MockitoBean
-    protected com.google.firebase.auth.FirebaseAuth firebaseAuth;
+    protected FirebaseAuth firebaseAuth;
 
     @MockitoBean(answers = Answers.CALLS_REAL_METHODS)
     protected KakaoLoginStrategy kakaoLoginStrategy;
@@ -90,4 +94,13 @@ public abstract class ControllerTest {
         return new Tokens(accessToken, refreshToken);
     }
 
+    protected ExtractableResponse<Response> postWithoutAuthorization(String url, Object body) {
+        return RestAssured.given().log().all()
+                .contentType(ContentType.JSON)
+                .body(body)
+                .when()
+                .post(url)
+                .then().log().all()
+                .extract();
+    }
 }
