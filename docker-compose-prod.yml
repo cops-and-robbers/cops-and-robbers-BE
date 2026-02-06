@@ -27,6 +27,8 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prod
 
+      FIREBASE_KEY_PATH: /app/firebase-key.json
+
       DB_HOST: jdbc:postgresql://cops-and-robbers-db:5432/cops_and_robbers_db
       DB_USERNAME: postgres
       DB_PASSWORD: ${DB_PASSWORD}
@@ -38,6 +40,9 @@ services:
       REFRESH_SECRET_KEY: ${REFRESH_SECRET_KEY}
       ACCESS_EXPIRATION: ${ACCESS_EXPIRATION}
       REFRESH_EXPIRATION: ${REFRESH_EXPIRATION}
+
+    volumes:
+      - ./firebase-key.json:/app/firebase-key.json
 
     depends_on:
       - cops-and-robbers-db
