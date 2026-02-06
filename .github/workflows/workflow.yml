@@ -2,11 +2,36 @@ name: 👮🏻 CI/CD 파이프라인 🥷
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main" , "chxghee/feat-19-firebase"]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_cnr
+          POSTGRES_PASSWORD: test5678
+          POSTGRES_DB: cops_test_db
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:latest
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: 🔄 소스 코드 가져오기
@@ -18,10 +43,10 @@ jobs:
           java-version: '21'
           distribution: 'corretto'
 
-      - name: 🐘 Gradle 빌드
+      - name: 🐘 Gradle 빌드 및 테스트
         run: |
           chmod +x gradlew
-          ./gradlew bootJar -x test
+          ./gradlew bootJar
 
       - name: 🐳 Docker Hub 로그인
         uses: docker/login-action@v2
