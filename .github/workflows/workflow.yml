@@ -10,7 +10,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15
+        image: postgis/postgis:15-3.3
         env:
           POSTGRES_USER: test_cnr
           POSTGRES_PASSWORD: test5678
@@ -30,9 +30,9 @@ jobs:
           - 6380:6379
         options: >-
           --health-cmd "redis-cli ping"
-          --health-interval 10s
+          --health-interval 5s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 50
 
     steps:
       - name: 🔄 소스 코드 가져오기
