@@ -22,3 +22,6 @@ spring:
 logging:
   level:
     org.hibernate.SQL: debug
+
+firebase:
+  key-path: classpath:firebase-key.json

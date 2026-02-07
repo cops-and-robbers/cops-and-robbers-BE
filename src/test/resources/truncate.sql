@@ -5,4 +5,4 @@ TRUNCATE TABLE
     game_results,
     games,
     users
-RESTART IDENTITY;
+RESTART IDENTITY CASCADE;

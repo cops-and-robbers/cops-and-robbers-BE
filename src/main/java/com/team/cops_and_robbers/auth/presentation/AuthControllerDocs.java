@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.auth.presentation;
 import com.team.cops_and_robbers.auth.presentation.dto.request.LoginRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.request.ReissueRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.response.LoginResponse;
+import com.team.cops_and_robbers.auth.presentation.dto.request.LogoutRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.response.ReissueResponse;
 import com.team.cops_and_robbers.common.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface AuthControllerDocs {
 
     @Operation(summary = "소셜 로그인",
-            description = "카카오 소셜 로그인을 통해 서비스에 로그인합니다. 신규 회원인 경우 자동으로 회원가입이 진행되며, Access Token과 Refresh Token이 발급됩니다."
+            description = "소셜 로그인을 통해 서비스에 로그인합니다. 신규 회원인 경우 자동으로 회원가입이 진행되며, Access Token과 Refresh Token이 발급됩니다."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "기존 회원 로그인 성공",
@@ -35,7 +36,8 @@ public interface AuthControllerDocs {
                                                 "tokens": {
                                                     "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzY4NDk1MDA1LCJleHAiOjE3Njg0OTg2MDV9...",
                                                     "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzY4NDk1MDA1LCJleHAiOjE3Njk3MDQ2MDV9..."
-                                                }
+                                                },
+                                                "isNewUser": false
                                             }
                                             """
                             )
@@ -53,7 +55,8 @@ public interface AuthControllerDocs {
                                                 "tokens": {
                                                     "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzY4NDk1MDEwLCJleHAiOjE3Njg0OTg2MTB9...",
                                                     "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzY4NDk1MDEwLCJleHAiOjE3Njk3MDQ2MTB9..."
-                                                }
+                                                },
+                                                "isNewUser": true
                                             }
                                             """
                             )
@@ -198,5 +201,32 @@ public interface AuthControllerDocs {
                             }
                     )
             ) @RequestBody @Valid ReissueRequest request
+    );
+
+
+    @Operation(summary = "로그아웃",
+            description = "로그아웃합니다. (리프레시 토큰 삭제 + 유저 디바이스 정보 삭제)"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "로그아웃 성공 (항상 204 응답)"),
+    })
+    ResponseEntity<Void> logout(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "로그아웃 요청",
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = ReissueRequest.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "정상 요청 예시",
+                                            value = """
+                                                    {
+                                                        "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzY4NDk1MDA1LCJleHAiOjE3Njk3MDQ2MDV9..."
+                                                    }
+                                                    """
+                                    )
+                            }
+                    )
+            ) @RequestBody @Valid LogoutRequest request
     );
 }

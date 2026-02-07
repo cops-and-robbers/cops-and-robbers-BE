@@ -1,12 +1,9 @@
 package com.team.cops_and_robbers;
 
+import com.team.cops_and_robbers.common.ControllerTest;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
-@ActiveProfiles("test")
-@SpringBootTest
-class CopsAndRobbersApplicationTests {
+class CopsAndRobbersApplicationTests extends ControllerTest {
 
 	@Test
 	void contextLoads() {

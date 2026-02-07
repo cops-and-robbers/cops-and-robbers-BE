@@ -31,3 +31,7 @@ logging:
   level:
     org.hibernate.SQL: debug
     org.hibernate.type.descriptor.sql: trace
+
+firebase:
+  key-path: classpath:dummy-firebase-key.json
+

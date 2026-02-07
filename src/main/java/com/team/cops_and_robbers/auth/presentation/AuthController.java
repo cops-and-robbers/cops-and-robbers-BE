@@ -6,6 +6,7 @@ import com.team.cops_and_robbers.auth.domain.Tokens;
 import com.team.cops_and_robbers.auth.presentation.dto.request.LoginRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.request.ReissueRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.response.LoginResponse;
+import com.team.cops_and_robbers.auth.presentation.dto.request.LogoutRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.response.ReissueResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,15 @@ public class AuthController implements AuthControllerDocs {
     public ResponseEntity<ReissueResponse> reissue(@RequestBody @Valid ReissueRequest request) {
         Tokens tokens = authService.reissueTokens(request.refreshToken());
         return ResponseEntity.ok(ReissueResponse.from(tokens));
+    }
+
+    /**
+     * 3. 로그아웃을 진행합니다.
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestBody @Valid LogoutRequest request) {
+        authService.logout(request.refreshToken());
+        return ResponseEntity.noContent().build();
     }
 
 }

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.Optional;
 
 @Component
 public class JwtTokenProvider {
@@ -96,6 +97,8 @@ public class JwtTokenProvider {
         );
     }
 
+
+
     private Claims getRefreshClaims(String refreshToken) {
         try {
             return Jwts.parserBuilder()
@@ -109,6 +112,25 @@ public class JwtTokenProvider {
             throw new ApplicationException(AuthException.UNAUTHENTICATED_REQUEST);
         } catch (JwtException e) {
             throw new ApplicationException(AuthException.INVALID_TOKEN);
+        }
+    }
+
+    public Optional<Long> getUserIdFromRefreshTokenLogout(String refreshToken) {
+        return getRefreshClaimsOptional(refreshToken)
+                .map(claims -> Long.valueOf(claims.getSubject()));
+    }
+
+    private Optional<Claims> getRefreshClaimsOptional(String refreshToken) {
+        try {
+            return Optional.of(Jwts.parserBuilder()
+                    .setSigningKey(refreshKey)
+                    .build()
+                    .parseClaimsJws(refreshToken)
+                    .getBody());
+        } catch (ExpiredJwtException e) {
+            return Optional.of(e.getClaims());
+        } catch (JwtException | IllegalArgumentException e) {
+            return Optional.empty();
         }
     }
 
