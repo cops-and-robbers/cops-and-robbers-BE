@@ -54,4 +54,11 @@ public class User extends BaseTimeEntity {
                 .build();
     }
 
+    public void updateNickname(String modifiedNickname) {
+        this.nickname = modifiedNickname;
+    }
+
+    public boolean hasSameNickname(String modifiedNickname) {
+        return this.nickname.equals(modifiedNickname);
+    }
 }
