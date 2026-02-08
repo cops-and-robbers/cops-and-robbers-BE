@@ -269,4 +269,130 @@ public interface LobbyControllerDocs {
             )
             @RequestBody @Valid ReadyUpdateRequest request
     );
+
+    @Operation(
+            summary = "게임 시작",
+            description = """
+                    대기 중인 게임을 시작합니다.
+
+                    - 방장(Host)만 시작 가능
+                    - 경찰/도둑 팀 각각 1명 이상 필요
+                    - 모든 참가자가 준비(Ready) 상태여야 함
+                    """,
+            security = @SecurityRequirement(name = "JWT")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "게임 시작 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "방장이 아님",
+                                            value = """
+                                                    {
+                                                        "title": "권한 없음",
+                                                        "status": 400,
+                                                        "detail": "게임을 시작할 수 있는 권한이 없습니다. (방장만 가능)",
+                                                        "instance": "/api/games/1/start"
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "팀 구성 오류",
+                                            value = """
+                                                    {
+                                                        "title": "팀 구성 오류",
+                                                        "status": 400,
+                                                        "detail": "경찰과 도둑 팀에 각각 최소 1명 이상의 참가자가 필요합니다.",
+                                                        "instance": "/api/games/1/start"
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "모든 참가자가 준비하지 않음",
+                                            value = """
+                                                    {
+                                                        "title": "준비되지 않은 참가자 존재",
+                                                        "status": 400,
+                                                        "detail": "모든 참가자가 준비 상태여야 게임을 시작할 수 있습니다.",
+                                                        "instance": "/api/games/1/start"
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "게임이 이미 시작됨",
+                                            value = """
+                                                    {
+                                                        "title": "이미 시작된 게임",
+                                                        "status": 400,
+                                                        "detail": "이미 시작된 게임에는 참여할 수 없습니다.",
+                                                        "instance": "/api/games/1/start"
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "로비 조작 불가",
+                                            value = """
+                                                    {
+                                                        "title": "로비 조작 불가",
+                                                        "status": 400,
+                                                        "detail": "게임이 시작된 이후에는 로비 상태를 변경할 수 없습니다.",
+                                                        "instance": "/api/games/1/start"
+                                                    }
+                                                    """
+                                    )
+                            }
+                    )
+            ),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    name = "인증 토큰 없음 또는 만료",
+                                    value = """
+                                            {
+                                                "title": "인증 필요",
+                                                "status": 401,
+                                                "detail": "로그인이 필요한 서비스입니다.",
+                                                "instance": "/api/games/1/start"
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @ApiResponse(responseCode = "404", description = "게임 또는 참여 정보 없음",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "존재하지 않는 게임",
+                                            value = """
+                                                    {
+                                                        "title": "게임을 찾을 수 없음",
+                                                        "status": 404,
+                                                        "detail": "해당 게임을 찾을 수 없습니다.",
+                                                        "instance": "/api/games/999/start"
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "참가자를 찾을 수 없음",
+                                            value = """
+                                                    {
+                                                        "title": "참가자를 찾을 수 없음",
+                                                        "status": 404,
+                                                        "detail": "해당 게임에 참가하지 않은 사용자입니다.",
+                                                        "instance": "/api/games/1/start"
+                                                    }
+                                                    """
+                                    )
+                            }
+                    )
+            )
+    })
+    ResponseEntity<Void> startGame(
+            @Parameter(hidden = true) @AuthUser LoginUser loginUser,
+            @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId
+    );
 }

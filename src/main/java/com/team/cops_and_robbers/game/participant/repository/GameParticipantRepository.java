@@ -2,9 +2,11 @@ package com.team.cops_and_robbers.game.participant.repository;
 
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
+import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -24,7 +26,7 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
             and g.status in ('WAITING', 'IN_PROGRESS')
         )
         """)
-    boolean existsActiveGameByUserId(Long userId);
+    boolean existsActiveGameByUserId(@Param("userId") Long userId);
 
     @Query("""
         select gp
@@ -37,6 +39,31 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
     int countByGameId(Long gameId);
 
     int countByGameIdAndTeam(Long gameId, Team team);
+
+    /**
+     * 게임에서 준비하지 않은 참가자가 있는지 확인
+     */
+    @Query("""
+        select exists(
+            select 1
+            from GameParticipant gp
+            where gp.game.id = :gameId
+            and gp.isReady = false
+            and gp.isHost = false
+        )
+        """)
+    boolean existsNotReadyParticipantByGameId(@Param("gameId") Long gameId);
+
+    /**
+     * 게임의 모든 참가자 상태를 업데이트
+     */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+        update GameParticipant gp
+        set gp.status = :status
+        where gp.game.id = :gameId
+        """)
+    void updateStatusByGameId(@Param("gameId") Long gameId, @Param("status") ParticipantStatus status);
 
     Optional<GameParticipant> findByGameIdAndUserId(Long gameId, Long userId);
 

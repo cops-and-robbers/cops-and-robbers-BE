@@ -5,6 +5,7 @@ import com.team.cops_and_robbers.game.area.domain.GameArea;
 import com.team.cops_and_robbers.game.area.exception.GameAreaException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
@@ -32,11 +33,11 @@ public interface GameAreaRepository extends JpaRepository <GameArea, Long>{
         ) + :innerradius <= :outerradius
     """, nativeQuery = true)
     boolean isCircleContained(
-            double outerlon,
-            double outerlat,
-            int outerradius,
-            double innerlon,
-            double innerlat,
-            int innerradius
+            @Param("outerlon") double outerlon,
+            @Param("outerlat") double outerlat,
+            @Param("outerradius") int outerradius,
+            @Param("innerlon") double innerlon,
+            @Param("innerlat") double innerlat,
+            @Param("innerradius") int innerradius
     );
 }

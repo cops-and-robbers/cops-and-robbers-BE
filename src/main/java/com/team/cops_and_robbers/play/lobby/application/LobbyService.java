@@ -1,12 +1,15 @@
 package com.team.cops_and_robbers.play.lobby.application;
 
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
+import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
+import com.team.cops_and_robbers.play.lobby.application.dto.command.GameStartCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.ReadyUpdateCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.TeamChangeCommand;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
@@ -15,10 +18,14 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class LobbyService {
+
+    private static final int MIN_TEAM_SIZE = 1;
 
     private final GameRepository gameRepository;
     private final GameParticipantRepository gameParticipantRepository;
@@ -57,6 +64,24 @@ public class LobbyService {
         eventPublisher.publishEvent(event);
     }
 
+    /**
+     * 게임 시작
+     */
+    @Transactional
+    public void startGame(GameStartCommand command) {
+        Game game = getWaitingGame(command.gameId());
+        GameParticipant participant = getWaitingParticipant(game.getId(), command.userId());
+
+        validateGameStart(game, participant);
+
+        LocalDateTime nowKst = TimestampUtil.nowKstLocal();
+        game.startGame(nowKst);
+        gameParticipantRepository.updateStatusByGameId(command.gameId(), ParticipantStatus.ALIVE);
+
+        LobbyEvent event = lobbyEventFactory.createGameStartEvent(command.gameId(), nowKst);
+        eventPublisher.publishEvent(event);
+    }
+
     private Game getWaitingGame(Long gameId) {
         Game game = gameRepository.getByGameId(gameId);
         if (!game.isWaiting()) {
@@ -71,5 +96,31 @@ public class LobbyService {
             throw new ApplicationException(GameParticipantException.LOBBY_ACTION_NOT_ALLOWED);
         }
         return participant;
+    }
+
+    private void validateGameStart(Game game, GameParticipant participant) {
+        validateHostPermission(participant);
+        validateTeamComposition(game.getId());
+        validateAllParticipantsReady(game.getId());
+    }
+
+    private void validateHostPermission(GameParticipant participant) {
+        if (!participant.isHost()) {
+            throw new ApplicationException(GameParticipantException.NOT_HOST);
+        }
+    }
+
+    private void validateTeamComposition(Long gameId) {
+        int policeCount = gameParticipantRepository.countByGameIdAndTeam(gameId, Team.POLICE);
+        int robberCount = gameParticipantRepository.countByGameIdAndTeam(gameId, Team.ROBBER);
+        if (policeCount < MIN_TEAM_SIZE || robberCount < MIN_TEAM_SIZE) {
+            throw new ApplicationException(GameParticipantException.INVALID_TEAM_COMPOSITION);
+        }
+    }
+
+    private void validateAllParticipantsReady(Long gameId) {
+        if (gameParticipantRepository.existsNotReadyParticipantByGameId(gameId)) {
+            throw new ApplicationException(GameParticipantException.NOT_ALL_READY);
+        }
     }
 }
