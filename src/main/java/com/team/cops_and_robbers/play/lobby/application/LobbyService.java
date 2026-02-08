@@ -18,12 +18,14 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class LobbyService {
+
+    private static final int MIN_TEAM_SIZE = 1;
 
     private final GameRepository gameRepository;
     private final GameParticipantRepository gameParticipantRepository;
@@ -72,8 +74,8 @@ public class LobbyService {
 
         validateGameStart(game, participant);
 
-        ZonedDateTime nowKst = TimestampUtil.nowKstZoned();
-        game.startGame(nowKst.toLocalDateTime());
+        LocalDateTime nowKst = TimestampUtil.nowKstLocal();
+        game.startGame(nowKst);
         gameParticipantRepository.updateStatusByGameId(command.gameId(), ParticipantStatus.ALIVE);
 
         LobbyEvent event = lobbyEventFactory.createGameStartEvent(command.gameId(), nowKst);
@@ -111,7 +113,7 @@ public class LobbyService {
     private void validateTeamComposition(Long gameId) {
         int policeCount = gameParticipantRepository.countByGameIdAndTeam(gameId, Team.POLICE);
         int robberCount = gameParticipantRepository.countByGameIdAndTeam(gameId, Team.ROBBER);
-        if (policeCount < 1 || robberCount < 1) {
+        if (policeCount < MIN_TEAM_SIZE || robberCount < MIN_TEAM_SIZE) {
             throw new ApplicationException(GameParticipantException.INVALID_TEAM_COMPOSITION);
         }
     }
