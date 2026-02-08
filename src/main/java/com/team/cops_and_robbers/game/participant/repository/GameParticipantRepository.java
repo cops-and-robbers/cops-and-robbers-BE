@@ -26,7 +26,7 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
             and g.status in ('WAITING', 'IN_PROGRESS')
         )
         """)
-    boolean existsActiveGameByUserId(Long userId);
+    boolean existsActiveGameByUserId(@Param("userId") Long userId);
 
     @Query("""
         select gp
@@ -52,7 +52,7 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
             and gp.isHost = false
         )
         """)
-    boolean existsNotReadyParticipantByGameId(Long gameId);
+    boolean existsNotReadyParticipantByGameId(@Param("gameId") Long gameId);
 
     /**
      * 게임의 모든 참가자 상태를 업데이트
@@ -63,7 +63,7 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
         set gp.status = :status
         where gp.game.id = :gameId
         """)
-    void updateStatusByGameId(Long gameId, ParticipantStatus status);
+    void updateStatusByGameId(@Param("gameId") Long gameId, @Param("status") ParticipantStatus status);
 
     Optional<GameParticipant> findByGameIdAndUserId(Long gameId, Long userId);
 
