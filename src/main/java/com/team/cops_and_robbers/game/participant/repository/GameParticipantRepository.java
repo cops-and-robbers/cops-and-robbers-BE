@@ -57,7 +57,7 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
     /**
      * 게임의 모든 참가자 상태를 업데이트
      */
-    @Modifying
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
         update GameParticipant gp
         set gp.status = :status
