@@ -54,6 +54,12 @@ public class GameSchedulerService {
         }
     }
 
+    /**
+     * 하나의 게임에 대해 필요한 시스템 이벤트 스케줄을 등록한다.
+     * - 경찰 이동 시작 이벤트
+     * - 도둑 위치 공개 이벤트
+     * 서버 재시작 시에도 동일한 로직으로 스케줄을 복구한다.
+     */
     private void scheduleGame(Game game) {
         List<ScheduledFuture> scheduledTasks = new ArrayList<>();
         LocalDateTime now = TimestampUtil.nowKstLocal();
