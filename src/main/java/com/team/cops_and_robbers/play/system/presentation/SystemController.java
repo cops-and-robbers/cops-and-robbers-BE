@@ -4,6 +4,7 @@ import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.play.system.application.SystemService;
 import com.team.cops_and_robbers.play.system.application.dto.ArrestCommand;
+import com.team.cops_and_robbers.play.system.application.dto.EscapeCommand;
 import com.team.cops_and_robbers.play.system.presentation.dto.ArrestRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,19 @@ public class SystemController {
     ) {
         ArrestCommand command = ArrestCommand.of(gameId, loginUser.userId(), request.robberParticipantId());
         systemService.arrestRobber(command);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 2. 수감된 도둑이 탈옥합니다.
+     */
+    @PostMapping("/escape")
+    public ResponseEntity<Void> escapeFromPrison(
+            @AuthUser LoginUser loginUser,
+            @PathVariable Long gameId
+    ) {
+        EscapeCommand command = EscapeCommand.of(gameId, loginUser.userId());
+        systemService.escapeFromPrison(command);
         return ResponseEntity.ok().build();
     }
 }
