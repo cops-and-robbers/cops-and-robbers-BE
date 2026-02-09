@@ -36,10 +36,7 @@ public interface GameParticipantControllerDocs {
                                     value = """
                                             {
                                                 "gameId": 1,
-                                                "userId": 2,
-                                                "nickname": "집요한괴도4053",
-                                                "isHost": false,
-                                                "joinedAt": "2026-01-16T02:30:45.123456"
+                                                "participantId": 2
                                             }
                                             """
                             )

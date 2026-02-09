@@ -1,9 +1,9 @@
 package com.team.cops_and_robbers.auth.presentation;
 
 import com.team.cops_and_robbers.auth.presentation.dto.request.LoginRequest;
+import com.team.cops_and_robbers.auth.presentation.dto.request.LogoutRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.request.ReissueRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.response.LoginResponse;
-import com.team.cops_and_robbers.auth.presentation.dto.request.LogoutRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.response.ReissueResponse;
 import com.team.cops_and_robbers.common.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -217,7 +217,7 @@ public interface AuthControllerDocs {
                     description = "로그아웃 요청",
                     required = true,
                     content = @Content(
-                            schema = @Schema(implementation = ReissueRequest.class),
+                            schema = @Schema(implementation = LogoutRequest.class),
                             examples = {
                                     @ExampleObject(
                                             name = "정상 요청 예시",

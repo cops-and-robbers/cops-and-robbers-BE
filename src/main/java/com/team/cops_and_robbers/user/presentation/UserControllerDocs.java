@@ -82,8 +82,8 @@ public interface UserControllerDocs {
                                             name = "사용 가능한 닉네임",
                                             value = """
                                                     {
-                                                       "isAvailable": ture,
-                                                       "message": "사용가능한 닉네임 입니다!"
+                                                       "isAvailable": true,
+                                                       "message": "사용 가능한 닉네임 입니다!"
                                                      }
                                                     """
                                     )
