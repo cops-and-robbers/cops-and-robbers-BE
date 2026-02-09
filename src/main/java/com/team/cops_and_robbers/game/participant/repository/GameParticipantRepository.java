@@ -40,6 +40,15 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
 
     int countByGameIdAndTeam(Long gameId, Team team);
 
+    @Query("""
+        select count(p)
+        from GameParticipant p
+        where p.game.id = :gameId
+        and p.team = 'ROBBER'
+        and p.status = :status
+        """)
+    int countByGameIdAndRobberStatus(@Param("gameId") Long gameId, @Param("status") ParticipantStatus status);
+
     /**
      * 게임에서 준비하지 않은 참가자가 있는지 확인
      */
