@@ -58,6 +58,10 @@ public class LobbyService {
         Game game = getWaitingGame(command.gameId());
         GameParticipant participant = getWaitingParticipant(game.getId(), command.userId());
 
+        if (participant.isHost()) {
+            throw new ApplicationException(GameParticipantException.HOST_CANNOT_UNREADY);
+        }
+
         participant.updateReady(command.isReady());
 
         LobbyEvent event = lobbyEventFactory.createReadyUpdateEvent(command.gameId(), participant);
