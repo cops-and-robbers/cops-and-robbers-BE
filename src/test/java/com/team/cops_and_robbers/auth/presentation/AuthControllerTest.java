@@ -41,7 +41,7 @@ class AuthControllerTest extends ControllerTest {
             LoginRequest request = new LoginRequest(SocialType.GOOGLE, "valid_token", "fcm_token", DeviceType.IOS, "device_123");
 
             // when
-            ExtractableResponse<Response> extract = postWithoutAuthorization("/api/auth/login", request);
+            ExtractableResponse<Response> extract = postWithoutAuthorization("/api/auth/login", request, null);
 
             // then
             LoginResponse response = extract.as(LoginResponse.class);
@@ -66,7 +66,7 @@ class AuthControllerTest extends ControllerTest {
             LoginRequest request = new LoginRequest(SocialType.GOOGLE, "valid_token", "fcm", DeviceType.IOS, "device_456");
 
             // when
-            ExtractableResponse<Response> extract = postWithoutAuthorization("/api/auth/login", request);
+            ExtractableResponse<Response> extract = postWithoutAuthorization("/api/auth/login", request, null);
 
             // then
             LoginResponse response = extract.as(LoginResponse.class);
@@ -84,7 +84,7 @@ class AuthControllerTest extends ControllerTest {
             LoginRequest request = new LoginRequest(SocialType.KAKAO, null, "fcm", DeviceType.IOS, "device");
 
             // when
-            ExtractableResponse<Response> extract = postWithoutAuthorization("/api/auth/login", request);
+            ExtractableResponse<Response> extract = postWithoutAuthorization("/api/auth/login", request, null);
 
             // then
             ErrorResponse response = extract.as(ErrorResponse.class);
@@ -108,7 +108,7 @@ class AuthControllerTest extends ControllerTest {
             ReissueRequest request = new ReissueRequest(tokens.refreshToken());
 
             // when
-            ExtractableResponse<Response> extract = postWithoutAuthorization("/api/auth/reissue", request);
+            ExtractableResponse<Response> extract = postWithoutAuthorization("/api/auth/reissue", request, null);
 
             // then
             ReissueResponse response = extract.as(ReissueResponse.class);
@@ -127,7 +127,7 @@ class AuthControllerTest extends ControllerTest {
             ReissueRequest request = new ReissueRequest("mismatched_refresh_token");
 
             // when
-            ExtractableResponse<Response> extract = postWithoutAuthorization("/api/auth/reissue", request);
+            ExtractableResponse<Response> extract = postWithoutAuthorization("/api/auth/reissue", request, null);
 
 
             // then
@@ -151,7 +151,7 @@ class AuthControllerTest extends ControllerTest {
             LogoutRequest request = new LogoutRequest(tokens.refreshToken());
 
             // when
-            ExtractableResponse<Response> extract = postWithoutAuthorization("/api/auth/logout", request);
+            ExtractableResponse<Response> extract = postWithoutAuthorization("/api/auth/logout", request, null);
 
             // then
             assertSoftly(softly -> {

@@ -7,10 +7,13 @@ import com.team.cops_and_robbers.auth.infrastructure.social.strategy.AppleLoginS
 import com.team.cops_and_robbers.auth.infrastructure.social.strategy.GoogleLoginStrategy;
 import com.team.cops_and_robbers.auth.infrastructure.social.strategy.KakaoLoginStrategy;
 import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
+import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.common.fixture.UserDeviceFixture;
 import com.team.cops_and_robbers.common.fixture.UserFixture;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
+import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
+import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.domain.UserDevice;
@@ -20,6 +23,7 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Answers;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +32,8 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
+
+import java.util.Map;
 
 @Sql(scripts = "/truncate.sql")
 @ActiveProfiles("test")
@@ -83,6 +89,10 @@ public abstract class ControllerTest {
         return userRepository.save(UserFixture.USER());
     }
 
+    protected User givenUser(String nickname) {
+        return userRepository.save(UserFixture.USER(nickname));
+    }
+
     protected UserDevice givenUserDevice() {
         return userDeviceRepository.save(UserDeviceFixture.IOS_DEVICE(givenUser()));
     }
@@ -94,13 +104,55 @@ public abstract class ControllerTest {
         return new Tokens(accessToken, refreshToken);
     }
 
-    protected ExtractableResponse<Response> postWithoutAuthorization(String url, Object body) {
-        return RestAssured.given().log().all()
-                .contentType(ContentType.JSON)
-                .body(body)
-                .when()
-                .post(url)
-                .then().log().all()
-                .extract();
+    protected GameParticipant givenHost(Game game, User user) {
+        return gameParticipantRepository.save(GameParticipantFixture.HOST_PARTICIPANT(game, user));
+    }
+
+    protected GameParticipant givenGuest(Game game, User user) {
+        return gameParticipantRepository.save(GameParticipantFixture.GUEST_PARTICIPANT(game, user));
+    }
+
+    protected GameParticipant givenPolice(Game game, User user) {
+        return gameParticipantRepository.save(GameParticipantFixture.ALIVE_POLICE(game, user));
+    }
+
+    protected GameParticipant givenRobber(Game game, User user) {
+        return gameParticipantRepository.save(GameParticipantFixture.ALIVE_ROBBER(game, user));
+    }
+
+    private RequestSpecification createSpec(String token, Object body, Map<String, ?> pathParams) {
+        RequestSpecification spec = RestAssured.given().log().all();
+        if (token != null) spec.header("Authorization", "Bearer " + token);
+        if (body != null) spec.contentType(ContentType.JSON).body(body);
+        if (pathParams != null && !pathParams.isEmpty()) spec.pathParams(pathParams);
+        return spec;
+    }
+
+    protected ExtractableResponse<Response> get(String url, String token, Map<String, ?> pathParams) {
+        return createSpec(token, null, pathParams).when().get(url).then().log().all().extract();
+    }
+
+    protected ExtractableResponse<Response> post(String url, String token, Object body, Map<String, ?> pathParams) {
+        return createSpec(token, body, pathParams).when().post(url).then().log().all().extract();
+    }
+
+    protected ExtractableResponse<Response> put(String url, String token, Object body, Map<String, ?> pathParams) {
+        return createSpec(token, body, pathParams).when().put(url).then().log().all().extract();
+    }
+
+    protected ExtractableResponse<Response> patch(String url, String token, Object body, Map<String, ?> pathParams) {
+        return createSpec(token, body, pathParams).when().patch(url).then().log().all().extract();
+    }
+
+    protected ExtractableResponse<Response> delete(String url, String token, Map<String, ?> pathParams) {
+        return createSpec(token, null, pathParams).when().delete(url).then().log().all().extract();
+    }
+
+    protected ExtractableResponse<Response> postWithoutAuthorization(String url, Object body, Map<String, ?> pathParams) {
+        return createSpec(null, body, pathParams).when().post(url).then().log().all().extract();
+    }
+
+    protected ExtractableResponse<Response> patchWithoutAuthorization(String url, Object body, Map<String, ?> pathParams) {
+        return createSpec(null, body, pathParams).when().patch(url).then().log().all().extract();
     }
 }
