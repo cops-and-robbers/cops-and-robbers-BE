@@ -11,7 +11,7 @@ public record NicknameCheckResponse(
     private static NicknameCheckResponse available() {
         return new NicknameCheckResponse(
                 true,
-                "사용가능한 닉네임 입니다!"
+                "사용 가능한 닉네임 입니다!"
         );
     }
 
