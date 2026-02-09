@@ -3,6 +3,8 @@ package com.team.cops_and_robbers.common.fixture;
 import com.team.cops_and_robbers.user.domain.SocialType;
 import com.team.cops_and_robbers.user.domain.User;
 
+import java.util.UUID;
+
 public class UserFixture {
 
     public static User USER() {
@@ -17,7 +19,7 @@ public class UserFixture {
 
     public static User USER(String nickname) {
         return User.builder()
-                .socialId("123456789")
+                .socialId(UUID.randomUUID().toString())
                 .socialType(SocialType.KAKAO)
                 .nickname(nickname)
                 .allowGamePush(true)
