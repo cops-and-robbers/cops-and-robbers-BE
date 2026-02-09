@@ -91,5 +91,9 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
                         new ApplicationException(GameParticipantException.PARTICIPANT_NOT_FOUND)
                 );
     }
-}
 
+    default GameParticipant getParticipantById(Long id) {
+        return findById(id)
+                .orElseThrow(() -> new ApplicationException(GameParticipantException.PARTICIPANT_NOT_FOUND));
+    }
+}
