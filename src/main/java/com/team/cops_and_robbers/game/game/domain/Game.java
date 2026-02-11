@@ -57,6 +57,10 @@ public class Game extends BaseTimeEntity {
         return this.status == GameStatus.WAITING;
     }
 
+    public boolean isInProgress() {
+        return this.status == GameStatus.IN_PROGRESS;
+    }
+
     public boolean isSameInviteCode(String inviteCode) {
         return this.inviteCode.equals(inviteCode);
     }

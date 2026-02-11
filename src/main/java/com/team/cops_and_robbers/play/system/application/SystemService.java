@@ -1,6 +1,9 @@
 package com.team.cops_and_robbers.play.system.application;
 
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.exception.GameException;
+import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
@@ -18,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class SystemService {
 
+    private final GameRepository gameRepository;
     private final GameParticipantRepository gameParticipantRepository;
 
     private final ApplicationEventPublisher eventPublisher;
@@ -28,10 +32,11 @@ public class SystemService {
      */
     @Transactional
     public void arrestRobber(ArrestCommand command) {
+        Game game = gameRepository.getByGameId(command.gameId());
         GameParticipant police = gameParticipantRepository.getByGameIdAndUserId(command.gameId(), command.policeUserId());
         GameParticipant robber = gameParticipantRepository.getParticipantById(command.robberParticipantId());
 
-        validateArrest(police, robber, command.gameId());
+        validateArrest(game, police, robber);
 
         robber.updateStatus(ParticipantStatus.JAILED);
 
@@ -50,11 +55,12 @@ public class SystemService {
      */
     @Transactional
     public void escapeFromPrison(EscapeCommand command) {
+        Game game = gameRepository.getByGameId(command.gameId());
         GameParticipant escapedThief = gameParticipantRepository.getByGameIdAndUserId(
                 command.gameId(), command.escapedThiefUserId()
         );
 
-        validateEscape(escapedThief);
+        validateEscape(game, escapedThief);
 
         escapedThief.updateStatus(ParticipantStatus.ALIVE);
 
@@ -62,24 +68,27 @@ public class SystemService {
         eventPublisher.publishEvent(event);
     }
 
-    private void validateArrest(GameParticipant police, GameParticipant robber, Long gameId) {
-        if (!police.isPolice()) {
-            throw new ApplicationException(GameParticipantException.ONLY_POLICE_CAN_ARREST);
+    private void validateArrest(Game game, GameParticipant police, GameParticipant robber) {
+        if (!game.isInProgress()) {
+            throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
+        }
+        if (police.isPoliceWaiting()) {
+            throw new ApplicationException(GameParticipantException.POLICE_WAITING_TIME);
         }
         if (!robber.isRobber()) {
             throw new ApplicationException(GameParticipantException.ONLY_ROBBER_CAN_BE_ARRESTED);
         }
-        if (!robber.isInGame(gameId)) {
-            throw new ApplicationException(GameParticipantException.NOT_A_PARTICIPANT);
+        if (!robber.isInGame(game.getId())) {
+            throw new ApplicationException(GameParticipantException.PARTICIPANT_GAME_MISMATCH);
         }
         if (robber.isJailed()) {
             throw new ApplicationException(GameParticipantException.ALREADY_ARRESTED);
         }
     }
 
-    private void validateEscape(GameParticipant escapedThief) {
-        if (!escapedThief.isRobber()) {
-            throw new ApplicationException(GameParticipantException.ONLY_ROBBER_CAN_ESCAPE);
+    private void validateEscape(Game game, GameParticipant escapedThief) {
+        if (!game.isInProgress()) {
+            throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
         }
         if (!escapedThief.isJailed()) {
             throw new ApplicationException(GameParticipantException.NOT_JAILED);
