@@ -5,7 +5,8 @@ import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
-import com.team.cops_and_robbers.play.system.presentation.dto.ArrestRequest;
+import com.team.cops_and_robbers.play.system.presentation.dto.request.ArrestRequest;
+import com.team.cops_and_robbers.play.system.presentation.dto.response.ArrestResponse;
 import com.team.cops_and_robbers.user.domain.User;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
@@ -18,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 class SystemControllerTest extends ControllerTest {
 
@@ -64,10 +66,37 @@ class SystemControllerTest extends ControllerTest {
             );
 
             // then
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+            ArrestResponse result = response.as(ArrestResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                softly.assertThat(result.result().police().nickname()).isEqualTo(police.getNickname());
+                softly.assertThat(result.result().robber().nickname()).isEqualTo(robber.getNickname());
+                softly.assertThat(result.result().remainingThieves()).isEqualTo(0);
+            });
 
             GameParticipant jailedRobber = gameParticipantRepository.findById(robberParticipant.getId()).orElseThrow();
             assertThat(jailedRobber.isJailed()).isTrue();
+        }
+
+        @Test
+        void 게임이_진행_중이_아니면_체포할_수_없으며_400_BadRequest를_응답한다() {
+            // given
+            Game waitingGame = gameRepository.save(GameFixture.WAITING_GAME());
+            givenPolice(waitingGame, police);
+            GameParticipant waitingRobber = givenRobber(waitingGame, robber);
+
+            ArrestRequest request = new ArrestRequest(waitingRobber.getId());
+
+            // when
+            ExtractableResponse<Response> response = post(
+                    ARREST_URL,
+                    policeToken,
+                    request,
+                    Map.of(GAME_ID_PARAM, waitingGame.getId())
+            );
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
         }
 
         @Test
@@ -79,6 +108,26 @@ class SystemControllerTest extends ControllerTest {
             ExtractableResponse<Response> response = post(
                     ARREST_URL,
                     robberToken,
+                    request,
+                    Map.of(GAME_ID_PARAM, game.getId())
+            );
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 경찰이_대기_상태이면_체포할_수_없으며_400_BadRequest를_응답한다() {
+            // given
+            policeParticipant.updateStatus(ParticipantStatus.POLICE_WAITING);
+            gameParticipantRepository.save(policeParticipant);
+
+            ArrestRequest request = new ArrestRequest(robberParticipant.getId());
+
+            // when
+            ExtractableResponse<Response> response = post(
+                    ARREST_URL,
+                    policeToken,
                     request,
                     Map.of(GAME_ID_PARAM, game.getId())
             );
@@ -198,11 +247,31 @@ class SystemControllerTest extends ControllerTest {
             );
 
             // then
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
 
             GameParticipant escapedRobber = gameParticipantRepository.findById(robberParticipant.getId()).orElseThrow();
             assertThat(escapedRobber.isJailed()).isFalse();
             assertThat(escapedRobber.isRobber()).isTrue();
+        }
+
+        @Test
+        void 게임이_진행_중이_아니면_탈옥할_수_없으며_400_BadRequest를_응답한다() {
+            // given
+            Game waitingGame = gameRepository.save(GameFixture.WAITING_GAME());
+            GameParticipant waitingRobber = givenRobber(waitingGame, robber);
+            waitingRobber.updateStatus(ParticipantStatus.JAILED); // 강제로 수감 상태로 만듦 (테스트용)
+            gameParticipantRepository.save(waitingRobber);
+
+            // when
+            ExtractableResponse<Response> response = post(
+                    ESCAPE_URL,
+                    robberToken,
+                    null,
+                    Map.of(GAME_ID_PARAM, waitingGame.getId())
+            );
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
         }
 
         @Test
