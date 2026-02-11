@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
-import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,7 +60,7 @@ class LobbyControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = authenticated(guestToken)
                     .body(request)
-                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .patch(TEAM_CHANGE_URL)
                     .then()
@@ -89,7 +88,7 @@ class LobbyControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = authenticated(guestToken)
                     .body(request)
-                    .pathParams(Map.of(GAME_ID_PARAM, waitingGame.getId()))
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
                     .when()
                     .patch(TEAM_CHANGE_URL)
                     .then()
@@ -107,7 +106,7 @@ class LobbyControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = unauthenticated()
                     .body(request)
-                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .patch(TEAM_CHANGE_URL)
                     .then()
@@ -125,7 +124,7 @@ class LobbyControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = authenticated(guestToken)
                     .body(request)
-                    .pathParams(Map.of(GAME_ID_PARAM, 9999L))
+                    .pathParam(GAME_ID_PARAM, 9999L)
                     .when()
                     .patch(TEAM_CHANGE_URL)
                     .then()
@@ -148,7 +147,7 @@ class LobbyControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = authenticated(guestToken)
                     .body(request)
-                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .patch(READY_UPDATE_URL)
                     .then()
@@ -169,7 +168,7 @@ class LobbyControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = authenticated(hostToken)
                     .body(request)
-                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .patch(READY_UPDATE_URL)
                     .then()
@@ -193,7 +192,7 @@ class LobbyControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = authenticated(guestToken)
                     .body(request)
-                    .pathParams(Map.of(GAME_ID_PARAM, waitingGame.getId()))
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
                     .when()
                     .patch(READY_UPDATE_URL)
                     .then()
@@ -211,7 +210,7 @@ class LobbyControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = unauthenticated()
                     .body(request)
-                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .patch(READY_UPDATE_URL)
                     .then()

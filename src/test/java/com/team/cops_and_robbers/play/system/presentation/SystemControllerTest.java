@@ -16,8 +16,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
-import java.util.Map;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
@@ -60,7 +58,7 @@ class SystemControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = authenticated(policeToken)
                     .body(request)
-                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(ARREST_URL)
                     .then()
@@ -91,7 +89,7 @@ class SystemControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = authenticated(policeToken)
                     .body(request)
-                    .pathParams(Map.of(GAME_ID_PARAM, waitingGame.getId()))
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
                     .when()
                     .post(ARREST_URL)
                     .then()
@@ -109,7 +107,7 @@ class SystemControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = authenticated(robberToken)
                     .body(request)
-                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(ARREST_URL)
                     .then()
@@ -130,7 +128,7 @@ class SystemControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = authenticated(policeToken)
                     .body(request)
-                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(ARREST_URL)
                     .then()
@@ -148,7 +146,7 @@ class SystemControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = authenticated(policeToken)
                     .body(request)
-                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(ARREST_URL)
                     .then()
@@ -169,7 +167,7 @@ class SystemControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = authenticated(policeToken)
                     .body(request)
-                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(ARREST_URL)
                     .then()
@@ -191,7 +189,7 @@ class SystemControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = authenticated(policeToken)
                     .body(request)
-                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(ARREST_URL)
                     .then()
@@ -209,7 +207,7 @@ class SystemControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = unauthenticated()
                     .body(request)
-                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(ARREST_URL)
                     .then()
@@ -227,7 +225,7 @@ class SystemControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = authenticated(policeToken)
                     .body(request)
-                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(ARREST_URL)
                     .then()
@@ -250,7 +248,7 @@ class SystemControllerTest extends ControllerTest {
 
             // when
             ExtractableResponse<Response> response = authenticated(robberToken)
-                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(ESCAPE_URL)
                     .then()
@@ -274,7 +272,7 @@ class SystemControllerTest extends ControllerTest {
 
             // when
             ExtractableResponse<Response> response = authenticated(robberToken)
-                    .pathParams(Map.of(GAME_ID_PARAM, waitingGame.getId()))
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
                     .when()
                     .post(ESCAPE_URL)
                     .then()
@@ -291,7 +289,7 @@ class SystemControllerTest extends ControllerTest {
 
             // when (경찰이 요청)
             ExtractableResponse<Response> response = authenticated(policeToken)
-                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(ESCAPE_URL)
                     .then()
@@ -308,7 +306,7 @@ class SystemControllerTest extends ControllerTest {
 
             // when
             ExtractableResponse<Response> response = authenticated(robberToken)
-                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(ESCAPE_URL)
                     .then()
@@ -322,7 +320,7 @@ class SystemControllerTest extends ControllerTest {
         void 인증_토큰_없이_요청하면_401_Unauthorized를_응답한다() {
             // when
             ExtractableResponse<Response> response = unauthenticated()
-                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(ESCAPE_URL)
                     .then()
@@ -336,7 +334,7 @@ class SystemControllerTest extends ControllerTest {
         void 존재하지_않는_게임에_요청하면_404_NotFound를_응답한다() {
             // when
             ExtractableResponse<Response> response = authenticated(robberToken)
-                    .pathParams(Map.of(GAME_ID_PARAM, 9999L)) // 존재 X
+                    .pathParam(GAME_ID_PARAM, 9999L) // 존재 X
                     .when()
                     .post(ESCAPE_URL)
                     .then()
