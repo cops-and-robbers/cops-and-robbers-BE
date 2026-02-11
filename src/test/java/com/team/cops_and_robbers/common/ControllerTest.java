@@ -21,8 +21,6 @@ import com.team.cops_and_robbers.user.repository.UserDeviceRepository;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
-import io.restassured.response.ExtractableResponse;
-import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Answers;
@@ -33,7 +31,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 
-import java.util.Map;
+import static io.restassured.RestAssured.given;
 
 @Sql(scripts = "/truncate.sql")
 @ActiveProfiles("test")
@@ -79,6 +77,7 @@ public abstract class ControllerTest {
     @BeforeEach
     void setUp() {
         RestAssured.port = port;
+        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 
     protected String givenAccessToken(User user) {
@@ -120,39 +119,14 @@ public abstract class ControllerTest {
         return gameParticipantRepository.save(GameParticipantFixture.ALIVE_ROBBER(game, user));
     }
 
-    private RequestSpecification createSpec(String token, Object body, Map<String, ?> pathParams) {
-        RequestSpecification spec = RestAssured.given().log().all();
-        if (token != null) spec.header("Authorization", "Bearer " + token);
-        if (body != null) spec.contentType(ContentType.JSON).body(body);
-        if (pathParams != null && !pathParams.isEmpty()) spec.pathParams(pathParams);
-        return spec;
+    protected RequestSpecification authenticated(String token) {
+        return given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + token);
     }
 
-    protected ExtractableResponse<Response> get(String url, String token, Map<String, ?> pathParams) {
-        return createSpec(token, null, pathParams).when().get(url).then().log().all().extract();
-    }
-
-    protected ExtractableResponse<Response> post(String url, String token, Object body, Map<String, ?> pathParams) {
-        return createSpec(token, body, pathParams).when().post(url).then().log().all().extract();
-    }
-
-    protected ExtractableResponse<Response> put(String url, String token, Object body, Map<String, ?> pathParams) {
-        return createSpec(token, body, pathParams).when().put(url).then().log().all().extract();
-    }
-
-    protected ExtractableResponse<Response> patch(String url, String token, Object body, Map<String, ?> pathParams) {
-        return createSpec(token, body, pathParams).when().patch(url).then().log().all().extract();
-    }
-
-    protected ExtractableResponse<Response> delete(String url, String token, Map<String, ?> pathParams) {
-        return createSpec(token, null, pathParams).when().delete(url).then().log().all().extract();
-    }
-
-    protected ExtractableResponse<Response> postWithoutAuthorization(String url, Object body, Map<String, ?> pathParams) {
-        return createSpec(null, body, pathParams).when().post(url).then().log().all().extract();
-    }
-
-    protected ExtractableResponse<Response> patchWithoutAuthorization(String url, Object body, Map<String, ?> pathParams) {
-        return createSpec(null, body, pathParams).when().patch(url).then().log().all().extract();
+    protected RequestSpecification unauthenticated() {
+        return given()
+                .contentType(ContentType.JSON);
     }
 }

@@ -58,12 +58,13 @@ class SystemControllerTest extends ControllerTest {
             ArrestRequest request = new ArrestRequest(robberParticipant.getId());
 
             // when
-            ExtractableResponse<Response> response = post(
-                    ARREST_URL,
-                    policeToken,
-                    request,
-                    Map.of(GAME_ID_PARAM, game.getId())
-            );
+            ExtractableResponse<Response> response = authenticated(policeToken)
+                    .body(request)
+                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .when()
+                    .post(ARREST_URL)
+                    .then()
+                    .extract();
 
             // then
             ArrestResponse result = response.as(ArrestResponse.class);
@@ -88,12 +89,13 @@ class SystemControllerTest extends ControllerTest {
             ArrestRequest request = new ArrestRequest(waitingRobber.getId());
 
             // when
-            ExtractableResponse<Response> response = post(
-                    ARREST_URL,
-                    policeToken,
-                    request,
-                    Map.of(GAME_ID_PARAM, waitingGame.getId())
-            );
+            ExtractableResponse<Response> response = authenticated(policeToken)
+                    .body(request)
+                    .pathParams(Map.of(GAME_ID_PARAM, waitingGame.getId()))
+                    .when()
+                    .post(ARREST_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
@@ -105,12 +107,13 @@ class SystemControllerTest extends ControllerTest {
             ArrestRequest request = new ArrestRequest(robberParticipant.getId());
 
             // when
-            ExtractableResponse<Response> response = post(
-                    ARREST_URL,
-                    robberToken,
-                    request,
-                    Map.of(GAME_ID_PARAM, game.getId())
-            );
+            ExtractableResponse<Response> response = authenticated(robberToken)
+                    .body(request)
+                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .when()
+                    .post(ARREST_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
@@ -125,12 +128,13 @@ class SystemControllerTest extends ControllerTest {
             ArrestRequest request = new ArrestRequest(robberParticipant.getId());
 
             // when
-            ExtractableResponse<Response> response = post(
-                    ARREST_URL,
-                    policeToken,
-                    request,
-                    Map.of(GAME_ID_PARAM, game.getId())
-            );
+            ExtractableResponse<Response> response = authenticated(policeToken)
+                    .body(request)
+                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .when()
+                    .post(ARREST_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
@@ -142,12 +146,13 @@ class SystemControllerTest extends ControllerTest {
             ArrestRequest request = new ArrestRequest(policeParticipant.getId());
 
             // when
-            ExtractableResponse<Response> response = post(
-                    ARREST_URL,
-                    policeToken,
-                    request,
-                    Map.of(GAME_ID_PARAM, game.getId())
-            );
+            ExtractableResponse<Response> response = authenticated(policeToken)
+                    .body(request)
+                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .when()
+                    .post(ARREST_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
@@ -162,12 +167,13 @@ class SystemControllerTest extends ControllerTest {
             ArrestRequest request = new ArrestRequest(robberParticipant.getId());
 
             // when
-            ExtractableResponse<Response> response = post(
-                    ARREST_URL,
-                    policeToken,
-                    request,
-                    Map.of(GAME_ID_PARAM, game.getId())
-            );
+            ExtractableResponse<Response> response = authenticated(policeToken)
+                    .body(request)
+                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .when()
+                    .post(ARREST_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
@@ -183,12 +189,13 @@ class SystemControllerTest extends ControllerTest {
             ArrestRequest request = new ArrestRequest(otherRobberParticipant.getId());
 
             // when
-            ExtractableResponse<Response> response = post(
-                    ARREST_URL,
-                    policeToken,
-                    request,
-                    Map.of(GAME_ID_PARAM, game.getId())
-            );
+            ExtractableResponse<Response> response = authenticated(policeToken)
+                    .body(request)
+                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .when()
+                    .post(ARREST_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
@@ -200,11 +207,13 @@ class SystemControllerTest extends ControllerTest {
             ArrestRequest request = new ArrestRequest(robberParticipant.getId());
 
             // when
-            ExtractableResponse<Response> response = postWithoutAuthorization(
-                    ARREST_URL,
-                    request,
-                    Map.of(GAME_ID_PARAM, game.getId())
-            );
+            ExtractableResponse<Response> response = unauthenticated()
+                    .body(request)
+                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .when()
+                    .post(ARREST_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
@@ -216,12 +225,13 @@ class SystemControllerTest extends ControllerTest {
             ArrestRequest request = new ArrestRequest(9999L); // 존재 X
 
             // when
-            ExtractableResponse<Response> response = post(
-                    ARREST_URL,
-                    policeToken,
-                    request,
-                    Map.of(GAME_ID_PARAM, game.getId())
-            );
+            ExtractableResponse<Response> response = authenticated(policeToken)
+                    .body(request)
+                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .when()
+                    .post(ARREST_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
@@ -239,12 +249,12 @@ class SystemControllerTest extends ControllerTest {
             gameParticipantRepository.save(robberParticipant);
 
             // when
-            ExtractableResponse<Response> response = post(
-                    ESCAPE_URL,
-                    robberToken,
-                    null,
-                    Map.of(GAME_ID_PARAM, game.getId())
-            );
+            ExtractableResponse<Response> response = authenticated(robberToken)
+                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .when()
+                    .post(ESCAPE_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
@@ -263,12 +273,12 @@ class SystemControllerTest extends ControllerTest {
             gameParticipantRepository.save(waitingRobber);
 
             // when
-            ExtractableResponse<Response> response = post(
-                    ESCAPE_URL,
-                    robberToken,
-                    null,
-                    Map.of(GAME_ID_PARAM, waitingGame.getId())
-            );
+            ExtractableResponse<Response> response = authenticated(robberToken)
+                    .pathParams(Map.of(GAME_ID_PARAM, waitingGame.getId()))
+                    .when()
+                    .post(ESCAPE_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
@@ -280,12 +290,12 @@ class SystemControllerTest extends ControllerTest {
             // policeParticipant는 경찰 팀
 
             // when (경찰이 요청)
-            ExtractableResponse<Response> response = post(
-                    ESCAPE_URL,
-                    policeToken,
-                    null,
-                    Map.of(GAME_ID_PARAM, game.getId())
-            );
+            ExtractableResponse<Response> response = authenticated(policeToken)
+                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .when()
+                    .post(ESCAPE_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
@@ -297,12 +307,12 @@ class SystemControllerTest extends ControllerTest {
             assertThat(robberParticipant.getStatus()).isEqualTo(ParticipantStatus.ALIVE); // ALIVE 상태 확인
 
             // when
-            ExtractableResponse<Response> response = post(
-                    ESCAPE_URL,
-                    robberToken,
-                    null,
-                    Map.of(GAME_ID_PARAM, game.getId())
-            );
+            ExtractableResponse<Response> response = authenticated(robberToken)
+                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .when()
+                    .post(ESCAPE_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
@@ -311,11 +321,12 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 인증_토큰_없이_요청하면_401_Unauthorized를_응답한다() {
             // when
-            ExtractableResponse<Response> response = postWithoutAuthorization(
-                    ESCAPE_URL,
-                    null,
-                    Map.of(GAME_ID_PARAM, game.getId())
-            );
+            ExtractableResponse<Response> response = unauthenticated()
+                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .when()
+                    .post(ESCAPE_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
@@ -324,12 +335,12 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 존재하지_않는_게임에_요청하면_404_NotFound를_응답한다() {
             // when
-            ExtractableResponse<Response> response = post(
-                    ESCAPE_URL,
-                    robberToken,
-                    null,
-                    Map.of(GAME_ID_PARAM, 9999L) // 존재 X
-            );
+            ExtractableResponse<Response> response = authenticated(robberToken)
+                    .pathParams(Map.of(GAME_ID_PARAM, 9999L)) // 존재 X
+                    .when()
+                    .post(ESCAPE_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());

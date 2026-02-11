@@ -9,8 +9,6 @@ import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
 import com.team.cops_and_robbers.user.presentation.dto.response.MyPageResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.NicknameCheckResponse;
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.DisplayName;
@@ -32,12 +30,10 @@ class UserControllerTest extends ControllerTest {
             String accessToken = givenAccessToken(user);
 
             // when
-            ExtractableResponse<Response> extract = RestAssured.given().log().all()
-                    .header("Authorization", "Bearer " + accessToken)
-                    .contentType(ContentType.JSON)
+            ExtractableResponse<Response> extract = authenticated(accessToken)
                     .when()
                     .get("/api/user/me")
-                    .then().log().all()
+                    .then()
                     .extract();
 
             // then
@@ -52,11 +48,10 @@ class UserControllerTest extends ControllerTest {
         @Test
         void 토큰이_없으면_401_UNAUTHORIZED를_응답해야_한다() {
             // when
-            ExtractableResponse<Response> extract = RestAssured.given().log().all()
-                    .contentType(ContentType.JSON)
+            ExtractableResponse<Response> extract = unauthenticated()
                     .when()
                     .get("/api/user/me")
-                    .then().log().all()
+                    .then()
                     .extract();
 
             // then
@@ -76,12 +71,11 @@ class UserControllerTest extends ControllerTest {
             User existingUser = givenUser();
 
             // when
-            ExtractableResponse<Response> extract = RestAssured.given().log().all()
-                    .contentType(ContentType.JSON)
+            ExtractableResponse<Response> extract = unauthenticated()
                     .param("nickname", existingUser.getNickname())
                     .when()
                     .get("/api/user/check-nickname")
-                    .then().log().all()
+                    .then()
                     .extract();
 
             // then
@@ -98,12 +92,11 @@ class UserControllerTest extends ControllerTest {
             String uniqueNickname = "유니크한닉네임999";
 
             // when
-            ExtractableResponse<Response> extract = RestAssured.given().log().all()
-                    .contentType(ContentType.JSON)
+            ExtractableResponse<Response> extract = unauthenticated()
                     .param("nickname", uniqueNickname)
                     .when()
                     .get("/api/user/check-nickname")
-                    .then().log().all()
+                    .then()
                     .extract();
 
             // then
@@ -117,11 +110,10 @@ class UserControllerTest extends ControllerTest {
         @Test
         void 닉네임_파라미터가_누락되면_400_BAD_REQUEST를_응답해야_한다() {
             // when
-            ExtractableResponse<Response> extract = RestAssured.given().log().all()
-                    .contentType(ContentType.JSON)
+            ExtractableResponse<Response> extract = unauthenticated()
                     .when()
                     .get("/api/user/check-nickname")
-                    .then().log().all()
+                    .then()
                     .extract();
 
             // then
@@ -146,13 +138,11 @@ class UserControllerTest extends ControllerTest {
             NicknameUpdateRequest request = new NicknameUpdateRequest(newNickname);
 
             // when
-            ExtractableResponse<Response> extract = RestAssured.given().log().all()
-                    .header("Authorization", "Bearer " + accessToken)
-                    .contentType(ContentType.JSON)
+            ExtractableResponse<Response> extract = authenticated(accessToken)
                     .body(request)
                     .when()
                     .patch("/api/user/me/nickname")
-                    .then().log().all()
+                    .then()
                     .extract();
 
             // then
@@ -173,13 +163,11 @@ class UserControllerTest extends ControllerTest {
             NicknameUpdateRequest request = new NicknameUpdateRequest(otherUser.getNickname());
 
             // when
-            ExtractableResponse<Response> extract = RestAssured.given().log().all()
-                    .header("Authorization", "Bearer " + accessToken)
-                    .contentType(ContentType.JSON)
+            ExtractableResponse<Response> extract = authenticated(accessToken)
                     .body(request)
                     .when()
                     .patch("/api/user/me/nickname")
-                    .then().log().all()
+                    .then()
                     .extract();
 
             // then
@@ -198,13 +186,11 @@ class UserControllerTest extends ControllerTest {
             NicknameUpdateRequest request = new NicknameUpdateRequest(user.getNickname());
 
             // when
-            ExtractableResponse<Response> extract = RestAssured.given().log().all()
-                    .header("Authorization", "Bearer " + accessToken)
-                    .contentType(ContentType.JSON)
+            ExtractableResponse<Response> extract = authenticated(accessToken)
                     .body(request)
                     .when()
                     .patch("/api/user/me/nickname")
-                    .then().log().all()
+                    .then()
                     .extract();
 
             // then
@@ -222,13 +208,11 @@ class UserControllerTest extends ControllerTest {
             NicknameUpdateRequest request = new NicknameUpdateRequest(longNickname);
 
             // when
-            ExtractableResponse<Response> extract = RestAssured.given().log().all()
-                    .header("Authorization", "Bearer " + accessToken)
-                    .contentType(ContentType.JSON)
+            ExtractableResponse<Response> extract = authenticated(accessToken)
                     .body(request)
                     .when()
                     .patch("/api/user/me/nickname")
-                    .then().log().all()
+                    .then()
                     .extract();
 
             // then
@@ -248,13 +232,11 @@ class UserControllerTest extends ControllerTest {
             NicknameUpdateRequest request = new NicknameUpdateRequest(" ");
 
             // when
-            ExtractableResponse<Response> extract = RestAssured.given().log().all()
-                    .header("Authorization", "Bearer " + accessToken)
-                    .contentType(ContentType.JSON)
+            ExtractableResponse<Response> extract = authenticated(accessToken)
                     .body(request)
                     .when()
                     .patch("/api/user/me/nickname")
-                    .then().log().all()
+                    .then()
                     .extract();
 
             // then

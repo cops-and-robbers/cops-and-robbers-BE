@@ -40,7 +40,12 @@ class GameControllerTest extends ControllerTest {
             GameCreateRequest request = createGameCreateRequest();
 
             // when
-            ExtractableResponse<Response> response = post(GAME_API_URL, accessToken, request, null);
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
 
             // then
             GameCreateResponse result = response.as(GameCreateResponse.class);
@@ -66,7 +71,12 @@ class GameControllerTest extends ControllerTest {
             GameCreateRequest request = new GameCreateRequest(invalidArea, createSettingsRequest());
 
             // when
-            ExtractableResponse<Response> response = post(GAME_API_URL, accessToken, request, null);
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(400);
@@ -79,7 +89,12 @@ class GameControllerTest extends ControllerTest {
             GameCreateRequest request = new GameCreateRequest(createAreaRequest(), invalidSettings);
 
             // when
-            ExtractableResponse<Response> response = post(GAME_API_URL, accessToken, request, null);
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(400);
@@ -88,10 +103,18 @@ class GameControllerTest extends ControllerTest {
         @Test
         void 이미_다른_활성_게임에_참여_중인_경우_409_Conflict를_응답한다() {
             // given
-            post(GAME_API_URL, accessToken, createGameCreateRequest(), null);
+            authenticated(accessToken)
+                    .body(createGameCreateRequest())
+                    .when()
+                    .post(GAME_API_URL);
 
             // when
-            ExtractableResponse<Response> response = post(GAME_API_URL, accessToken, createGameCreateRequest(), null);
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(createGameCreateRequest())
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(409);
@@ -103,7 +126,12 @@ class GameControllerTest extends ControllerTest {
             GameCreateRequest request = createGameCreateRequest();
 
             // when
-            ExtractableResponse<Response> response = postWithoutAuthorization(GAME_API_URL, request, null);
+            ExtractableResponse<Response> response = unauthenticated()
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(401);

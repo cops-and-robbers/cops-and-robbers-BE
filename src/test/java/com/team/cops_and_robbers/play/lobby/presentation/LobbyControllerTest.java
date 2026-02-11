@@ -25,8 +25,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 class LobbyControllerTest extends ControllerTest {
 
     private static final String GAME_ID_PARAM = "gameId";
-    private static final String TEAM_CHANGE_URL = "/api/games/{gameId}/team";
-    private static final String READY_UPDATE_URL = "/api/games/{gameId}/ready";
+    private static final String TEAM_CHANGE_URL = "/api/games/{gameId}/lobby/team";
+    private static final String READY_UPDATE_URL = "/api/games/{gameId}/lobby/ready";
 
     private User host;
     private User guest;
@@ -59,11 +59,13 @@ class LobbyControllerTest extends ControllerTest {
             TeamChangeRequest request = new TeamChangeRequest(Team.POLICE);
 
             // when
-            ExtractableResponse<Response> response = patch(
-                    TEAM_CHANGE_URL,
-                    guestToken,
-                    request,
-                    Map.of(GAME_ID_PARAM, game.getId()));
+            ExtractableResponse<Response> response = authenticated(guestToken)
+                    .body(request)
+                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .when()
+                    .patch(TEAM_CHANGE_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
@@ -85,11 +87,13 @@ class LobbyControllerTest extends ControllerTest {
             TeamChangeRequest request = new TeamChangeRequest(Team.POLICE);
 
             // when
-            ExtractableResponse<Response> response = patch(
-                    TEAM_CHANGE_URL,
-                    guestToken,
-                    request,
-                    Map.of(GAME_ID_PARAM, waitingGame.getId()));
+            ExtractableResponse<Response> response = authenticated(guestToken)
+                    .body(request)
+                    .pathParams(Map.of(GAME_ID_PARAM, waitingGame.getId()))
+                    .when()
+                    .patch(TEAM_CHANGE_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
@@ -101,10 +105,13 @@ class LobbyControllerTest extends ControllerTest {
             TeamChangeRequest request = new TeamChangeRequest(Team.POLICE);
 
             // when
-            ExtractableResponse<Response> response = patchWithoutAuthorization(
-                    TEAM_CHANGE_URL,
-                    request,
-                    Map.of(GAME_ID_PARAM, game.getId()));
+            ExtractableResponse<Response> response = unauthenticated()
+                    .body(request)
+                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .when()
+                    .patch(TEAM_CHANGE_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
@@ -116,10 +123,13 @@ class LobbyControllerTest extends ControllerTest {
             TeamChangeRequest request = new TeamChangeRequest(Team.POLICE);
 
             // when
-            ExtractableResponse<Response> response = patch(
-                    TEAM_CHANGE_URL, guestToken,
-                    request,
-                    Map.of(GAME_ID_PARAM, 9999L));
+            ExtractableResponse<Response> response = authenticated(guestToken)
+                    .body(request)
+                    .pathParams(Map.of(GAME_ID_PARAM, 9999L))
+                    .when()
+                    .patch(TEAM_CHANGE_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
@@ -136,11 +146,13 @@ class LobbyControllerTest extends ControllerTest {
             ReadyUpdateRequest request = new ReadyUpdateRequest(true);
 
             // when
-            ExtractableResponse<Response> response = patch(
-                    READY_UPDATE_URL,
-                    guestToken,
-                    request,
-                    Map.of(GAME_ID_PARAM, game.getId()));
+            ExtractableResponse<Response> response = authenticated(guestToken)
+                    .body(request)
+                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .when()
+                    .patch(READY_UPDATE_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
@@ -155,11 +167,13 @@ class LobbyControllerTest extends ControllerTest {
             ReadyUpdateRequest request = new ReadyUpdateRequest(false);
 
             // when
-            ExtractableResponse<Response> response = patch(
-                    READY_UPDATE_URL,
-                    hostToken,
-                    request,
-                    Map.of(GAME_ID_PARAM, game.getId()));
+            ExtractableResponse<Response> response = authenticated(hostToken)
+                    .body(request)
+                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .when()
+                    .patch(READY_UPDATE_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
@@ -177,12 +191,13 @@ class LobbyControllerTest extends ControllerTest {
             ReadyUpdateRequest request = new ReadyUpdateRequest(true);
 
             // when
-            ExtractableResponse<Response> response = patch(
-                    READY_UPDATE_URL,
-                    guestToken,
-                    request,
-                    Map.of(GAME_ID_PARAM, waitingGame.getId())
-            );
+            ExtractableResponse<Response> response = authenticated(guestToken)
+                    .body(request)
+                    .pathParams(Map.of(GAME_ID_PARAM, waitingGame.getId()))
+                    .when()
+                    .patch(READY_UPDATE_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
@@ -194,11 +209,13 @@ class LobbyControllerTest extends ControllerTest {
             ReadyUpdateRequest request = new ReadyUpdateRequest(true);
 
             // when
-            ExtractableResponse<Response> response = patchWithoutAuthorization(
-                    READY_UPDATE_URL,
-                    request,
-                    Map.of(GAME_ID_PARAM, game.getId())
-            );
+            ExtractableResponse<Response> response = unauthenticated()
+                    .body(request)
+                    .pathParams(Map.of(GAME_ID_PARAM, game.getId()))
+                    .when()
+                    .patch(READY_UPDATE_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
