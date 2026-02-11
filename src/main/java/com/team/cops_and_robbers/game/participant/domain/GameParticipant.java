@@ -68,22 +68,36 @@ public class GameParticipant extends BaseTimeEntity {
         return this.status == ParticipantStatus.WAITING;
     }
 
-    public boolean isJailed() { return this.status == ParticipantStatus.JAILED; }
+    public boolean isJailed() {
+        return this.status == ParticipantStatus.JAILED;
+    }
 
-    public boolean isRobber() { return this.team == Team.ROBBER; }
+    public boolean isRobber() {
+        return this.team == Team.ROBBER;
+    }
 
-    public boolean isPolice() { return this.team == Team.POLICE; }
+    public boolean isPolice() {
+        return this.team == Team.POLICE;
+    }
 
-    public boolean isInGame(Long gameId) { return this.game.getId().equals(gameId); }
+    public boolean isInGame(Long gameId) {
+        return this.game.getId().equals(gameId);
+    }
 
-    public void promoteToHost() { this.isHost = true; }
+    public void promoteToHost() {
+        this.isHost = true;
+    }
 
     public void changeTeam(Team targetTeam) {
         this.team = targetTeam;
         this.isReady = false;
     }
 
-    public void updateReady(boolean ready) { this.isReady = ready; }
+    public void updateReady(boolean ready) {
+        this.isReady = ready;
+    }
 
-    public void updateStatus(ParticipantStatus status) { this.status = status;}
+    public void updateStatus(ParticipantStatus status) {
+        this.status = status;
+    }
 }
