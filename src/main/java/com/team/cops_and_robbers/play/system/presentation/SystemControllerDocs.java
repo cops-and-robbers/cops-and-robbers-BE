@@ -3,7 +3,8 @@ package com.team.cops_and_robbers.play.system.presentation;
 import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.common.exception.ErrorResponse;
-import com.team.cops_and_robbers.play.system.presentation.dto.ArrestRequest;
+import com.team.cops_and_robbers.play.system.presentation.dto.request.ArrestRequest;
+import com.team.cops_and_robbers.play.system.presentation.dto.response.ArrestResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -34,11 +35,23 @@ public interface SystemControllerDocs {
             security = @SecurityRequirement(name = "JWT")
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "체포 성공"),
+            @ApiResponse(responseCode = "200", description = "체포 성공",
+                    content = @Content(schema = @Schema(implementation = ArrestResponse.class))),
             @ApiResponse(responseCode = "400", description = "잘못된 요청",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = {
+                                    @ExampleObject(
+                                            name = "게임 진행 중 아님",
+                                            value = """
+                                                    {
+                                                        "title": "게임 진행 중 아님",
+                                                        "status": 400,
+                                                        "detail": "게임이 진행 중인 상태가 아닙니다.",
+                                                        "instance": "/api/games/1/system/arrest"
+                                                    }
+                                                    """
+                                    ),
                                     @ExampleObject(
                                             name = "경찰이 아님",
                                             value = """
@@ -46,6 +59,17 @@ public interface SystemControllerDocs {
                                                         "title": "경찰만 체포 가능",
                                                         "status": 400,
                                                         "detail": "경찰 팀만 도둑을 체포할 수 있습니다.",
+                                                        "instance": "/api/games/1/system/arrest"
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "경찰 대기 시간",
+                                            value = """
+                                                    {
+                                                        "title": "경찰 대기 시간",
+                                                        "status": 400,
+                                                        "detail": "경찰은 대기 시간 동안 도둑을 체포할 수 없습니다.",
                                                         "instance": "/api/games/1/system/arrest"
                                                     }
                                                     """
@@ -62,23 +86,23 @@ public interface SystemControllerDocs {
                                                     """
                                     ),
                                     @ExampleObject(
+                                            name = "참가자 게임 불일치",
+                                            value = """
+                                                    {
+                                                        "title": "참가자 게임 불일치",
+                                                        "status": 400,
+                                                        "detail": "경찰과 도둑이 서로 다른 게임에 참여하고 있습니다.",
+                                                        "instance": "/api/games/1/system/arrest"
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
                                             name = "이미 체포된 도둑",
                                             value = """
                                                     {
                                                         "title": "이미 체포됨",
                                                         "status": 400,
                                                         "detail": "이미 수감된 도둑입니다.",
-                                                        "instance": "/api/games/1/system/arrest"
-                                                    }
-                                                    """
-                                    ),
-                                    @ExampleObject(
-                                            name = "다른 게임 참가자",
-                                            value = """
-                                                    {
-                                                        "title": "참여 권한 없음",
-                                                        "status": 400,
-                                                        "detail": "해당 게임의 참가자가 아닙니다.",
                                                         "instance": "/api/games/1/system/arrest"
                                                     }
                                                     """
@@ -119,7 +143,7 @@ public interface SystemControllerDocs {
                     )
             )
     })
-    ResponseEntity<Void> arrestRobber(
+    ResponseEntity<ArrestResponse> arrestRobber(
             @Parameter(hidden = true) @AuthUser LoginUser loginUser,
             @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -151,11 +175,22 @@ public interface SystemControllerDocs {
             security = @SecurityRequirement(name = "JWT")
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "탈옥 성공"),
+            @ApiResponse(responseCode = "204", description = "탈옥 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = {
+                                    @ExampleObject(
+                                            name = "게임 진행 중 아님",
+                                            value = """
+                                                    {
+                                                        "title": "게임 진행 중 아님",
+                                                        "status": 400,
+                                                        "detail": "게임이 진행 중인 상태가 아닙니다.",
+                                                        "instance": "/api/games/1/system/escape"
+                                                    }
+                                                    """
+                                    ),
                                     @ExampleObject(
                                             name = "도둑이 아님",
                                             value = """

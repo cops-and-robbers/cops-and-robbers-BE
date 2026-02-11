@@ -8,9 +8,11 @@ import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
-import com.team.cops_and_robbers.play.system.application.dto.ArrestCommand;
-import com.team.cops_and_robbers.play.system.application.dto.EscapeCommand;
+import com.team.cops_and_robbers.play.system.application.dto.command.ArrestCommand;
+import com.team.cops_and_robbers.play.system.application.dto.command.EscapeCommand;
+import com.team.cops_and_robbers.play.system.application.dto.result.ArrestResult;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
+import com.team.cops_and_robbers.play.system.domain.SystemEventData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -31,7 +33,7 @@ public class SystemService {
      * 경찰이 도둑을 체포합니다.
      */
     @Transactional
-    public void arrestRobber(ArrestCommand command) {
+    public ArrestResult arrestRobber(ArrestCommand command) {
         Game game = gameRepository.getByGameId(command.gameId());
         GameParticipant police = gameParticipantRepository.getByGameIdAndUserId(command.gameId(), command.policeUserId());
         GameParticipant robber = gameParticipantRepository.getParticipantById(command.robberParticipantId());
@@ -48,6 +50,8 @@ public class SystemService {
                 command.gameId(), police, robber, remainingThieves
         );
         eventPublisher.publishEvent(event);
+
+        return ArrestResult.from((SystemEventData.ArrestData) event.data());
     }
 
     /**
@@ -71,6 +75,9 @@ public class SystemService {
     private void validateArrest(Game game, GameParticipant police, GameParticipant robber) {
         if (!game.isInProgress()) {
             throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
+        }
+        if (!police.isPolice()) {
+            throw new ApplicationException(GameParticipantException.ONLY_POLICE_CAN_ARREST);
         }
         if (police.isPoliceWaiting()) {
             throw new ApplicationException(GameParticipantException.POLICE_WAITING_TIME);

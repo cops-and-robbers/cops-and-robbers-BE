@@ -1,4 +1,4 @@
-package com.team.cops_and_robbers.play.system.application.dto;
+package com.team.cops_and_robbers.play.system.application.dto.command;
 
 public record ArrestCommand(
         Long gameId,

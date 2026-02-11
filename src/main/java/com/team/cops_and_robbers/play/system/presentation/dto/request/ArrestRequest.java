@@ -1,4 +1,4 @@
-package com.team.cops_and_robbers.play.system.presentation.dto;
+package com.team.cops_and_robbers.play.system.presentation.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 
