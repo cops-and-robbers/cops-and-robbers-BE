@@ -80,7 +80,9 @@ public class LobbyService {
 
         LocalDateTime nowKst = TimestampUtil.nowKstLocal();
         game.startGame(nowKst);
-        gameParticipantRepository.updateStatusByGameId(command.gameId(), ParticipantStatus.ALIVE);
+
+        gameParticipantRepository.updateStatusByGameIdAndTeam(command.gameId(), Team.ROBBER, ParticipantStatus.ALIVE);
+        gameParticipantRepository.updateStatusByGameIdAndTeam(command.gameId(), Team.POLICE, ParticipantStatus.POLICE_WAITING);
 
         LobbyEvent event = lobbyEventFactory.createGameStartEvent(command.gameId(), nowKst);
         eventPublisher.publishEvent(event);
