@@ -117,7 +117,7 @@ public class DataLoader implements CommandLineRunner {
                 30, 5, 3, 10
         );
 
-        Game game = Game.createGame("TESTCODE", command);
+        Game game = Game.createGame("TEST12", command);
         gameRepository.save(game);
 
         Point playgroundCenter = geometryFactory.createPoint(new Coordinate(command.playgroundLongitude(), command.playgroundLatitude()));
