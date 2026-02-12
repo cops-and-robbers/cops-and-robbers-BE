@@ -40,6 +40,15 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
 
     int countByGameIdAndTeam(Long gameId, Team team);
 
+    @Query("""
+        select count(p)
+        from GameParticipant p
+        where p.game.id = :gameId
+        and p.team = 'ROBBER'
+        and p.status = :status
+        """)
+    int countByGameIdAndRobberStatus(@Param("gameId") Long gameId, @Param("status") ParticipantStatus status);
+
     /**
      * 게임에서 준비하지 않은 참가자가 있는지 확인
      */
@@ -65,6 +74,18 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
         """)
     void updateStatusByGameId(@Param("gameId") Long gameId, @Param("status") ParticipantStatus status);
 
+    /**
+     * 게임의 특정 팀 참가자 상태를 업데이트
+     */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+        update GameParticipant gp
+        set gp.status = :status
+        where gp.game.id = :gameId
+        and gp.team = :team
+        """)
+    void updateStatusByGameIdAndTeam(@Param("gameId") Long gameId, @Param("team") Team team, @Param("status") ParticipantStatus status);
+
     Optional<GameParticipant> findByGameIdAndUserId(Long gameId, Long userId);
 
     Optional<GameParticipant> findFirstByGameIdOrderByCreatedAtAsc(Long gameId);
@@ -82,5 +103,9 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
                         new ApplicationException(GameParticipantException.PARTICIPANT_NOT_FOUND)
                 );
     }
-}
 
+    default GameParticipant getParticipantById(Long id) {
+        return findById(id)
+                .orElseThrow(() -> new ApplicationException(GameParticipantException.PARTICIPANT_NOT_FOUND));
+    }
+}

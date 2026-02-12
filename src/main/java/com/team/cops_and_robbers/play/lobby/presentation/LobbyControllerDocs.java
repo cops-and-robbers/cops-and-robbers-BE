@@ -40,7 +40,7 @@ public interface LobbyControllerDocs {
                                                         "title": "유효하지 않은 입력값",
                                                         "status": 400,
                                                         "detail": "targetTeam: 팀은 필수입니다.",
-                                                        "instance": "/api/games/1/team"
+                                                        "instance": "/api/games/1/lobby/team"
                                                     }
                                                     """
                                     ),
@@ -51,7 +51,7 @@ public interface LobbyControllerDocs {
                                                         "title": "이미 시작된 게임",
                                                         "status": 400,
                                                         "detail": "이미 시작된 게임에는 참여할 수 없습니다.",
-                                                        "instance": "/api/games/1/team"
+                                                        "instance": "/api/games/1/lobby/team"
                                                     }
                                                     """
                                     ),
@@ -62,7 +62,7 @@ public interface LobbyControllerDocs {
                                                         "title": "로비 조작 불가",
                                                         "status": 400,
                                                         "detail": "게임이 시작된 이후에는 로비 상태를 변경할 수 없습니다.",
-                                                        "instance": "/api/games/1/team"
+                                                        "instance": "/api/games/1/lobby/team"
                                                     }
                                                     """
                                     )
@@ -79,7 +79,7 @@ public interface LobbyControllerDocs {
                                                 "title": "인증 필요",
                                                 "status": 401,
                                                 "detail": "로그인이 필요한 서비스입니다.",
-                                                "instance": "/api/games/1/team"
+                                                "instance": "/api/games/1/lobby/team"
                                             }
                                             """
                             )
@@ -96,7 +96,7 @@ public interface LobbyControllerDocs {
                                                         "title": "게임을 찾을 수 없음",
                                                         "status": 404,
                                                         "detail": "해당 게임을 찾을 수 없습니다.",
-                                                        "instance": "/api/games/999/team"
+                                                        "instance": "/api/games/999/lobby/team"
                                                     }
                                                     """
                                     ),
@@ -107,7 +107,7 @@ public interface LobbyControllerDocs {
                                                         "title": "참가자를 찾을 수 없음",
                                                         "status": 404,
                                                         "detail": "해당 게임에 참가하지 않은 사용자입니다.",
-                                                        "instance": "/api/games/1/team"
+                                                        "instance": "/api/games/1/lobby/team"
                                                     }
                                                     """
                                     )
@@ -164,7 +164,18 @@ public interface LobbyControllerDocs {
                                                         "title": "유효하지 않은 입력값",
                                                         "status": 400,
                                                         "detail": "isReady: 준비 여부는 필수입니다.",
-                                                        "instance": "/api/games/1/ready"
+                                                        "instance": "/api/games/1/lobby/ready"
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "방장 레디 해제 불가",
+                                            value = """
+                                                    {
+                                                        "title": "방장 레디 해제 불가",
+                                                        "status": 400,
+                                                        "detail": "방장은 항상 준비 상태여야 합니다.",
+                                                        "instance": "/api/games/1/lobby/ready"
                                                     }
                                                     """
                                     ),
@@ -175,7 +186,7 @@ public interface LobbyControllerDocs {
                                                         "title": "이미 시작된 게임",
                                                         "status": 400,
                                                         "detail": "이미 시작된 게임에는 참여할 수 없습니다.",
-                                                        "instance": "/api/games/1/ready"
+                                                        "instance": "/api/games/1/lobby/ready"
                                                     }
                                                     """
                                     ),
@@ -186,7 +197,7 @@ public interface LobbyControllerDocs {
                                                         "title": "로비 조작 불가",
                                                         "status": 400,
                                                         "detail": "게임이 시작된 이후에는 로비 상태를 변경할 수 없습니다.",
-                                                        "instance": "/api/games/1/ready"
+                                                        "instance": "/api/games/1/lobby/ready"
                                                     }
                                                     """
                                     )
@@ -203,7 +214,7 @@ public interface LobbyControllerDocs {
                                                 "title": "인증 필요",
                                                 "status": 401,
                                                 "detail": "로그인이 필요한 서비스입니다.",
-                                                "instance": "/api/games/1/ready"
+                                                "instance": "/api/games/1/lobby/ready"
                                             }
                                             """
                             )
@@ -220,7 +231,7 @@ public interface LobbyControllerDocs {
                                                         "title": "게임을 찾을 수 없음",
                                                         "status": 404,
                                                         "detail": "해당 게임을 찾을 수 없습니다.",
-                                                        "instance": "/api/games/999/ready"
+                                                        "instance": "/api/games/999/lobby/ready"
                                                     }
                                                     """
                                     ),
@@ -231,7 +242,7 @@ public interface LobbyControllerDocs {
                                                         "title": "참가자를 찾을 수 없음",
                                                         "status": 404,
                                                         "detail": "해당 게임에 참가하지 않은 사용자입니다.",
-                                                        "instance": "/api/games/1/ready"
+                                                        "instance": "/api/games/1/lobby/ready"
                                                     }
                                                     """
                                     )
@@ -294,7 +305,7 @@ public interface LobbyControllerDocs {
                                                         "title": "권한 없음",
                                                         "status": 400,
                                                         "detail": "게임을 시작할 수 있는 권한이 없습니다. (방장만 가능)",
-                                                        "instance": "/api/games/1/start"
+                                                        "instance": "/api/games/1/lobby/start"
                                                     }
                                                     """
                                     ),
@@ -305,7 +316,7 @@ public interface LobbyControllerDocs {
                                                         "title": "팀 구성 오류",
                                                         "status": 400,
                                                         "detail": "경찰과 도둑 팀에 각각 최소 1명 이상의 참가자가 필요합니다.",
-                                                        "instance": "/api/games/1/start"
+                                                        "instance": "/api/games/1/lobby/start"
                                                     }
                                                     """
                                     ),
@@ -316,7 +327,7 @@ public interface LobbyControllerDocs {
                                                         "title": "준비되지 않은 참가자 존재",
                                                         "status": 400,
                                                         "detail": "모든 참가자가 준비 상태여야 게임을 시작할 수 있습니다.",
-                                                        "instance": "/api/games/1/start"
+                                                        "instance": "/api/games/1/lobby/start"
                                                     }
                                                     """
                                     ),
@@ -327,7 +338,7 @@ public interface LobbyControllerDocs {
                                                         "title": "이미 시작된 게임",
                                                         "status": 400,
                                                         "detail": "이미 시작된 게임에는 참여할 수 없습니다.",
-                                                        "instance": "/api/games/1/start"
+                                                        "instance": "/api/games/1/lobby/start"
                                                     }
                                                     """
                                     ),
@@ -338,7 +349,7 @@ public interface LobbyControllerDocs {
                                                         "title": "로비 조작 불가",
                                                         "status": 400,
                                                         "detail": "게임이 시작된 이후에는 로비 상태를 변경할 수 없습니다.",
-                                                        "instance": "/api/games/1/start"
+                                                        "instance": "/api/games/1/lobby/start"
                                                     }
                                                     """
                                     )
@@ -355,7 +366,7 @@ public interface LobbyControllerDocs {
                                                 "title": "인증 필요",
                                                 "status": 401,
                                                 "detail": "로그인이 필요한 서비스입니다.",
-                                                "instance": "/api/games/1/start"
+                                                "instance": "/api/games/1/lobby/start"
                                             }
                                             """
                             )
@@ -372,7 +383,7 @@ public interface LobbyControllerDocs {
                                                         "title": "게임을 찾을 수 없음",
                                                         "status": 404,
                                                         "detail": "해당 게임을 찾을 수 없습니다.",
-                                                        "instance": "/api/games/999/start"
+                                                        "instance": "/api/games/999/lobby/start"
                                                     }
                                                     """
                                     ),
@@ -383,7 +394,7 @@ public interface LobbyControllerDocs {
                                                         "title": "참가자를 찾을 수 없음",
                                                         "status": 404,
                                                         "detail": "해당 게임에 참가하지 않은 사용자입니다.",
-                                                        "instance": "/api/games/1/start"
+                                                        "instance": "/api/games/1/lobby/start"
                                                     }
                                                     """
                                     )

@@ -53,14 +53,6 @@ public class GameParticipant extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean isHost;
 
-    public boolean isWaiting() {
-        return this.status == ParticipantStatus.WAITING;
-    }
-
-    public void promoteToHost() {
-        this.isHost = true;
-    }
-
     public static GameParticipant createParticipant(Game game, User user, boolean isHost) {
         return GameParticipant.builder()
                 .game(game)
@@ -72,6 +64,34 @@ public class GameParticipant extends BaseTimeEntity {
                 .build();
     }
 
+    public boolean isWaiting() {
+        return this.status == ParticipantStatus.WAITING;
+    }
+
+    public boolean isJailed() {
+        return this.status == ParticipantStatus.JAILED;
+    }
+
+    public boolean isPoliceWaiting() {
+        return this.status == ParticipantStatus.POLICE_WAITING;
+    }
+
+    public boolean isRobber() {
+        return this.team == Team.ROBBER;
+    }
+
+    public boolean isPolice() {
+        return this.team == Team.POLICE;
+    }
+
+    public boolean isInGame(Long gameId) {
+        return this.game.getId().equals(gameId);
+    }
+
+    public void promoteToHost() {
+        this.isHost = true;
+    }
+
     public void changeTeam(Team targetTeam) {
         this.team = targetTeam;
         this.isReady = false;
@@ -79,5 +99,9 @@ public class GameParticipant extends BaseTimeEntity {
 
     public void updateReady(boolean ready) {
         this.isReady = ready;
+    }
+
+    public void updateStatus(ParticipantStatus status) {
+        this.status = status;
     }
 }

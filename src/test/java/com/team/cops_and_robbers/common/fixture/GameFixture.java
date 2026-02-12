@@ -4,12 +4,13 @@ import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class GameFixture {
 
     public static Game WAITING_GAME() {
         return Game.builder()
-                .inviteCode("ABC123")
+                .inviteCode(UUID.randomUUID().toString().substring(0, 6))
                 .status(GameStatus.WAITING)
                 .roundDurationMinutes(30)
                 .locationRevealIntervalMinutes(5)
@@ -31,7 +32,7 @@ public class GameFixture {
 
     public static Game IN_PROGRESS_GAME() {
         return Game.builder()
-                .inviteCode("ABC123")
+                .inviteCode(UUID.randomUUID().toString().substring(0, 6))
                 .status(GameStatus.IN_PROGRESS)
                 .roundDurationMinutes(30)
                 .locationRevealIntervalMinutes(5)
@@ -43,7 +44,7 @@ public class GameFixture {
 
     public static Game FINISHED_GAME() {
         return Game.builder()
-                .inviteCode("ABC123")
+                .inviteCode(UUID.randomUUID().toString().substring(0, 6))
                 .status(GameStatus.FINISHED)
                 .roundDurationMinutes(30)
                 .locationRevealIntervalMinutes(5)
@@ -56,7 +57,7 @@ public class GameFixture {
 
     public static Game CANCELED_GAME() {
         return Game.builder()
-                .inviteCode("ABC123")
+                .inviteCode(UUID.randomUUID().toString().substring(0, 6))
                 .status(GameStatus.CANCELED)
                 .roundDurationMinutes(30)
                 .locationRevealIntervalMinutes(5)

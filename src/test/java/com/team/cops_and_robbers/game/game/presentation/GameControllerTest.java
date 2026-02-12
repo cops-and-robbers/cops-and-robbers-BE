@@ -7,8 +7,6 @@ import com.team.cops_and_robbers.game.game.presentation.dto.request.GameCreateRe
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameSettingsRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameCreateResponse;
 import com.team.cops_and_robbers.user.domain.User;
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +40,12 @@ class GameControllerTest extends ControllerTest {
             GameCreateRequest request = createGameCreateRequest();
 
             // when
-            ExtractableResponse<Response> response = postGameCreateRequest(GAME_API_URL, accessToken, request);
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
 
             // then
             GameCreateResponse result = response.as(GameCreateResponse.class);
@@ -68,7 +71,12 @@ class GameControllerTest extends ControllerTest {
             GameCreateRequest request = new GameCreateRequest(invalidArea, createSettingsRequest());
 
             // when
-            ExtractableResponse<Response> response = postGameCreateRequest(GAME_API_URL, accessToken, request);
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(400);
@@ -81,7 +89,12 @@ class GameControllerTest extends ControllerTest {
             GameCreateRequest request = new GameCreateRequest(createAreaRequest(), invalidSettings);
 
             // when
-            ExtractableResponse<Response> response = postGameCreateRequest(GAME_API_URL, accessToken, request);
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(400);
@@ -90,10 +103,18 @@ class GameControllerTest extends ControllerTest {
         @Test
         void 이미_다른_활성_게임에_참여_중인_경우_409_Conflict를_응답한다() {
             // given
-            postGameCreateRequest(GAME_API_URL, accessToken, createGameCreateRequest());
+            authenticated(accessToken)
+                    .body(createGameCreateRequest())
+                    .when()
+                    .post(GAME_API_URL);
 
             // when
-            ExtractableResponse<Response> response = postGameCreateRequest(GAME_API_URL, accessToken, createGameCreateRequest());
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(createGameCreateRequest())
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(409);
@@ -105,28 +126,16 @@ class GameControllerTest extends ControllerTest {
             GameCreateRequest request = createGameCreateRequest();
 
             // when
-            ExtractableResponse<Response> response = RestAssured.given().log().all()
-                    .contentType(ContentType.JSON)
+            ExtractableResponse<Response> response = unauthenticated()
                     .body(request)
                     .when()
                     .post(GAME_API_URL)
-                    .then().log().all()
+                    .then()
                     .extract();
 
             // then
             assertThat(response.statusCode()).isEqualTo(401);
         }
-    }
-
-    private ExtractableResponse<Response> postGameCreateRequest(String url, String token, Object body) {
-        return RestAssured.given().log().all()
-                .contentType(ContentType.JSON)
-                .header("Authorization", "Bearer " + token)
-                .body(body)
-                .when()
-                .post(url)
-                .then().log().all()
-                .extract();
     }
 
     private GameCreateRequest createGameCreateRequest() {

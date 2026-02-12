@@ -4,6 +4,9 @@ import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
+import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
+import com.team.cops_and_robbers.game.participant.domain.Team;
+import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.play.location.application.RobberLocationService;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
 import com.team.cops_and_robbers.play.system.domain.SystemEventData;
@@ -12,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -32,7 +36,9 @@ public class GameSchedulerService {
     private final SystemPublisher systemPublisher;
     private final SystemEventFactory systemEventFactory;
     private final GameRepository gameRepository;
+    private final GameParticipantRepository gameParticipantRepository;
     private final RobberLocationService robberLocationService;
+    private final TransactionTemplate transactionTemplate;
 
     /**
      * 게임 시작 시 모든 이벤트 예약
@@ -78,7 +84,12 @@ public class GameSchedulerService {
         LocalDateTime policeMoveStartTime = policeMoveStartTime(game);
 
         register(scheduledTasks, policeMoveStartTime, now,
-                () -> publishPoliceMoveStart(game.getId()));
+                () -> {
+                    transactionTemplate.executeWithoutResult(status ->
+                            gameParticipantRepository.updateStatusByGameIdAndTeam(game.getId(), Team.POLICE, ParticipantStatus.ALIVE)
+                    );
+                    publishPoliceMoveStart(game.getId());
+                });
     }
 
     private void scheduleRobberLocationReveals(
