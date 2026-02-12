@@ -68,7 +68,11 @@ public class SystemService {
 
         escapedThief.updateStatus(ParticipantStatus.ALIVE);
 
-        SystemEvent event = systemEventFactory.createEscapeEvent(command.gameId(), escapedThief);
+        int remainingThieves = gameParticipantRepository.countByGameIdAndRobberStatus(
+                command.gameId(), ParticipantStatus.ALIVE
+        );
+
+        SystemEvent event = systemEventFactory.createEscapeEvent(command.gameId(), escapedThief, remainingThieves);
         eventPublisher.publishEvent(event);
     }
 

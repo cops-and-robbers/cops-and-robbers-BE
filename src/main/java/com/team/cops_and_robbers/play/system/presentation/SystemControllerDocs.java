@@ -36,7 +36,19 @@ public interface SystemControllerDocs {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "체포 성공",
-                    content = @Content(schema = @Schema(implementation = ArrestResponse.class))),
+                    content = @Content(
+                            schema = @Schema(implementation = ArrestResponse.class),
+                            examples = @ExampleObject(
+                                    name = "체포 성공 응답",
+                                    value = """
+                                            {
+                                                "robberNickname": "잡힌도둑",
+                                                "remainingThieves": 2
+                                            }
+                                            """
+                            )
+                    )
+            ),
             @ApiResponse(responseCode = "400", description = "잘못된 요청",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -187,17 +199,6 @@ public interface SystemControllerDocs {
                                                         "title": "게임 진행 중 아님",
                                                         "status": 400,
                                                         "detail": "게임이 진행 중인 상태가 아닙니다.",
-                                                        "instance": "/api/games/1/system/escape"
-                                                    }
-                                                    """
-                                    ),
-                                    @ExampleObject(
-                                            name = "도둑이 아님",
-                                            value = """
-                                                    {
-                                                        "title": "도둑만 탈옥 가능",
-                                                        "status": 400,
-                                                        "detail": "도둑 팀만 탈옥할 수 있습니다.",
                                                         "instance": "/api/games/1/system/escape"
                                                     }
                                                     """

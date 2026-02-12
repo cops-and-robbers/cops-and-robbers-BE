@@ -68,9 +68,8 @@ class SystemControllerTest extends ControllerTest {
             ArrestResponse result = response.as(ArrestResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-                softly.assertThat(result.result().police().nickname()).isEqualTo(police.getNickname());
-                softly.assertThat(result.result().robber().nickname()).isEqualTo(robber.getNickname());
-                softly.assertThat(result.result().remainingThieves()).isEqualTo(0);
+                softly.assertThat(result.robberNickname()).isEqualTo(robber.getNickname());
+                softly.assertThat(result.remainingThieves()).isEqualTo(0);
             });
 
             GameParticipant jailedRobber = gameParticipantRepository.findById(robberParticipant.getId()).orElseThrow();
@@ -267,7 +266,7 @@ class SystemControllerTest extends ControllerTest {
             // given
             Game waitingGame = gameRepository.save(GameFixture.WAITING_GAME());
             GameParticipant waitingRobber = givenRobber(waitingGame, robber);
-            waitingRobber.updateStatus(ParticipantStatus.JAILED); // 강제로 수감 상태로 만듦 (테스트용)
+            waitingRobber.updateStatus(ParticipantStatus.JAILED);
             gameParticipantRepository.save(waitingRobber);
 
             // when

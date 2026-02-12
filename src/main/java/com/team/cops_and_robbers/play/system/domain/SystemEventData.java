@@ -46,9 +46,9 @@ public sealed interface SystemEventData permits
         }
     }
 
-    record EscapeData(SystemParticipantInfo escapedThief) implements SystemEventData {
-        public static EscapeData of(GameParticipant escapedThief) {
-            return new EscapeData(SystemParticipantInfo.from(escapedThief));
+    record EscapeData(SystemParticipantInfo escapedThief, int remainingThieves) implements SystemEventData {
+        public static EscapeData of(GameParticipant escapedThief, int remainingThieves) {
+            return new EscapeData(SystemParticipantInfo.from(escapedThief), remainingThieves);
         }
     }
 }

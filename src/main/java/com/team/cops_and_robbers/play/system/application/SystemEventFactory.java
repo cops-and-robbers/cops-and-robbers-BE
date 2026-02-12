@@ -26,8 +26,8 @@ public class SystemEventFactory {
         return SystemEvent.of(gameId, SystemEventType.ARREST, data);
     }
 
-    public SystemEvent createEscapeEvent(Long gameId, GameParticipant escapedThief) {
-        SystemEventData.EscapeData data = SystemEventData.EscapeData.of(escapedThief);
+    public SystemEvent createEscapeEvent(Long gameId, GameParticipant escapedThief, int remainingThieves) {
+        SystemEventData.EscapeData data = SystemEventData.EscapeData.of(escapedThief, remainingThieves);
         return SystemEvent.of(gameId, SystemEventType.ESCAPE, data);
     }
 }
