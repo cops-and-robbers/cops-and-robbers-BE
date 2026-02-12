@@ -11,6 +11,7 @@ import com.team.cops_and_robbers.game.participant.application.dto.result.GameLea
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.play.lobby.application.LobbyEventFactory;
+import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
 import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,8 +30,10 @@ import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 class GameParticipantServiceTest extends ServiceUnitTest {
 
@@ -42,6 +45,9 @@ class GameParticipantServiceTest extends ServiceUnitTest {
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private LobbyEvent lobbyEvent;
 
     private static final String INVITE_CODE = "ABCDEF";
 
@@ -64,22 +70,23 @@ class GameParticipantServiceTest extends ServiceUnitTest {
     class joinGame {
 
         @Test
-        void 게임_참여에_성공하면_결과를_반환한다() {
+        void 게임_참여에_성공하면_결과를_반환하고_이벤트를_발행한다() {
             // given
             GameJoinCommand command = createGameJoinCommand(user.getId(), waitingGame.getId(), INVITE_CODE);
 
             given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
-
             given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(false);
             given(gameParticipantRepository.countByGameId(waitingGame.getId())).willReturn(0);
             given(userRepository.getByUserId(user.getId())).willReturn(user);
             given(gameParticipantRepository.save(any(GameParticipant.class))).willReturn(guestParticipant);
+            given(lobbyEventFactory.createEnterEvent(any(), any(GameParticipant.class), anyInt(), anyInt())).willReturn(lobbyEvent);
 
             // when
             GameJoinResult result = gameParticipantService.joinGame(command);
 
             // then
             assertThat(result).isEqualTo(GameJoinResult.from(guestParticipant));
+            then(eventPublisher).should().publishEvent(lobbyEvent);
         }
 
         @Test
@@ -171,7 +178,7 @@ class GameParticipantServiceTest extends ServiceUnitTest {
         }
 
         @Test
-        void 방장이_퇴장에_성공할_경우_다음_들어온_사람에게_방장을_위임한다() {
+        void 방장이_퇴장에_성공할_경우_다음_들어온_사람에게_방장을_위임하고_이벤트를_발행한다() {
             // given
             hostParticipant = HOST_PARTICIPANT(waitingGame, user2);
             GameLeaveCommand command = createGameLeaveCommand(user2.getId(), waitingGame.getId());
@@ -179,6 +186,8 @@ class GameParticipantServiceTest extends ServiceUnitTest {
             given(gameParticipantRepository.getByGameIdAndUserId(waitingGame.getId(), user2.getId())).willReturn(hostParticipant);
             given(gameParticipantRepository.countByGameId(waitingGame.getId())).willReturn(1);
             given(gameParticipantRepository.getNextParticipant(waitingGame.getId())).willReturn(guestParticipant);
+            given(lobbyEventFactory.createHostChangedEvent(any(), any(GameParticipant.class))).willReturn(lobbyEvent);
+            given(lobbyEventFactory.createExitEvent(any(), any(), anyInt(), anyInt())).willReturn(lobbyEvent);
 
             // when
             GameLeaveResult result = gameParticipantService.leaveGame(command);
@@ -187,6 +196,7 @@ class GameParticipantServiceTest extends ServiceUnitTest {
             assertThat(guestParticipant.isHost()).isTrue();
             assertThat(result).isEqualTo(GameLeaveResult.from(user2.getId(), 1));
             then(gameParticipantRepository).should().delete(hostParticipant);
+            then(eventPublisher).should(times(2)).publishEvent(lobbyEvent);
         }
 
         @Test
