@@ -52,9 +52,7 @@ class LobbyServiceTest extends ServiceUnitTest {
     @BeforeEach
     void setUp() {
         user = USER();
-        setId(user, 1L);
         waitingGame = WAITING_GAME();
-        setId(waitingGame, 1L);
     }
 
     @Nested
@@ -85,7 +83,6 @@ class LobbyServiceTest extends ServiceUnitTest {
         void 게임이_WAITING_상태가_아니면_예외가_발생한다() {
             // given
             Game inProgressGame = IN_PROGRESS_GAME();
-            setId(inProgressGame, 1L);
             TeamChangeCommand command = new TeamChangeCommand(user.getId(), inProgressGame.getId(), Team.POLICE);
 
             given(gameRepository.getByGameId(inProgressGame.getId())).willReturn(inProgressGame);
@@ -153,7 +150,6 @@ class LobbyServiceTest extends ServiceUnitTest {
         void 게임이_WAITING_상태가_아니면_예외가_발생한다() {
             // given
             Game inProgressGame = IN_PROGRESS_GAME();
-            setId(inProgressGame, 1L);
             ReadyUpdateCommand command = new ReadyUpdateCommand(user.getId(), inProgressGame.getId(), true);
 
             given(gameRepository.getByGameId(inProgressGame.getId())).willReturn(inProgressGame);
@@ -261,7 +257,6 @@ class LobbyServiceTest extends ServiceUnitTest {
         void 게임이_WAITING_상태가_아니면_예외가_발생한다() {
             // given
             Game inProgressGame = IN_PROGRESS_GAME();
-            setId(inProgressGame, 1L);
             GameStartCommand command = new GameStartCommand(user.getId(), inProgressGame.getId());
 
             given(gameRepository.getByGameId(inProgressGame.getId())).willReturn(inProgressGame);
