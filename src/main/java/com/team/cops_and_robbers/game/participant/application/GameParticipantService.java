@@ -37,8 +37,8 @@ public class GameParticipantService {
 
     @Transactional
     public GameJoinResult joinGame(GameJoinCommand command) {
-        Game game = gameRepository.getByGameId(command.gameId());
-        validateJoinable(command.userId(), game, command.inviteCode());
+        Game game = gameRepository.getByInviteCode(command.inviteCode());
+        validateJoinable(command.userId(), game);
 
         User user = userRepository.getByUserId(command.userId());
         GameParticipant participant = GameParticipant.createParticipant(game, user, false);
@@ -53,17 +53,13 @@ public class GameParticipantService {
         return GameJoinResult.from(participant);
     }
 
-    private void validateJoinable(Long userId, Game game, String inviteCode) {
+    private void validateJoinable(Long userId, Game game) {
         if (gameParticipantRepository.existsActiveGameByUserId(userId)) {
             throw new ApplicationException(GameParticipantException.ALREADY_PARTICIPATING);
         }
 
         if (!game.isWaiting()) {
             throw new ApplicationException(GameParticipantException.GAME_ALREADY_STARTED);
-        }
-
-        if (!game.isSameInviteCode(inviteCode)) {
-            throw new ApplicationException(GameParticipantException.INVALID_INVITE_CODE);
         }
 
         int participantCount = gameParticipantRepository.countByGameId(game.getId());

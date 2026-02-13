@@ -61,10 +61,6 @@ public class Game extends BaseTimeEntity {
         return this.status == GameStatus.IN_PROGRESS;
     }
 
-    public boolean isSameInviteCode(String inviteCode) {
-        return this.inviteCode.equals(inviteCode);
-    }
-
     public void startGame(LocalDateTime startTime) {
         this.startedAt = startTime;
         this.status = GameStatus.IN_PROGRESS;

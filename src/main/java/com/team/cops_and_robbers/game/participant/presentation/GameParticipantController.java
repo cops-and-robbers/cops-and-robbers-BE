@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/games/{gameId}/participants")
+@RequestMapping("/api/games")
 @RequiredArgsConstructor
 public class GameParticipantController implements GameParticipantControllerDocs {
 
@@ -31,13 +31,12 @@ public class GameParticipantController implements GameParticipantControllerDocs 
     /**
      * 1. 게임 방에 참여합니다.
      */
-    @PostMapping
+    @PostMapping("/join")
     public ResponseEntity<GameJoinResponse> joinGame(
             @AuthUser LoginUser loginUser,
-            @PathVariable Long gameId,
             @RequestBody @Valid GameJoinRequest request
     ) {
-        GameJoinCommand command = GameJoinCommand.of(loginUser.userId(), gameId, request.inviteCode());
+        GameJoinCommand command = GameJoinCommand.of(loginUser.userId(), request.inviteCode());
         GameJoinResult result = gameParticipantService.joinGame(command);
         GameJoinResponse response = GameJoinResponse.from(result);
         return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -46,7 +45,7 @@ public class GameParticipantController implements GameParticipantControllerDocs 
     /**
      * 2. 게임 방에서 퇴장합니다.
      */
-    @DeleteMapping
+    @DeleteMapping("/{gameId}/leave")
     public ResponseEntity<GameLeaveResponse> leaveGame(
             @AuthUser LoginUser loginUser,
             @PathVariable Long gameId
