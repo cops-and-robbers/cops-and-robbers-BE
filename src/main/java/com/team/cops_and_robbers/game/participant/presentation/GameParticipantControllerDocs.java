@@ -53,18 +53,7 @@ public interface GameParticipantControllerDocs {
                                                         "title": "유효하지 않은 입력값",
                                                         "status": 400,
                                                         "detail": "inviteCode: 초대 코드는 필수입니다.",
-                                                        "instance": "/api/games/1/participants"
-                                                    }
-                                                    """
-                                    ),
-                                    @ExampleObject(
-                                            name = "잘못된 초대 코드",
-                                            value = """
-                                                    {
-                                                        "title": "초대 코드 불일치",
-                                                        "status": 400,
-                                                        "detail": "잘못된 초대 코드입니다.",
-                                                        "instance": "/api/games/1/participants"
+                                                        "instance": "/api/games/join"
                                                     }
                                                     """
                                     ),
@@ -75,7 +64,7 @@ public interface GameParticipantControllerDocs {
                                                         "title": "게임 참여 불가",
                                                         "status": 400,
                                                         "detail": "이미 시작된 게임에는 참여할 수 없습니다.",
-                                                        "instance": "/api/games/1/participants"
+                                                        "instance": "/api/games/join"
                                                     }
                                                     """
                                     ),
@@ -86,7 +75,18 @@ public interface GameParticipantControllerDocs {
                                                         "title": "게임 참여 불가",
                                                         "status": 400,
                                                         "detail": "게임 방의 최대 참여 인원에 도달했습니다.",
-                                                        "instance": "/api/games/1/participants"
+                                                        "instance": "/api/games/join"
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "잘못된 초대 코드",
+                                            value = """
+                                                    {
+                                                        "title": "초대 코드 오류",
+                                                        "status": 400,
+                                                        "detail": "입력하신 초대 코드가 유효하지 않습니다.",
+                                                        "instance": "/api/games/join"
                                                     }
                                                     """
                                     )
@@ -103,23 +103,7 @@ public interface GameParticipantControllerDocs {
                                                 "title": "인증 필요",
                                                 "status": 401,
                                                 "detail": "로그인이 필요한 서비스입니다.",
-                                                "instance": "/api/games/1/participants"
-                                            }
-                                            """
-                            )
-                    )
-            ),
-            @ApiResponse(responseCode = "404", description = "게임을 찾을 수 없음",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(
-                                    name = "존재하지 않는 게임",
-                                    value = """
-                                            {
-                                                "title": "게임을 찾을 수 없음",
-                                                "status": 404,
-                                                "detail": "해당 게임을 찾을 수 없습니다.",
-                                                "instance": "/api/games/999/participants"
+                                                "instance": "/api/games/join"
                                             }
                                             """
                             )
@@ -135,7 +119,7 @@ public interface GameParticipantControllerDocs {
                                                 "title": "이미 참가 중인 게임",
                                                 "status": 409,
                                                 "detail": "이미 게임에 참가하고 있습니다.",
-                                                "instance": "/api/games/1/participants"
+                                                "instance": "/api/games/join"
                                             }
                                             """
                             )
@@ -144,7 +128,6 @@ public interface GameParticipantControllerDocs {
     })
     ResponseEntity<GameJoinResponse> joinGame(
             @Parameter(hidden = true) @AuthUser LoginUser loginUser,
-            @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "게임 참여 요청",
                     required = true,
@@ -204,7 +187,7 @@ public interface GameParticipantControllerDocs {
                                                 "title": "인증 필요",
                                                 "status": 401,
                                                 "detail": "로그인이 필요한 서비스입니다.",
-                                                "instance": "/api/games/1/participants"
+                                                "instance": "/api/games/1/leave"
                                             }
                                             """
                             )
@@ -221,7 +204,7 @@ public interface GameParticipantControllerDocs {
                                                         "title": "게임을 찾을 수 없음",
                                                         "status": 404,
                                                         "detail": "해당 게임을 찾을 수 없습니다.",
-                                                        "instance": "/api/games/999/participants"
+                                                        "instance": "/api/games/999/leave"
                                                     }
                                                     """
                                     ),
@@ -232,7 +215,7 @@ public interface GameParticipantControllerDocs {
                                                         "title": "참여 정보를 찾을 수 없음",
                                                         "status": 404,
                                                         "detail": "해당 게임에 참여하고 있지 않습니다.",
-                                                        "instance": "/api/games/1/participants"
+                                                        "instance": "/api/games/1/leave"
                                                     }
                                                     """
                                     )
