@@ -49,13 +49,12 @@ class GameParticipantServiceTest extends ServiceUnitTest {
     @Mock
     private LobbyEvent lobbyEvent;
 
-    private static final String INVITE_CODE = "ABCDEF";
-
     private User user;
     private User user2;
     private Game waitingGame;
     private GameParticipant guestParticipant;
     private GameParticipant hostParticipant;
+    private  String INVITE_CODE = "ABCDEF";
 
     @BeforeEach
     void setUp() {
@@ -72,9 +71,9 @@ class GameParticipantServiceTest extends ServiceUnitTest {
         @Test
         void 게임_참여에_성공하면_결과를_반환하고_이벤트를_발행한다() {
             // given
-            GameJoinCommand command = createGameJoinCommand(user.getId(), waitingGame.getId(), INVITE_CODE);
+            GameJoinCommand command = createGameJoinCommand(user.getId(), INVITE_CODE);
 
-            given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
+            given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(waitingGame);
             given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(false);
             given(gameParticipantRepository.countByGameId(waitingGame.getId())).willReturn(0);
             given(userRepository.getByUserId(user.getId())).willReturn(user);
@@ -92,9 +91,9 @@ class GameParticipantServiceTest extends ServiceUnitTest {
         @Test
         void 이미_참여_중인_활성_게임이_있는_유저라면_예외가_발생한다() {
             // given
-            GameJoinCommand command = createGameJoinCommand(user.getId(), waitingGame.getId(), INVITE_CODE);
+            GameJoinCommand command = createGameJoinCommand(user.getId(), INVITE_CODE);
 
-            given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
+            given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(waitingGame);
             given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(true);
 
             // when & then
@@ -109,9 +108,9 @@ class GameParticipantServiceTest extends ServiceUnitTest {
             Game inProgressGame = IN_PROGRESS_GAME();
             setId(inProgressGame, 1L);
 
-            GameJoinCommand command = createGameJoinCommand(user.getId(), inProgressGame.getId(), INVITE_CODE);
+            GameJoinCommand command = createGameJoinCommand(user.getId(), INVITE_CODE);
 
-            given(gameRepository.getByGameId(inProgressGame.getId())).willReturn(inProgressGame);
+            given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(inProgressGame);
             given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(false);
 
             // when & then
@@ -121,27 +120,12 @@ class GameParticipantServiceTest extends ServiceUnitTest {
         }
 
         @Test
-        void 게임_초대코드가_일치하지_않으면_예외가_발생한다() {
-            // given
-            String wrongInviteCode = "WRONG_CODE";
-            GameJoinCommand command = createGameJoinCommand(user.getId(), waitingGame.getId(), wrongInviteCode);
-
-            given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
-            given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(false);
-
-            // when & then
-            assertThatThrownBy(() -> gameParticipantService.joinGame(command))
-                    .isInstanceOf(ApplicationException.class)
-                    .hasMessageContaining(GameParticipantException.INVALID_INVITE_CODE.getDetail());
-        }
-
-        @Test
         void 현재_인원이_게임_최대_인원을_초과하면_예외가_발생한다() {
             // given
-            GameJoinCommand command = createGameJoinCommand(user.getId(), waitingGame.getId(), INVITE_CODE);
+            GameJoinCommand command = createGameJoinCommand(user.getId(), INVITE_CODE);
             int maxParticipants = waitingGame.getMaxParticipants();
 
-            given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
+            given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(waitingGame);
             given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(false);
             given(gameParticipantRepository.countByGameId(waitingGame.getId())).willReturn(maxParticipants);
 
@@ -152,8 +136,8 @@ class GameParticipantServiceTest extends ServiceUnitTest {
         }
     }
 
-    private GameJoinCommand createGameJoinCommand(Long userId,  Long gameId, String inviteCode) {
-        return new GameJoinCommand(userId, gameId, inviteCode);
+    private GameJoinCommand createGameJoinCommand(Long userId, String inviteCode) {
+        return new GameJoinCommand(userId, inviteCode);
     }
 
     @Nested

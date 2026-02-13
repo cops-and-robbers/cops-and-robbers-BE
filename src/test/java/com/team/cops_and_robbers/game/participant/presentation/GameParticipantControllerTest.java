@@ -25,8 +25,8 @@ import static org.assertj.core.api.SoftAssertions.assertSoftly;
 class GameParticipantControllerTest extends ControllerTest {
 
     private static final String GAME_ID_PARAM = "gameId";
-    private static final String JOIN_URL = "/api/games/{gameId}/participants";
-    private static final String LEAVE_URL = "/api/games/{gameId}/participants";
+    private static final String JOIN_URL = "/api/games/join";
+    private static final String LEAVE_URL = "/api/games/{gameId}/leave";
 
     private User host;
     private Game waitingGame;
@@ -54,7 +54,6 @@ class GameParticipantControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = authenticated(guestToken)
                     .body(request)
-                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
                     .when()
                     .post(JOIN_URL)
                     .then()
@@ -79,7 +78,6 @@ class GameParticipantControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = authenticated(guestToken)
                     .body(request)
-                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
                     .when()
                     .post(JOIN_URL)
                     .then()
@@ -102,7 +100,6 @@ class GameParticipantControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = authenticated(guestToken)
                     .body(request)
-                    .pathParam(GAME_ID_PARAM, startedGame.getId())
                     .when()
                     .post(JOIN_URL)
                     .then()
@@ -137,7 +134,6 @@ class GameParticipantControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = authenticated(guest2Token)
                     .body(request)
-                    .pathParam(GAME_ID_PARAM, fullGame.getId())
                     .when()
                     .post(JOIN_URL)
                     .then()
@@ -155,7 +151,6 @@ class GameParticipantControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = unauthenticated()
                     .body(request)
-                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
                     .when()
                     .post(JOIN_URL)
                     .then()
@@ -163,26 +158,6 @@ class GameParticipantControllerTest extends ControllerTest {
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
-        }
-
-        @Test
-        void 존재하지_않는_게임에_참여하면_404_NotFound를_응답한다() {
-            // given
-            User guest = givenUser("guest");
-            String guestToken = givenAccessToken(guest);
-            GameJoinRequest request = new GameJoinRequest("ABC123");
-
-            // when
-            ExtractableResponse<Response> response = authenticated(guestToken)
-                    .body(request)
-                    .pathParam(GAME_ID_PARAM, 9999L)
-                    .when()
-                    .post(JOIN_URL)
-                    .then()
-                    .extract();
-
-            // then
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
         }
 
         @Test
@@ -198,7 +173,6 @@ class GameParticipantControllerTest extends ControllerTest {
             // when
             ExtractableResponse<Response> response = authenticated(guestToken)
                     .body(request)
-                    .pathParam(GAME_ID_PARAM, anotherGame.getId())
                     .when()
                     .post(JOIN_URL)
                     .then()
