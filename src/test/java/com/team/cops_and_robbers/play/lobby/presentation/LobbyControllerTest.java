@@ -26,6 +26,7 @@ class LobbyControllerTest extends ControllerTest {
     private static final String GAME_ID_PARAM = "gameId";
     private static final String TEAM_CHANGE_URL = "/api/games/{gameId}/lobby/team";
     private static final String READY_UPDATE_URL = "/api/games/{gameId}/lobby/ready";
+    private static final String GAME_START_URL = "/api/games/{gameId}/lobby/start";
 
     private User host;
     private User guest;
@@ -213,6 +214,124 @@ class LobbyControllerTest extends ControllerTest {
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .patch(READY_UPDATE_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+        }
+    }
+
+    @Nested
+    @DisplayName("게임 시작 API")
+    class StartGame {
+
+        @Test
+        void 게임_시작_성공() {
+            // given
+            guestParticipant.updateReady(true); // 방장 제외 모든 인원 준비 완료 시
+            gameParticipantRepository.save(guestParticipant);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(hostToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(GAME_START_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
+
+            Game startedGame = gameRepository.findById(game.getId()).orElseThrow();
+            assertThat(startedGame.isInProgress()).isTrue();
+        }
+
+        @Test
+        void 방장이_아니면_403_Forbidden을_응답한다() {
+            // when
+            ExtractableResponse<Response> response = authenticated(guestToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(GAME_START_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
+        }
+
+        @Test
+        void 경찰이_없으면_400_BadRequest를_응답한다() {
+            // given
+            guestParticipant.changeTeam(Team.ROBBER);
+            guestParticipant.updateReady(true);
+            gameParticipantRepository.save(guestParticipant);
+
+            hostParticipant.changeTeam(Team.ROBBER);
+            gameParticipantRepository.save(hostParticipant);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(hostToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(GAME_START_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 준비하지_않은_참가자가_있으면_400_BadRequest를_응답한다() {
+            // given
+            guestParticipant.changeTeam(Team.POLICE);
+            gameParticipantRepository.save(guestParticipant);
+
+            hostParticipant.changeTeam(Team.ROBBER);
+            gameParticipantRepository.save(hostParticipant);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(hostToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(GAME_START_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 이미_시작된_게임에서는_게임을_시작할_수_없으며_400_BadRequest를_응답한다() {
+            // given
+            Game waitingGame = gameRepository.save(GameFixture.WAITING_GAME(UUID.randomUUID().toString().substring(0, 6)));
+            waitingGame.startGame(java.time.LocalDateTime.now());
+            gameRepository.save(waitingGame);
+
+            givenHost(waitingGame, host);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(hostToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .when()
+                    .post(GAME_START_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 인증_토큰_없이_요청하면_401_Unauthorized를_응답한다() {
+            // when
+            ExtractableResponse<Response> response = unauthenticated()
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(GAME_START_URL)
                     .then()
                     .extract();
 
