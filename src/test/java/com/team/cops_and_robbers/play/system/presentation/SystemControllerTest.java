@@ -1,8 +1,10 @@
 package com.team.cops_and_robbers.play.system.presentation;
 
 import com.team.cops_and_robbers.common.ControllerTest;
+import com.team.cops_and_robbers.common.fixture.GameAreaFixture;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.play.system.presentation.dto.request.ArrestRequest;
@@ -42,6 +44,7 @@ class SystemControllerTest extends ControllerTest {
         robberToken = givenAccessToken(robber);
 
         game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
+        gameAreaRepository.save(GameAreaFixture.GAME_AREA(game));
         policeParticipant = givenPolice(game, police);
         robberParticipant = givenRobber(game, robber);
     }
@@ -52,6 +55,34 @@ class SystemControllerTest extends ControllerTest {
 
         @Test
         void 도둑_체포_성공() {
+            // given
+            User secondRobber = givenUser("robber2");
+            givenRobber(game, secondRobber);
+            ArrestRequest request = new ArrestRequest(robberParticipant.getId());
+
+            // when
+            ExtractableResponse<Response> response = authenticated(policeToken)
+                    .body(request)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(ARREST_URL)
+                    .then()
+                    .extract();
+
+            // then
+            ArrestResponse result = response.as(ArrestResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                softly.assertThat(result.robberNickname()).isEqualTo(robber.getNickname());
+                softly.assertThat(result.remainingThieves()).isEqualTo(1);
+
+                GameParticipant jailedRobber = gameParticipantRepository.findById(robberParticipant.getId()).orElseThrow();
+                softly.assertThat(jailedRobber.isJailed()).isTrue();
+            });
+        }
+
+        @Test
+        void 모든_도둑이_체포되면_게임이_종료되어_게임과_유저는_WAITING_상태가_되어야한다() {
             // given
             ArrestRequest request = new ArrestRequest(robberParticipant.getId());
 
@@ -70,10 +101,15 @@ class SystemControllerTest extends ControllerTest {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
                 softly.assertThat(result.robberNickname()).isEqualTo(robber.getNickname());
                 softly.assertThat(result.remainingThieves()).isEqualTo(0);
-            });
 
-            GameParticipant jailedRobber = gameParticipantRepository.findById(robberParticipant.getId()).orElseThrow();
-            assertThat(jailedRobber.isJailed()).isTrue();
+                GameParticipant jailedRobber = gameParticipantRepository.findById(robberParticipant.getId()).orElseThrow();
+                softly.assertThat(jailedRobber.isWaiting()).isTrue();
+
+                gameRepository.findById(game.getId()).orElseThrow();
+                softly.assertThat(game.getStatus() == GameStatus.WAITING);
+
+                softly.assertThat(gameResultRepository.existsById(1L)).isTrue();    // 게임 결과 또한 저장되어야 한다.
+            });
         }
 
         @Test

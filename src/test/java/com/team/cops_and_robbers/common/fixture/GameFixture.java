@@ -51,7 +51,7 @@ public class GameFixture {
                 .policeWaitMinutes(3)
                 .maxParticipants(10)
                 .startedAt(LocalDateTime.now().minusMinutes(30))
-                .endedAt(LocalDateTime.now())
+                .lastEndedAt(LocalDateTime.now())
                 .build();
     }
 
