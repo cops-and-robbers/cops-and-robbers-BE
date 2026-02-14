@@ -51,7 +51,7 @@ public class Game extends BaseTimeEntity {
 
     private LocalDateTime startedAt;
 
-    private LocalDateTime endedAt;
+    private LocalDateTime lastEndedAt;
 
     public boolean isWaiting() {
         return this.status == GameStatus.WAITING;
@@ -64,6 +64,11 @@ public class Game extends BaseTimeEntity {
     public void startGame(LocalDateTime startTime) {
         this.startedAt = startTime;
         this.status = GameStatus.IN_PROGRESS;
+    }
+
+    public void resetForNextRound() {
+        this.status = GameStatus.WAITING;
+        this.lastEndedAt = LocalDateTime.now();
     }
 
     public static Game createGame(String inviteCode, GameCreateCommand command) {
