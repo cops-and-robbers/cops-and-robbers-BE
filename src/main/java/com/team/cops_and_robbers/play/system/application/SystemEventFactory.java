@@ -33,8 +33,8 @@ public class SystemEventFactory {
         return SystemEvent.of(gameId, SystemEventType.ESCAPE, data);
     }
 
-    public SystemEvent createGameEndEvent(Long gameId, Team winnerTeam, GameEndReason reason) {
-        SystemEventData.GameEndData data = SystemEventData.GameEndData.of(winnerTeam, reason);
+    public SystemEvent createGameEndEvent(Long gameId, Team winnerTeam, GameEndReason reason, Long gameResultId) {
+        SystemEventData.GameEndData data = SystemEventData.GameEndData.of(gameResultId, winnerTeam, reason);
         return SystemEvent.of(gameId, SystemEventType.GAME_OVER, data);
     }
 }

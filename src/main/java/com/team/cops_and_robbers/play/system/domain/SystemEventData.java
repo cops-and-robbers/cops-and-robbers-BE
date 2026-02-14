@@ -55,9 +55,9 @@ public sealed interface SystemEventData permits
         }
     }
 
-    record GameEndData(Team winnerTeam, GameEndReason reason) implements SystemEventData {
-        public static GameEndData of(Team winnerTeam, GameEndReason reason) {
-            return new GameEndData(winnerTeam, reason);
+    record GameEndData(Long gameResultId, Team winnerTeam, GameEndReason reason) implements SystemEventData {
+        public static GameEndData of(Long gameResultId, Team winnerTeam, GameEndReason reason) {
+            return new GameEndData(gameResultId, winnerTeam, reason);
         }
     }
 }
