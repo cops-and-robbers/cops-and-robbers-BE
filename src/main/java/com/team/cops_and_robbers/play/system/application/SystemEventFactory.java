@@ -1,6 +1,8 @@
 package com.team.cops_and_robbers.play.system.application;
 
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
+import com.team.cops_and_robbers.game.participant.domain.Team;
+import com.team.cops_and_robbers.history.domain.GameEndReason;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
 import com.team.cops_and_robbers.play.system.domain.SystemEventData;
 import com.team.cops_and_robbers.play.system.domain.SystemEventType;
@@ -29,5 +31,10 @@ public class SystemEventFactory {
     public SystemEvent createEscapeEvent(Long gameId, GameParticipant escapedThief, int remainingThieves) {
         SystemEventData.EscapeData data = SystemEventData.EscapeData.of(escapedThief, remainingThieves);
         return SystemEvent.of(gameId, SystemEventType.ESCAPE, data);
+    }
+
+    public SystemEvent createGameEndEvent(Long gameId, Team winnerTeam, GameEndReason reason) {
+        SystemEventData.GameEndData data = SystemEventData.GameEndData.of(winnerTeam, reason);
+        return SystemEvent.of(gameId, SystemEventType.GAME_OVER, data);
     }
 }

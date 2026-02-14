@@ -2,6 +2,8 @@ package com.team.cops_and_robbers.play.system.domain;
 
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
+import com.team.cops_and_robbers.game.participant.domain.Team;
+import com.team.cops_and_robbers.history.domain.GameEndReason;
 
 import java.util.List;
 
@@ -9,7 +11,8 @@ public sealed interface SystemEventData permits
         SystemEventData.PoliceMoveStartData,
         SystemEventData.RobberLocationRevealData,
         SystemEventData.ArrestData,
-        SystemEventData.EscapeData {
+        SystemEventData.EscapeData,
+        SystemEventData.GameEndData {
 
     record SystemParticipantInfo(Long participantId, String nickname, ParticipantStatus status) {
         public static SystemParticipantInfo from(GameParticipant participant) {
@@ -49,6 +52,12 @@ public sealed interface SystemEventData permits
     record EscapeData(SystemParticipantInfo escapedThief, int remainingThieves) implements SystemEventData {
         public static EscapeData of(GameParticipant escapedThief, int remainingThieves) {
             return new EscapeData(SystemParticipantInfo.from(escapedThief), remainingThieves);
+        }
+    }
+
+    record GameEndData(Team winnerTeam, GameEndReason reason) implements SystemEventData {
+        public static GameEndData of(Team winnerTeam, GameEndReason reason) {
+            return new GameEndData(winnerTeam, reason);
         }
     }
 }
