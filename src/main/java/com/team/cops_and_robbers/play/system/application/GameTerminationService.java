@@ -52,7 +52,7 @@ public class GameTerminationService {
     private void endGame(Game game, Team winner, GameEndReason reason) {
         GameResult result = gameResultService.recordGameResult(game, winner, reason);
         game.resetForNextRound();
-        gameParticipantRepository.updateStatusByGameId(game.getId(), ParticipantStatus.WAITING);
+        gameParticipantRepository.resetAllParticipantsForNextRound(game.getId(), ParticipantStatus.WAITING);
 
         SystemEvent gameEndEvent = systemEventFactory.createGameEndEvent(
                 game.getId(), winner, reason, result.getId()
