@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.user.presentation;
 
 import com.google.firebase.auth.AuthErrorCode;
 import com.google.firebase.auth.FirebaseAuthException;
+import com.team.cops_and_robbers.auth.domain.Tokens;
 import com.team.cops_and_robbers.common.ControllerTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.exception.CommonException;
@@ -257,7 +258,6 @@ class UserControllerTest extends ControllerTest {
     }
 
 
-
     @Nested
     @DisplayName("회원 탈퇴 API")
     class DeleteAccount {
@@ -266,10 +266,10 @@ class UserControllerTest extends ControllerTest {
         void 회원_탈퇴_성공() {
             // given
             User user = givenUser();
-            String accessToken = givenAccessToken(user);
+            Tokens tokens = givenTokens(user);
 
             // when
-            ExtractableResponse<Response> extract = authenticated(accessToken)
+            ExtractableResponse<Response> extract = authenticated(tokens.accessToken())
                     .when()
                     .delete("/api/user/me")
                     .then()
@@ -279,6 +279,7 @@ class UserControllerTest extends ControllerTest {
             NicknameCheckResponse response = extract.as(NicknameCheckResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(refreshTokenRepository.findByUserId(user.getId())).isNull();
                 softly.assertThatThrownBy(() ->
                         userRepository.getByUserId(user.getId())
                 )
@@ -291,14 +292,14 @@ class UserControllerTest extends ControllerTest {
         void 외부_인증_서버에_유저가_없으면_내부_유저를_삭제한다() throws Exception {
             // given
             User user = givenUser();
-            String accessToken = givenAccessToken(user);
+            Tokens tokens = givenTokens(user);
             FirebaseAuthException mockException = mock(FirebaseAuthException.class);
             when(mockException.getAuthErrorCode()).thenReturn(AuthErrorCode.USER_NOT_FOUND);
             doThrow(mockException)
                     .when(firebaseAuth).deleteUser(anyString());
 
             // when
-            ExtractableResponse<Response> extract = authenticated(accessToken)
+            ExtractableResponse<Response> extract = authenticated(tokens.accessToken())
                     .when()
                     .delete("/api/user/me")
                     .then()
@@ -308,6 +309,7 @@ class UserControllerTest extends ControllerTest {
             NicknameCheckResponse response = extract.as(NicknameCheckResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(refreshTokenRepository.findByUserId(user.getId())).isNull();
                 softly.assertThatThrownBy(() ->
                                 userRepository.getByUserId(user.getId())
                         )
@@ -320,11 +322,11 @@ class UserControllerTest extends ControllerTest {
         void 참여중인_게임이_있다면_회원_탈퇴에_실패하고_409_CONFLICT_를_응답해야_한다() {
             // given
             User user = givenUser();
-            String accessToken = givenAccessToken(user);
+            Tokens tokens = givenTokens(user);
             givenGame(user);
 
             // when
-            ExtractableResponse<Response> extract = authenticated(accessToken)
+            ExtractableResponse<Response> extract = authenticated(tokens.accessToken())
                     .when()
                     .delete("/api/user/me")
                     .then()
@@ -335,6 +337,7 @@ class UserControllerTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(409);
                 softly.assertThat(response.title()).isEqualTo(UserException.CANNOT_WITHDRAW.getTitle());
+                softly.assertThat(refreshTokenRepository.findByUserId(user.getId())).isEqualTo(tokens.refreshToken());
             });
         }
 

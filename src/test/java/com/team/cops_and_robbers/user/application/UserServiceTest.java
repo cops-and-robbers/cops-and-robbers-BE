@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.user.application;
 import com.google.firebase.auth.AuthErrorCode;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
+import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
@@ -27,6 +28,9 @@ class UserServiceTest extends ServiceUnitTest {
 
     @InjectMocks
     private UserService userService;
+
+    @Mock
+    protected RefreshTokenRepository refreshTokenRepository;
 
     @Mock
     private FirebaseAuth firebaseAuth;
@@ -90,6 +94,7 @@ class UserServiceTest extends ServiceUnitTest {
             // then
             then(userRepository).should().delete(user);
             then(firebaseAuth).should().deleteUser(user.getSocialId());
+            then(refreshTokenRepository).should().delete(user.getId());
         }
 
         @Test
@@ -104,6 +109,7 @@ class UserServiceTest extends ServiceUnitTest {
                     .hasMessage(UserException.CANNOT_WITHDRAW.getDetail());
 
             then(userRepository).should(never()).delete(any());
+            then(refreshTokenRepository).should(never()).delete(any());
             then(firebaseAuth).shouldHaveNoInteractions();
         }
 
@@ -122,6 +128,7 @@ class UserServiceTest extends ServiceUnitTest {
 
             // then
             then(userRepository).should().delete(user);
+            then(refreshTokenRepository).should().delete(user.getId());
         }
     }
 
