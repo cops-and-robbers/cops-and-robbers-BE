@@ -11,6 +11,7 @@ import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepo
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.exception.UserException;
+import com.team.cops_and_robbers.user.repository.UserDeviceRepository;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ public class UserService {
 
     private final FirebaseAuth firebaseAuth;
     private final UserRepository userRepository;
+    private final UserDeviceRepository userDeviceRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final GameParticipantRepository gameParticipantRepository;
 
@@ -60,7 +62,8 @@ public class UserService {
         if (gameParticipantRepository.existsActiveGameByUserId(user.getId())) {
             throw new ApplicationException(UserException.CANNOT_WITHDRAW);
         }
-        userRepository.delete(user);
+        userDeviceRepository.deleteByUserId(userId);
+        userRepository.deleteUserByIdDirectly(user.getId());
         refreshTokenRepository.delete(user.getId());
 
         try {
