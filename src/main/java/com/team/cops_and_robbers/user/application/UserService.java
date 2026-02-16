@@ -4,6 +4,7 @@ import com.google.firebase.auth.AuthErrorCode;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.team.cops_and_robbers.auth.exception.AuthException;
+import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.exception.InfrastructureException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
@@ -24,6 +25,7 @@ public class UserService {
 
     private final FirebaseAuth firebaseAuth;
     private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final GameParticipantRepository gameParticipantRepository;
 
     @Transactional(readOnly = true)
@@ -59,6 +61,7 @@ public class UserService {
             throw new ApplicationException(UserException.CANNOT_WITHDRAW);
         }
         userRepository.delete(user);
+        refreshTokenRepository.delete(user.getId());
 
         try {
             firebaseAuth.deleteUser(user.getSocialId());
