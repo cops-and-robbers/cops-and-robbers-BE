@@ -6,6 +6,7 @@ import com.team.cops_and_robbers.user.application.UserService;
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
+import com.team.cops_and_robbers.user.presentation.dto.response.DeleteAccountResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.MyPageResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.NicknameCheckResponse;
 import jakarta.validation.Valid;
@@ -49,5 +50,14 @@ public class UserController implements UserControllerDocs {
         NicknameUpdateCommand command = NicknameUpdateCommand.of(loginUser.userId(), request.nickname());
         userService.updateNickname(command);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 4. 사용자 정보를 삭제합니다. (회원 탈퇴)
+     */
+    @DeleteMapping("/me")
+    public ResponseEntity<DeleteAccountResponse> deleteAccount(@AuthUser LoginUser loginUser) {
+        userService.deleteAccount(loginUser.userId());
+        return ResponseEntity.ok(DeleteAccountResponse.from());
     }
 }
