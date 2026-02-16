@@ -92,7 +92,7 @@ class UserServiceTest extends ServiceUnitTest {
             userService.deleteAccount(user.getId());
 
             // then
-            then(userRepository).should().delete(user);
+            then(userRepository).should().deleteUserByIdDirectly(user.getId());
             then(firebaseAuth).should().deleteUser(user.getSocialId());
             then(refreshTokenRepository).should().delete(user.getId());
         }
@@ -127,7 +127,7 @@ class UserServiceTest extends ServiceUnitTest {
             userService.deleteAccount(user.getId());
 
             // then
-            then(userRepository).should().delete(user);
+            then(userRepository).should().deleteUserByIdDirectly(user.getId());
             then(refreshTokenRepository).should().delete(user.getId());
         }
     }
