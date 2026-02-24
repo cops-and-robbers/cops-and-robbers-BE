@@ -4,5 +4,6 @@ public enum SystemEventType {
     POLICE_MOVE_START,
     ROBBER_LOCATION_REVEAL,
     ARREST,
-    ESCAPE
+    ESCAPE,
+    GAME_OVER
 }

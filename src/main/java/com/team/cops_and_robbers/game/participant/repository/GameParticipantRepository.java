@@ -86,6 +86,17 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
         """)
     void updateStatusByGameIdAndTeam(@Param("gameId") Long gameId, @Param("team") Team team, @Param("status") ParticipantStatus status);
 
+    /**
+     * 게임이 종료될 때 참가자의 상태를 초기화
+     */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+        update GameParticipant gp
+        set gp.status = :status, gp.isReady = false
+        where gp.game.id = :gameId
+        """ )
+    void resetAllParticipantsForNextRound(@Param("gameId") Long gameId, @Param("status") ParticipantStatus status);
+
     Optional<GameParticipant> findByGameIdAndUserId(Long gameId, Long userId);
 
     Optional<GameParticipant> findFirstByGameIdOrderByCreatedAtAsc(Long gameId);

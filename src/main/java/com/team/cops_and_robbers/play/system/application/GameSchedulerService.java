@@ -30,7 +30,7 @@ import java.util.concurrent.ScheduledFuture;
 @RequiredArgsConstructor
 public class GameSchedulerService {
 
-    private final Map<Long, List<ScheduledFuture>> gameSchedules = new ConcurrentHashMap<>();
+    private final Map<Long, List<ScheduledFuture<?>>> gameSchedules = new ConcurrentHashMap<>();
 
     private final TaskScheduler taskScheduler;
     private final SystemPublisher systemPublisher;
@@ -38,6 +38,7 @@ public class GameSchedulerService {
     private final GameRepository gameRepository;
     private final GameParticipantRepository gameParticipantRepository;
     private final RobberLocationService robberLocationService;
+    private final GameTerminationService gameTerminationService;
     private final TransactionTemplate transactionTemplate;
 
     /**
@@ -45,6 +46,7 @@ public class GameSchedulerService {
      */
     public void scheduleAllEvents(Long gameId) {
         Game game = gameRepository.getByGameId(gameId);
+        log.info("[Scheduler] Scheduling events for newly started game. GameId: {}", game.getId());
         scheduleGame(game);
     }
 
@@ -54,7 +56,7 @@ public class GameSchedulerService {
     @PostConstruct
     public void recoverSchedules() {
         List<Game> inProgressGames = gameRepository.findByStatus(GameStatus.IN_PROGRESS);
-
+        log.info("[Scheduler] Recovering schedules for {} in-progress game(s).", inProgressGames.size());
         for (Game game : inProgressGames) {
             scheduleGame(game);
         }
@@ -64,20 +66,25 @@ public class GameSchedulerService {
      * 하나의 게임에 대해 필요한 시스템 이벤트 스케줄을 등록한다.
      * - 경찰 이동 시작 이벤트
      * - 도둑 위치 공개 이벤트
+     * - 타임오버로 인한 게임 종료 이벤트
      * 서버 재시작 시에도 동일한 로직으로 스케줄을 복구한다.
      */
     private void scheduleGame(Game game) {
-        List<ScheduledFuture> scheduledTasks = new ArrayList<>();
+        cancelSchedule(game.getId());
+
+        List<ScheduledFuture<?>> scheduledTasks = new ArrayList<>();
         LocalDateTime now = TimestampUtil.nowKstLocal();
 
         schedulePoliceMoveStart(scheduledTasks, game, now);
         scheduleRobberLocationReveals(scheduledTasks, game, now);
+        scheduleGameOver(scheduledTasks, game, now);
 
         gameSchedules.put(game.getId(), scheduledTasks);
+        log.info("[Scheduler] Successfully scheduled all events for GameId: {}", game.getId());
     }
 
     private void schedulePoliceMoveStart(
-            List<ScheduledFuture> scheduledTasks,
+            List<ScheduledFuture<?>> scheduledTasks,
             Game game,
             LocalDateTime now
     ) {
@@ -85,6 +92,7 @@ public class GameSchedulerService {
 
         register(scheduledTasks, policeMoveStartTime, now,
                 () -> {
+                    log.info("[Scheduler] Executing police-move-start task! GameId: {}", game.getId());
                     transactionTemplate.executeWithoutResult(status ->
                             gameParticipantRepository.updateStatusByGameIdAndTeam(game.getId(), Team.POLICE, ParticipantStatus.ALIVE)
                     );
@@ -93,7 +101,7 @@ public class GameSchedulerService {
     }
 
     private void scheduleRobberLocationReveals(
-            List<ScheduledFuture> scheduledTasks,
+            List<ScheduledFuture<?>> scheduledTasks,
             Game game,
             LocalDateTime now
     ) {
@@ -104,21 +112,61 @@ public class GameSchedulerService {
             LocalDateTime finalRevealTime = revealTime;
 
             register(scheduledTasks, finalRevealTime, now,
-                    () -> publishRobberLocationReveal(game.getId()));
+                    () -> {
+                        log.info("[Scheduler] Executing robber-location-reveal task! GameId: {}", game.getId());
+                        publishRobberLocationReveal(game.getId());
+                    });
 
             revealTime = revealTime.plusMinutes(game.getLocationRevealIntervalMinutes());
         }
     }
 
+    /**
+     * 타임 오버로 인한 게임 종료
+     */
+    private void scheduleGameOver(
+            List<ScheduledFuture<?>> scheduledTasks,
+            Game game,
+            LocalDateTime now
+    ) {
+        LocalDateTime targetTime = gameOverTime(game);
+
+        if (!targetTime.isAfter(now)) {
+            log.warn("[Scheduler] Time-over already reached for GameId: {}. Executing immediate game termination.", game.getId());
+            gameTerminationService.endGameByTimeOver(game.getId());
+            return;
+        }
+
+        register(scheduledTasks, targetTime, now,
+                () -> {
+                    log.info("[Scheduler] Executing time-out game-over task! GameId: {}", game.getId());
+                    gameTerminationService.endGameByTimeOver(game.getId());
+                });
+    }
+
+    /**
+     * 게임 종료/시작 시에 게임에 남아 있는 스케줄러를 모두 취소한다.
+     */
+    public void cancelSchedule(Long gameId) {
+        List<ScheduledFuture<?>> tasks = gameSchedules.remove(gameId);
+
+        if (tasks != null) {
+            for (ScheduledFuture<?> task : tasks) {
+                task.cancel(false);
+            }
+            log.info("[Scheduler] Cancelled all {} scheduled tasks for GameId {}.", tasks.size(), gameId);
+        }
+    }
+
     private void register(
-            List<ScheduledFuture> scheduledTasks,
+            List<ScheduledFuture<?>> scheduledTasks,
             LocalDateTime targetTime,
             LocalDateTime now,
             Runnable task
     ) {
         if (targetTime.isAfter(now)) {
             Instant instant = TimestampUtil.toInstant(targetTime);
-            ScheduledFuture scheduledTask = taskScheduler.schedule(task, instant);
+            ScheduledFuture<?> scheduledTask = taskScheduler.schedule(task, instant);
             scheduledTasks.add(scheduledTask);
         }
     }

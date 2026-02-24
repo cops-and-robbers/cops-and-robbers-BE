@@ -28,9 +28,11 @@ public class SystemService {
 
     private final ApplicationEventPublisher eventPublisher;
     private final SystemEventFactory systemEventFactory;
+    private final GameTerminationService gameTerminationService;
 
     /**
      * 경찰이 도둑을 체포합니다.
+     * - 남은 도둑이 없을 경우 게임 종료 이벤트가 추가로 발생합니다.
      */
     @Transactional
     public ArrestResult arrestRobber(ArrestCommand command) {
@@ -43,13 +45,17 @@ public class SystemService {
         robber.updateStatus(ParticipantStatus.JAILED);
 
         int remainingThieves = gameParticipantRepository.countByGameIdAndRobberStatus(
-                command.gameId(), ParticipantStatus.ALIVE
+                game.getId(), ParticipantStatus.ALIVE
         );
 
         SystemEvent event = systemEventFactory.createArrestEvent(
-                command.gameId(), police, robber, remainingThieves
+                game.getId(), police, robber, remainingThieves
         );
         eventPublisher.publishEvent(event);
+
+        if (remainingThieves == 0) {
+            gameTerminationService.endGameByAllArrested(game.getId());
+        }
 
         return ArrestResult.from((SystemEventData.ArrestData) event.data());
     }
