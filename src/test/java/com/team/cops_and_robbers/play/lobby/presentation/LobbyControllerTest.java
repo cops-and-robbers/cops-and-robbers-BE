@@ -6,8 +6,8 @@ import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.Team;
-import com.team.cops_and_robbers.play.lobby.presentation.dto.ReadyUpdateRequest;
-import com.team.cops_and_robbers.play.lobby.presentation.dto.TeamChangeRequest;
+import com.team.cops_and_robbers.play.lobby.presentation.dto.request.ReadyUpdateRequest;
+import com.team.cops_and_robbers.play.lobby.presentation.dto.request.TeamChangeRequest;
 import com.team.cops_and_robbers.user.domain.User;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
@@ -27,6 +27,7 @@ class LobbyControllerTest extends ControllerTest {
     private static final String TEAM_CHANGE_URL = "/api/games/{gameId}/lobby/team";
     private static final String READY_UPDATE_URL = "/api/games/{gameId}/lobby/ready";
     private static final String GAME_START_URL = "/api/games/{gameId}/lobby/start";
+    private static final String LOBBY_INFO_URL = "/api/games/{gameId}/lobby";
 
     private User host;
     private User guest;
@@ -337,6 +338,96 @@ class LobbyControllerTest extends ControllerTest {
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+        }
+    }
+
+    @Nested
+    @DisplayName("로비 조회 API")
+    class GetLobbyInfo {
+
+        @Test
+        void 로비_정보_조회_성공() {
+            // when
+            ExtractableResponse<Response> response = authenticated(guestToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .get(LOBBY_INFO_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+            assertThat(response.jsonPath().getLong("myParticipantId")).isEqualTo(guestParticipant.getId());
+            assertThat(response.jsonPath().getLong("hostParticipantId")).isEqualTo(hostParticipant.getId());
+            assertThat(response.jsonPath().getInt("maxParticipants")).isEqualTo(game.getMaxParticipants());
+            assertThat(response.jsonPath().getInt("locationRevealIntervalMinutes")).isEqualTo(game.getLocationRevealIntervalMinutes());
+            assertThat(response.jsonPath().getList("participants")).hasSize(2);
+        }
+
+        @Test
+        void 이미_시작된_게임이면_400_BadRequest를_응답한다() {
+            // given
+            Game startedGame = gameRepository.save(GameFixture.WAITING_GAME(java.util.UUID.randomUUID().toString().substring(0, 6)));
+            startedGame.startGame(java.time.LocalDateTime.now());
+            gameRepository.save(startedGame);
+            gameParticipantRepository.save(GameParticipantFixture.GUEST_PARTICIPANT(startedGame, guest));
+
+            // when
+            ExtractableResponse<Response> response = authenticated(guestToken)
+                    .pathParam(GAME_ID_PARAM, startedGame.getId())
+                    .when()
+                    .get(LOBBY_INFO_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 인증_토큰_없이_요청하면_401_Unauthorized를_응답한다() {
+            // when
+            ExtractableResponse<Response> response = unauthenticated()
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .get(LOBBY_INFO_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+        }
+
+        @Test
+        void 존재하지_않는_게임이면_404_NotFound를_응답한다() {
+            // when
+            ExtractableResponse<Response> response = authenticated(guestToken)
+                    .pathParam(GAME_ID_PARAM, 9999L)
+                    .when()
+                    .get(LOBBY_INFO_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        }
+
+        @Test
+        void 해당_게임의_참가자가_아니면_404_NotFound를_응답한다() {
+            // given
+            User another = givenUser("another");
+            String anotherToken = givenAccessToken(another);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(anotherToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .get(LOBBY_INFO_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
         }
     }
 }
