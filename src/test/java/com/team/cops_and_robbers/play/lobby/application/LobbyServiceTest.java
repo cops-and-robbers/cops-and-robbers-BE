@@ -17,7 +17,11 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.springframework.context.ApplicationEventPublisher;
+
+import java.time.Clock;
+import java.time.ZoneId;
 
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
@@ -36,6 +40,9 @@ class LobbyServiceTest extends ServiceUnitTest {
 
     @InjectMocks
     private LobbyService lobbyService;
+
+    @Spy
+    private Clock clock = Clock.system(ZoneId.of("Asia/Seoul"));
 
     @Mock
     private LobbyEventFactory lobbyEventFactory;

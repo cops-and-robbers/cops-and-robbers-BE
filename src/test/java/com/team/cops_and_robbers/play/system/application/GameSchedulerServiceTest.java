@@ -12,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.springframework.scheduling.TaskScheduler;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -53,6 +54,12 @@ class GameSchedulerServiceTest extends ServiceUnitTest {
 
     @Mock
     private RobberLocationService robberLocationService;
+
+    @Mock
+    private GameTerminationService gameTerminationService;
+
+    @Mock
+    private TransactionTemplate transactionTemplate;
 
     private static final Long TEST_GAME_ID = 1L;
 
@@ -137,7 +144,7 @@ class GameSchedulerServiceTest extends ServiceUnitTest {
             // then
             List<Instant> scheduledTimes = captureScheduledInstants();
             Instant gameOverTime = toInstant(clock, startedAt.plusMinutes(ROUND_DURATION_MINUTES));
-            assertThat(scheduledTimes).allMatch(instant -> instant.isBefore(gameOverTime));
+            assertThat(scheduledTimes).allMatch(instant -> !instant.isAfter(gameOverTime));
         }
     }
 
