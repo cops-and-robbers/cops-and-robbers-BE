@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.user.presentation;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.common.exception.ErrorResponse;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
+import com.team.cops_and_robbers.user.presentation.dto.response.DeleteAccountResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.MyPageResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.NicknameCheckResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -181,4 +182,57 @@ public interface UserControllerDocs {
                     )
             ) @RequestBody @Valid NicknameUpdateRequest request
     );
+
+
+    @Operation(summary = "회원탈퇴",
+            description = "로그인한 사용자의 사용자 정보를 삭제합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "탈퇴 성공",
+                    content = @Content(
+                            schema = @Schema(implementation = DeleteAccountResponse.class),
+                            examples = @ExampleObject(
+                                    name = "회원 탈퇴 예시",
+                                    value = """
+                                            {
+                                               "message": "회원탈퇴가 완료되었습니다."
+                                             }
+                                            """
+                            )
+                    )
+            ),
+            @ApiResponse(responseCode = "401", description = "인증 실패 (토큰 없음/만료)",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    name = "인증 실패",
+                                    value = """
+                                            {
+                                                "title": "인증 실패",
+                                                "status": 401,
+                                                "detail": "유효하지 않은 토큰입니다.",
+                                                "instance": "/api/user/me"
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @ApiResponse(responseCode = "409", description = "진행 중인 게임이 있는 경우",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    name = "회원탈퇴 불가",
+                                    value = """
+                                            {
+                                                "title": "회원탈퇴 불가",
+                                                "status": 401,
+                                                "detail": "진행 중인 게임 세션이 있어 탈퇴할 수 없습니다.",
+                                                "instance": "/api/user/me"
+                                            }
+                                            """
+                            )
+                    )
+            )
+    })
+    ResponseEntity<DeleteAccountResponse> deleteAccount(@Parameter(hidden = true) LoginUser loginUser);
 }

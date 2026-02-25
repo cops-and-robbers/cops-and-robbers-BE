@@ -23,7 +23,10 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
             from GameParticipant gp
             join gp.game g
             where gp.user.id = :userId
-            and g.status in ('WAITING', 'IN_PROGRESS')
+            and g.status in (
+                    com.team.cops_and_robbers.game.game.domain.GameStatus.WAITING,
+                    com.team.cops_and_robbers.game.game.domain.GameStatus.IN_PROGRESS
+                )
         )
         """)
     boolean existsActiveGameByUserId(@Param("userId") Long userId);
