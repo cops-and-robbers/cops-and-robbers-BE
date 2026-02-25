@@ -42,6 +42,18 @@ public class GameFixture {
                 .build();
     }
 
+    public static Game IN_PROGRESS_GAME(LocalDateTime startedAt) {
+        return Game.builder()
+                .inviteCode(UUID.randomUUID().toString().substring(0, 6))
+                .status(GameStatus.IN_PROGRESS)
+                .roundDurationMinutes(30)
+                .locationRevealIntervalMinutes(5)
+                .policeWaitMinutes(3)
+                .maxParticipants(10)
+                .startedAt(startedAt)
+                .build();
+    }
+
     public static Game FINISHED_GAME() {
         return Game.builder()
                 .inviteCode(UUID.randomUUID().toString().substring(0, 6))

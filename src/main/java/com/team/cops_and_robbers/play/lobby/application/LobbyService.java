@@ -1,7 +1,6 @@
 package com.team.cops_and_robbers.play.lobby.application;
 
 import com.team.cops_and_robbers.common.exception.ApplicationException;
-import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
@@ -18,6 +17,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 @Service
@@ -27,6 +27,7 @@ public class LobbyService {
 
     private static final int MIN_TEAM_SIZE = 1;
 
+    private final Clock clock;
     private final GameRepository gameRepository;
     private final GameParticipantRepository gameParticipantRepository;
 
@@ -78,13 +79,13 @@ public class LobbyService {
 
         validateGameStart(game, participant);
 
-        LocalDateTime nowKst = TimestampUtil.nowKstLocal();
-        game.startGame(nowKst);
+        LocalDateTime now = LocalDateTime.now(clock);
+        game.startGame(now);
 
         gameParticipantRepository.updateStatusByGameIdAndTeam(command.gameId(), Team.ROBBER, ParticipantStatus.ALIVE);
         gameParticipantRepository.updateStatusByGameIdAndTeam(command.gameId(), Team.POLICE, ParticipantStatus.POLICE_WAITING);
 
-        LobbyEvent event = lobbyEventFactory.createGameStartEvent(command.gameId(), nowKst);
+        LobbyEvent event = lobbyEventFactory.createGameStartEvent(command.gameId(), now);
         eventPublisher.publishEvent(event);
     }
 

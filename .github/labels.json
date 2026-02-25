@@ -1,63 +1,47 @@
 [
   {
-    "name": "⚙ Setting",
-    "color": "e3dede",
-    "description": "개발 환경 세팅"
+    "name": "feature",
+    "color": "D0E7F7",
+    "description": "새로운 기능 개발"
   },
   {
-    "name": "✨ Feature",
-    "color": "a2eeef",
-    "description": "기능 개발"
+    "name": "bug",
+    "color": "F7D0D5",
+    "description": "버그 수정"
   },
   {
-    "name": "🌏 Deploy",
-    "color": "C2E0C6",
-    "description": "배포 관련"
+    "name": "refactor",
+    "color": "7A53B0",
+    "description": "코드 구조 개선 및 리팩토링"
   },
   {
-    "name": "🎨 Html&css",
-    "color": "FEF2C0",
-    "description": "마크업 & 스타일링"
+    "name": "test",
+    "color": "E7F7D0",
+    "description": "단위 테스트 및 통합 테스트"
   },
   {
-    "name": "🐞 BugFix",
-    "color": "d73a4a",
-    "description": "Something isn't working"
+    "name": "realtime",
+    "color": "DBD0F7",
+    "description": "WebSocket, STOMP, Redis Pub/Sub"
   },
   {
-    "name": "💻 CrossBrowsing",
-    "color": "C5DEF5",
-    "description": "브라우저 호환성"
+    "name": "persistence",
+    "color": "E6E6E6",
+    "description": "DB, JPA, Query 관련 작업"
   },
   {
-    "name": "📃 Docs",
-    "color": "1D76DB",
-    "description": "문서 작성 및 수정 (README.md 등)"
+    "name": "infra",
+    "color": "F4D0F7",
+    "description": "CI/CD, Docker, 서버 설정"
   },
   {
-    "name": "📬 API",
-    "color": "D4C5F9",
-    "description": "서버 API 통신"
+    "name": "deploy",
+    "color": "F7F4D0",
+    "description": "배포 관련 작업"
   },
   {
-    "name": "🔨 Refactor",
-    "color": "f29a4e",
-    "description": "코드 리팩토링"
-  },
-  {
-    "name": "🙋‍♂️ Question",
-    "color": "9ED447",
-    "description": "Further information is requested"
-  },
-  {
-    "name": "🥰 Accessibility",
-    "color": "facfcf",
-    "description": "웹접근성 관련"
-  },
-  {
-    "name": "✅ Test",
-    "color": "ccffc4",
-    "description": "test 관련(storybook, jest...)"
+    "name": "docs",
+    "color": "FFFFFF",
+    "description": "문서 및 명세 작성"
   }
 ]
-
