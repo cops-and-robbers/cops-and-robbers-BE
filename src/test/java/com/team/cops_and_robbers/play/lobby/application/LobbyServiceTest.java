@@ -7,8 +7,10 @@ import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.GameStartCommand;
+import com.team.cops_and_robbers.play.lobby.application.dto.command.LobbyInfoCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.ReadyUpdateCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.TeamChangeCommand;
+import com.team.cops_and_robbers.play.lobby.application.dto.result.LobbyInfoResult;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
 import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +24,7 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.Clock;
 import java.time.ZoneId;
+import java.util.List;
 
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
@@ -272,6 +275,68 @@ class LobbyServiceTest extends ServiceUnitTest {
             assertThatThrownBy(() -> lobbyService.startGame(command))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(GameParticipantException.GAME_ALREADY_STARTED.getDetail());
+        }
+    }
+
+    @Nested
+    @DisplayName("로비 조회")
+    class GetLobbyInfo {
+
+        @Test
+        void 로비_정보_조회에_성공한다() {
+            // given
+            User hostUser = USER("host");
+            setId(hostUser, 1L);
+            setId(user, 2L);
+
+            GameParticipant hostParticipant = HOST_PARTICIPANT(waitingGame, hostUser);
+            GameParticipant guestParticipant = GUEST_PARTICIPANT(waitingGame, user);
+            LobbyInfoCommand command = LobbyInfoCommand.of(user.getId(), waitingGame.getId());
+
+            given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
+            given(gameParticipantRepository.findAllByGameIdWithUser(waitingGame.getId()))
+                    .willReturn(List.of(hostParticipant, guestParticipant));
+
+            // when
+            LobbyInfoResult result = lobbyService.getLobbyInfo(command);
+
+            // then
+            assertThat(result.myParticipantId()).isEqualTo(guestParticipant.getId());
+            assertThat(result.hostParticipantId()).isEqualTo(hostParticipant.getId());
+            assertThat(result.participants()).hasSize(2);
+        }
+
+        @Test
+        void 게임이_WAITING_상태가_아니면_예외가_발생한다() {
+            // given
+            Game inProgressGame = IN_PROGRESS_GAME();
+            LobbyInfoCommand command = LobbyInfoCommand.of(user.getId(), inProgressGame.getId());
+
+            given(gameRepository.getByGameId(inProgressGame.getId())).willReturn(inProgressGame);
+
+            // when & then
+            assertThatThrownBy(() -> lobbyService.getLobbyInfo(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(GameParticipantException.GAME_ALREADY_STARTED.getDetail());
+        }
+
+        @Test
+        void 해당_게임의_참가자가_아니면_예외가_발생한다() {
+            // given
+            User anotherUser = USER("another");
+            setId(anotherUser, 999L);
+
+            GameParticipant hostParticipant = HOST_PARTICIPANT(waitingGame, anotherUser);
+            LobbyInfoCommand command = LobbyInfoCommand.of(user.getId(), waitingGame.getId());
+
+            given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
+            given(gameParticipantRepository.findAllByGameIdWithUser(waitingGame.getId()))
+                    .willReturn(List.of(hostParticipant));
+
+            // when & then
+            assertThatThrownBy(() -> lobbyService.getLobbyInfo(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(GameParticipantException.PARTICIPANT_NOT_FOUND.getDetail());
         }
     }
 }
