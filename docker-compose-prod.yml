@@ -43,6 +43,7 @@ services:
 
     volumes:
       - ./firebase-key.json:/app/firebase-key.json
+      - /home/ubuntu/log:/log
 
     depends_on:
       - cops-and-robbers-db
