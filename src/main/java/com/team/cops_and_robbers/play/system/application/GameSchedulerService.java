@@ -17,6 +17,7 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -32,6 +33,7 @@ public class GameSchedulerService {
 
     private final Map<Long, List<ScheduledFuture<?>>> gameSchedules = new ConcurrentHashMap<>();
 
+    private final Clock clock;
     private final TaskScheduler taskScheduler;
     private final SystemPublisher systemPublisher;
     private final SystemEventFactory systemEventFactory;
@@ -73,7 +75,7 @@ public class GameSchedulerService {
         cancelSchedule(game.getId());
 
         List<ScheduledFuture<?>> scheduledTasks = new ArrayList<>();
-        LocalDateTime now = TimestampUtil.nowKstLocal();
+        LocalDateTime now = LocalDateTime.now(clock);
 
         schedulePoliceMoveStart(scheduledTasks, game, now);
         scheduleRobberLocationReveals(scheduledTasks, game, now);
@@ -165,7 +167,7 @@ public class GameSchedulerService {
             Runnable task
     ) {
         if (targetTime.isAfter(now)) {
-            Instant instant = TimestampUtil.toInstant(targetTime);
+            Instant instant =  targetTime.atZone(clock.getZone()).toInstant();
             ScheduledFuture<?> scheduledTask = taskScheduler.schedule(task, instant);
             scheduledTasks.add(scheduledTask);
         }
