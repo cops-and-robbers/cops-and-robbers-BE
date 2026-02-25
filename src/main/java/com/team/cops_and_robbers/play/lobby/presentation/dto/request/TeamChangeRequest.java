@@ -1,4 +1,4 @@
-package com.team.cops_and_robbers.play.lobby.presentation.dto;
+package com.team.cops_and_robbers.play.lobby.presentation.dto.request;
 
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import jakarta.validation.constraints.NotNull;
