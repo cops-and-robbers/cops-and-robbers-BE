@@ -4,13 +4,17 @@ import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.play.lobby.application.LobbyService;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.GameStartCommand;
+import com.team.cops_and_robbers.play.lobby.application.dto.command.LobbyInfoCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.ReadyUpdateCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.TeamChangeCommand;
-import com.team.cops_and_robbers.play.lobby.presentation.dto.ReadyUpdateRequest;
-import com.team.cops_and_robbers.play.lobby.presentation.dto.TeamChangeRequest;
+import com.team.cops_and_robbers.play.lobby.application.dto.result.LobbyInfoResult;
+import com.team.cops_and_robbers.play.lobby.presentation.dto.request.ReadyUpdateRequest;
+import com.team.cops_and_robbers.play.lobby.presentation.dto.request.TeamChangeRequest;
+import com.team.cops_and_robbers.play.lobby.presentation.dto.response.LobbyInfoResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -64,5 +68,19 @@ public class LobbyController implements LobbyControllerDocs {
         GameStartCommand command = GameStartCommand.of(loginUser.userId(), gameId);
         lobbyService.startGame(command);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 4. 로비 정보를 조회합니다.
+     */
+    @GetMapping
+    public ResponseEntity<LobbyInfoResponse> getLobbyInfo(
+            @AuthUser LoginUser loginUser,
+            @PathVariable Long gameId
+    ) {
+        LobbyInfoCommand command = LobbyInfoCommand.of(loginUser.userId(), gameId);
+        LobbyInfoResult result = lobbyService.getLobbyInfo(command);
+        LobbyInfoResponse response = LobbyInfoResponse.from(result);
+        return ResponseEntity.ok(response);
     }
 }
