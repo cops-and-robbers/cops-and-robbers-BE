@@ -410,7 +410,7 @@ public interface LobbyControllerDocs {
 
     @Operation(
             summary = "로비 조회",
-            description = "대기 상태(WAITING)인 게임의 로비 정보를 조회합니다. 요청자의 참가자 ID, 방장 ID, 방 설정, 전체 참가자 목록을 반환합니다.",
+            description = "대기 상태(WAITING)인 게임의 로비 정보를 조회합니다. 요청자의 참가자 ID, 방장 ID, 전체 참가자 목록을 반환합니다.",
             security = @SecurityRequirement(name = "JWT")
     )
     @ApiResponses(value = {
@@ -423,8 +423,6 @@ public interface LobbyControllerDocs {
                                             {
                                                 "myParticipantId": 2,
                                                 "hostParticipantId": 1,
-                                                "maxParticipants": 10,
-                                                "locationRevealIntervalMinutes": 3,
                                                 "participants": [
                                                     {
                                                         "participantId": 1,

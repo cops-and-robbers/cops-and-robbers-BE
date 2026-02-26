@@ -106,7 +106,7 @@ public class LobbyService {
                 .map(LobbyInfoResult.ParticipantInfo::from)
                 .toList();
 
-        return LobbyInfoResult.of(game, myParticipant, hostParticipant, participantInfos);
+        return LobbyInfoResult.of(myParticipant, hostParticipant, participantInfos);
     }
 
     private GameParticipant findParticipantByUserId(List<GameParticipant> participants, Long userId) {

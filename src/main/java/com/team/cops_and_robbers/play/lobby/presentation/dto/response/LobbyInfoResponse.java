@@ -8,8 +8,6 @@ import java.util.List;
 public record LobbyInfoResponse(
         Long myParticipantId,
         Long hostParticipantId,
-        Integer maxParticipants,
-        Integer locationRevealIntervalMinutes,
         List<ParticipantResponse> participants
 ) {
     public record ParticipantResponse(
@@ -32,8 +30,6 @@ public record LobbyInfoResponse(
         return new LobbyInfoResponse(
                 result.myParticipantId(),
                 result.hostParticipantId(),
-                result.maxParticipants(),
-                result.locationRevealIntervalMinutes(),
                 participantResponses
         );
     }

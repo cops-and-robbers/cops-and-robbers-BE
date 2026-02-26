@@ -359,8 +359,6 @@ class LobbyControllerTest extends ControllerTest {
             assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
             assertThat(response.jsonPath().getLong("myParticipantId")).isEqualTo(guestParticipant.getId());
             assertThat(response.jsonPath().getLong("hostParticipantId")).isEqualTo(hostParticipant.getId());
-            assertThat(response.jsonPath().getInt("maxParticipants")).isEqualTo(game.getMaxParticipants());
-            assertThat(response.jsonPath().getInt("locationRevealIntervalMinutes")).isEqualTo(game.getLocationRevealIntervalMinutes());
             assertThat(response.jsonPath().getList("participants")).hasSize(2);
         }
 
