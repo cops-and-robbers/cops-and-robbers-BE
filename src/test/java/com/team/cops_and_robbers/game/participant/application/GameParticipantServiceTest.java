@@ -4,15 +4,20 @@ package com.team.cops_and_robbers.game.participant.application;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.participant.application.dto.command.GameJoinCommand;
 import com.team.cops_and_robbers.game.participant.application.dto.command.GameLeaveCommand;
+import com.team.cops_and_robbers.game.participant.application.dto.command.GameParticipantListCommand;
 import com.team.cops_and_robbers.game.participant.application.dto.result.GameJoinResult;
 import com.team.cops_and_robbers.game.participant.application.dto.result.GameLeaveResult;
+import com.team.cops_and_robbers.game.participant.application.dto.result.GameParticipantListResult;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.play.lobby.application.LobbyEventFactory;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
 import com.team.cops_and_robbers.user.domain.User;
+
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -24,8 +29,10 @@ import org.springframework.context.ApplicationEventPublisher;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_POLICE;
+import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_ROBBER;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.GUEST_PARTICIPANT;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.HOST_PARTICIPANT;
+import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.WAITING_POLICE;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -49,19 +56,31 @@ class GameParticipantServiceTest extends ServiceUnitTest {
     @Mock
     private LobbyEvent lobbyEvent;
 
+    private static final Long TEST_USER_ID = 1L;
+    private static final Long TEST_GAME_ID = 1L;
+
     private User user;
     private User user2;
     private Game waitingGame;
+    private Game inProgressGame;
     private GameParticipant guestParticipant;
     private GameParticipant hostParticipant;
-    private  String INVITE_CODE = "ABCDEF";
+    private GameParticipant policeParticipant;
+    private GameParticipant robberParticipant;
+    private String INVITE_CODE = "ABCDEF";
 
     @BeforeEach
     void setUp() {
         user = USER();
         user2 = USER();
         waitingGame = WAITING_GAME(INVITE_CODE);
+        inProgressGame = IN_PROGRESS_GAME();
+        setId(user, TEST_USER_ID);
+        setId(waitingGame, TEST_GAME_ID);
+        setId(inProgressGame, TEST_GAME_ID);
         guestParticipant = GUEST_PARTICIPANT(waitingGame, user);
+        policeParticipant = WAITING_POLICE(inProgressGame, user);
+        robberParticipant = ALIVE_ROBBER(inProgressGame, user2);
     }
 
     @Nested
@@ -201,5 +220,55 @@ class GameParticipantServiceTest extends ServiceUnitTest {
 
     private GameLeaveCommand createGameLeaveCommand(Long userId,  Long gameId) {
         return new GameLeaveCommand(userId, gameId);
+    }
+
+    @Nested
+    @DisplayName("게임 참가자 목록 조회")
+    class GetParticipantList {
+
+        @Test
+        void IN_PROGRESS_게임의_참가자_목록_조회에_성공한다() {
+            // given
+            GameParticipantListCommand command = GameParticipantListCommand.of(TEST_USER_ID, TEST_GAME_ID);
+
+            given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(inProgressGame);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_USER_ID)).willReturn(policeParticipant);
+            given(gameParticipantRepository.findAllByGameIdWithUser(TEST_GAME_ID)).willReturn(List.of(policeParticipant, robberParticipant));
+
+            // when
+            GameParticipantListResult result = gameParticipantService.getParticipantList(command);
+
+            // then
+            assertThat(result.police()).hasSize(1);
+            assertThat(result.robbers()).hasSize(1);
+        }
+
+        @Test
+        void 게임이_IN_PROGRESS_상태가_아니면_예외가_발생한다() {
+            // given
+            GameParticipantListCommand command = GameParticipantListCommand.of(TEST_USER_ID, TEST_GAME_ID);
+
+            given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(waitingGame);
+
+            // when & then
+            assertThatThrownBy(() -> gameParticipantService.getParticipantList(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessage(GameException.GAME_NOT_IN_PROGRESS.getDetail());
+        }
+
+        @Test
+        void 해당_게임의_참가자가_아니면_예외가_발생한다() {
+            // given
+            GameParticipantListCommand command = GameParticipantListCommand.of(TEST_USER_ID, TEST_GAME_ID);
+
+            given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(inProgressGame);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_USER_ID))
+                    .willThrow(new ApplicationException(GameParticipantException.PARTICIPANT_NOT_FOUND));
+
+            // when & then
+            assertThatThrownBy(() -> gameParticipantService.getParticipantList(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessage(GameParticipantException.PARTICIPANT_NOT_FOUND.getDetail());
+        }
     }
 }
