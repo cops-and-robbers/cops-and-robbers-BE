@@ -112,6 +112,17 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
         """ )
     void resetAllParticipantsForNextRound(@Param("gameId") Long gameId, @Param("status") ParticipantStatus status);
 
+    /**
+     * 게임의 모든 참가자 조회
+     */
+    @Query("""
+        select gp
+        from GameParticipant gp
+        join fetch gp.user
+        where gp.game.id = :gameId
+    """)
+    List<GameParticipant> findAllByGameIdWithUser(@Param("gameId") Long gameId);
+
     Optional<GameParticipant> findByGameIdAndUserId(Long gameId, Long userId);
 
     Optional<GameParticipant> findFirstByGameIdOrderByCreatedAtAsc(Long gameId);
