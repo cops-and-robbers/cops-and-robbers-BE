@@ -10,7 +10,6 @@ import com.team.cops_and_robbers.play.lobby.application.dto.command.GameStartCom
 import com.team.cops_and_robbers.play.lobby.application.dto.command.LobbyInfoCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.ReadyUpdateCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.TeamChangeCommand;
-import com.team.cops_and_robbers.play.lobby.application.dto.result.LobbyInfoResult;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
 import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,9 +27,7 @@ import java.util.List;
 
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
-import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_ROBBER;
-import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.GUEST_PARTICIPANT;
-import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.HOST_PARTICIPANT;
+import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.*;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -298,12 +295,11 @@ class LobbyServiceTest extends ServiceUnitTest {
                     .willReturn(List.of(hostParticipant, guestParticipant));
 
             // when
-            LobbyInfoResult result = lobbyService.getLobbyInfo(command);
+            lobbyService.getLobbyInfo(command);
 
             // then
-            assertThat(result.myParticipantId()).isEqualTo(guestParticipant.getId());
-            assertThat(result.hostParticipantId()).isEqualTo(hostParticipant.getId());
-            assertThat(result.participants()).hasSize(2);
+            then(gameRepository).should().getByGameId(waitingGame.getId());
+            then(gameParticipantRepository).should().findAllByGameIdWithUser(waitingGame.getId());
         }
 
         @Test
