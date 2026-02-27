@@ -18,6 +18,8 @@ import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
+import com.team.cops_and_robbers.play.lobby.application.LobbyEventFactory;
+import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +43,8 @@ public class GameService {
     private final GameParticipantRepository gameParticipantRepository;
     private final UserRepository userRepository;
     private final GameAreaDomainService gameAreaDomainService;
+    private final ApplicationEventPublisher eventPublisher;
+    private final LobbyEventFactory lobbyEventFactory;
 
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
@@ -136,7 +141,12 @@ public class GameService {
                 command.jailRadiusInMeters()
         );
 
-        return GameAreaUpdateResult.from(gameArea);
+        GameAreaUpdateResult result = GameAreaUpdateResult.from(gameArea);
+
+        LobbyEvent areaEvent = lobbyEventFactory.createAreaUpdatedEvent(command.gameId(), result);
+        eventPublisher.publishEvent(areaEvent);
+
+        return result;
     }
 
     @Transactional
@@ -152,7 +162,12 @@ public class GameService {
                 command.maxParticipants()
         );
 
-        return GameSettingsUpdateResult.from(game);
+        GameSettingsUpdateResult result = GameSettingsUpdateResult.from(game);
+
+        LobbyEvent settingsEvent = lobbyEventFactory.createSettingsUpdatedEvent(command.gameId(), result);
+        eventPublisher.publishEvent(settingsEvent);
+
+        return result;
     }
 
     private void validateGameEditable(GameParticipant participant) {
