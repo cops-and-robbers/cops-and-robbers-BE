@@ -9,7 +9,9 @@ public sealed interface LobbyEventData permits
         LobbyEventData.LobbyTeamUpdateData,
         LobbyEventData.LobbyReadyUpdateData,
         LobbyEventData.LobbyHostChangedData,
-        LobbyEventData.LobbyGameStartData {
+        LobbyEventData.LobbyGameStartData,
+        LobbyEventData.LobbyAreaUpdatedData,
+        LobbyEventData.LobbySettingsUpdatedData {
 
     record LobbyParticipantInfo(Long participantId, String nickname, Team team, boolean isReady) {
         public static LobbyParticipantInfo from(GameParticipant participant) {
@@ -59,4 +61,20 @@ public sealed interface LobbyEventData permits
             return new LobbyGameStartData(startTime);
         }
     }
+
+    record LobbyAreaUpdatedData(
+            Double playgroundLatitude,
+            Double playgroundLongitude,
+            Integer playgroundRadiusInMeters,
+            Double jailLatitude,
+            Double jailLongitude,
+            Integer jailRadiusInMeters
+    ) implements LobbyEventData {}
+
+    record LobbySettingsUpdatedData(
+            Integer roundDurationMinutes,
+            Integer locationRevealIntervalMinutes,
+            Integer policeWaitMinutes,
+            Integer maxParticipants
+    ) implements LobbyEventData {}
 }

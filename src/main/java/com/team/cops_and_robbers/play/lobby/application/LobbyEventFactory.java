@@ -1,6 +1,8 @@
 package com.team.cops_and_robbers.play.lobby.application;
 
 import com.team.cops_and_robbers.common.util.TimestampUtil;
+import com.team.cops_and_robbers.game.game.application.dto.result.GameAreaUpdateResult;
+import com.team.cops_and_robbers.game.game.application.dto.result.GameSettingsUpdateResult;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEventData;
@@ -41,5 +43,21 @@ public class LobbyEventFactory {
         String startTimeStr = TimestampUtil.toIsoString(startedAt);
         LobbyEventData.LobbyGameStartData data = LobbyEventData.LobbyGameStartData.of(startTimeStr);
         return LobbyEvent.of(gameId, LobbyEventType.GAME_START, data);
+    }
+
+    public LobbyEvent createAreaUpdatedEvent(Long gameId, GameAreaUpdateResult result) {
+        LobbyEventData.LobbyAreaUpdatedData data = new LobbyEventData.LobbyAreaUpdatedData(
+                result.playgroundLatitude(), result.playgroundLongitude(), result.playgroundRadiusInMeters(),
+                result.jailLatitude(), result.jailLongitude(), result.jailRadiusInMeters()
+        );
+        return LobbyEvent.of(gameId, LobbyEventType.AREA_UPDATED, data);
+    }
+
+    public LobbyEvent createSettingsUpdatedEvent(Long gameId, GameSettingsUpdateResult result) {
+        LobbyEventData.LobbySettingsUpdatedData data = new LobbyEventData.LobbySettingsUpdatedData(
+                result.roundDurationMinutes(), result.locationRevealIntervalMinutes(),
+                result.policeWaitMinutes(), result.maxParticipants()
+        );
+        return LobbyEvent.of(gameId, LobbyEventType.SETTINGS_UPDATED, data);
     }
 }
