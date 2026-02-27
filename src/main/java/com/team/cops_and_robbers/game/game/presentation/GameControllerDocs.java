@@ -3,9 +3,13 @@ package com.team.cops_and_robbers.game.game.presentation;
 import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.common.exception.ErrorResponse;
+import com.team.cops_and_robbers.game.game.presentation.dto.request.GameAreaRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameCreateRequest;
+import com.team.cops_and_robbers.game.game.presentation.dto.request.GameSettingsRequest;
+import com.team.cops_and_robbers.game.game.presentation.dto.response.GameAreaUpdateResponse;
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameCreateResponse;
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameInfoResponse;
+import com.team.cops_and_robbers.game.game.presentation.dto.response.GameSettingsUpdateResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -264,3 +268,111 @@ public interface GameControllerDocs {
             @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId
     );
 }
+
+    @Operation(summary = "게임 영역 수정 (방장 전용)",
+            description = """
+                    대기실에서 플레이그라운드·감옥 영역을 수정합니다.
+
+                    **제약 조건**
+                    - 방장만 호출 가능
+                    - 게임이 WAITING 상태일 때만 가능
+                    - 플레이그라운드와 감옥을 반드시 세트로 전송 (부분 수정 불가)
+                    - 감옥은 플레이그라운드 내부에 완전히 포함되어야 함
+                    - 감옥 반경 < 플레이그라운드 반경
+
+                    **WebSocket**
+                    성공 시 대기실 구독자 전체에게 `AREA_UPDATED` 이벤트가 브로드캐스트됩니다.
+                    """,
+            security = @SecurityRequirement(name = "JWT")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "영역 수정 성공",
+                    content = @Content(
+                            schema = @Schema(implementation = GameAreaUpdateResponse.class),
+                            examples = @ExampleObject(
+                                    name = "수정 성공 예시",
+                                    value = """
+                                            {
+                                                "playgroundLatitude": 37.5665,
+                                                "playgroundLongitude": 126.9780,
+                                                "playgroundRadiusInMeters": 1000,
+                                                "jailLatitude": 37.5670,
+                                                "jailLongitude": 126.9785,
+                                                "jailRadiusInMeters": 100
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "감옥이 플레이그라운드 밖에 위치",
+                                            value = """
+                                                    {
+                                                        "title": "감옥 영역 벗어남",
+                                                        "status": 400,
+                                                        "detail": "감옥은 운동장 내부에 완전히 포함되어야 합니다.",
+                                                        "instance": "/api/games/1/area"
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "게임이 대기 중이 아닌 경우",
+                                            value = """
+                                                    {
+                                                        "title": "대기 중인 게임이 아님",
+                                                        "status": 400,
+                                                        "detail": "대기 중인 게임에서만 설정을 변경할 수 있습니다.",
+                                                        "instance": "/api/games/1/area"
+                                                    }
+                                                    """
+                                    )
+                            }
+                    )
+            ),
+            @ApiResponse(responseCode = "403", description = "방장 권한 없음",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                                "title": "호스트 권한 필요",
+                                                "status": 403,
+                                                "detail": "방장만 게임을 시작할 수 있습니다.",
+                                                "instance": "/api/games/1/area"
+                                            }
+                                            """
+                            )
+                    )
+            )
+    })
+    ResponseEntity<GameAreaUpdateResponse> updateGameArea(
+            @Parameter(hidden = true) @AuthUser LoginUser loginUser,
+            @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "변경할 전체 영역 정보 (플레이그라운드 + 감옥 세트로 전송)",
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = GameAreaRequest.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                                "playgroundCenter": {
+                                                    "latitude": 37.5665,
+                                                    "longitude": 126.9780
+                                                },
+                                                "playgroundRadiusInMeters": 1000,
+                                                "jailCenter": {
+                                                    "latitude": 37.5670,
+                                                    "longitude": 126.9785
+                                                },
+                                                "jailRadiusInMeters": 100
+                                            }
+                                            """
+                            )
+                    )
+            ) @RequestBody @Valid GameAreaRequest request
+    );
