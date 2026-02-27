@@ -9,11 +9,11 @@
         <include resource="logback/console/app-console.xml"/>
         <include resource="logback/console/error-console.xml"/>
 
-        <root level="DEBUG">
+        <root level="INFO">
             <appender-ref ref="APP_CONSOLE"/>
             <appender-ref ref="ERROR_CONSOLE"/>
         </root>
-        <logger name="com.team.cops_and_robbers" level="DEBUG"/>
+        <logger name="com.team.cops_and_robbers" level="INFO"/>
     </springProfile>
 
     <!-- prod 환경: 파일만 -->

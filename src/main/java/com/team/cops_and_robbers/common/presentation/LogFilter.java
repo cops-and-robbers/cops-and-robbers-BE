@@ -30,19 +30,19 @@ public class LogFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
         String requestId = UUID.randomUUID().toString().substring(0, 8);
+        String method = httpRequest.getMethod();
+        String uri = httpRequest.getRequestURI();
         long start = System.currentTimeMillis();
 
         MDC.put("request_id", requestId);
-        MDC.put("method", httpRequest.getMethod());
-        MDC.put("uri", httpRequest.getRequestURI());
 
-        log.info("Request started");
+        log.info("[{}] REQUEST | {} {}", requestId, method, uri);
 
         try {
             chain.doFilter(request, response);
         } finally {
             long elapsed = System.currentTimeMillis() - start;
-            log.info("Request completed - status={} elapsed={}ms", httpResponse.getStatus(), elapsed);
+            log.info("[{}] RESPONSE | {} {} | STATUS: {} | {}ms", requestId, method, uri, httpResponse.getStatus(), elapsed);
             MDC.clear();
         }
     }
