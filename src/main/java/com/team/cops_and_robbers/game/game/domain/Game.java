@@ -81,4 +81,16 @@ public class Game extends BaseTimeEntity {
                 .maxParticipants(command.maxParticipants())
                 .build();
     }
+
+    public void updateSettings(
+            Integer roundDurationMinutes,
+            Integer locationRevealIntervalMinutes,
+            Integer policeWaitMinutes,
+            Integer maxParticipants
+    ) {
+        this.roundDurationMinutes = roundDurationMinutes;
+        this.locationRevealIntervalMinutes = locationRevealIntervalMinutes;
+        this.policeWaitMinutes = policeWaitMinutes;
+        this.maxParticipants = maxParticipants;
+    }
 }
