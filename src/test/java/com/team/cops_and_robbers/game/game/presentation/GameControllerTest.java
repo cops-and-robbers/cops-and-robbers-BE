@@ -1,12 +1,16 @@
 package com.team.cops_and_robbers.game.game.presentation;
 
 import com.team.cops_and_robbers.common.ControllerTest;
+import com.team.cops_and_robbers.common.fixture.GameAreaFixture;
+import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
-import com.team.cops_and_robbers.game.game.presentation.dto.request.AreaRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.CoordinatesRequest;
+import com.team.cops_and_robbers.game.game.presentation.dto.request.GameAreaRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameCreateRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameSettingsRequest;
+import com.team.cops_and_robbers.game.game.presentation.dto.response.GameAreaUpdateResponse;
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameCreateResponse;
+import com.team.cops_and_robbers.game.game.presentation.dto.response.GameSettingsUpdateResponse;
 import com.team.cops_and_robbers.user.domain.User;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
@@ -14,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 
 import static com.team.cops_and_robbers.common.fixture.GameFixture.FINISHED_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
@@ -22,8 +27,11 @@ import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 class GameControllerTest extends ControllerTest {
 
+    private static final String GAME_ID_PARAM = "gameId";
     private static final String GAME_API_URL = "/api/games";
     private static final String GAME_INFO_API_URL = "/api/games/{gameId}";
+    private static final String AREA_URL = "/api/games/{gameId}/area";
+    private static final String SETTINGS_URL = "/api/games/{gameId}/settings";
 
     private User host;
     private String accessToken;
@@ -67,7 +75,7 @@ class GameControllerTest extends ControllerTest {
             CoordinatesRequest playgroundCenter = new CoordinatesRequest(37.5665, 126.978);
             CoordinatesRequest farAwayJailCenter = new CoordinatesRequest(35.1796, 129.0756);
 
-            AreaRequest invalidArea = new AreaRequest(
+            GameAreaRequest invalidArea = new GameAreaRequest(
                     playgroundCenter, 1000,
                     farAwayJailCenter, 100
             );
@@ -232,12 +240,298 @@ class GameControllerTest extends ControllerTest {
         }
     }
 
+    @Nested
+    @DisplayName("게임 영역 수정 API")
+    class UpdateGameArea {
+
+        private Game waitingGame;
+
+        @BeforeEach
+        void setUp() {
+            waitingGame = gameRepository.save(GameFixture.WAITING_GAME());
+            gameAreaRepository.save(GameAreaFixture.GAME_AREA(waitingGame));
+            givenHost(waitingGame, host);
+        }
+
+        @Test
+        void 영역_수정_성공() {
+            // given
+            GameAreaRequest request = createAreaRequest();
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(request)
+                    .when()
+                    .put(AREA_URL)
+                    .then()
+                    .extract();
+
+            // then
+            GameAreaUpdateResponse result = response.as(GameAreaUpdateResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                softly.assertThat(result.playgroundRadiusInMeters()).isEqualTo(request.playgroundRadiusInMeters());
+                softly.assertThat(result.jailRadiusInMeters()).isEqualTo(request.jailRadiusInMeters());
+            });
+        }
+
+        @Test
+        void 감옥이_플레이그라운드_밖에_위치하면_400_BadRequest를_응답한다() {
+            // given
+            GameAreaRequest request = new GameAreaRequest(
+                    new CoordinatesRequest(37.5665, 126.978),   // 서울 시청
+                    1000,
+                    new CoordinatesRequest(35.1796, 129.0756),  // 부산 - 명백히 밖
+                    100
+            );
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(request)
+                    .when()
+                    .put(AREA_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 방장이_아닌_참여자가_요청하면_403_Forbidden을_응답한다() {
+            // given
+            User guest = givenUser("guest");
+            String guestToken = givenAccessToken(guest);
+            givenGuest(waitingGame, guest);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(guestToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(createAreaRequest())
+                    .when()
+                    .put(AREA_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
+        }
+
+        @Test
+        void 게임이_진행_중이면_400_BadRequest를_응답한다() {
+            // given
+            Game inProgressGame = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
+            gameAreaRepository.save(GameAreaFixture.GAME_AREA(inProgressGame));
+            User anotherHost = givenUser("anotherHost");
+            String anotherHostToken = givenAccessToken(anotherHost);
+            givenHost(inProgressGame, anotherHost);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(anotherHostToken)
+                    .pathParam(GAME_ID_PARAM, inProgressGame.getId())
+                    .body(createAreaRequest())
+                    .when()
+                    .put(AREA_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 인증_토큰_없이_요청하면_401_Unauthorized를_응답한다() {
+            // when
+            ExtractableResponse<Response> response = unauthenticated()
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(createAreaRequest())
+                    .when()
+                    .put(AREA_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+        }
+
+        @Test
+        void 참여하지_않은_게임에_요청하면_404_NotFound를_응답한다() {
+            // given
+            User nonParticipant = givenUser("nonParticipant");
+            String nonParticipantToken = givenAccessToken(nonParticipant);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(nonParticipantToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(createAreaRequest())
+                    .when()
+                    .put(AREA_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        }
+    }
+
+    @Nested
+    @DisplayName("게임 설정 수정 API")
+    class UpdateGameSettings {
+
+        private Game waitingGame;
+
+        @BeforeEach
+        void setUp() {
+            waitingGame = gameRepository.save(GameFixture.WAITING_GAME());
+            gameAreaRepository.save(GameAreaFixture.GAME_AREA(waitingGame));
+            givenHost(waitingGame, host);
+        }
+
+        @Test
+        void 설정_수정_성공() {
+            // given
+            GameSettingsRequest request = new GameSettingsRequest(60, 10, 5, 20);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(request)
+                    .when()
+                    .put(SETTINGS_URL)
+                    .then()
+                    .extract();
+
+            // then
+            GameSettingsUpdateResponse result = response.as(GameSettingsUpdateResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                softly.assertThat(result.roundDurationMinutes()).isEqualTo(60);
+                softly.assertThat(result.locationRevealIntervalMinutes()).isEqualTo(10);
+                softly.assertThat(result.policeWaitMinutes()).isEqualTo(5);
+                softly.assertThat(result.maxParticipants()).isEqualTo(20);
+            });
+        }
+
+        @Test
+        void 위치_공개_주기가_라운드_시간_이상이면_400_BadRequest를_응답한다() {
+            // given (30분 라운드, 30분 주기 - 같아도 불가)
+            GameSettingsRequest request = new GameSettingsRequest(30, 30, 5, 10);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(request)
+                    .when()
+                    .put(SETTINGS_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 경찰_대기_시간이_라운드_시간_이상이면_400_BadRequest를_응답한다() {
+            // given (30분 라운드, 30분 대기 - 같아도 불가)
+            GameSettingsRequest request = new GameSettingsRequest(30, 5, 30, 10);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(request)
+                    .when()
+                    .put(SETTINGS_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 방장이_아닌_참여자가_요청하면_403_Forbidden을_응답한다() {
+            // given
+            User guest = givenUser("guest");
+            String guestToken = givenAccessToken(guest);
+            givenGuest(waitingGame, guest);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(guestToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(createSettingsRequest())
+                    .when()
+                    .put(SETTINGS_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
+        }
+
+        @Test
+        void 게임이_진행_중이면_400_BadRequest를_응답한다() {
+            // given
+            Game inProgressGame = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
+            User anotherHost = givenUser("anotherHost");
+            String anotherHostToken = givenAccessToken(anotherHost);
+            givenHost(inProgressGame, anotherHost);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(anotherHostToken)
+                    .pathParam(GAME_ID_PARAM, inProgressGame.getId())
+                    .body(createSettingsRequest())
+                    .when()
+                    .put(SETTINGS_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 인증_토큰_없이_요청하면_401_Unauthorized를_응답한다() {
+            // when
+            ExtractableResponse<Response> response = unauthenticated()
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(createSettingsRequest())
+                    .when()
+                    .put(SETTINGS_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+        }
+
+        @Test
+        void 참여하지_않은_게임에_요청하면_404_NotFound를_응답한다() {
+            // given
+            User nonParticipant = givenUser("nonParticipant");
+            String nonParticipantToken = givenAccessToken(nonParticipant);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(nonParticipantToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(createSettingsRequest())
+                    .when()
+                    .put(SETTINGS_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        }
+    }
+
     private GameCreateRequest createGameCreateRequest() {
         return new GameCreateRequest(createAreaRequest(), createSettingsRequest());
     }
 
-    private AreaRequest createAreaRequest() {
-        return new AreaRequest(
+    private GameAreaRequest createAreaRequest() {
+        return new GameAreaRequest(
                 new CoordinatesRequest(37.5665, 126.978),   // playgroundCenter
                 1000,   // playgroundRadius
                 new CoordinatesRequest(37.5665, 126.978),   // jailCenter
