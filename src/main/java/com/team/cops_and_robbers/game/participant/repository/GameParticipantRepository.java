@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface GameParticipantRepository extends JpaRepository<GameParticipant, Long> {
@@ -38,6 +39,17 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
         where gp.id = :id
     """)
     Optional<GameParticipant> findByIdWithUser(@Param("id") Long id);
+
+    /**
+     * 게임의 모든 참가자를 유저 정보와 함께 조회
+     */
+    @Query("""
+        select gp
+        from GameParticipant gp
+        join fetch gp.user
+        where gp.game.id = :gameId
+    """)
+    List<GameParticipant> findAllByGameIdWithUser(@Param("gameId") Long gameId);
 
     int countByGameId(Long gameId);
 

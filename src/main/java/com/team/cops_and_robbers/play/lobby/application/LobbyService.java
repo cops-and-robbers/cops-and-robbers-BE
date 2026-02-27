@@ -9,8 +9,10 @@ import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.GameStartCommand;
+import com.team.cops_and_robbers.play.lobby.application.dto.command.LobbyInfoCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.ReadyUpdateCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.TeamChangeCommand;
+import com.team.cops_and_robbers.play.lobby.application.dto.result.LobbyInfoResult;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -87,6 +90,37 @@ public class LobbyService {
 
         LobbyEvent event = lobbyEventFactory.createGameStartEvent(command.gameId(), now);
         eventPublisher.publishEvent(event);
+    }
+
+    /**
+     * 로비 조회
+     */
+    public LobbyInfoResult getLobbyInfo(LobbyInfoCommand command) {
+        Game game = getWaitingGame(command.gameId());
+        List<GameParticipant> participants = gameParticipantRepository.findAllByGameIdWithUser(command.gameId());
+
+        GameParticipant myParticipant = findParticipantByUserId(participants, command.userId());
+        GameParticipant hostParticipant = findHostParticipant(participants);
+
+        List<LobbyInfoResult.ParticipantInfo> participantInfos = participants.stream()
+                .map(LobbyInfoResult.ParticipantInfo::from)
+                .toList();
+
+        return LobbyInfoResult.of(myParticipant, hostParticipant, participantInfos);
+    }
+
+    private GameParticipant findParticipantByUserId(List<GameParticipant> participants, Long userId) {
+        return participants.stream()
+                .filter(participant -> participant.getUser().getId().equals(userId))
+                .findFirst()
+                .orElseThrow(() -> new ApplicationException(GameParticipantException.PARTICIPANT_NOT_FOUND));
+    }
+
+    private GameParticipant findHostParticipant(List<GameParticipant> participants) {
+        return participants.stream()
+                .filter(GameParticipant::isHost)
+                .findFirst()
+                .orElseThrow(() -> new ApplicationException(GameParticipantException.PARTICIPANT_NOT_FOUND));
     }
 
     private Game getWaitingGame(Long gameId) {

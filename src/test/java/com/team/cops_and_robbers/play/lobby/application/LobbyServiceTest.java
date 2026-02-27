@@ -7,6 +7,7 @@ import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.GameStartCommand;
+import com.team.cops_and_robbers.play.lobby.application.dto.command.LobbyInfoCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.ReadyUpdateCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.TeamChangeCommand;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
@@ -22,12 +23,11 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.Clock;
 import java.time.ZoneId;
+import java.util.List;
 
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
-import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_ROBBER;
-import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.GUEST_PARTICIPANT;
-import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.HOST_PARTICIPANT;
+import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.*;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -272,6 +272,67 @@ class LobbyServiceTest extends ServiceUnitTest {
             assertThatThrownBy(() -> lobbyService.startGame(command))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(GameParticipantException.GAME_ALREADY_STARTED.getDetail());
+        }
+    }
+
+    @Nested
+    @DisplayName("로비 조회")
+    class GetLobbyInfo {
+
+        @Test
+        void 로비_정보_조회에_성공한다() {
+            // given
+            User hostUser = USER("host");
+            setId(hostUser, 1L);
+            setId(user, 2L);
+
+            GameParticipant hostParticipant = HOST_PARTICIPANT(waitingGame, hostUser);
+            GameParticipant guestParticipant = GUEST_PARTICIPANT(waitingGame, user);
+            LobbyInfoCommand command = LobbyInfoCommand.of(user.getId(), waitingGame.getId());
+
+            given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
+            given(gameParticipantRepository.findAllByGameIdWithUser(waitingGame.getId()))
+                    .willReturn(List.of(hostParticipant, guestParticipant));
+
+            // when
+            lobbyService.getLobbyInfo(command);
+
+            // then
+            then(gameRepository).should().getByGameId(waitingGame.getId());
+            then(gameParticipantRepository).should().findAllByGameIdWithUser(waitingGame.getId());
+        }
+
+        @Test
+        void 게임이_WAITING_상태가_아니면_예외가_발생한다() {
+            // given
+            Game inProgressGame = IN_PROGRESS_GAME();
+            LobbyInfoCommand command = LobbyInfoCommand.of(user.getId(), inProgressGame.getId());
+
+            given(gameRepository.getByGameId(inProgressGame.getId())).willReturn(inProgressGame);
+
+            // when & then
+            assertThatThrownBy(() -> lobbyService.getLobbyInfo(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(GameParticipantException.GAME_ALREADY_STARTED.getDetail());
+        }
+
+        @Test
+        void 해당_게임의_참가자가_아니면_예외가_발생한다() {
+            // given
+            User anotherUser = USER("another");
+            setId(anotherUser, 999L);
+
+            GameParticipant hostParticipant = HOST_PARTICIPANT(waitingGame, anotherUser);
+            LobbyInfoCommand command = LobbyInfoCommand.of(user.getId(), waitingGame.getId());
+
+            given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
+            given(gameParticipantRepository.findAllByGameIdWithUser(waitingGame.getId()))
+                    .willReturn(List.of(hostParticipant));
+
+            // when & then
+            assertThatThrownBy(() -> lobbyService.getLobbyInfo(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(GameParticipantException.PARTICIPANT_NOT_FOUND.getDetail());
         }
     }
 }
