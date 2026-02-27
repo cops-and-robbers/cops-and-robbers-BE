@@ -2,7 +2,7 @@ package com.team.cops_and_robbers.game.game.application.dto.command;
 
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.game.exception.GameException;
-import com.team.cops_and_robbers.game.game.presentation.dto.request.AreaRequest;
+import com.team.cops_and_robbers.game.game.presentation.dto.request.GameAreaRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameSettingsRequest;
 
 public record GameCreateCommand(
@@ -29,7 +29,7 @@ public record GameCreateCommand(
         }
     }
 
-    public static GameCreateCommand of(Long hostUserId, AreaRequest area, GameSettingsRequest settings) {
+    public static GameCreateCommand of(Long hostUserId, GameAreaRequest area, GameSettingsRequest settings) {
         return new GameCreateCommand(
                 hostUserId,
                 area.playgroundCenter().latitude(),
