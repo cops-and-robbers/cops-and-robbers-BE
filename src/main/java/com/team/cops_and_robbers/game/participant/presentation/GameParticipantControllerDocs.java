@@ -230,7 +230,7 @@ public interface GameParticipantControllerDocs {
     );
 
     @Operation(
-            summary = "게임 참가자 목록 조회",
+            summary = "게임 참가자 인게임 상태 목록 조회",
             description = """
                     경찰/도둑 팀별 참가자 목록과 상태를 조회합니다.
 
