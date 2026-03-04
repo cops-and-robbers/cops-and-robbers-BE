@@ -36,13 +36,13 @@ public class LogFilter implements Filter {
 
         MDC.put("request_id", requestId);
 
-        log.info("[{}] REQUEST | {} {}", requestId, method, uri);
+        log.info("REQUEST | {} {}", method, uri);
 
         try {
             chain.doFilter(request, response);
         } finally {
             long elapsed = System.currentTimeMillis() - start;
-            log.info("[{}] RESPONSE | {} {} | STATUS: {} | {}ms", requestId, method, uri, httpResponse.getStatus(), elapsed);
+            log.info("RESPONSE | {} {} | STATUS: {} | {}ms", method, uri, httpResponse.getStatus(), elapsed);
             MDC.clear();
         }
     }
