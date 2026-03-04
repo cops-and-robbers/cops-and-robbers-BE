@@ -5,7 +5,9 @@ import com.team.cops_and_robbers.game.area.domain.GameArea;
 import com.team.cops_and_robbers.game.area.domain.GameAreaDomainService;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameCreateCommand;
+import com.team.cops_and_robbers.game.game.application.dto.command.GameInfoCommand;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameCreateResult;
+import com.team.cops_and_robbers.game.game.application.dto.result.GameInfoResult;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
@@ -37,6 +39,17 @@ public class GameService {
 
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
+
+    public GameInfoResult getGameInfo(GameInfoCommand command) {
+        Game game = gameRepository.getByGameId(command.gameId());
+
+        if (!game.isWaiting() && !game.isInProgress()) {
+            throw new ApplicationException(GameException.GAME_NOT_ACTIVE);
+        }
+
+        gameParticipantRepository.getByGameIdAndUserId(command.gameId(), command.userId());
+        return GameInfoResult.from(game);
+    }
 
     @Transactional
     public GameCreateResult createGame(GameCreateCommand command) {

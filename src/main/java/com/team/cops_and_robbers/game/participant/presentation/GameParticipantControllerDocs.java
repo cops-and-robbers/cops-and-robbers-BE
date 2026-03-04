@@ -6,6 +6,7 @@ import com.team.cops_and_robbers.common.exception.ErrorResponse;
 import com.team.cops_and_robbers.game.participant.presentation.dto.request.GameJoinRequest;
 import com.team.cops_and_robbers.game.participant.presentation.dto.response.GameJoinResponse;
 import com.team.cops_and_robbers.game.participant.presentation.dto.response.GameLeaveResponse;
+import com.team.cops_and_robbers.game.participant.presentation.dto.response.GameParticipantListResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -224,6 +225,106 @@ public interface GameParticipantControllerDocs {
             )
     })
     ResponseEntity<GameLeaveResponse> leaveGame(
+            @Parameter(hidden = true) @AuthUser LoginUser loginUser,
+            @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId
+    );
+
+    @Operation(
+            summary = "게임 참가자 인게임 상태 목록 조회",
+            description = """
+                    경찰/도둑 팀별 참가자 목록과 상태를 조회합니다.
+
+                    - 게임이 진행 중(IN_PROGRESS) 상태에서만 조회 가능
+                    - 해당 게임의 참가자만 조회 가능
+                    - 경찰 상태: POLICE_WAITING(대기 중), ALIVE(활성)
+                    - 도둑 상태: ALIVE(생존), JAILED(잡힘)
+                    """,
+            security = @SecurityRequirement(name = "JWT")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "참가자 목록 조회 성공",
+                    content = @Content(
+                            schema = @Schema(implementation = GameParticipantListResponse.class),
+                            examples = @ExampleObject(
+                                    name = "참가자 목록 조회 성공 예시",
+                                    value = """
+                                            {
+                                                "police": [
+                                                    { "participantId": 1, "nickname": "경찰1", "status": "POLICE_WAITING" },
+                                                    { "participantId": 2, "nickname": "경찰2", "status": "ALIVE" }
+                                                ],
+                                                "robbers": [
+                                                    { "participantId": 3, "nickname": "도둑1", "status": "ALIVE" },
+                                                    { "participantId": 4, "nickname": "도둑2", "status": "JAILED" }
+                                                ]
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @ApiResponse(responseCode = "400", description = "게임 미진행",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    name = "게임 미진행",
+                                    value = """
+                                            {
+                                                "title": "게임 진행 중 아님",
+                                                "status": 400,
+                                                "detail": "게임이 진행 중인 상태가 아닙니다.",
+                                                "instance": "/api/games/1/participants"
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    name = "인증 토큰 없음 또는 만료",
+                                    value = """
+                                            {
+                                                "title": "인증 필요",
+                                                "status": 401,
+                                                "detail": "로그인이 필요한 서비스입니다.",
+                                                "instance": "/api/games/1/participants"
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @ApiResponse(responseCode = "404", description = "게임 또는 참가자 정보 없음",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "게임을 찾을 수 없음",
+                                            value = """
+                                                    {
+                                                        "title": "게임을 찾을 수 없음",
+                                                        "status": 404,
+                                                        "detail": "요청하신 게임 정보가 존재하지 않습니다.",
+                                                        "instance": "/api/games/999/participants"
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "참가자를 찾을 수 없음",
+                                            value = """
+                                                    {
+                                                        "title": "참가자를 찾을 수 없음",
+                                                        "status": 404,
+                                                        "detail": "해당 게임에 참가하지 않은 사용자입니다.",
+                                                        "instance": "/api/games/1/participants"
+                                                    }
+                                                    """
+                                    )
+                            }
+                    )
+            )
+    })
+    ResponseEntity<GameParticipantListResponse> getParticipantList(
             @Parameter(hidden = true) @AuthUser LoginUser loginUser,
             @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId
     );

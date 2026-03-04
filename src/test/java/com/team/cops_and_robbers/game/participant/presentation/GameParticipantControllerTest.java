@@ -27,6 +27,7 @@ class GameParticipantControllerTest extends ControllerTest {
     private static final String GAME_ID_PARAM = "gameId";
     private static final String JOIN_URL = "/api/games/join";
     private static final String LEAVE_URL = "/api/games/{gameId}/leave";
+    private static final String PARTICIPANTS_URL = "/api/games/{gameId}/participants";
 
     private User host;
     private Game waitingGame;
@@ -297,6 +298,86 @@ class GameParticipantControllerTest extends ControllerTest {
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        }
+    }
+
+    @Nested
+    @DisplayName("게임 참가자 목록 조회 API")
+    class GetParticipantList {
+
+        @Test
+        void 게임_참가자_목록_조회_성공() {
+            // given
+            Game game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
+            givenPolice(game, host);
+            User robberUser = givenUser("robber");
+            givenRobber(game, robberUser);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(hostToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .get(PARTICIPANTS_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                softly.assertThat(response.jsonPath().getList("police")).hasSize(1);
+                softly.assertThat(response.jsonPath().getList("robbers")).hasSize(1);
+                softly.assertThat(response.jsonPath().getString("police[0].status")).isEqualTo("ALIVE");
+                softly.assertThat(response.jsonPath().getString("robbers[0].status")).isEqualTo("ALIVE");
+            });
+        }
+
+        @Test
+        void 게임이_IN_PROGRESS_상태가_아니면_400_BadRequest를_응답한다() {
+            // when
+            ExtractableResponse<Response> response = authenticated(hostToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .when()
+                    .get(PARTICIPANTS_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 해당_게임의_참가자가_아니면_404_NotFound를_응답한다() {
+            // given
+            Game game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
+
+            // when
+            ExtractableResponse<Response> response = authenticated(hostToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .get(PARTICIPANTS_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        }
+
+        @Test
+        void 인증_토큰_없이_요청하면_401_Unauthorized를_응답한다() {
+            // given
+            Game game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
+            givenPolice(game, host);
+
+            // when
+            ExtractableResponse<Response> response = unauthenticated()
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .get(PARTICIPANTS_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
         }
     }
 }

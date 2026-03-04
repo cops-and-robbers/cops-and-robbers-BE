@@ -5,8 +5,11 @@ import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.area.domain.GameArea;
 import com.team.cops_and_robbers.game.area.domain.GameAreaDomainService;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameCreateCommand;
+import com.team.cops_and_robbers.game.game.application.dto.command.GameInfoCommand;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameCreateResult;
+
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.user.domain.User;
@@ -17,7 +20,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+import static com.team.cops_and_robbers.common.fixture.GameFixture.FINISHED_GAME;
+import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
+import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.HOST_PARTICIPANT;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
@@ -38,13 +44,19 @@ class GameServiceTest extends ServiceUnitTest {
 
     private User host;
     private Game game;
+    private Game inProgressGame;
+    private Game finishedGame;
 
     @BeforeEach
     void setUp() {
         host = USER();
         game = WAITING_GAME();
+        inProgressGame = IN_PROGRESS_GAME();
+        finishedGame = FINISHED_GAME();
         setId(host, TEST_HOST_ID);
         setId(game, TEST_GAME_ID);
+        setId(inProgressGame, TEST_GAME_ID);
+        setId(finishedGame, TEST_GAME_ID);
     }
 
     @Nested
@@ -87,6 +99,73 @@ class GameServiceTest extends ServiceUnitTest {
             then(gameRepository).should(never()).save(any(Game.class));
             then(gameAreaRepository).should(never()).save(any(GameArea.class));
             then(gameParticipantRepository).should(never()).save(any(GameParticipant.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("게임 기본 설정 조회")
+    class GetGameInfo {
+
+        @Test
+        void WAITING_상태_게임의_설정_조회에_성공한다() {
+            // given
+            GameParticipant participant = HOST_PARTICIPANT(game, host);
+            GameInfoCommand command = GameInfoCommand.of(TEST_HOST_ID, TEST_GAME_ID);
+
+            given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(game);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_HOST_ID)).willReturn(participant);
+
+            // when
+            gameService.getGameInfo(command);
+
+            // then
+            then(gameRepository).should().getByGameId(TEST_GAME_ID);
+            then(gameParticipantRepository).should().getByGameIdAndUserId(TEST_GAME_ID, TEST_HOST_ID);
+        }
+
+        @Test
+        void IN_PROGRESS_상태_게임의_설정_조회에_성공한다() {
+            // given
+            GameParticipant participant = HOST_PARTICIPANT(inProgressGame, host);
+            GameInfoCommand command = GameInfoCommand.of(TEST_HOST_ID, TEST_GAME_ID);
+
+            given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(inProgressGame);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_HOST_ID)).willReturn(participant);
+
+            // when
+            gameService.getGameInfo(command);
+
+            // then
+            then(gameRepository).should().getByGameId(TEST_GAME_ID);
+            then(gameParticipantRepository).should().getByGameIdAndUserId(TEST_GAME_ID, TEST_HOST_ID);
+        }
+
+        @Test
+        void 게임이_비활성_상태이면_예외가_발생한다() {
+            // given
+            GameInfoCommand command = GameInfoCommand.of(TEST_HOST_ID, TEST_GAME_ID);
+
+            given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(finishedGame);
+
+            // when & then
+            assertThatThrownBy(() -> gameService.getGameInfo(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessage(GameException.GAME_NOT_ACTIVE.getDetail());
+        }
+
+        @Test
+        void 해당_게임의_참가자가_아니면_예외가_발생한다() {
+            // given
+            GameInfoCommand command = GameInfoCommand.of(TEST_HOST_ID, TEST_GAME_ID);
+
+            given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(game);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_HOST_ID))
+                    .willThrow(new ApplicationException(GameParticipantException.PARTICIPANT_NOT_FOUND));
+
+            // when & then
+            assertThatThrownBy(() -> gameService.getGameInfo(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessage(GameParticipantException.PARTICIPANT_NOT_FOUND.getDetail());
         }
     }
 

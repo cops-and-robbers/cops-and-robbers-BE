@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.game.game.presentation;
 
 import com.team.cops_and_robbers.common.ControllerTest;
+import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.AreaRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.CoordinatesRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameCreateRequest;
@@ -14,12 +15,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import static com.team.cops_and_robbers.common.fixture.GameFixture.FINISHED_GAME;
+import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 class GameControllerTest extends ControllerTest {
 
     private static final String GAME_API_URL = "/api/games";
+    private static final String GAME_INFO_API_URL = "/api/games/{gameId}";
 
     private User host;
     private String accessToken;
@@ -135,6 +139,96 @@ class GameControllerTest extends ControllerTest {
 
             // then
             assertThat(response.statusCode()).isEqualTo(401);
+        }
+    }
+
+    @Nested
+    @DisplayName("게임 기본 설정 조회 API")
+    class GetGameInfo {
+
+        @Test
+        void 게임_설정_조회_성공() {
+            // given
+            Game game = gameRepository.save(WAITING_GAME());
+            givenHost(game, host);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .when()
+                    .get(GAME_INFO_API_URL, game.getId())
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(200);
+                softly.assertThat(response.jsonPath().getInt("roundDurationMinutes")).isEqualTo(game.getRoundDurationMinutes());
+                softly.assertThat(response.jsonPath().getInt("locationRevealIntervalMinutes")).isEqualTo(game.getLocationRevealIntervalMinutes());
+                softly.assertThat(response.jsonPath().getInt("policeWaitMinutes")).isEqualTo(game.getPoliceWaitMinutes());
+                softly.assertThat(response.jsonPath().getInt("maxParticipants")).isEqualTo(game.getMaxParticipants());
+            });
+        }
+
+        @Test
+        void 게임이_비활성_상태이면_400_BadRequest를_응답한다() {
+            // given
+            Game game = gameRepository.save(FINISHED_GAME());
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .when()
+                    .get(GAME_INFO_API_URL, game.getId())
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(400);
+        }
+
+        @Test
+        void 해당_게임의_참가자가_아니면_404_NotFound를_응답한다() {
+            // given
+            Game game = gameRepository.save(WAITING_GAME());
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .when()
+                    .get(GAME_INFO_API_URL, game.getId())
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(404);
+        }
+
+        @Test
+        void 인증_토큰_없이_요청하면_401_Unauthorized를_응답한다() {
+            // given
+            Game game = gameRepository.save(WAITING_GAME());
+            givenHost(game, host);
+
+            // when
+            ExtractableResponse<Response> response = unauthenticated()
+                    .when()
+                    .get(GAME_INFO_API_URL, game.getId())
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(401);
+        }
+
+        @Test
+        void 존재하지_않는_게임이면_404_NotFound를_응답한다() {
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .when()
+                    .get(GAME_INFO_API_URL, 9999L)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(404);
         }
     }
 

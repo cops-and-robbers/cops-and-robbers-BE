@@ -3,11 +3,14 @@ package com.team.cops_and_robbers.game.participant.application;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.application.dto.command.GameJoinCommand;
 import com.team.cops_and_robbers.game.participant.application.dto.command.GameLeaveCommand;
+import com.team.cops_and_robbers.game.participant.application.dto.command.GameParticipantListCommand;
 import com.team.cops_and_robbers.game.participant.application.dto.result.GameJoinResult;
 import com.team.cops_and_robbers.game.participant.application.dto.result.GameLeaveResult;
+import com.team.cops_and_robbers.game.participant.application.dto.result.GameParticipantListResult;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
@@ -19,6 +22,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -108,5 +113,17 @@ public class GameParticipantService {
         if (!participant.isWaiting()) {
             throw new ApplicationException(GameParticipantException.CANNOT_LEAVE_DURING_GAME);
         }
+    }
+
+    public GameParticipantListResult getParticipantList(GameParticipantListCommand command) {
+        Game game = gameRepository.getByGameId(command.gameId());
+
+        if (!game.isInProgress()) {
+            throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
+        }
+
+        gameParticipantRepository.getByGameIdAndUserId(command.gameId(), command.userId());
+        List<GameParticipant> participants = gameParticipantRepository.findAllByGameIdWithUser(command.gameId());
+        return GameParticipantListResult.from(participants);
     }
 }
