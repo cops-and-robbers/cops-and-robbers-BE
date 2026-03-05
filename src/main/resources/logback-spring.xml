@@ -1,58 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <!-- 콘솔 출력 -->
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} | %highlight(%-5level) | %cyan(%logger{20}) | %msg%n</pattern>
-        </encoder>
-    </appender>
-
-    <!-- prod: 전체 로그 파일 - INFO 이상 -->
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${user.home}/log/app/app.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${user.home}/log/app/app_%d{yyyyMMdd}.log</fileNamePattern>
-            <maxHistory>30</maxHistory>
-            <totalSizeCap>1GB</totalSizeCap>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} | %-5level | %logger{20} | %msg%n</pattern>
-        </encoder>
-    </appender>
-
-    <!-- prod: 에러 로그 파일 - ERROR만 -->
-    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${user.home}/log/error/error.log</file>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>ERROR</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${user.home}/log/error/error_%d{yyyyMMdd}.log</fileNamePattern>
-            <maxHistory>30</maxHistory>
-            <totalSizeCap>500MB</totalSizeCap>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} | %-5level | %logger{20} | %msg%n</pattern>
-        </encoder>
-    </appender>
+    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
+    <property name="LOG_PATH" value="/log"/>
 
     <!-- dev 환경: 콘솔만 -->
     <springProfile name="dev">
+        <include resource="logback/console/app-console.xml"/>
+        <include resource="logback/console/error-console.xml"/>
+
         <root level="INFO">
-            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="APP_CONSOLE"/>
+            <appender-ref ref="ERROR_CONSOLE"/>
         </root>
-        <logger name="com.team.cops_and_robbers" level="DEBUG"/>
+        <logger name="com.team.cops_and_robbers" level="INFO"/>
     </springProfile>
 
-    <!-- prod 환경: 콘솔 + 파일 -->
+    <!-- prod 환경: 파일만 -->
     <springProfile name="prod">
+        <include resource="logback/file/app-appender.xml"/>
+        <include resource="logback/file/error-appender.xml"/>
+
         <root level="INFO">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="FILE"/>
-            <appender-ref ref="ERROR_FILE"/>
+            <appender-ref ref="FILE_APP"/>
+            <appender-ref ref="FILE_ERROR"/>
         </root>
         <logger name="com.team.cops_and_robbers" level="INFO"/>
     </springProfile>
