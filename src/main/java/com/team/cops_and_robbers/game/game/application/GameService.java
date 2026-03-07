@@ -121,7 +121,10 @@ public class GameService {
 
     @Transactional
     public GameAreaUpdateResult updateGameArea(GameAreaUpdateCommand command) {
-        GameParticipant participant = gameParticipantRepository.getByGameIdAndUserId(command.gameId(), command.userId());
+        GameParticipant participant = gameParticipantRepository.getByGameIdAndUserIdWithGame(
+                command.gameId(),
+                command.userId()
+        );
         validateGameEditable(participant);
 
         gameAreaDomainService.validateAreaContainment(
@@ -151,7 +154,10 @@ public class GameService {
 
     @Transactional
     public GameSettingsUpdateResult updateGameSettings(GameSettingsUpdateCommand command) {
-        GameParticipant participant = gameParticipantRepository.getByGameIdAndUserId(command.gameId(), command.userId());
+        GameParticipant participant = gameParticipantRepository.getByGameIdAndUserIdWithGame(
+                command.gameId(),
+                command.userId()
+        );
        validateGameEditable(participant);
 
         Game game = participant.getGame();
