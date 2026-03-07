@@ -12,7 +12,6 @@ public record GameAreaUpdateCommand(
         Double jailLongitude,
         Integer jailRadiusInMeters
 ) {
-
     public static GameAreaUpdateCommand of(Long gameId, Long userId, GameAreaRequest area) {
         return new GameAreaUpdateCommand(
                 gameId,
