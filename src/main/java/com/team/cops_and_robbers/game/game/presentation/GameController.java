@@ -76,7 +76,8 @@ public class GameController implements GameControllerDocs {
     ) {
         GameAreaUpdateCommand command = GameAreaUpdateCommand.of(gameId, loginUser.userId(), request);
         GameAreaUpdateResult result = gameService.updateGameArea(command);
-        return ResponseEntity.ok(GameAreaUpdateResponse.from(result));
+        GameAreaUpdateResponse response = GameAreaUpdateResponse.from(result);
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -90,6 +91,7 @@ public class GameController implements GameControllerDocs {
     ) {
         GameSettingsUpdateCommand command = GameSettingsUpdateCommand.of(gameId, loginUser.userId(), request);
         GameSettingsUpdateResult result = gameService.updateGameSettings(command);
-        return ResponseEntity.ok(GameSettingsUpdateResponse.from(result));
+        GameSettingsUpdateResponse response = GameSettingsUpdateResponse.from(result);
+        return ResponseEntity.ok(response);
     }
 }
