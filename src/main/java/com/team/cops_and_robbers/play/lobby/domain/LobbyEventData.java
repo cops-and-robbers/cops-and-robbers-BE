@@ -1,5 +1,8 @@
 package com.team.cops_and_robbers.play.lobby.domain;
 
+import com.team.cops_and_robbers.common.dto.Coordinates;
+import com.team.cops_and_robbers.game.game.application.dto.result.GameAreaUpdateResult;
+import com.team.cops_and_robbers.game.game.application.dto.result.GameSettingsUpdateResult;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 
@@ -63,18 +66,32 @@ public sealed interface LobbyEventData permits
     }
 
     record LobbyAreaUpdatedData(
-            Double playgroundLatitude,
-            Double playgroundLongitude,
+            Coordinates playgroundCenter,
             Integer playgroundRadiusInMeters,
-            Double jailLatitude,
-            Double jailLongitude,
+            Coordinates jailCenter,
             Integer jailRadiusInMeters
-    ) implements LobbyEventData {}
+    ) implements LobbyEventData {
+        public static LobbyAreaUpdatedData from(GameAreaUpdateResult result) {
+            return new LobbyAreaUpdatedData(
+                    result.playgroundCenter(),
+                    result.playgroundRadiusInMeters(),
+                    result.jailCenter(),
+                    result.jailRadiusInMeters()
+            );
+        }
+    }
 
     record LobbySettingsUpdatedData(
             Integer roundDurationMinutes,
             Integer locationRevealIntervalMinutes,
             Integer policeWaitMinutes,
             Integer maxParticipants
-    ) implements LobbyEventData {}
+    ) implements LobbyEventData {
+        public static LobbySettingsUpdatedData from(GameSettingsUpdateResult result) {
+            return new LobbySettingsUpdatedData(
+                    result.roundDurationMinutes(), result.locationRevealIntervalMinutes(),
+                    result.policeWaitMinutes(), result.maxParticipants()
+            );
+        }
+    }
 }

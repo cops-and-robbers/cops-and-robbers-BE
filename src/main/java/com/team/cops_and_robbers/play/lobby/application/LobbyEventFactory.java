@@ -46,18 +46,12 @@ public class LobbyEventFactory {
     }
 
     public LobbyEvent createAreaUpdatedEvent(Long gameId, GameAreaUpdateResult result) {
-        LobbyEventData.LobbyAreaUpdatedData data = new LobbyEventData.LobbyAreaUpdatedData(
-                result.playgroundLatitude(), result.playgroundLongitude(), result.playgroundRadiusInMeters(),
-                result.jailLatitude(), result.jailLongitude(), result.jailRadiusInMeters()
-        );
+        LobbyEventData.LobbyAreaUpdatedData data = LobbyEventData.LobbyAreaUpdatedData.from(result);
         return LobbyEvent.of(gameId, LobbyEventType.AREA_UPDATED, data);
     }
 
     public LobbyEvent createSettingsUpdatedEvent(Long gameId, GameSettingsUpdateResult result) {
-        LobbyEventData.LobbySettingsUpdatedData data = new LobbyEventData.LobbySettingsUpdatedData(
-                result.roundDurationMinutes(), result.locationRevealIntervalMinutes(),
-                result.policeWaitMinutes(), result.maxParticipants()
-        );
+        LobbyEventData.LobbySettingsUpdatedData data = LobbyEventData.LobbySettingsUpdatedData.from(result);
         return LobbyEvent.of(gameId, LobbyEventType.SETTINGS_UPDATED, data);
     }
 }
