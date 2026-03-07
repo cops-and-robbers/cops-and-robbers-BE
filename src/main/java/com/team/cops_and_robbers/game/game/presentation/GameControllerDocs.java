@@ -267,7 +267,6 @@ public interface GameControllerDocs {
             @Parameter(hidden = true) @AuthUser LoginUser loginUser,
             @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId
     );
-}
 
     @Operation(summary = "게임 영역 수정 (방장 전용)",
             description = """
@@ -376,3 +375,104 @@ public interface GameControllerDocs {
                     )
             ) @RequestBody @Valid GameAreaRequest request
     );
+
+    @Operation(summary = "게임 설정 수정 (방장 전용)",
+            description = """
+                    대기실에서 게임 규칙을 수정합니다.
+
+                    **제약 조건**
+                    - 방장만 호출 가능
+                    - 게임이 WAITING 상태일 때만 가능
+                    - 모든 설정 필드를 세트로 전송 (부분 수정 불가)
+                    - 위치 공개 주기 < 라운드 시간
+                    - 경찰 대기 시간 < 라운드 시간
+
+                    **WebSocket**
+                    성공 시 대기실 구독자 전체에게 `SETTINGS_UPDATED` 이벤트가 브로드캐스트됩니다.
+                    """,
+            security = @SecurityRequirement(name = "JWT")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "설정 수정 성공",
+                    content = @Content(
+                            schema = @Schema(implementation = GameSettingsUpdateResponse.class),
+                            examples = @ExampleObject(
+                                    name = "수정 성공 예시",
+                                    value = """
+                                            {
+                                                "roundDurationMinutes": 60,
+                                                "locationRevealIntervalMinutes": 10,
+                                                "policeWaitMinutes": 5,
+                                                "maxParticipants": 20
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "위치 공개 주기가 라운드 시간 이상인 경우",
+                                            value = """
+                                                    {
+                                                        "title": "유효하지 않은 위치 공개 주기",
+                                                        "status": 400,
+                                                        "detail": "위치 공개 주기는 라운드 시간보다 짧아야 합니다.",
+                                                        "instance": "/api/games/1/settings"
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "게임이 대기 중이 아닌 경우",
+                                            value = """
+                                                    {
+                                                        "title": "대기 중인 게임이 아님",
+                                                        "status": 400,
+                                                        "detail": "대기 중인 게임에서만 설정을 변경할 수 있습니다.",
+                                                        "instance": "/api/games/1/settings"
+                                                    }
+                                                    """
+                                    )
+                            }
+                    )
+            ),
+            @ApiResponse(responseCode = "403", description = "방장 권한 없음",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                                "title": "호스트 권한 필요",
+                                                "status": 403,
+                                                "detail": "방장만 게임을 시작할 수 있습니다.",
+                                                "instance": "/api/games/1/settings"
+                                            }
+                                            """
+                            )
+                    )
+            )
+    })
+    ResponseEntity<GameSettingsUpdateResponse> updateGameSettings(
+            @Parameter(hidden = true) @AuthUser LoginUser loginUser,
+            @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "변경할 전체 게임 설정 (모든 필드 필수)",
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = GameSettingsRequest.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                                "roundDurationMinutes": 60,
+                                                "locationRevealIntervalMinutes": 10,
+                                                "policeWaitMinutes": 5,
+                                                "maxParticipants": 20
+                                            }
+                                            """
+                            )
+                    )
+            ) @RequestBody @Valid GameSettingsRequest request
+    );
+}

@@ -93,4 +93,3 @@ public class GameController implements GameControllerDocs {
         return ResponseEntity.ok(GameSettingsUpdateResponse.from(result));
     }
 }
-
