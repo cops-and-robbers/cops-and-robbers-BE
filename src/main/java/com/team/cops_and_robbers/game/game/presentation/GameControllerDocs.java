@@ -292,11 +292,15 @@ public interface GameControllerDocs {
                                     name = "수정 성공 예시",
                                     value = """
                                             {
-                                                "playgroundLatitude": 37.5665,
-                                                "playgroundLongitude": 126.9780,
+                                                "playgroundCenter": {
+                                                    "latitude": 37.5665,
+                                                    "longitude": 126.9780
+                                                },
                                                 "playgroundRadiusInMeters": 1000,
-                                                "jailLatitude": 37.5670,
-                                                "jailLongitude": 126.9785,
+                                                "jailCenter": {
+                                                    "latitude": 37.5670,
+                                                    "longitude": 126.9785
+                                                },
                                                 "jailRadiusInMeters": 100
                                             }
                                             """
