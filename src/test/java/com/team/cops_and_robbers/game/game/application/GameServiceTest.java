@@ -25,12 +25,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.context.ApplicationEventPublisher;
 
+import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.GAME_AREA;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.FINISHED_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
-import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.GAME_AREA;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
-import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.HOST_PARTICIPANT;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.GUEST_PARTICIPANT;
+import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.HOST_PARTICIPANT;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -215,7 +215,7 @@ class GameServiceTest extends ServiceUnitTest {
         void 영역_수정에_성공하면_결과를_반환한다() {
             // given
             GameParticipant hostParticipant = HOST_PARTICIPANT(game, host);
-            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_HOST_ID)).willReturn(hostParticipant);
+            given(gameParticipantRepository.getByGameIdAndUserIdWithGame(TEST_GAME_ID, TEST_HOST_ID)).willReturn(hostParticipant);
             given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(gameArea);
             given(lobbyEventFactory.createAreaUpdatedEvent(any(), any())).willReturn(lobbyEvent);
 
@@ -232,7 +232,7 @@ class GameServiceTest extends ServiceUnitTest {
         void 방장이_아닌_참여자가_요청하면_예외가_발생한다() {
             // given
             GameParticipant guest = GUEST_PARTICIPANT(game, host);
-            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_HOST_ID)).willReturn(guest);
+            given(gameParticipantRepository.getByGameIdAndUserIdWithGame(TEST_GAME_ID, TEST_HOST_ID)).willReturn(guest);
 
             // when & then
             assertThatThrownBy(() -> gameService.updateGameArea(command))
@@ -247,7 +247,7 @@ class GameServiceTest extends ServiceUnitTest {
             // given
             Game inProgressGame = IN_PROGRESS_GAME();
             GameParticipant hostParticipant = HOST_PARTICIPANT(inProgressGame, host);
-            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_HOST_ID)).willReturn(hostParticipant);
+            given(gameParticipantRepository.getByGameIdAndUserIdWithGame(TEST_GAME_ID, TEST_HOST_ID)).willReturn(hostParticipant);
 
             // when & then
             assertThatThrownBy(() -> gameService.updateGameArea(command))
@@ -280,7 +280,7 @@ class GameServiceTest extends ServiceUnitTest {
         void 설정_수정에_성공하면_결과를_반환한다() {
             // given
             GameParticipant hostParticipant = HOST_PARTICIPANT(game, host);
-            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_HOST_ID)).willReturn(hostParticipant);
+            given(gameParticipantRepository.getByGameIdAndUserIdWithGame(TEST_GAME_ID, TEST_HOST_ID)).willReturn(hostParticipant);
             given(lobbyEventFactory.createSettingsUpdatedEvent(any(), any())).willReturn(lobbyEvent);
 
             // when
@@ -298,7 +298,7 @@ class GameServiceTest extends ServiceUnitTest {
         void 방장이_아닌_참여자가_요청하면_예외가_발생한다() {
             // given
             GameParticipant guest = GUEST_PARTICIPANT(game, host);
-            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_HOST_ID)).willReturn(guest);
+            given(gameParticipantRepository.getByGameIdAndUserIdWithGame(TEST_GAME_ID, TEST_HOST_ID)).willReturn(guest);
 
             // when & then
             assertThatThrownBy(() -> gameService.updateGameSettings(command))
@@ -311,7 +311,7 @@ class GameServiceTest extends ServiceUnitTest {
             // given
             Game inProgressGame = IN_PROGRESS_GAME();
             GameParticipant hostParticipant = HOST_PARTICIPANT(inProgressGame, host);
-            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_HOST_ID)).willReturn(hostParticipant);
+            given(gameParticipantRepository.getByGameIdAndUserIdWithGame(TEST_GAME_ID, TEST_HOST_ID)).willReturn(hostParticipant);
 
             // when & then
             assertThatThrownBy(() -> gameService.updateGameSettings(command))
