@@ -82,7 +82,7 @@ class SystemControllerTest extends ControllerTest {
         }
 
         @Test
-        void 모든_도둑이_체포되면_게임이_종료되어_게임과_유저는_WAITING_상태가_되어야한다() {
+        void 모든_도둑이_체포되면_추가_시간이_시작되어야_한다() {
             // given
             ArrestRequest request = new ArrestRequest(robberParticipant.getId());
 
@@ -102,13 +102,14 @@ class SystemControllerTest extends ControllerTest {
                 softly.assertThat(result.robberNickname()).isEqualTo(robber.getNickname());
                 softly.assertThat(result.remainingThieves()).isEqualTo(0);
 
+                // 추가 시간이 시작되었으므로 게임은 즉시 종료되지 않고 IN_PROGRESS 상태를 유지한다.
+                Game refreshedGame = gameRepository.findById(game.getId()).orElseThrow();
+                softly.assertThat(refreshedGame.getStatus()).isEqualTo(GameStatus.IN_PROGRESS);
+                softly.assertThat(refreshedGame.isInAdditionalTime()).isTrue();
+
+                // 게임이 아직 종료되지 않았으므로 도둑은 JAILED 상태이다.
                 GameParticipant jailedRobber = gameParticipantRepository.findById(robberParticipant.getId()).orElseThrow();
-                softly.assertThat(jailedRobber.isWaiting()).isTrue();
-
-                gameRepository.findById(game.getId()).orElseThrow();
-                softly.assertThat(game.getStatus() == GameStatus.WAITING);
-
-                softly.assertThat(gameResultRepository.existsById(1L)).isTrue();    // 게임 결과 또한 저장되어야 한다.
+                softly.assertThat(jailedRobber.isJailed()).isTrue();
             });
         }
 
