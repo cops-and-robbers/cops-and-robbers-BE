@@ -37,4 +37,14 @@ public class SystemEventFactory {
         SystemEventData.GameEndData data = SystemEventData.GameEndData.of(gameResultId, winnerTeam, reason);
         return SystemEvent.of(gameId, SystemEventType.GAME_OVER, data);
     }
+
+    public SystemEvent createAdditionalTimeStartedEvent(Long gameId, GameEndReason trigger, int additionalTimeSeconds) {
+        SystemEventData.AdditionalTimeStartedData data = SystemEventData.AdditionalTimeStartedData.of(trigger, additionalTimeSeconds);
+        return SystemEvent.of(gameId, SystemEventType.ADDITIONAL_TIME_STARTED, data);
+    }
+
+    public SystemEvent createGameResumedEvent(Long gameId, long remainingSeconds) {
+        SystemEventData.GameResumedData data = SystemEventData.GameResumedData.of(remainingSeconds);
+        return SystemEvent.of(gameId, SystemEventType.GAME_RESUMED, data);
+    }
 }
