@@ -1,12 +1,12 @@
 package com.team.cops_and_robbers.play.system.application;
 
-import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
+import com.team.cops_and_robbers.history.domain.GameEndReason;
 import com.team.cops_and_robbers.play.location.application.RobberLocationService;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
 import com.team.cops_and_robbers.play.system.domain.SystemEventData;
@@ -32,6 +32,7 @@ import java.util.concurrent.ScheduledFuture;
 public class GameSchedulerService {
 
     private final Map<Long, List<ScheduledFuture<?>>> gameSchedules = new ConcurrentHashMap<>();
+    private final Map<Long, ScheduledFuture<?>> gameOverSchedules = new ConcurrentHashMap<>();
 
     private final Clock clock;
     private final TaskScheduler taskScheduler;
@@ -40,7 +41,7 @@ public class GameSchedulerService {
     private final GameRepository gameRepository;
     private final GameParticipantRepository gameParticipantRepository;
     private final RobberLocationService robberLocationService;
-    private final GameTerminationService gameTerminationService;
+    private final AdditionalTimeService additionalTimeService;
     private final TransactionTemplate transactionTemplate;
 
     /**
@@ -60,16 +61,32 @@ public class GameSchedulerService {
         List<Game> inProgressGames = gameRepository.findByStatus(GameStatus.IN_PROGRESS);
         log.info("[Scheduler] Recovering schedules for {} in-progress game(s).", inProgressGames.size());
         for (Game game : inProgressGames) {
-            scheduleGame(game);
+            if (game.isInAdditionalTime()) {
+                recoverAdditionalTimeGame(game);
+            } else {
+                scheduleGame(game);
+            }
         }
     }
 
     /**
+     * 추가 시간 진행 중에 서버가 재시작된 경우, 즉시 평가를 실행한다.
+     * (이미 1분이 경과했을 수 있으므로 즉시 실행)
+     */
+    private void recoverAdditionalTimeGame(Game game) {
+        log.info("[Scheduler] Recovering additional-time game. Executing immediate evaluation for GameId: {}", game.getId());
+        // additionalTimeStartedAt >= scheduledEndTime 이면 TIME_OVER가 추가시간을 트리거한 것
+        GameEndReason trigger = !game.getAdditionalTimeStartedAt().isBefore(game.getScheduledEndTime())
+                ? GameEndReason.TIME_OVER
+                : GameEndReason.ALL_ARRESTED;
+
+        transactionTemplate.executeWithoutResult(status ->
+                additionalTimeService.evaluateAdditionalTime(game.getId(), trigger)
+        );
+    }
+
+    /**
      * 하나의 게임에 대해 필요한 시스템 이벤트 스케줄을 등록한다.
-     * - 경찰 이동 시작 이벤트
-     * - 도둑 위치 공개 이벤트
-     * - 타임오버로 인한 게임 종료 이벤트
-     * 서버 재시작 시에도 동일한 로직으로 스케줄을 복구한다.
      */
     private void scheduleGame(Game game) {
         cancelSchedule(game.getId());
@@ -124,7 +141,8 @@ public class GameSchedulerService {
     }
 
     /**
-     * 타임 오버로 인한 게임 종료
+     * 타임 오버 태스크 등록.
+     * 시간이 되면 즉시 종료하지 않고 AdditionalTimeService를 통해 추가 시간 플로우로 진입한다.
      */
     private void scheduleGameOver(
             List<ScheduledFuture<?>> scheduledTasks,
@@ -134,24 +152,83 @@ public class GameSchedulerService {
         LocalDateTime targetTime = gameOverTime(game);
 
         if (!targetTime.isAfter(now)) {
-            log.warn("[Scheduler] Time-over already reached for GameId: {}. Executing immediate game termination.", game.getId());
-            gameTerminationService.endGameByTimeOver(game.getId());
+            log.warn("[Scheduler] Time-over already reached for GameId: {}. Triggering additional time immediately.", game.getId());
+            additionalTimeService.startAdditionalTime(game.getId(), GameEndReason.TIME_OVER);
             return;
         }
 
-        register(scheduledTasks, targetTime, now,
+        Instant instant = targetTime.atZone(clock.getZone()).toInstant();
+        ScheduledFuture<?> future = taskScheduler.schedule(
                 () -> {
-                    log.info("[Scheduler] Executing time-out game-over task! GameId: {}", game.getId());
-                    gameTerminationService.endGameByTimeOver(game.getId());
-                });
+                    log.info("[Scheduler] Executing time-out task! GameId: {}", game.getId());
+                    additionalTimeService.startAdditionalTime(game.getId(), GameEndReason.TIME_OVER);
+                },
+                instant
+        );
+        scheduledTasks.add(future);
+        gameOverSchedules.put(game.getId(), future);
+    }
+
+    /**
+     * TIME_OVER 태스크만 취소한다. (추가 시간 시작 시 게임 시간 정지용)
+     * SystemEventHandler가 ADDITIONAL_TIME_STARTED 이벤트 처리 후 호출한다.
+     */
+    public void cancelGameOverSchedule(Long gameId) {
+        ScheduledFuture<?> future = gameOverSchedules.remove(gameId);
+        if (future != null) {
+            future.cancel(false);
+            log.info("[Scheduler] Cancelled game-over schedule for GameId: {}", gameId);
+        }
+    }
+
+    /**
+     * 추가 시간 이후 게임 속행 시, 남은 시간만큼 TIME_OVER 태스크를 재등록한다.
+     * SystemEventHandler가 GAME_RESUMED 이벤트 처리 후 호출한다.
+     */
+    public void scheduleGameOverAfterAdditionalTime(Long gameId, long delaySeconds) {
+        Instant instant = Instant.now(clock).plusSeconds(delaySeconds);
+        ScheduledFuture<?> future = taskScheduler.schedule(
+                () -> {
+                    log.info("[Scheduler] Executing resumed time-out task! GameId: {}", gameId);
+                    additionalTimeService.startAdditionalTime(gameId, GameEndReason.TIME_OVER);
+                },
+                instant
+        );
+        gameOverSchedules.put(gameId, future);
+        List<ScheduledFuture<?>> tasks = gameSchedules.get(gameId);
+        if (tasks != null) {
+            tasks.add(future);
+        }
+        log.info("[Scheduler] Scheduled game-over after {}s for GameId: {}", delaySeconds, gameId);
+    }
+
+    /**
+     * 추가 시간 종료 후 평가 태스크를 등록한다.
+     * SystemEventHandler가 ADDITIONAL_TIME_STARTED 이벤트 처리 후 호출한다.
+     */
+    public void scheduleAdditionalTimeEvaluation(Long gameId, GameEndReason trigger) {
+        Instant instant = Instant.now(clock).plusSeconds(AdditionalTimeService.ADDITIONAL_TIME_SECONDS);
+        ScheduledFuture<?> future = taskScheduler.schedule(
+                () -> {
+                    log.info("[Scheduler] Executing additional-time evaluation task! GameId: {}", gameId);
+                    additionalTimeService.evaluateAdditionalTime(gameId, trigger);
+                },
+                instant
+        );
+        List<ScheduledFuture<?>> tasks = gameSchedules.get(gameId);
+        if (tasks != null) {
+            tasks.add(future);
+        }
+        log.info("[Scheduler] Scheduled additional-time evaluation after {}s for GameId: {}", AdditionalTimeService.ADDITIONAL_TIME_SECONDS, gameId);
     }
 
     /**
      * 게임 종료/시작 시에 게임에 남아 있는 스케줄러를 모두 취소한다.
      */
     public void cancelSchedule(Long gameId) {
-        List<ScheduledFuture<?>> tasks = gameSchedules.remove(gameId);
+        gameOverSchedules.remove(gameId);
 
+        List<ScheduledFuture<?>> tasks = gameSchedules.remove(gameId);
         if (tasks != null) {
             for (ScheduledFuture<?> task : tasks) {
                 task.cancel(false);
@@ -167,25 +244,22 @@ public class GameSchedulerService {
             Runnable task
     ) {
         if (targetTime.isAfter(now)) {
-            Instant instant =  targetTime.atZone(clock.getZone()).toInstant();
+            Instant instant = targetTime.atZone(clock.getZone()).toInstant();
             ScheduledFuture<?> scheduledTask = taskScheduler.schedule(task, instant);
             scheduledTasks.add(scheduledTask);
         }
     }
 
     private LocalDateTime policeMoveStartTime(Game game) {
-        return game.getStartedAt()
-                .plusMinutes(game.getPoliceWaitMinutes());
+        return game.getStartedAt().plusMinutes(game.getPoliceWaitMinutes());
     }
 
     private LocalDateTime gameOverTime(Game game) {
-        return game.getStartedAt()
-                .plusMinutes(game.getRoundDurationMinutes());
+        return game.getStartedAt().plusMinutes(game.getRoundDurationMinutes());
     }
 
     private LocalDateTime firstRobberRevealTime(Game game) {
-        return policeMoveStartTime(game)
-                .plusMinutes(game.getLocationRevealIntervalMinutes());
+        return policeMoveStartTime(game).plusMinutes(game.getLocationRevealIntervalMinutes());
     }
 
     private void publishPoliceMoveStart(Long gameId) {
@@ -195,7 +269,6 @@ public class GameSchedulerService {
 
     private void publishRobberLocationReveal(Long gameId) {
         List<SystemEventData.RobberLocation> locations = robberLocationService.getCurrentRobberLocations(gameId);
-
         SystemEvent event = systemEventFactory.createRobberLocationRevealEvent(gameId, locations);
         systemPublisher.publish(event);
     }
