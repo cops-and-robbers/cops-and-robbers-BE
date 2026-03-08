@@ -61,4 +61,16 @@ public class GameArea extends BaseTimeEntity {
                 .jailRadiusInMeters(jailRadiusInMeters)
                 .build();
     }
+
+    public void update(
+            Point playgroundCenter,
+            Integer playgroundRadiusInMeters,
+            Point jailCenter,
+            Integer jailRadiusInMeters
+    ) {
+        this.playgroundCenter = playgroundCenter;
+        this.playgroundRadiusInMeters = playgroundRadiusInMeters;
+        this.jailCenter = jailCenter;
+        this.jailRadiusInMeters = jailRadiusInMeters;
+    }
 }

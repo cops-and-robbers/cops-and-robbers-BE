@@ -6,5 +6,7 @@ public enum LobbyEventType {
     TEAM_UPDATE,
     READY_UPDATE,
     HOST_CHANGED,
-    GAME_START
+    GAME_START,
+    AREA_UPDATED,
+    SETTINGS_UPDATED
 }

@@ -4,16 +4,22 @@ import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.area.domain.GameArea;
 import com.team.cops_and_robbers.game.area.domain.GameAreaDomainService;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
+import com.team.cops_and_robbers.game.game.application.dto.command.GameAreaUpdateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameCreateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameInfoCommand;
+import com.team.cops_and_robbers.game.game.application.dto.command.GameSettingsUpdateCommand;
+import com.team.cops_and_robbers.game.game.application.dto.result.GameAreaUpdateResult;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameCreateResult;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameInfoResult;
+import com.team.cops_and_robbers.game.game.application.dto.result.GameSettingsUpdateResult;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
+import com.team.cops_and_robbers.play.lobby.application.LobbyEventFactory;
+import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +27,7 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +43,8 @@ public class GameService {
     private final GameParticipantRepository gameParticipantRepository;
     private final UserRepository userRepository;
     private final GameAreaDomainService gameAreaDomainService;
+    private final ApplicationEventPublisher eventPublisher;
+    private final LobbyEventFactory lobbyEventFactory;
 
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
@@ -108,5 +117,71 @@ public class GameService {
             }
         }
         throw new ApplicationException(GameException.INVITE_CODE_GENERATION_FAILED);
+    }
+
+    @Transactional
+    public GameAreaUpdateResult updateGameArea(GameAreaUpdateCommand command) {
+        GameParticipant participant = gameParticipantRepository.getByGameIdAndUserIdWithGame(
+                command.gameId(),
+                command.userId()
+        );
+        validateGameEditable(participant);
+
+        gameAreaDomainService.validateAreaContainment(
+                command.playgroundLongitude(), command.playgroundLatitude(), command.playgroundRadiusInMeters(),
+                command.jailLongitude(), command.jailLatitude(), command.jailRadiusInMeters()
+        );
+
+        Point playgroundCenter = geometryFactory.createPoint(
+                new Coordinate(command.playgroundLongitude(), command.playgroundLatitude()));
+        Point jailCenter = geometryFactory.createPoint(new Coordinate(command.jailLongitude(), command.jailLatitude()));
+
+        GameArea gameArea = gameAreaRepository.getByGameId(command.gameId());
+        gameArea.update(
+                playgroundCenter,
+                command.playgroundRadiusInMeters(),
+                jailCenter,
+                command.jailRadiusInMeters()
+        );
+
+        GameAreaUpdateResult result = GameAreaUpdateResult.from(gameArea);
+
+        LobbyEvent areaEvent = lobbyEventFactory.createAreaUpdatedEvent(command.gameId(), result);
+        eventPublisher.publishEvent(areaEvent);
+
+        return result;
+    }
+
+    @Transactional
+    public GameSettingsUpdateResult updateGameSettings(GameSettingsUpdateCommand command) {
+        GameParticipant participant = gameParticipantRepository.getByGameIdAndUserIdWithGame(
+                command.gameId(),
+                command.userId()
+        );
+       validateGameEditable(participant);
+
+        Game game = participant.getGame();
+        game.updateSettings(
+                command.roundDurationMinutes(),
+                command.locationRevealIntervalMinutes(),
+                command.policeWaitMinutes(),
+                command.maxParticipants()
+        );
+
+        GameSettingsUpdateResult result = GameSettingsUpdateResult.from(game);
+
+        LobbyEvent settingsEvent = lobbyEventFactory.createSettingsUpdatedEvent(command.gameId(), result);
+        eventPublisher.publishEvent(settingsEvent);
+
+        return result;
+    }
+
+    private void validateGameEditable(GameParticipant participant) {
+        if (!participant.isHost()) {
+            throw new ApplicationException(GameParticipantException.NOT_HOST);
+        }
+        if (!participant.getGame().isWaiting()) {
+            throw new ApplicationException(GameException.GAME_NOT_WAITING);
+        }
     }
 }

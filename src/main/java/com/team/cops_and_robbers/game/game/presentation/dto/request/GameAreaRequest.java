@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
-public record AreaRequest(
+public record GameAreaRequest(
         @Valid @NotNull(message = "플레이그라운드 중심 좌표를 입력해주세요.")
         CoordinatesRequest playgroundCenter,
 

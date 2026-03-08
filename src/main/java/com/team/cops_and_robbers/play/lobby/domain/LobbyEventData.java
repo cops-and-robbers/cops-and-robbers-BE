@@ -1,5 +1,8 @@
 package com.team.cops_and_robbers.play.lobby.domain;
 
+import com.team.cops_and_robbers.common.dto.Coordinates;
+import com.team.cops_and_robbers.game.game.application.dto.result.GameAreaUpdateResult;
+import com.team.cops_and_robbers.game.game.application.dto.result.GameSettingsUpdateResult;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 
@@ -9,7 +12,9 @@ public sealed interface LobbyEventData permits
         LobbyEventData.LobbyTeamUpdateData,
         LobbyEventData.LobbyReadyUpdateData,
         LobbyEventData.LobbyHostChangedData,
-        LobbyEventData.LobbyGameStartData {
+        LobbyEventData.LobbyGameStartData,
+        LobbyEventData.LobbyAreaUpdatedData,
+        LobbyEventData.LobbySettingsUpdatedData {
 
     record LobbyParticipantInfo(Long participantId, String nickname, Team team, boolean isReady) {
         public static LobbyParticipantInfo from(GameParticipant participant) {
@@ -57,6 +62,36 @@ public sealed interface LobbyEventData permits
     record LobbyGameStartData(String startTime) implements LobbyEventData {
         public static LobbyGameStartData of(String startTime) {
             return new LobbyGameStartData(startTime);
+        }
+    }
+
+    record LobbyAreaUpdatedData(
+            Coordinates playgroundCenter,
+            Integer playgroundRadiusInMeters,
+            Coordinates jailCenter,
+            Integer jailRadiusInMeters
+    ) implements LobbyEventData {
+        public static LobbyAreaUpdatedData from(GameAreaUpdateResult result) {
+            return new LobbyAreaUpdatedData(
+                    result.playgroundCenter(),
+                    result.playgroundRadiusInMeters(),
+                    result.jailCenter(),
+                    result.jailRadiusInMeters()
+            );
+        }
+    }
+
+    record LobbySettingsUpdatedData(
+            Integer roundDurationMinutes,
+            Integer locationRevealIntervalMinutes,
+            Integer policeWaitMinutes,
+            Integer maxParticipants
+    ) implements LobbyEventData {
+        public static LobbySettingsUpdatedData from(GameSettingsUpdateResult result) {
+            return new LobbySettingsUpdatedData(
+                    result.roundDurationMinutes(), result.locationRevealIntervalMinutes(),
+                    result.policeWaitMinutes(), result.maxParticipants()
+            );
         }
     }
 }

@@ -2,25 +2,18 @@ package com.team.cops_and_robbers.game.game.application.dto.command;
 
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.game.exception.GameException;
-import com.team.cops_and_robbers.game.game.presentation.dto.request.GameAreaRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameSettingsRequest;
 
-public record GameCreateCommand(
-        Long hostUserId,
-        Double playgroundLatitude,
-        Double playgroundLongitude,
-        Integer playgroundRadiusInMeters,
-        Double jailLatitude,
-        Double jailLongitude,
-        Integer jailRadiusInMeters,
-
+public record GameSettingsUpdateCommand(
+        Long gameId,
+        Long userId,
         Integer roundDurationMinutes,
         Integer locationRevealIntervalMinutes,
         Integer policeWaitMinutes,
         Integer maxParticipants
 ) {
 
-    public GameCreateCommand {
+    public GameSettingsUpdateCommand {
         if (locationRevealIntervalMinutes >= roundDurationMinutes) {
             throw new ApplicationException(GameException.INVALID_LOCATION_INTERVAL);
         }
@@ -29,15 +22,10 @@ public record GameCreateCommand(
         }
     }
 
-    public static GameCreateCommand of(Long hostUserId, GameAreaRequest area, GameSettingsRequest settings) {
-        return new GameCreateCommand(
-                hostUserId,
-                area.playgroundCenter().latitude(),
-                area.playgroundCenter().longitude(),
-                area.playgroundRadiusInMeters(),
-                area.jailCenter().latitude(),
-                area.jailCenter().longitude(),
-                area.jailRadiusInMeters(),
+    public static GameSettingsUpdateCommand of(Long gameId, Long userId, GameSettingsRequest settings) {
+        return new GameSettingsUpdateCommand(
+                gameId,
+                userId,
                 settings.roundDurationMinutes(),
                 settings.locationRevealIntervalMinutes(),
                 settings.policeWaitMinutes(),
