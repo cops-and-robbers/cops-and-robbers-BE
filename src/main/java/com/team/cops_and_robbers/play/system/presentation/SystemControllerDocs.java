@@ -31,6 +31,7 @@ public interface SystemControllerDocs {
                     - 도둑만 체포 대상이 될 수 있음
                     - 이미 체포된 도둑은 체포 불가
                     - 같은 게임 내 참가자끼리만 상호작용 가능
+                    - 마지막 도둑을 체포하게 되면 추가시간 1분이 부여 됩니다. (1분동안 탈옥이 없을 시 경찰의 승리로 게임 종료)
                     """,
             security = @SecurityRequirement(name = "JWT")
     )
