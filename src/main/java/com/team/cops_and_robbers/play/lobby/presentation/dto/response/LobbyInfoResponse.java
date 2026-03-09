@@ -12,9 +12,10 @@ public record LobbyInfoResponse(
         @Schema(description = "방장 참가자 ID", example = "1")
         Long hostParticipantId,
         @Schema(description = "참가자 목록")
-        List<ParticipantResponse> participants
+        List<LobbyParticipantResponse> participants
 ) {
-    public record ParticipantResponse(
+    @Schema(name = "LobbyParticipantResponse", description = "로비 참가자 정보")
+    public record LobbyParticipantResponse(
             @Schema(description = "참가자 ID", example = "1")
             Long participantId,
             @Schema(description = "닉네임", example = "방장닉네임")
@@ -27,8 +28,8 @@ public record LobbyInfoResponse(
     }
 
     public static LobbyInfoResponse from(LobbyInfoResult result) {
-        List<ParticipantResponse> participantResponses = result.participants().stream()
-                .map(participantInfo -> new ParticipantResponse(
+        List<LobbyParticipantResponse> participantResponses = result.participants().stream()
+                .map(participantInfo -> new LobbyParticipantResponse(
                         participantInfo.participantId(),
                         participantInfo.nickname(),
                         participantInfo.team(),
