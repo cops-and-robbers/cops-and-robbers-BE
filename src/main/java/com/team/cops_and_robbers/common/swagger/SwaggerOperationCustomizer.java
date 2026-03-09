@@ -67,8 +67,8 @@ public class SwaggerOperationCustomizer implements OperationCustomizer {
             return (ExceptionCode) Enum.valueOf((Class<? extends Enum>) enumClass, codeName);
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(
-                    String.format("Enum constant '%s' not found in class '%s'. Please check @ApiErrorCode annotation.",
-                            codeName, enumClass.getName()), e);
+                    String.format("'%s.%s'를 찾을 수 없습니다. @ApiErrorCode 값을 확인해주세요.",
+                            enumClass.getSimpleName(), codeName), e);
         }
     }
 

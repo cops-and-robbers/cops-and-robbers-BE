@@ -1,5 +1,9 @@
 package com.team.cops_and_robbers.common.swagger;
 
+import com.team.cops_and_robbers.common.exception.ErrorResponse;
+import io.swagger.v3.core.converter.AnnotatedType;
+import io.swagger.v3.core.converter.ModelConverters;
+import io.swagger.v3.core.converter.ResolvedSchema;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -7,7 +11,6 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 
 @Configuration
 public class SwaggerConfig {
@@ -22,11 +25,16 @@ public class SwaggerConfig {
                 .scheme("bearer")
                 .description("JWT Access Token을 입력하세요. 'Bearer ' 접두사는 자동으로 추가됩니다.");
 
+        ResolvedSchema resolvedSchema = ModelConverters.getInstance()
+                .resolveAsResolvedSchema(new AnnotatedType(ErrorResponse.class));
+
         Info info = new Info().title("👮 경찰과 도둑 API 🥷").version("1.0.0");
 
         return new OpenAPI()
                 .info(info)
                 .addSecurityItem(securityRequirement)
-                .components(new Components().addSecuritySchemes("JWT", securityScheme));
-    }
+                .components(new Components()
+                        .addSecuritySchemes("JWT", securityScheme)
+                        .addSchemas("ErrorResponse", resolvedSchema.schema)
+                );    }
 }
