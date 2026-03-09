@@ -1,4 +1,4 @@
-package com.team.cops_and_robbers.common.config;
+package com.team.cops_and_robbers.common.swagger;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
