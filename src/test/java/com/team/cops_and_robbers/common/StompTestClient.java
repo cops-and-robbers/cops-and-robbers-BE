@@ -33,11 +33,12 @@ public class StompTestClient {
                 .get(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
-    public <T> void subscribe(String destination, Class<T> type) {
+    public <T> void subscribe(String destination, Class<T> type) throws InterruptedException {
         BlockingQueue<T> queue = new LinkedBlockingQueue<>();
         receivedMessages.put(destination, queue);
 
         session.subscribe(destination, new StompFrameHandlerImpl<>(type, queue));
+        Thread.sleep(300);
     }
     
     public <T> T waitForMessage(String destination, int timeoutSeconds) throws InterruptedException {
