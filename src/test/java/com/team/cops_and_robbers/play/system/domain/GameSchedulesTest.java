@@ -167,7 +167,7 @@ class GameSchedulesTest {
             ScheduledFuture<?> extraTask = mock(ScheduledFuture.class);
 
             // when
-            gameSchedules.addTask(GAME_ID, TaskType.ADDITIONAL_TIME_EVAL, extraTask);
+            gameSchedules.addTask(GAME_ID, TaskType.ADDITIONAL_TIME_EVALUATION, extraTask);
 
             // then
             int count = gameSchedules.cancelAll(GAME_ID);
@@ -179,7 +179,7 @@ class GameSchedulesTest {
         void 등록되지_않은_gameId에_addTask_호출_시_예외가_발생한다() {
             ScheduledFuture<?> future = mock(ScheduledFuture.class);
 
-            assertThatThrownBy(() -> gameSchedules.addTask(GAME_ID, TaskType.ADDITIONAL_TIME_EVAL, future))
+            assertThatThrownBy(() -> gameSchedules.addTask(GAME_ID, TaskType.ADDITIONAL_TIME_EVALUATION, future))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining(String.valueOf(GAME_ID));
         }

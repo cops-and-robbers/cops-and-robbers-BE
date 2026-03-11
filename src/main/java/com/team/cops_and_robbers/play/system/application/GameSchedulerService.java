@@ -195,7 +195,7 @@ public class GameSchedulerService {
                 },
                 instant
         );
-        gameSchedules.addTask(gameId, TaskType.ADDITIONAL_TIME_EVAL, future);
+        gameSchedules.addTask(gameId, TaskType.ADDITIONAL_TIME_EVALUATION, future);
         log.info("[Scheduler] Scheduled additional-time evaluation after {}s for GameId: {}", AdditionalTimeService.ADDITIONAL_TIME_SECONDS, gameId);
     }
 
