@@ -75,6 +75,10 @@ public class GameSchedulerService {
         log.info("[Scheduler] Recovering additional-time game. Executing immediate evaluation for GameId: {}", game.getId());
         gameSchedules.register(game.getId());
 
+        // 남은 시간 기준으로 위치 공개 재등록
+        LocalDateTime now = LocalDateTime.now(clock);
+        scheduleLocationReveals(game, now.plusMinutes(game.getLocationRevealIntervalMinutes()), game.getScheduledEndTime(), now);
+
         // additionalTimeStartedAt >= scheduledEndTime 이면 TIME_OVER가 추가시간을 트리거한 것
         GameEndReason trigger = !game.getAdditionalTimeStartedAt().isBefore(game.getScheduledEndTime())
                 ? GameEndReason.TIME_OVER
@@ -117,16 +121,18 @@ public class GameSchedulerService {
     private void scheduleRobberLocationReveals(Game game, LocalDateTime now) {
         LocalDateTime revealTime = firstRobberRevealTime(game);
         LocalDateTime gameOverTime = gameOverTime(game);
+        scheduleLocationReveals(game, revealTime, gameOverTime, now);
+    }
 
-        while (revealTime.isBefore(gameOverTime)) {
+    private void scheduleLocationReveals(Game game, LocalDateTime firstReveal, LocalDateTime until, LocalDateTime now) {
+        LocalDateTime revealTime = firstReveal;
+        while (revealTime.isBefore(until)) {
             LocalDateTime finalRevealTime = revealTime;
-
             scheduleTask(game.getId(), TaskType.LOCATION_REVEAL, finalRevealTime, now,
                     () -> {
                         log.info("[Scheduler] Executing robber-location-reveal task! GameId: {}", game.getId());
                         publishRobberLocationReveal(game.getId());
                     });
-
             revealTime = revealTime.plusMinutes(game.getLocationRevealIntervalMinutes());
         }
     }
