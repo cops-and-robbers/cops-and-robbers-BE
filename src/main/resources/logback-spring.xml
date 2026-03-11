@@ -16,14 +16,18 @@
         <logger name="com.team.cops_and_robbers" level="INFO"/>
     </springProfile>
 
-    <!-- prod 환경: 파일만 -->
+    <!-- prod 환경: 파일 + 콘솔 -->
     <springProfile name="prod">
         <include resource="logback/file/app-appender.xml"/>
         <include resource="logback/file/error-appender.xml"/>
+        <include resource="logback/console/app-console.xml"/>
+        <include resource="logback/console/error-console.xml"/>
 
         <root level="INFO">
             <appender-ref ref="FILE_APP"/>
             <appender-ref ref="FILE_ERROR"/>
+            <appender-ref ref="APP_CONSOLE"/>
+            <appender-ref ref="ERROR_CONSOLE"/>
         </root>
         <logger name="com.team.cops_and_robbers" level="INFO"/>
     </springProfile>
