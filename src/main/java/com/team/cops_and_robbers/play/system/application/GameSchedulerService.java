@@ -73,6 +73,8 @@ public class GameSchedulerService {
      */
     private void recoverAdditionalTimeGame(Game game) {
         log.info("[Scheduler] Recovering additional-time game. Executing immediate evaluation for GameId: {}", game.getId());
+        gameSchedules.register(game.getId());
+
         // additionalTimeStartedAt >= scheduledEndTime 이면 TIME_OVER가 추가시간을 트리거한 것
         GameEndReason trigger = !game.getAdditionalTimeStartedAt().isBefore(game.getScheduledEndTime())
                 ? GameEndReason.TIME_OVER
