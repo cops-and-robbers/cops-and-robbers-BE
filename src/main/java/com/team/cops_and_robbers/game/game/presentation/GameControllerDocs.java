@@ -2,7 +2,10 @@ package com.team.cops_and_robbers.game.game.presentation;
 
 import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
-import com.team.cops_and_robbers.common.exception.ErrorResponse;
+import com.team.cops_and_robbers.common.exception.CommonException;
+import com.team.cops_and_robbers.common.swagger.ApiErrorCode;
+import com.team.cops_and_robbers.game.area.exception.GameAreaException;
+import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameAreaRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameCreateRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameSettingsRequest;
@@ -10,6 +13,7 @@ import com.team.cops_and_robbers.game.game.presentation.dto.response.GameAreaUpd
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameCreateResponse;
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameInfoResponse;
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameSettingsUpdateResponse;
+import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -31,6 +35,10 @@ public interface GameControllerDocs {
             description = "새로운 게임 방을 생성하고 초대 코드를 발급받습니다. 게임 영역(플레이그라운드, 감옥)과 게임 규칙을 설정할 수 있습니다. 방을 생성한 사용자는 자동으로 방장이 됩니다.",
             security = @SecurityRequirement(name = "JWT")
     )
+    @ApiErrorCode(value = GameAreaException.class, codes = {"INVALID_JAIL_RADIUS", "JAIL_OUTSIDE_PLAYGROUND"})
+    @ApiErrorCode(value = GameException.class, codes = {"INVALID_LOCATION_INTERVAL", "INVALID_POLICE_WAIT_TIME"})
+    @ApiErrorCode(value = GameParticipantException.class, codes = {"ALREADY_PARTICIPATING"})
+    @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "게임 방 생성 성공 (리소스 생성됨)",
                     content = @Content(
@@ -52,89 +60,6 @@ public interface GameControllerDocs {
                             )
                     )
             ),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = {
-                                    @ExampleObject(
-                                            name = "필수 필드 누락",
-                                            value = """
-                                                    {
-                                                        "title": "유효하지 않은 입력값",
-                                                        "status": 400,
-                                                        "detail": "area: 영역 설정은 필수입니다.",
-                                                        "instance": "/api/games"
-                                                    }
-                                                    """
-                                    ),
-                                    @ExampleObject(
-                                            name = "감옥이 플레이그라운드 밖에 위치한 경우",
-                                            value = """
-                                                    {
-                                                        "title": "영역 설정 오류",
-                                                        "status": 400,
-                                                        "detail": "감옥 영역이 플레이그라운드 영역 내에 포함되어야 합니다.",
-                                                        "instance": "/api/games"
-                                                    }
-                                                    """
-                                    ),
-                                    @ExampleObject(
-                                            name = "위치 공개 주기가 라운드 시간보다 긴 경우",
-                                            value = """
-                                                    {
-                                                        "title": "게임 설정 오류",
-                                                        "status": 400,
-                                                        "detail": "위치 공개 주기는 라운드 시간보다 짧아야 합니다.",
-                                                        "instance": "/api/games"
-                                                    }
-                                                    """
-                                    ),
-                                    @ExampleObject(
-                                            name = "JSON 형식 오류",
-                                            value = """
-                                                    {
-                                                        "title": "잘못된 요청 본문",
-                                                        "status": 400,
-                                                        "detail": "요청 본문의 형식이 잘못되었습니다.",
-                                                        "instance": "/api/games"
-                                                    }
-                                                    """
-                                    )
-                            }
-                    )
-            ),
-            @ApiResponse(responseCode = "401", description = "인증 실패",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(
-                                    name = "인증 토큰 없음 또는 만료",
-                                    value = """
-                                            {
-                                                "title": "인증 필요",
-                                                "status": 401,
-                                                "detail": "로그인이 필요한 서비스입니다.",
-                                                "instance": "/api/games"
-                                            }
-                                            """
-                            )
-                    )
-            ),
-            @ApiResponse(responseCode = "409", description = "이미 다른 활성 게임에 참여 중인 경우",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(
-                                    name = "중복 게임 참여",
-                                    value = """
-                                            {
-                                                "title": "이미 참가 중인 게임",
-                                                "status": 409,
-                                                "detail": "이미 게임에 참가하고 있습니다.",
-                                                "instance": "/api/games"
-                                            }
-                                            """
-                            )
-                    )
-            )
     })
     ResponseEntity<GameCreateResponse> createGame(
             @Parameter(hidden = true) @AuthUser LoginUser loginUser,
@@ -184,6 +109,8 @@ public interface GameControllerDocs {
                     """,
             security = @SecurityRequirement(name = "JWT")
     )
+    @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_FOUND", "GAME_NOT_ACTIVE"})
+    @ApiErrorCode(value = GameParticipantException.class, codes = {"PARTICIPANT_NOT_FOUND"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "게임 설정 조회 성공",
                     content = @Content(
@@ -201,67 +128,6 @@ public interface GameControllerDocs {
                             )
                     )
             ),
-            @ApiResponse(responseCode = "400", description = "비활성 게임",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(
-                                    name = "비활성 게임",
-                                    value = """
-                                            {
-                                                "title": "비활성 게임",
-                                                "status": 400,
-                                                "detail": "대기 중이거나 진행 중인 게임에서만 조회할 수 있습니다.",
-                                                "instance": "/api/games/1"
-                                            }
-                                            """
-                            )
-                    )
-            ),
-            @ApiResponse(responseCode = "401", description = "인증 실패",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(
-                                    name = "인증 토큰 없음 또는 만료",
-                                    value = """
-                                            {
-                                                "title": "인증 필요",
-                                                "status": 401,
-                                                "detail": "로그인이 필요한 서비스입니다.",
-                                                "instance": "/api/games/1"
-                                            }
-                                            """
-                            )
-                    )
-            ),
-            @ApiResponse(responseCode = "404", description = "게임 또는 참가자 정보 없음",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = {
-                                    @ExampleObject(
-                                            name = "게임을 찾을 수 없음",
-                                            value = """
-                                                    {
-                                                        "title": "게임을 찾을 수 없음",
-                                                        "status": 404,
-                                                        "detail": "요청하신 게임 정보가 존재하지 않습니다.",
-                                                        "instance": "/api/games/999"
-                                                    }
-                                                    """
-                                    ),
-                                    @ExampleObject(
-                                            name = "참가자를 찾을 수 없음",
-                                            value = """
-                                                    {
-                                                        "title": "참가자를 찾을 수 없음",
-                                                        "status": 404,
-                                                        "detail": "해당 게임에 참가하지 않은 사용자입니다.",
-                                                        "instance": "/api/games/1"
-                                                    }
-                                                    """
-                                    )
-                            }
-                    )
-            )
     })
     ResponseEntity<GameInfoResponse> getGameInfo(
             @Parameter(hidden = true) @AuthUser LoginUser loginUser,
@@ -284,6 +150,10 @@ public interface GameControllerDocs {
                     """,
             security = @SecurityRequirement(name = "JWT")
     )
+    @ApiErrorCode(value = GameParticipantException.class, codes = {"NOT_HOST"})
+    @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_WAITING"})
+    @ApiErrorCode(value = GameAreaException.class, codes = {"INVALID_JAIL_RADIUS", "JAIL_OUTSIDE_PLAYGROUND"})
+    @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "영역 수정 성공",
                     content = @Content(
@@ -307,50 +177,6 @@ public interface GameControllerDocs {
                             )
                     )
             ),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = {
-                                    @ExampleObject(
-                                            name = "감옥이 플레이그라운드 밖에 위치",
-                                            value = """
-                                                    {
-                                                        "title": "감옥 영역 벗어남",
-                                                        "status": 400,
-                                                        "detail": "감옥은 운동장 내부에 완전히 포함되어야 합니다.",
-                                                        "instance": "/api/games/1/area"
-                                                    }
-                                                    """
-                                    ),
-                                    @ExampleObject(
-                                            name = "게임이 대기 중이 아닌 경우",
-                                            value = """
-                                                    {
-                                                        "title": "대기 중인 게임이 아님",
-                                                        "status": 400,
-                                                        "detail": "대기 중인 게임에서만 설정을 변경할 수 있습니다.",
-                                                        "instance": "/api/games/1/area"
-                                                    }
-                                                    """
-                                    )
-                            }
-                    )
-            ),
-            @ApiResponse(responseCode = "403", description = "방장 권한 없음",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(
-                                    value = """
-                                            {
-                                                "title": "호스트 권한 필요",
-                                                "status": 403,
-                                                "detail": "방장만 게임을 시작할 수 있습니다.",
-                                                "instance": "/api/games/1/area"
-                                            }
-                                            """
-                            )
-                    )
-            )
     })
     ResponseEntity<GameAreaUpdateResponse> updateGameArea(
             @Parameter(hidden = true) @AuthUser LoginUser loginUser,
@@ -396,6 +222,9 @@ public interface GameControllerDocs {
                     """,
             security = @SecurityRequirement(name = "JWT")
     )
+    @ApiErrorCode(value = GameParticipantException.class, codes = {"NOT_HOST"})
+    @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_WAITING", "INVALID_LOCATION_INTERVAL", "INVALID_POLICE_WAIT_TIME"})
+    @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "설정 수정 성공",
                     content = @Content(
@@ -413,50 +242,6 @@ public interface GameControllerDocs {
                             )
                     )
             ),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = {
-                                    @ExampleObject(
-                                            name = "위치 공개 주기가 라운드 시간 이상인 경우",
-                                            value = """
-                                                    {
-                                                        "title": "유효하지 않은 위치 공개 주기",
-                                                        "status": 400,
-                                                        "detail": "위치 공개 주기는 라운드 시간보다 짧아야 합니다.",
-                                                        "instance": "/api/games/1/settings"
-                                                    }
-                                                    """
-                                    ),
-                                    @ExampleObject(
-                                            name = "게임이 대기 중이 아닌 경우",
-                                            value = """
-                                                    {
-                                                        "title": "대기 중인 게임이 아님",
-                                                        "status": 400,
-                                                        "detail": "대기 중인 게임에서만 설정을 변경할 수 있습니다.",
-                                                        "instance": "/api/games/1/settings"
-                                                    }
-                                                    """
-                                    )
-                            }
-                    )
-            ),
-            @ApiResponse(responseCode = "403", description = "방장 권한 없음",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(
-                                    value = """
-                                            {
-                                                "title": "호스트 권한 필요",
-                                                "status": 403,
-                                                "detail": "방장만 게임을 시작할 수 있습니다.",
-                                                "instance": "/api/games/1/settings"
-                                            }
-                                            """
-                            )
-                    )
-            )
     })
     ResponseEntity<GameSettingsUpdateResponse> updateGameSettings(
             @Parameter(hidden = true) @AuthUser LoginUser loginUser,

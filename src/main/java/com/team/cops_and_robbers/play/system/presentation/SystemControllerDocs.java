@@ -2,14 +2,14 @@ package com.team.cops_and_robbers.play.system.presentation;
 
 import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
-import com.team.cops_and_robbers.common.exception.ErrorResponse;
+import com.team.cops_and_robbers.common.exception.CommonException;
+import com.team.cops_and_robbers.common.swagger.ApiErrorCode;
+import com.team.cops_and_robbers.game.game.exception.GameException;
+import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.play.system.presentation.dto.request.ArrestRequest;
 import com.team.cops_and_robbers.play.system.presentation.dto.response.ArrestResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -34,145 +34,18 @@ public interface SystemControllerDocs {
                     """,
             security = @SecurityRequirement(name = "JWT")
     )
+    @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_IN_PROGRESS", "GAME_NOT_FOUND"})
+    @ApiErrorCode(value = GameParticipantException.class, codes = {
+            "ONLY_POLICE_CAN_ARREST", "POLICE_WAITING_TIME", "ONLY_ROBBER_CAN_BE_ARRESTED",
+            "PARTICIPANT_GAME_MISMATCH", "ALREADY_ARRESTED", "PARTICIPANT_NOT_FOUND"
+    })
+    @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "체포 성공",
-                    content = @Content(
-                            schema = @Schema(implementation = ArrestResponse.class),
-                            examples = @ExampleObject(
-                                    name = "체포 성공 응답",
-                                    value = """
-                                            {
-                                                "robberNickname": "잡힌도둑",
-                                                "remainingThieves": 2
-                                            }
-                                            """
-                            )
-                    )
-            ),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = {
-                                    @ExampleObject(
-                                            name = "게임 진행 중 아님",
-                                            value = """
-                                                    {
-                                                        "title": "게임 진행 중 아님",
-                                                        "status": 400,
-                                                        "detail": "게임이 진행 중인 상태가 아닙니다.",
-                                                        "instance": "/api/games/1/system/arrest"
-                                                    }
-                                                    """
-                                    ),
-                                    @ExampleObject(
-                                            name = "경찰이 아님",
-                                            value = """
-                                                    {
-                                                        "title": "경찰만 체포 가능",
-                                                        "status": 400,
-                                                        "detail": "경찰 팀만 도둑을 체포할 수 있습니다.",
-                                                        "instance": "/api/games/1/system/arrest"
-                                                    }
-                                                    """
-                                    ),
-                                    @ExampleObject(
-                                            name = "경찰 대기 시간",
-                                            value = """
-                                                    {
-                                                        "title": "경찰 대기 시간",
-                                                        "status": 400,
-                                                        "detail": "경찰은 대기 시간 동안 도둑을 체포할 수 없습니다.",
-                                                        "instance": "/api/games/1/system/arrest"
-                                                    }
-                                                    """
-                                    ),
-                                    @ExampleObject(
-                                            name = "대상이 도둑이 아님",
-                                            value = """
-                                                    {
-                                                        "title": "도둑만 체포 가능",
-                                                        "status": 400,
-                                                        "detail": "도둑 팀만 체포될 수 있습니다.",
-                                                        "instance": "/api/games/1/system/arrest"
-                                                    }
-                                                    """
-                                    ),
-                                    @ExampleObject(
-                                            name = "참가자 게임 불일치",
-                                            value = """
-                                                    {
-                                                        "title": "참가자 게임 불일치",
-                                                        "status": 400,
-                                                        "detail": "경찰과 도둑이 서로 다른 게임에 참여하고 있습니다.",
-                                                        "instance": "/api/games/1/system/arrest"
-                                                    }
-                                                    """
-                                    ),
-                                    @ExampleObject(
-                                            name = "이미 체포된 도둑",
-                                            value = """
-                                                    {
-                                                        "title": "이미 체포됨",
-                                                        "status": 400,
-                                                        "detail": "이미 수감된 도둑입니다.",
-                                                        "instance": "/api/games/1/system/arrest"
-                                                    }
-                                                    """
-                                    )
-                            }
-                    )
-            ),
-            @ApiResponse(responseCode = "401", description = "인증 실패",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(
-                                    name = "인증 토큰 없음 또는 만료",
-                                    value = """
-                                            {
-                                                "title": "인증 필요",
-                                                "status": 401,
-                                                "detail": "로그인이 필요한 서비스입니다.",
-                                                "instance": "/api/games/1/system/arrest"
-                                            }
-                                            """
-                            )
-                    )
-            ),
-            @ApiResponse(responseCode = "404", description = "참가자 정보 없음",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(
-                                    name = "참가자를 찾을 수 없음",
-                                    value = """
-                                            {
-                                                "title": "참가자를 찾을 수 없음",
-                                                "status": 404,
-                                                "detail": "해당 게임에 참가하지 않은 사용자입니다.",
-                                                "instance": "/api/games/1/system/arrest"
-                                            }
-                                            """
-                            )
-                    )
-            )
+            @ApiResponse(responseCode = "200", description = "체포 성공")
     })
     ResponseEntity<ArrestResponse> arrestRobber(
             @Parameter(hidden = true) @AuthUser LoginUser loginUser,
             @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "체포 요청 정보",
-                    required = true,
-                    content = @Content(
-                            schema = @Schema(implementation = ArrestRequest.class),
-                            examples = @ExampleObject(
-                                    name = "도둑 체포 요청",
-                                    value = """
-                                            {
-                                                "robberParticipantId": 102
-                                            }
-                                            """
-                            )
-                    )
-            )
             @RequestBody @Valid ArrestRequest request
     );
 
@@ -186,69 +59,11 @@ public interface SystemControllerDocs {
                     """,
             security = @SecurityRequirement(name = "JWT")
     )
+    @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_IN_PROGRESS", "GAME_NOT_FOUND"})
+    @ApiErrorCode(value = GameParticipantException.class, codes = {"NOT_JAILED", "PARTICIPANT_NOT_FOUND"})
+    @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "탈옥 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = {
-                                    @ExampleObject(
-                                            name = "게임 진행 중 아님",
-                                            value = """
-                                                    {
-                                                        "title": "게임 진행 중 아님",
-                                                        "status": 400,
-                                                        "detail": "게임이 진행 중인 상태가 아닙니다.",
-                                                        "instance": "/api/games/1/system/escape"
-                                                    }
-                                                    """
-                                    ),
-                                    @ExampleObject(
-                                            name = "수감되지 않음",
-                                            value = """
-                                                    {
-                                                        "title": "수감되지 않음",
-                                                        "status": 400,
-                                                        "detail": "수감된 상태에서만 탈옥할 수 있습니다.",
-                                                        "instance": "/api/games/1/system/escape"
-                                                    }
-                                                    """
-                                    )
-                            }
-                    )
-            ),
-            @ApiResponse(responseCode = "401", description = "인증 실패",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(
-                                    name = "인증 토큰 없음 또는 만료",
-                                    value = """
-                                            {
-                                                "title": "인증 필요",
-                                                "status": 401,
-                                                "detail": "로그인이 필요한 서비스입니다.",
-                                                "instance": "/api/games/1/system/escape"
-                                            }
-                                            """
-                            )
-                    )
-            ),
-            @ApiResponse(responseCode = "404", description = "참가자 정보 없음",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(
-                                    name = "참가자를 찾을 수 없음",
-                                    value = """
-                                            {
-                                                "title": "참가자를 찾을 수 없음",
-                                                "status": 404,
-                                                "detail": "해당 게임에 참가하지 않은 사용자입니다.",
-                                                "instance": "/api/games/1/system/escape"
-                                            }
-                                            """
-                            )
-                    )
-            )
+            @ApiResponse(responseCode = "204", description = "탈옥 성공")
     })
     ResponseEntity<Void> escapeFromPrison(
             @Parameter(hidden = true) @AuthUser LoginUser loginUser,

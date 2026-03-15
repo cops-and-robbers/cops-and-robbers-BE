@@ -1,11 +1,13 @@
 package com.team.cops_and_robbers.auth.presentation;
 
+import com.team.cops_and_robbers.auth.exception.AuthException;
 import com.team.cops_and_robbers.auth.presentation.dto.request.LoginRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.request.LogoutRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.request.ReissueRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.response.LoginResponse;
 import com.team.cops_and_robbers.auth.presentation.dto.response.ReissueResponse;
-import com.team.cops_and_robbers.common.exception.ErrorResponse;
+import com.team.cops_and_robbers.common.exception.CommonException;
+import com.team.cops_and_robbers.common.swagger.ApiErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -23,6 +25,8 @@ public interface AuthControllerDocs {
     @Operation(summary = "소셜 로그인",
             description = "소셜 로그인을 통해 서비스에 로그인합니다. 신규 회원인 경우 자동으로 회원가입이 진행되며, Access Token과 Refresh Token이 발급됩니다."
     )
+    @ApiErrorCode(value = AuthException.class, codes = {"INVALID_FIREBASE_TOKEN", "EXPIRED_FIREBASE_TOKEN"})
+    @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "기존 회원 로그인 성공",
                     content = @Content(
@@ -61,51 +65,6 @@ public interface AuthControllerDocs {
                                             """
                             )
                     )
-            ),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = {
-                                    @ExampleObject(
-                                            name = "필수 요청 필드가 누락된 경우",
-                                            value = """
-                                                    {
-                                                        "title": "유효하지 않은 입력값",
-                                                        "status": 400,
-                                                        "detail": "idToken: 소셜 인증 토큰(ID Token)은 필수입니다.",
-                                                        "instance": "/api/auth/login"
-                                                    }
-                                                    """
-                                    ),
-                                    @ExampleObject(
-                                            name = "JSON 형식 오류",
-                                            value = """
-                                                    {
-                                                        "title": "잘못된 요청 본문",
-                                                        "status": 400,
-                                                        "detail": "요청 본문의 형식이 잘못되었습니다.",
-                                                        "instance": "/api/auth/login"
-                                                    }
-                                                    """
-                                    )
-                            }
-                    )
-            ),
-            @ApiResponse(responseCode = "401", description = "소셜 ID Token 검증 실패",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(
-                                    name = "유효하지 않은 ID Token",
-                                    value = """
-                                            {
-                                                "title": "소셜 로그인 실패",
-                                                "status": 401,
-                                                "detail": "유효하지 않은 소셜 인증 토큰입니다.",
-                                                "instance": "/api/auth/login"
-                                            }
-                                            """
-                            )
-                    )
             )
     })
     ResponseEntity<LoginResponse> login(
@@ -135,6 +94,8 @@ public interface AuthControllerDocs {
     @Operation(summary = "토큰 재발급",
             description = "만료된 Access Token을 Refresh Token을 사용하여 재발급받습니다."
     )
+    @ApiErrorCode(value = AuthException.class, codes = {"REFRESH_TOKEN_EXPIRED", "INVALID_TOKEN"})
+    @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "토큰 재발급 성공",
                     content = @Content(
@@ -147,38 +108,6 @@ public interface AuthControllerDocs {
                                                     "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIx.....",
                                                     "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIx....."
                                                 }
-                                            }
-                                            """
-                            )
-                    )
-            ),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(
-                                    name = "Refresh Token 누락",
-                                    value = """
-                                            {
-                                                "title": "유효하지 않은 입력값",
-                                                "status": 400,
-                                                "detail": "refreshToken: Refresh Token은 필수입니다.",
-                                                "instance": "/api/auth/reissue"
-                                            }
-                                            """
-                            )
-                    )
-            ),
-            @ApiResponse(responseCode = "401", description = "Refresh Token 검증 실패",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(
-                                    name = "유효하지 않은 Refresh Token",
-                                    value = """
-                                            {
-                                                "title": "토큰 재발급 실패",
-                                                "status": 401,
-                                                "detail": "유효하지 않거나 만료된 Refresh Token입니다.",
-                                                "instance": "/api/auth/reissue"
                                             }
                                             """
                             )
@@ -209,6 +138,7 @@ public interface AuthControllerDocs {
     @Operation(summary = "로그아웃",
             description = "로그아웃합니다. (리프레시 토큰 삭제 + 유저 디바이스 정보 삭제)"
     )
+    @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "로그아웃 성공 (항상 204 응답)"),
     })
