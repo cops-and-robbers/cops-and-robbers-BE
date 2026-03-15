@@ -37,36 +37,52 @@ class LocationE2ETest extends WebSocketE2ETest {
     @Autowired
     private SystemEventFactory systemEventFactory;
 
-    @Test
-    void 도둑이_위치를_전송하면_서버에_위치가_저장된다() throws Exception {
-        // given
-        User robberUser = givenUser("robber");
+    private record LocationSetup(
+            Game game,
+            GameParticipant robberParticipant,
+            String policeToken,
+            String robberToken,
+            String systemChannel,
+            StompTestClient policeClient,
+            StompTestClient robberClient
+    ) {}
+
+    private LocationSetup givenLocationSetup() throws Exception {
         User policeUser = givenUser("police");
+        User robberUser = givenUser("robber");
 
         Game game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
         gameAreaRepository.save(GameAreaFixture.GAME_AREA(game));
         givenPolice(game, policeUser);
         GameParticipant robberParticipant = givenRobber(game, robberUser);
 
-        String robberToken = givenAccessToken(robberUser);
         String policeToken = givenAccessToken(policeUser);
+        String robberToken = givenAccessToken(robberUser);
         String systemChannel = SYSTEM_CHANNEL.formatted(game.getId());
 
-        StompTestClient robberClient = connect(robberToken);
         StompTestClient policeClient = connect(policeToken);
-        robberClient.subscribe(systemChannel, TestEventResponse.class);
+        StompTestClient robberClient = connect(robberToken);
         policeClient.subscribe(systemChannel, TestEventResponse.class);
+        robberClient.subscribe(systemChannel, TestEventResponse.class);
+
+        return new LocationSetup(game, robberParticipant, policeToken, robberToken, systemChannel, policeClient, robberClient);
+    }
+
+    @Test
+    void 도둑이_위치를_전송하면_서버에_위치가_저장된다() throws Exception {
+        // given
+        LocationSetup setup = givenLocationSetup();
 
         // when
-        robberClient.send("/publish/game/" + game.getId() + "/location",
+        setup.robberClient().send("/publish/game/" + setup.game().getId() + "/location",
                 new LocationUpdateRequest(37.5, 127.0));
 
         Thread.sleep(500);
 
         // then
-        List<SystemEventData.RobberLocation> locations = robberLocationService.getCurrentRobberLocations(game.getId());
+        List<SystemEventData.RobberLocation> locations = robberLocationService.getCurrentRobberLocations(setup.game().getId());
 
-        assertThat(locations.get(0).participantId()).isEqualTo(robberParticipant.getId());
+        assertThat(locations.get(0).participantId()).isEqualTo(setup.robberParticipant().getId());
         assertThat(locations.get(0).latitude()).isEqualTo(37.5);
         assertThat(locations.get(0).longitude()).isEqualTo(127.0);
     }
@@ -74,38 +90,23 @@ class LocationE2ETest extends WebSocketE2ETest {
     @Test
     void 위치_공개_시_도둑_위치가_시스템_채널을_통해_공개된다() throws Exception {
         // given
-        User policeUser = givenUser("police");
-        User robberUser = givenUser("robber");
+        LocationSetup setup = givenLocationSetup();
 
-        Game game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
-        gameAreaRepository.save(GameAreaFixture.GAME_AREA(game));
-        givenPolice(game, policeUser);
-        GameParticipant robberParticipant = givenRobber(game, robberUser);
-
-        String policeToken = givenAccessToken(policeUser);
-        String robberToken = givenAccessToken(robberUser);
-        String systemChannel = SYSTEM_CHANNEL.formatted(game.getId());
-
-        StompTestClient policeClient = connect(policeToken);
-        StompTestClient robberClient = connect(robberToken);
-        policeClient.subscribe(systemChannel, TestEventResponse.class);
-        robberClient.subscribe(systemChannel, TestEventResponse.class);
-
-        robberClient.send("/publish/game/" + game.getId() + "/location",
+        setup.robberClient().send("/publish/game/" + setup.game().getId() + "/location",
                 new LocationUpdateRequest(37.5, 127.0));
 
         Thread.sleep(500);
 
         // when
-        List<SystemEventData.RobberLocation> locations = robberLocationService.getCurrentRobberLocations(game.getId());
-        systemPublisher.publish(systemEventFactory.createRobberLocationRevealEvent(game.getId(), locations));
+        List<SystemEventData.RobberLocation> locations = robberLocationService.getCurrentRobberLocations(setup.game().getId());
+        systemPublisher.publish(systemEventFactory.createRobberLocationRevealEvent(setup.game().getId(), locations));
 
         // then
-        TestEventResponse policeEvent = policeClient.waitForMessage(systemChannel, 5);
+        TestEventResponse policeEvent = setup.policeClient().waitForMessage(setup.systemChannel(), 5);
 
         assertThat(policeEvent.type()).isEqualTo("ROBBER_LOCATION_REVEAL");
         assertThat(policeEvent.data().get("locations").size()).isGreaterThan(0);
         assertThat(policeEvent.data().get("locations").get(0).get("participantId").asLong())
-                .isEqualTo(robberParticipant.getId());
+                .isEqualTo(setup.robberParticipant().getId());
     }
 }
