@@ -4,6 +4,7 @@ import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.play.lobby.application.LobbyService;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.GameStartCommand;
+import com.team.cops_and_robbers.play.lobby.application.dto.command.KickCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.LobbyInfoCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.ReadyUpdateCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.TeamChangeCommand;
@@ -13,7 +14,9 @@ import com.team.cops_and_robbers.play.lobby.presentation.dto.request.TeamChangeR
 import com.team.cops_and_robbers.play.lobby.presentation.dto.response.LobbyInfoResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/games/{gameId}/lobby")
 @RequiredArgsConstructor
@@ -82,5 +86,19 @@ public class LobbyController implements LobbyControllerDocs {
         LobbyInfoResult result = lobbyService.getLobbyInfo(command);
         LobbyInfoResponse response = LobbyInfoResponse.from(result);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 5. 방장이 멤버를 퇴장시킵니다.
+     */
+    @DeleteMapping("/{participantId}")
+    public ResponseEntity<Void> kickMember(
+        @AuthUser LoginUser loginUser,
+        @PathVariable Long gameId,
+        @PathVariable Long participantId
+    ){
+        KickCommand command = KickCommand.of(loginUser.userId(), gameId, participantId);
+        lobbyService.kickMember(command);
+        return ResponseEntity.noContent().build();
     }
 }
