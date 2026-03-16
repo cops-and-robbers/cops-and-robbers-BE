@@ -54,4 +54,9 @@ public class LobbyEventFactory {
         LobbyEventData.LobbySettingsUpdatedData data = LobbyEventData.LobbySettingsUpdatedData.from(result);
         return LobbyEvent.of(gameId, LobbyEventType.SETTINGS_UPDATED, data);
     }
+
+    public LobbyEvent createKickEvent(Long gameId, Long kickedParticipantId) {
+        LobbyEventData.LobbyKickedData data = LobbyEventData.LobbyKickedData.of(kickedParticipantId);
+        return LobbyEvent.of(gameId, LobbyEventType.KICKED, data);
+    }
 }
