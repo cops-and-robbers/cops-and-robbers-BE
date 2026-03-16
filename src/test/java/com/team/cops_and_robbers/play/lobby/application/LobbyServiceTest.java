@@ -7,6 +7,7 @@ import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.GameStartCommand;
+import com.team.cops_and_robbers.play.lobby.application.dto.command.KickCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.LobbyInfoCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.ReadyUpdateCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.TeamChangeCommand;
@@ -27,7 +28,9 @@ import java.util.List;
 
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
-import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.*;
+import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_ROBBER;
+import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.GUEST_PARTICIPANT;
+import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.HOST_PARTICIPANT;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -272,6 +275,94 @@ class LobbyServiceTest extends ServiceUnitTest {
             assertThatThrownBy(() -> lobbyService.startGame(command))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(GameParticipantException.GAME_ALREADY_STARTED.getDetail());
+        }
+    }
+
+    @Nested
+    @DisplayName("강제 퇴장")
+    class KickMember {
+
+        @Test
+        void 강제_퇴장에_성공하면_참가자가_삭제되고_이벤트를_발행한다() {
+            // given
+            User guestUser = USER("guest");
+            setId(user, 1L);
+            setId(guestUser, 2L);
+
+            GameParticipant hostParticipant = HOST_PARTICIPANT(waitingGame, user);
+            GameParticipant guestParticipant = GUEST_PARTICIPANT(waitingGame, guestUser);
+            setId(hostParticipant, 1L);
+            setId(guestParticipant, 2L);
+
+            KickCommand command = new KickCommand(user.getId(), waitingGame.getId(), guestParticipant.getId());
+
+            given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
+            given(gameParticipantRepository.getByGameIdAndUserId(waitingGame.getId(), user.getId())).willReturn(hostParticipant);
+            given(gameParticipantRepository.getByIdAndGameId(guestParticipant.getId(), waitingGame.getId())).willReturn(guestParticipant);
+            given(lobbyEventFactory.createKickEvent(any(), any())).willReturn(lobbyEvent);
+
+            // when
+            lobbyService.kickMember(command);
+
+            // then
+            then(gameParticipantRepository).should().delete(guestParticipant);
+            then(eventPublisher).should().publishEvent(lobbyEvent);
+        }
+
+        @Test
+        void 게임이_WAITING_상태가_아니면_예외가_발생한다() {
+            // given
+            Game inProgressGame = IN_PROGRESS_GAME();
+            KickCommand command = new KickCommand(user.getId(), inProgressGame.getId(), 2L);
+
+            given(gameRepository.getByGameId(inProgressGame.getId())).willReturn(inProgressGame);
+
+            // when & then
+            assertThatThrownBy(() -> lobbyService.kickMember(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(GameParticipantException.GAME_ALREADY_STARTED.getDetail());
+        }
+
+        @Test
+        void 방장이_아니면_예외가_발생한다() {
+            // given
+            User targetUser = USER("target");
+            setId(user, 1L);
+            setId(targetUser, 2L);
+
+            GameParticipant guestParticipant = GUEST_PARTICIPANT(waitingGame, user);
+            GameParticipant targetParticipant = GUEST_PARTICIPANT(waitingGame, targetUser);
+            setId(guestParticipant, 1L);
+            setId(targetParticipant, 2L);
+
+            KickCommand command = new KickCommand(user.getId(), waitingGame.getId(), targetParticipant.getId());
+
+            given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
+            given(gameParticipantRepository.getByGameIdAndUserId(waitingGame.getId(), user.getId())).willReturn(guestParticipant);
+            given(gameParticipantRepository.getByIdAndGameId(targetParticipant.getId(), waitingGame.getId())).willReturn(targetParticipant);
+
+            // when & then
+            assertThatThrownBy(() -> lobbyService.kickMember(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(GameParticipantException.NOT_HOST.getDetail());
+        }
+
+        @Test
+        void 자기_자신을_강제_퇴장하려_하면_예외가_발생한다() {
+            // given
+            GameParticipant hostParticipant = HOST_PARTICIPANT(waitingGame, user);
+            setId(hostParticipant, 1L);
+
+            KickCommand command = new KickCommand(user.getId(), waitingGame.getId(), hostParticipant.getId());
+
+            given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
+            given(gameParticipantRepository.getByGameIdAndUserId(waitingGame.getId(), user.getId())).willReturn(hostParticipant);
+            given(gameParticipantRepository.getByIdAndGameId(hostParticipant.getId(), waitingGame.getId())).willReturn(hostParticipant);
+
+            // when & then
+            assertThatThrownBy(() -> lobbyService.kickMember(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(GameParticipantException.CANNOT_KICK_YOURSELF.getDetail());
         }
     }
 
