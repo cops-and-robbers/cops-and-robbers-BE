@@ -29,7 +29,8 @@ public enum GameParticipantException implements ExceptionCode {
     ONLY_ROBBER_CAN_ESCAPE(HttpStatus.BAD_REQUEST, "도둑만 탈옥 가능", "도둑 팀만 탈옥할 수 있습니다."),
     ALREADY_ARRESTED(HttpStatus.BAD_REQUEST, "이미 체포됨", "이미 수감된 도둑입니다."),
     NOT_JAILED(HttpStatus.BAD_REQUEST, "수감되지 않음", "수감된 상태에서만 탈옥할 수 있습니다."),
-    POLICE_WAITING_TIME(HttpStatus.BAD_REQUEST, "경찰 대기 시간", "경찰은 대기 시간 동안 도둑을 체포할 수 없습니다.");
+    POLICE_WAITING_TIME(HttpStatus.BAD_REQUEST, "경찰 대기 시간", "경찰은 대기 시간 동안 도둑을 체포할 수 없습니다."),
+    CANNOT_KICK_YOURSELF(HttpStatus.BAD_REQUEST, "자기 자신 강퇴 불가", "방장은 자기 자신을 강퇴할 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String title;
