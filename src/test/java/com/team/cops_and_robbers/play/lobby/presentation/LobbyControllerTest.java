@@ -24,10 +24,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 class LobbyControllerTest extends ControllerTest {
 
     private static final String GAME_ID_PARAM = "gameId";
+    private static final String PARTICIPANT_ID_PARAM = "participantId";
     private static final String TEAM_CHANGE_URL = "/api/games/{gameId}/lobby/team";
     private static final String READY_UPDATE_URL = "/api/games/{gameId}/lobby/ready";
     private static final String GAME_START_URL = "/api/games/{gameId}/lobby/start";
     private static final String LOBBY_INFO_URL = "/api/games/{gameId}/lobby";
+    private static final String KICK_URL = "/api/games/{gameId}/lobby/{participantId}";
 
     private User host;
     private User guest;
@@ -426,6 +428,111 @@ class LobbyControllerTest extends ControllerTest {
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        }
+    }
+
+    @Nested
+    @DisplayName("강제 퇴장 API")
+    class KickMember {
+
+        @Test
+        void 강제_퇴장_성공() {
+            // when
+            ExtractableResponse<Response> response = authenticated(hostToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .pathParam(PARTICIPANT_ID_PARAM, guestParticipant.getId())
+                    .when()
+                    .delete(KICK_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
+            assertThat(gameParticipantRepository.findById(guestParticipant.getId())).isEmpty();
+        }
+
+        @Test
+        void 방장이_아니면_403_Forbidden을_응답한다() {
+            // when
+            ExtractableResponse<Response> response = authenticated(guestToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .pathParam(PARTICIPANT_ID_PARAM, hostParticipant.getId())
+                    .when()
+                    .delete(KICK_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
+        }
+
+        @Test
+        void 자기_자신을_강제_퇴장_하려_하면_400_BadRequest를_응답한다() {
+            // when
+            ExtractableResponse<Response> response = authenticated(hostToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .pathParam(PARTICIPANT_ID_PARAM, hostParticipant.getId())
+                    .when()
+                    .delete(KICK_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 존재하지_않는_참가자를_강제_퇴장하려_하면_404_NotFound를_응답한다() {
+            // when
+            ExtractableResponse<Response> response = authenticated(hostToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .pathParam(PARTICIPANT_ID_PARAM, 9999L)
+                    .when()
+                    .delete(KICK_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        }
+
+        @Test
+        void 이미_시작된_게임에서는_강제_퇴장_할_수_없으며_400_BadRequest를_응답한다() {
+            // given
+            Game startedGame = gameRepository.save(GameFixture.WAITING_GAME(UUID.randomUUID().toString().substring(0, 6)));
+            startedGame.startGame(java.time.LocalDateTime.now());
+            gameRepository.save(startedGame);
+
+            User anotherGuest = givenUser("guest2");
+            givenHost(startedGame, host);
+            GameParticipant guestInStartedGame = gameParticipantRepository.save(GameParticipantFixture.GUEST_PARTICIPANT(startedGame, anotherGuest));
+
+            // when
+            ExtractableResponse<Response> response = authenticated(hostToken)
+                    .pathParam(GAME_ID_PARAM, startedGame.getId())
+                    .pathParam(PARTICIPANT_ID_PARAM, guestInStartedGame.getId())
+                    .when()
+                    .delete(KICK_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 인증_토큰_없이_요청하면_401_Unauthorized를_응답한다() {
+            // when
+            ExtractableResponse<Response> response = unauthenticated()
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .pathParam(PARTICIPANT_ID_PARAM, guestParticipant.getId())
+                    .when()
+                    .delete(KICK_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
         }
     }
 }
