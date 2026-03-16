@@ -126,6 +126,9 @@ public class LobbyService {
         validateNotSelf(hostParticipant, kickParticipant);
 
         gameParticipantRepository.delete(kickParticipant);
+
+        LobbyEvent event = lobbyEventFactory.createKickEvent(command.gameId(), command.targetParticipantId());
+        eventPublisher.publishEvent(event);
     }
 
     private GameParticipant findParticipantByUserId(List<GameParticipant> participants, Long userId) {
