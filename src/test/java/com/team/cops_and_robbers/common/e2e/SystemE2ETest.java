@@ -5,9 +5,9 @@ import com.team.cops_and_robbers.common.TestEventResponse;
 import com.team.cops_and_robbers.common.WebSocketE2ETest;
 import com.team.cops_and_robbers.common.fixture.GameAreaFixture;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
-import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
+import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.play.location.application.RobberLocationService;
 import com.team.cops_and_robbers.play.location.application.dto.command.LocationUpdateCommand;
 import com.team.cops_and_robbers.play.system.application.SystemEventFactory;
@@ -42,7 +42,8 @@ class SystemE2ETest extends WebSocketE2ETest {
 
     private record SystemSetup(
             Game game,
-            User robberUser,
+            GameParticipant policeParticipant,
+            GameParticipant robberParticipant,
             String policeToken,
             String robberToken,
             String systemChannel,
@@ -56,7 +57,8 @@ class SystemE2ETest extends WebSocketE2ETest {
 
         Game game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
         gameAreaRepository.save(GameAreaFixture.GAME_AREA(game));
-        givenPolice(game, policeUser);
+        GameParticipant policeParticipant = givenPolice(game, policeUser);
+        GameParticipant robberParticipant = givenRobber(game, robberUser);
 
         String policeToken = givenAccessToken(policeUser);
         String robberToken = givenAccessToken(robberUser);
@@ -67,14 +69,13 @@ class SystemE2ETest extends WebSocketE2ETest {
         policeClient.subscribe(systemChannel, TestEventResponse.class);
         robberClient.subscribe(systemChannel, TestEventResponse.class);
 
-        return new SystemSetup(game, robberUser, policeToken, robberToken, systemChannel, policeClient, robberClient);
+        return new SystemSetup(game, policeParticipant, robberParticipant, policeToken, robberToken, systemChannel, policeClient, robberClient);
     }
 
     @Test
     void 경찰_대기_시간이_지나면_POLICE_MOVE_START_이벤트를_수신한다() throws Exception {
         // given
         SystemSetup setup = givenSystemSetup();
-        givenRobber(setup.game(), setup.robberUser());
 
         // when
         SystemEvent event = systemEventFactory.createPoliceMoveStartEvent(setup.game().getId());
@@ -92,10 +93,9 @@ class SystemE2ETest extends WebSocketE2ETest {
     void 위치_공개_주기가_도달하면_경찰이_ROBBER_LOCATION_REVEAL_이벤트를_수신한다() throws Exception {
         // given
         SystemSetup setup = givenSystemSetup();
-        GameParticipant robberParticipant = givenRobber(setup.game(), setup.robberUser());
 
         robberLocationService.updateLocation(
-                new LocationUpdateCommand(setup.game().getId(), robberParticipant.getId(), 37.5, 127.0)
+                new LocationUpdateCommand(setup.game().getId(), setup.robberParticipant().getId(), 37.5, 127.0)
         );
 
         // when
@@ -113,12 +113,11 @@ class SystemE2ETest extends WebSocketE2ETest {
     void 경찰이_도둑을_체포하면_모든_참가자가_ARREST_이벤트를_수신한다() throws Exception {
         // given: 도둑 2명 (체포 후에도 게임 종료 안 됨)
         SystemSetup setup = givenSystemSetup();
-        GameParticipant robberParticipant = givenRobber(setup.game(), setup.robberUser());
         givenRobber(setup.game(), givenUser("robber2"));
 
         // when
         authenticated(setup.policeToken())
-                .body(new ArrestRequest(robberParticipant.getId()))
+                .body(new ArrestRequest(setup.robberParticipant().getId()))
                 .post("/api/games/{gameId}/system/arrest", setup.game().getId())
                 .then()
                 .statusCode(200);
@@ -135,7 +134,8 @@ class SystemE2ETest extends WebSocketE2ETest {
     void 도둑이_감옥에서_탈출하면_모든_참가자가_ESCAPE_이벤트를_수신한다() throws Exception {
         // given
         SystemSetup setup = givenSystemSetup();
-        gameParticipantRepository.save(GameParticipantFixture.JAILED_ROBBER(setup.game(), setup.robberUser()));
+        setup.robberParticipant().updateStatus(ParticipantStatus.JAILED);
+        gameParticipantRepository.save(setup.robberParticipant());
 
         // when
         authenticated(setup.robberToken())
@@ -155,11 +155,10 @@ class SystemE2ETest extends WebSocketE2ETest {
     void 모든_도둑이_체포되면_GAME_OVER_이벤트를_수신한다() throws Exception {
         // given: 마지막 도둑 한 명 남음
         SystemSetup setup = givenSystemSetup();
-        GameParticipant robberParticipant = givenRobber(setup.game(), setup.robberUser());
 
         // when: 마지막 도둑 체포 → ARREST + GAME_OVER 이벤트 발행
         authenticated(setup.policeToken())
-                .body(new ArrestRequest(robberParticipant.getId()))
+                .body(new ArrestRequest(setup.robberParticipant().getId()))
                 .post("/api/games/{gameId}/system/arrest", setup.game().getId())
                 .then()
                 .statusCode(200);
