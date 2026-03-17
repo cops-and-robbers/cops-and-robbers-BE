@@ -8,6 +8,7 @@ import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateReq
 import com.team.cops_and_robbers.user.presentation.dto.response.DeleteAccountResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.MyPageResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.NicknameCheckResponse;
+import com.team.cops_and_robbers.user.presentation.dto.response.UserGameInfoResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -24,10 +25,19 @@ public interface UserControllerDocs {
     @Operation(summary = "내 정보 조회",
             description = "로그인한 사용자의 상세 정보를 조회합니다. (일단은 테스트용)"
     )
+    @ApiErrorCode(value = UserException.class, codes = {"USER_NOT_FOUND"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     ResponseEntity<MyPageResponse> myPage(@Parameter(hidden = true) LoginUser loginUser);
+
+    @Operation(summary = "참여 중인 게임 정보 조회",
+            description = "로그인한 사용자가 현재 참여 중인 게임 ID와 참가자 ID를 조회합니다. 참여 중인 게임이 없으면 null을 반환합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공 (참여 중인 게임이 없으면 null 반환)")
+    })
+    ResponseEntity<UserGameInfoResponse> getUserGameInfo(@Parameter(hidden = true) LoginUser loginUser);
 
     @Operation(summary = "닉네임 중복 확인",
             description = "닉네임 변경 전, 해당 닉네임이 이미 사용 중인지 확인합니다. (쿼리 파라미터로 요청)"
@@ -44,7 +54,7 @@ public interface UserControllerDocs {
     @Operation(summary = "닉네임 변경",
             description = "로그인한 사용자의 닉네임을 변경합니다. (최대 10자, 중복 불가)"
     )
-    @ApiErrorCode(value = UserException.class, codes = {"DUPLICATED_NICKNAME"})
+    @ApiErrorCode(value = UserException.class, codes = {"USER_NOT_FOUND", "DUPLICATED_NICKNAME"})
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "변경 성공 (응답 본문 없음), 현재 유저 본인의 닉네임으로 변경 요청했을 시 또한 204 응답")
@@ -58,7 +68,7 @@ public interface UserControllerDocs {
     @Operation(summary = "회원탈퇴",
             description = "로그인한 사용자의 사용자 정보를 삭제합니다."
     )
-    @ApiErrorCode(value = UserException.class, codes = {"CANNOT_WITHDRAW"})
+    @ApiErrorCode(value = UserException.class, codes = {"USER_NOT_FOUND", "CANNOT_WITHDRAW"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "탈퇴 성공")
     })
