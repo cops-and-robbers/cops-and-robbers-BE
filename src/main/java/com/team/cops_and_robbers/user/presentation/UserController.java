@@ -4,15 +4,19 @@ import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.user.application.UserService;
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
+import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
 import com.team.cops_and_robbers.user.presentation.dto.response.DeleteAccountResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.MyPageResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.NicknameCheckResponse;
+import com.team.cops_and_robbers.user.presentation.dto.response.UserGameInfoResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/user")
@@ -31,7 +35,17 @@ public class UserController implements UserControllerDocs {
     }
 
     /**
-     * 2. 닉네임의 중복 여부를 확인합니다.
+     * 2. 참여 중인 게임 정보를 조회합니다.
+     */
+    @GetMapping("/me/game")
+    public ResponseEntity<UserGameInfoResponse> getUserGameInfo(@AuthUser LoginUser loginUser) {
+        Optional<UserGameInfoResult> result = userService.getUserGameInfo(loginUser.userId());
+        UserGameInfoResponse response = result.map(UserGameInfoResponse::from).orElse(null);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 3. 닉네임의 중복 여부를 확인합니다.
      */
     @GetMapping("/check-nickname")
     public ResponseEntity<NicknameCheckResponse> checkDuplicate(@RequestParam String nickname) {
@@ -40,7 +54,7 @@ public class UserController implements UserControllerDocs {
     }
 
     /**
-     * 3. 사용자 닉네임을 변경합니다.
+     * 4. 사용자 닉네임을 변경합니다.
      */
     @PatchMapping("/me/nickname")
     public ResponseEntity<Void> updateNickname(
@@ -53,7 +67,7 @@ public class UserController implements UserControllerDocs {
     }
 
     /**
-     * 4. 사용자 정보를 삭제합니다. (회원 탈퇴)
+     * 5. 사용자 정보를 삭제합니다. (회원 탈퇴)
      */
     @DeleteMapping("/me")
     public ResponseEntity<DeleteAccountResponse> deleteAccount(@AuthUser LoginUser loginUser) {
