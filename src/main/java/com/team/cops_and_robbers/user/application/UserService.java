@@ -9,6 +9,7 @@ import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.exception.InfrastructureException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
+import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.repository.UserDeviceRepository;
@@ -18,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -33,6 +36,12 @@ public class UserService {
     @Transactional(readOnly = true)
     public User getUserInfo(Long loginUserId) {
         return userRepository.getByUserId(loginUserId);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<UserGameInfoResult> getUserGameInfo(Long userId) {
+        return gameParticipantRepository.findActiveParticipantByUserId(userId)
+                .map(UserGameInfoResult::from);
     }
 
     @Transactional(readOnly = true)
