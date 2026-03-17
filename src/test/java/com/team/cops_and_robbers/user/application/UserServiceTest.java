@@ -6,9 +6,16 @@ import com.google.firebase.auth.FirebaseAuthException;
 import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.common.fixture.GameFixture;
+import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
+import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
+import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.exception.UserException;
+
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -42,6 +49,44 @@ class UserServiceTest extends ServiceUnitTest {
     void setUp() {
         user = USER();
         setId(user, TEST_USER_ID);
+    }
+
+    @Nested
+    @DisplayName("참여 중인 게임 정보 조회")
+    class GetUserGameInfo {
+
+        @Test
+        void 참여_중인_게임이_있으면_게임_정보를_반환한다() {
+            // given
+            Game game = GameFixture.WAITING_GAME();
+            setId(game, 1L);
+            GameParticipant participant = GameParticipantFixture.HOST_PARTICIPANT(game, user);
+            setId(participant, 10L);
+
+            given(gameParticipantRepository.findActiveParticipantByUserId(user.getId()))
+                    .willReturn(Optional.of(participant));
+
+            // when
+            Optional<UserGameInfoResult> result = userService.getUserGameInfo(user.getId());
+
+            // then
+            assertThat(result).isPresent();
+            assertThat(result.get().gameId()).isEqualTo(game.getId());
+            assertThat(result.get().participantId()).isEqualTo(participant.getId());
+        }
+
+        @Test
+        void 참여_중인_게임이_없으면_빈_Optional을_반환한다() {
+            // given
+            given(gameParticipantRepository.findActiveParticipantByUserId(user.getId()))
+                    .willReturn(Optional.empty());
+
+            // when
+            Optional<UserGameInfoResult> result = userService.getUserGameInfo(user.getId());
+
+            // then
+            assertThat(result).isEmpty();
+        }
     }
 
     @Nested

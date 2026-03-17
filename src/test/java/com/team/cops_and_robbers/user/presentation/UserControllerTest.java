@@ -17,6 +17,7 @@ import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
 import com.team.cops_and_robbers.user.presentation.dto.response.MyPageResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.NicknameCheckResponse;
+import com.team.cops_and_robbers.user.presentation.dto.response.UserGameInfoResponse;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.DisplayName;
@@ -60,6 +61,70 @@ class UserControllerTest extends ControllerTest {
             ExtractableResponse<Response> extract = unauthenticated()
                     .when()
                     .get("/api/user/me")
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(401);
+            });
+        }
+    }
+
+    @Nested
+    @DisplayName("참여 중인 게임 정보 조회 API")
+    class GetUserGameInfo {
+
+        @Test
+        void 참여_중인_게임이_있으면_게임_정보와_200_OK를_응답한다() {
+            // given
+            User user = givenUser();
+            String accessToken = givenAccessToken(user);
+            Game game = gameRepository.save(GameFixture.WAITING_GAME());
+            GameParticipant participant = gameParticipantRepository.save(GameParticipantFixture.HOST_PARTICIPANT(game, user));
+
+            // when
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .when()
+                    .get("/api/user/me/game")
+                    .then()
+                    .extract();
+
+            // then
+            UserGameInfoResponse response = extract.as(UserGameInfoResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(response.gameId()).isEqualTo(game.getId());
+                softly.assertThat(response.participantId()).isEqualTo(participant.getId());
+            });
+        }
+
+        @Test
+        void 참여_중인_게임이_없으면_null과_200_OK를_응답한다() {
+            // given
+            User user = givenUser();
+            String accessToken = givenAccessToken(user);
+
+            // when
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .when()
+                    .get("/api/user/me/game")
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.body().asString()).isEqualTo("");
+            });
+        }
+
+        @Test
+        void 토큰이_없으면_401_UNAUTHORIZED를_응답한다() {
+            // when
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .when()
+                    .get("/api/user/me/game")
                     .then()
                     .extract();
 
