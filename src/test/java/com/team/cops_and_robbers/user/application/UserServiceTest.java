@@ -9,6 +9,7 @@ import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
 import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
@@ -73,6 +74,7 @@ class UserServiceTest extends ServiceUnitTest {
             assertThat(result).isPresent();
             assertThat(result.get().gameId()).isEqualTo(game.getId());
             assertThat(result.get().participantId()).isEqualTo(participant.getId());
+            assertThat(result.get().gameStatus()).isEqualTo(GameStatus.WAITING);
         }
 
         @Test

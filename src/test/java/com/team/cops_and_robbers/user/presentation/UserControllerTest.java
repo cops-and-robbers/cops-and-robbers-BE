@@ -11,6 +11,7 @@ import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.common.fixture.UserFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.exception.UserException;
@@ -96,6 +97,7 @@ class UserControllerTest extends ControllerTest {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
                 softly.assertThat(response.gameId()).isEqualTo(game.getId());
                 softly.assertThat(response.participantId()).isEqualTo(participant.getId());
+                softly.assertThat(response.gameStatus()).isEqualTo(GameStatus.WAITING);
             });
         }
 
