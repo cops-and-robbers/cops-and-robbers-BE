@@ -8,12 +8,14 @@ import java.util.List;
 public record LobbyInfoResult(
         Long myParticipantId,
         Long hostParticipantId,
+        String inviteCode,
         List<ParticipantInfo> participants
 ) {
-    public static LobbyInfoResult of(GameParticipant myParticipant, GameParticipant hostParticipant, List<ParticipantInfo> participants) {
+    public static LobbyInfoResult of(GameParticipant myParticipant, GameParticipant hostParticipant, String inviteCode, List<ParticipantInfo> participants) {
         return new LobbyInfoResult(
                 myParticipant.getId(),
                 hostParticipant.getId(),
+                inviteCode,
                 participants
         );
     }
