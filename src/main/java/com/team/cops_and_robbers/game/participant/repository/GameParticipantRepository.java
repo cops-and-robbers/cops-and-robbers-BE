@@ -32,6 +32,21 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
         """)
     boolean existsActiveGameByUserId(@Param("userId") Long userId);
 
+    /**
+     * 유저가 참여 중인 활성 게임 참가자 조회
+     */
+    @Query("""
+        select gp
+        from GameParticipant gp
+        join fetch gp.game g
+        where gp.user.id = :userId
+        and g.status in (
+                com.team.cops_and_robbers.game.game.domain.GameStatus.WAITING,
+                com.team.cops_and_robbers.game.game.domain.GameStatus.IN_PROGRESS
+            )
+        """)
+    Optional<GameParticipant> findActiveParticipantByUserId(@Param("userId") Long userId);
+
     @Query("""
         select gp
         from GameParticipant gp
