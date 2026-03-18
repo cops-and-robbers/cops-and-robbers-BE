@@ -11,6 +11,8 @@ public record LobbyInfoResponse(
         Long myParticipantId,
         @Schema(description = "방장 참가자 ID", example = "1")
         Long hostParticipantId,
+        @Schema(description = "초대 코드", example = "ABC123")
+        String inviteCode,
         @Schema(description = "참가자 목록")
         List<LobbyParticipantResponse> participants
 ) {
@@ -39,6 +41,7 @@ public record LobbyInfoResponse(
         return new LobbyInfoResponse(
                 result.myParticipantId(),
                 result.hostParticipantId(),
+                result.inviteCode(),
                 participantResponses
         );
     }

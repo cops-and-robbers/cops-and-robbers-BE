@@ -11,12 +11,14 @@ import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.common.fixture.UserFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
 import com.team.cops_and_robbers.user.presentation.dto.response.MyPageResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.NicknameCheckResponse;
+import com.team.cops_and_robbers.user.presentation.dto.response.UserGameInfoResponse;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.DisplayName;
@@ -60,6 +62,74 @@ class UserControllerTest extends ControllerTest {
             ExtractableResponse<Response> extract = unauthenticated()
                     .when()
                     .get("/api/user/me")
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(401);
+            });
+        }
+    }
+
+    @Nested
+    @DisplayName("참여 중인 게임 정보 조회 API")
+    class GetUserGameInfo {
+
+        @Test
+        void 참여_중인_게임이_있으면_게임_정보와_200_OK를_응답한다() {
+            // given
+            User user = givenUser();
+            String accessToken = givenAccessToken(user);
+            Game game = gameRepository.save(GameFixture.WAITING_GAME());
+            GameParticipant participant = gameParticipantRepository.save(GameParticipantFixture.HOST_PARTICIPANT(game, user));
+
+            // when
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .when()
+                    .get("/api/user/me/game")
+                    .then()
+                    .extract();
+
+            // then
+            UserGameInfoResponse response = extract.as(UserGameInfoResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(response.isParticipating()).isTrue();
+                softly.assertThat(response.participationInfo().gameId()).isEqualTo(game.getId());
+                softly.assertThat(response.participationInfo().participantId()).isEqualTo(participant.getId());
+                softly.assertThat(response.participationInfo().gameStatus()).isEqualTo(GameStatus.WAITING);
+            });
+        }
+
+        @Test
+        void 참여_중인_게임이_없으면_isParticipating이_false이고_200_OK를_응답한다() {
+            // given
+            User user = givenUser();
+            String accessToken = givenAccessToken(user);
+
+            // when
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .when()
+                    .get("/api/user/me/game")
+                    .then()
+                    .extract();
+
+            // then
+            UserGameInfoResponse response = extract.as(UserGameInfoResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(response.isParticipating()).isFalse();
+                softly.assertThat(response.participationInfo()).isNull();
+            });
+        }
+
+        @Test
+        void 토큰이_없으면_401_UNAUTHORIZED를_응답한다() {
+            // when
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .when()
+                    .get("/api/user/me/game")
                     .then()
                     .extract();
 
