@@ -95,14 +95,15 @@ class UserControllerTest extends ControllerTest {
             UserGameInfoResponse response = extract.as(UserGameInfoResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
-                softly.assertThat(response.gameId()).isEqualTo(game.getId());
-                softly.assertThat(response.participantId()).isEqualTo(participant.getId());
-                softly.assertThat(response.gameStatus()).isEqualTo(GameStatus.WAITING);
+                softly.assertThat(response.isParticipating()).isTrue();
+                softly.assertThat(response.participationInfo().gameId()).isEqualTo(game.getId());
+                softly.assertThat(response.participationInfo().participantId()).isEqualTo(participant.getId());
+                softly.assertThat(response.participationInfo().gameStatus()).isEqualTo(GameStatus.WAITING);
             });
         }
 
         @Test
-        void 참여_중인_게임이_없으면_null과_200_OK를_응답한다() {
+        void 참여_중인_게임이_없으면_isParticipating이_false이고_200_OK를_응답한다() {
             // given
             User user = givenUser();
             String accessToken = givenAccessToken(user);
@@ -115,9 +116,11 @@ class UserControllerTest extends ControllerTest {
                     .extract();
 
             // then
+            UserGameInfoResponse response = extract.as(UserGameInfoResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
-                softly.assertThat(extract.body().asString()).isEqualTo("");
+                softly.assertThat(response.isParticipating()).isFalse();
+                softly.assertThat(response.participationInfo()).isNull();
             });
         }
 

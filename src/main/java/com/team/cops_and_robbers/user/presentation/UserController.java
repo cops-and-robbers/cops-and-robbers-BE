@@ -40,7 +40,8 @@ public class UserController implements UserControllerDocs {
     @GetMapping("/me/game")
     public ResponseEntity<UserGameInfoResponse> getUserGameInfo(@AuthUser LoginUser loginUser) {
         Optional<UserGameInfoResult> result = userService.getUserGameInfo(loginUser.userId());
-        UserGameInfoResponse response = result.map(UserGameInfoResponse::from).orElse(null);
+        UserGameInfoResponse response = result.map(UserGameInfoResponse::from)
+                .orElse(UserGameInfoResponse.notParticipating());
         return ResponseEntity.ok(response);
     }
 

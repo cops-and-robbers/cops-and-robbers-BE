@@ -32,10 +32,10 @@ public interface UserControllerDocs {
     ResponseEntity<MyPageResponse> myPage(@Parameter(hidden = true) LoginUser loginUser);
 
     @Operation(summary = "참여 중인 게임 정보 조회",
-            description = "로그인한 사용자가 현재 참여 중인 게임 ID와 참가자 ID를 조회합니다. 참여 중인 게임이 없으면 null을 반환합니다."
+            description = "로그인한 사용자가 현재 참여 중인 게임 정보를 조회합니다. isParticipating으로 참여 여부를 확인할 수 있으며, 참여 중인 게임이 없으면 participation이 null로 반환됩니다."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "조회 성공 (참여 중인 게임이 없으면 null 반환)")
+            @ApiResponse(responseCode = "200", description = "조회 성공 (참여 중인 게임이 없으면 participationInfo null 반환)")
     })
     ResponseEntity<UserGameInfoResponse> getUserGameInfo(@Parameter(hidden = true) LoginUser loginUser);
 
