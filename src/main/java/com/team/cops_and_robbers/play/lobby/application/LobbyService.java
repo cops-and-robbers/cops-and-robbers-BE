@@ -125,9 +125,10 @@ public class LobbyService {
         validateHostPermission(hostParticipant);
         validateNotSelf(hostParticipant, kickParticipant);
 
+        String nickname = kickParticipant.getUser().getNickname();
         gameParticipantRepository.delete(kickParticipant);
 
-        LobbyEvent event = lobbyEventFactory.createKickEvent(command.gameId(), command.targetParticipantId());
+        LobbyEvent event = lobbyEventFactory.createKickEvent(command.gameId(), command.targetParticipantId(), nickname);
         eventPublisher.publishEvent(event);
     }
 

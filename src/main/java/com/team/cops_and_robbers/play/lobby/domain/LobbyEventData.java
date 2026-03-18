@@ -96,9 +96,9 @@ public sealed interface LobbyEventData permits
         }
     }
 
-    record LobbyKickedData(Long kickedParticipantId) implements LobbyEventData {
-        public static LobbyKickedData of(Long kickedParticipantId) {
-            return new LobbyKickedData(kickedParticipantId);
+    record LobbyKickedData(Long kickedParticipantId, String nickname) implements LobbyEventData {
+        public static LobbyKickedData of(Long kickedParticipantId, String nickname) {
+            return new LobbyKickedData(kickedParticipantId, nickname);
         }
     }
 }

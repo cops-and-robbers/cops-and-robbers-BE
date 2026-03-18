@@ -114,7 +114,14 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
 
     Optional<GameParticipant> findByGameIdAndUserId(Long gameId, Long userId);
 
-    Optional<GameParticipant> findByIdAndGameId(Long id, Long gameId);
+    @Query("""
+        select gp
+        from GameParticipant gp
+        join fetch gp.user
+        where gp.id = :id
+        and gp.game.id = :gameId
+    """)
+    Optional<GameParticipant> findByIdAndGameId(@Param("id") Long id, @Param("gameId") Long gameId);
 
     /**
      *  특정 참가자를 게임과 함께 조회
