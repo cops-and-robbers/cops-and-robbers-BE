@@ -19,7 +19,10 @@ spring:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
 
+server:
+  forward-headers-strategy: framework
+
 logging:
   level:
-    root: INFO  
+    root: INFO
     com.team.cops_and_robbers: INFO
