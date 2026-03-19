@@ -299,7 +299,7 @@ class LobbyServiceTest extends ServiceUnitTest {
             given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
             given(gameParticipantRepository.getByGameIdAndUserId(waitingGame.getId(), user.getId())).willReturn(hostParticipant);
             given(gameParticipantRepository.getByIdAndGameId(guestParticipant.getId(), waitingGame.getId())).willReturn(guestParticipant);
-            given(lobbyEventFactory.createKickEvent(any(), any())).willReturn(lobbyEvent);
+            given(lobbyEventFactory.createKickEvent(any(), any(), any())).willReturn(lobbyEvent);
 
             // when
             lobbyService.kickMember(command);
