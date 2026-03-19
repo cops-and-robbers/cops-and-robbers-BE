@@ -129,6 +129,15 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
 
     Optional<GameParticipant> findByGameIdAndUserId(Long gameId, Long userId);
 
+    @Query("""
+        select gp
+        from GameParticipant gp
+        join fetch gp.user
+        where gp.id = :id
+        and gp.game.id = :gameId
+    """)
+    Optional<GameParticipant> findByIdAndGameId(@Param("id") Long id, @Param("gameId") Long gameId);
+
     /**
      *  특정 참가자를 게임과 함께 조회
      */
@@ -166,6 +175,11 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
 
     default GameParticipant getParticipantById(Long id) {
         return findById(id)
+                .orElseThrow(() -> new ApplicationException(GameParticipantException.PARTICIPANT_NOT_FOUND));
+    }
+
+    default GameParticipant getByIdAndGameId(Long id, Long gameId) {
+        return findByIdAndGameId(id, gameId)
                 .orElseThrow(() -> new ApplicationException(GameParticipantException.PARTICIPANT_NOT_FOUND));
     }
 }

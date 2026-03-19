@@ -14,7 +14,8 @@ public sealed interface LobbyEventData permits
         LobbyEventData.LobbyHostChangedData,
         LobbyEventData.LobbyGameStartData,
         LobbyEventData.LobbyAreaUpdatedData,
-        LobbyEventData.LobbySettingsUpdatedData {
+        LobbyEventData.LobbySettingsUpdatedData,
+        LobbyEventData.LobbyKickedData {
 
     record LobbyParticipantInfo(Long participantId, String nickname, Team team, boolean isReady) {
         public static LobbyParticipantInfo from(GameParticipant participant) {
@@ -92,6 +93,12 @@ public sealed interface LobbyEventData permits
                     result.roundDurationMinutes(), result.locationRevealIntervalMinutes(),
                     result.policeWaitMinutes(), result.maxParticipants()
             );
+        }
+    }
+
+    record LobbyKickedData(Long kickedParticipantId, String nickname) implements LobbyEventData {
+        public static LobbyKickedData of(Long kickedParticipantId, String nickname) {
+            return new LobbyKickedData(kickedParticipantId, nickname);
         }
     }
 }

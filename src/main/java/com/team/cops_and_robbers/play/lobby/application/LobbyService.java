@@ -9,6 +9,7 @@ import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.GameStartCommand;
+import com.team.cops_and_robbers.play.lobby.application.dto.command.KickCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.LobbyInfoCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.ReadyUpdateCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.TeamChangeCommand;
@@ -109,6 +110,28 @@ public class LobbyService {
         return LobbyInfoResult.of(myParticipant, hostParticipant, game.getInviteCode(), participantInfos);
     }
 
+    /**
+     * 강제 퇴장
+     */
+    @Transactional
+    public void kickMember(KickCommand command) {
+        Game game = getWaitingGame(command.gameId());
+        GameParticipant hostParticipant = getWaitingParticipant(game.getId(), command.userId());
+        GameParticipant kickParticipant = gameParticipantRepository.getByIdAndGameId(
+                command.targetParticipantId(),
+                command.gameId()
+        );
+
+        validateHostPermission(hostParticipant);
+        validateNotSelf(hostParticipant, kickParticipant);
+
+        String nickname = kickParticipant.getUser().getNickname();
+        gameParticipantRepository.delete(kickParticipant);
+
+        LobbyEvent event = lobbyEventFactory.createKickEvent(command.gameId(), command.targetParticipantId(), nickname);
+        eventPublisher.publishEvent(event);
+    }
+
     private GameParticipant findParticipantByUserId(List<GameParticipant> participants, Long userId) {
         return participants.stream()
                 .filter(participant -> participant.getUser().getId().equals(userId))
@@ -148,6 +171,12 @@ public class LobbyService {
     private void validateHostPermission(GameParticipant participant) {
         if (!participant.isHost()) {
             throw new ApplicationException(GameParticipantException.NOT_HOST);
+        }
+    }
+
+    private void validateNotSelf(GameParticipant host, GameParticipant target) {
+        if (host.getId().equals(target.getId())) {
+            throw new ApplicationException(GameParticipantException.CANNOT_KICK_YOURSELF);
         }
     }
 

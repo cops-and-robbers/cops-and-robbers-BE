@@ -92,4 +92,20 @@ public interface LobbyControllerDocs {
             @Parameter(hidden = true) @AuthUser LoginUser loginUser,
             @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId
     );
+
+    @Operation(
+            summary = "멤버 강제 퇴장",
+            description = "방장이 대기실의 특정 참가자를 강제 퇴장합니다. 방장 본인은 강제 퇴장할 수 없습니다.",
+            security = @SecurityRequirement(name = "JWT")
+    )
+    @ApiErrorCode(value = GameParticipantException.class, codes = {"NOT_HOST", "CANNOT_KICK_YOURSELF", "GAME_ALREADY_STARTED", "LOBBY_ACTION_NOT_ALLOWED", "PARTICIPANT_NOT_FOUND"})
+    @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_FOUND"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "강제 퇴장 성공")
+    })
+    ResponseEntity<Void> kickMember(
+            @Parameter(hidden = true) @AuthUser LoginUser loginUser,
+            @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId,
+            @Parameter(description = "강제 퇴장할 참가자 ID", required = true, example = "2") @PathVariable Long participantId
+    );
 }
