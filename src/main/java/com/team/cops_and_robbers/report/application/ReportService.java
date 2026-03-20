@@ -22,6 +22,11 @@ public class ReportService {
 
     @Transactional
     public void reportChat(ReportCommand command) {
+        Long reportedUserId = validateReport(command);
+        reportRepository.save(ChatReport.create(command.gameId(), command.reporterUserId(), reportedUserId, command.messageContent()));
+    }
+
+    private Long validateReport(ReportCommand command) {
         GameParticipant reporter = gameParticipantRepository.findByGameIdAndUserIdWithGame(command.gameId(), command.reporterUserId())
                 .orElseThrow(() -> new ApplicationException(GameParticipantException.PARTICIPANT_NOT_FOUND));
 
@@ -37,13 +42,11 @@ public class ReportService {
             throw new ApplicationException(ReportException.SELF_REPORT);
         }
 
-        boolean isDuplicate = reportRepository.existsByReporterUserIdAndReportedUserIdAndGameId(
-                command.reporterUserId(), reportedUserId, command.gameId());
-        if (isDuplicate) {
+        if (reportRepository.existsByReporterUserIdAndReportedUserIdAndGameId(command.reporterUserId(), reportedUserId, command.gameId())) {
             throw new ApplicationException(ReportException.DUPLICATE_REPORT);
         }
 
-        ChatReport report = ChatReport.create(command.gameId(), command.reporterUserId(), reportedUserId, command.messageContent());
-        reportRepository.save(report);
+        return reportedUserId;
     }
 }
+
