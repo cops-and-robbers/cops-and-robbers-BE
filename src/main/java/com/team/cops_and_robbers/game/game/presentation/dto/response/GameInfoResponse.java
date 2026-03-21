@@ -15,6 +15,8 @@ public record GameInfoResponse(
         Integer policeWaitMinutes,
         @Schema(description = "최대 참가 인원", example = "10")
         Integer maxParticipants,
+        @Schema(description = "게임 시작 여부", example = "false")
+        boolean isStarted,
         @JsonInclude(JsonInclude.Include.NON_NULL)
         @Schema(description = "게임 시작 시간 (진행 중일 때만 포함)", example = "2026-03-21T15:30:00")
         LocalDateTime gameStartTime
@@ -25,6 +27,7 @@ public record GameInfoResponse(
                 result.locationRevealIntervalMinutes(),
                 result.policeWaitMinutes(),
                 result.maxParticipants(),
+                result.isStarted(),
                 result.gameStartTime()
         );
     }

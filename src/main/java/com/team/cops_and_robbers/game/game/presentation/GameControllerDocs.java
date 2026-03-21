@@ -115,18 +115,33 @@ public interface GameControllerDocs {
             @ApiResponse(responseCode = "200", description = "게임 설정 조회 성공",
                     content = @Content(
                             schema = @Schema(implementation = GameInfoResponse.class),
-                            examples = @ExampleObject(
-                                    name = "게임 설정 조회 성공 예시",
-                                    value = """
-                                            {
-                                                "roundDurationMinutes": 30,
-                                                "locationRevealIntervalMinutes": 5,
-                                                "policeWaitMinutes": 3,
-                                                "maxParticipants": 10,
-                                                "gameStartTime": "2026-03-21T15:30:00"
-                                            }
-                                            """
-                            )
+                            examples = {
+                                    @ExampleObject(
+                                            name = "대기 중 (WAITING)",
+                                            value = """
+                                                    {
+                                                        "roundDurationMinutes": 30,
+                                                        "locationRevealIntervalMinutes": 5,
+                                                        "policeWaitMinutes": 3,
+                                                        "maxParticipants": 10,
+                                                        "isStarted": false
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "진행 중 (IN_PROGRESS)",
+                                            value = """
+                                                    {
+                                                        "roundDurationMinutes": 30,
+                                                        "locationRevealIntervalMinutes": 5,
+                                                        "policeWaitMinutes": 3,
+                                                        "maxParticipants": 10,
+                                                        "isStarted": true,
+                                                        "gameStartTime": "2026-03-21T15:30:00"
+                                                    }
+                                                    """
+                                    )
+                            }
                     )
             ),
     })
