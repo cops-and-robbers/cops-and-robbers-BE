@@ -174,6 +174,7 @@ class GameControllerTest extends ControllerTest {
                 softly.assertThat(response.jsonPath().getInt("locationRevealIntervalMinutes")).isEqualTo(game.getLocationRevealIntervalMinutes());
                 softly.assertThat(response.jsonPath().getInt("policeWaitMinutes")).isEqualTo(game.getPoliceWaitMinutes());
                 softly.assertThat(response.jsonPath().getInt("maxParticipants")).isEqualTo(game.getMaxParticipants());
+                softly.assertThat((Object) response.jsonPath().get("gameStartTime")).isNull();
             });
         }
 

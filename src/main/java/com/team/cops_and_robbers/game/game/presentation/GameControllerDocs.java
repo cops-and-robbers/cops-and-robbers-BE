@@ -122,7 +122,8 @@ public interface GameControllerDocs {
                                                 "roundDurationMinutes": 30,
                                                 "locationRevealIntervalMinutes": 5,
                                                 "policeWaitMinutes": 3,
-                                                "maxParticipants": 10
+                                                "maxParticipants": 10,
+                                                "gameStartTime": "2026-03-21T15:30:00"
                                             }
                                             """
                             )
