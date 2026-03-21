@@ -11,6 +11,7 @@ import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
+import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
 import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.User;
@@ -75,6 +76,7 @@ class UserServiceTest extends ServiceUnitTest {
             assertThat(result.get().gameId()).isEqualTo(game.getId());
             assertThat(result.get().participantId()).isEqualTo(participant.getId());
             assertThat(result.get().gameStatus()).isEqualTo(GameStatus.WAITING);
+            assertThat(result.get().team()).isEqualTo(Team.POLICE);
         }
 
         @Test

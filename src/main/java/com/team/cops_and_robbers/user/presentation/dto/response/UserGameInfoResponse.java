@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.user.presentation.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
+import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -19,12 +20,14 @@ public record UserGameInfoResponse(
             @Schema(description = "참가자 ID", example = "12")
             Long participantId,
             @Schema(description = "게임 상태", example = "WAITING")
-            GameStatus gameStatus
+            GameStatus gameStatus,
+            @Schema(description = "팀", example = "POLICE")
+            Team team
     ) {}
 
     public static UserGameInfoResponse from(UserGameInfoResult result) {
         UserGameParticipationResponse participation = new UserGameParticipationResponse(
-                result.gameId(), result.participantId(), result.gameStatus()
+                result.gameId(), result.participantId(), result.gameStatus(), result.team()
         );
         return new UserGameInfoResponse(true, participation);
     }

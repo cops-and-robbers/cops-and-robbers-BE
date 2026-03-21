@@ -13,6 +13,7 @@ import com.team.cops_and_robbers.common.fixture.UserFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
+import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
@@ -99,6 +100,7 @@ class UserControllerTest extends ControllerTest {
                 softly.assertThat(response.participationInfo().gameId()).isEqualTo(game.getId());
                 softly.assertThat(response.participationInfo().participantId()).isEqualTo(participant.getId());
                 softly.assertThat(response.participationInfo().gameStatus()).isEqualTo(GameStatus.WAITING);
+                softly.assertThat(response.participationInfo().team()).isEqualTo(Team.POLICE);
             });
         }
 
