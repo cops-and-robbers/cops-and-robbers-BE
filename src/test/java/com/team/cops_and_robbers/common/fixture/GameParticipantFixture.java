@@ -85,6 +85,17 @@ public class GameParticipantFixture {
                 .build();
     }
 
+    public static GameParticipant READY_PARTICIPANT(Game game, User user) {
+        return GameParticipant.builder()
+                .game(game)
+                .user(user)
+                .team(Team.ROBBER)
+                .status(ParticipantStatus.WAITING)
+                .isReady(true)
+                .isHost(false)
+                .build();
+    }
+
     public static GameParticipant JAILED_ROBBER(Game game, User user) {
         return GameParticipant.builder()
                 .game(game)
