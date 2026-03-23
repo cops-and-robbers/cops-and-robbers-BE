@@ -150,6 +150,8 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
     """)
     Optional<GameParticipant> findByGameIdAndUserIdWithGame(@Param("gameId") Long gameId, @Param("userId") Long userId);
 
+    void deleteAllByGameId(Long gameId);
+
     Optional<GameParticipant> findFirstByGameIdOrderByCreatedAtAsc(Long gameId);
 
     default GameParticipant getByGameIdAndUserId(Long gameId, Long userId) {
