@@ -10,6 +10,7 @@ import com.team.cops_and_robbers.report.domain.ChatReport;
 import com.team.cops_and_robbers.report.exception.ReportException;
 import com.team.cops_and_robbers.report.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +24,11 @@ public class ReportService {
     @Transactional
     public void reportChat(ReportCommand command) {
         Long reportedUserId = validateReport(command);
-        reportRepository.save(ChatReport.create(command.gameId(), command.reporterUserId(), reportedUserId, command.messageContent()));
+        try {
+            reportRepository.save(ChatReport.create(command.gameId(), command.reporterUserId(), reportedUserId, command.messageContent()));
+        } catch (DataIntegrityViolationException e) {
+            throw new ApplicationException(ReportException.DUPLICATE_REPORT);
+        }
     }
 
     private Long validateReport(ReportCommand command) {
@@ -42,11 +47,6 @@ public class ReportService {
             throw new ApplicationException(ReportException.SELF_REPORT);
         }
 
-        if (reportRepository.existsByReporterUserIdAndReportedUserIdAndGameId(command.reporterUserId(), reportedUserId, command.gameId())) {
-            throw new ApplicationException(ReportException.DUPLICATE_REPORT);
-        }
-
         return reportedUserId;
     }
 }
-
