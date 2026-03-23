@@ -4,6 +4,8 @@ import com.google.firebase.auth.AuthErrorCode;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.team.cops_and_robbers.auth.domain.Tokens;
 import com.team.cops_and_robbers.common.ControllerTest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.exception.CommonException;
 import com.team.cops_and_robbers.common.exception.ErrorResponse;
@@ -14,6 +16,8 @@ import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.Team;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
@@ -30,6 +34,9 @@ import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.mockito.Mockito.*;
 
 class UserControllerTest extends ControllerTest {
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Nested
     @DisplayName("내 정보 조회 API")
@@ -123,6 +130,36 @@ class UserControllerTest extends ControllerTest {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
                 softly.assertThat(response.isParticipating()).isFalse();
                 softly.assertThat(response.participationInfo()).isNull();
+            });
+        }
+
+        @Test
+        void 만료된_WAITING_로비이면_삭제하고_isParticipating이_false이고_200_OK를_응답한다() {
+            // given
+            User user = givenUser();
+            String accessToken = givenAccessToken(user);
+            Game game = gameRepository.save(GameFixture.WAITING_GAME());
+            gameParticipantRepository.save(GameParticipantFixture.HOST_PARTICIPANT(game, user));
+            jdbcTemplate.update(
+                    "UPDATE games SET created_at = ? WHERE id = ?",
+                    Timestamp.valueOf(LocalDateTime.now().minusHours(25)),
+                    game.getId()
+            );
+
+            // when
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .when()
+                    .get("/api/user/me/game")
+                    .then()
+                    .extract();
+
+            // then
+            UserGameInfoResponse response = extract.as(UserGameInfoResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(response.isParticipating()).isFalse();
+                softly.assertThat(response.participationInfo()).isNull();
+                softly.assertThat(gameRepository.findById(game.getId())).isEmpty();
             });
         }
 

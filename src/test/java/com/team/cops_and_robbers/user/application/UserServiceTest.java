@@ -17,7 +17,9 @@ import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.exception.UserException;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -62,6 +64,7 @@ class UserServiceTest extends ServiceUnitTest {
             // given
             Game game = GameFixture.WAITING_GAME();
             setId(game, 1L);
+            ReflectionTestUtils.setField(game, "createdAt", LocalDateTime.now());
             GameParticipant participant = GameParticipantFixture.HOST_PARTICIPANT(game, user);
             setId(participant, 10L);
 
@@ -90,6 +93,50 @@ class UserServiceTest extends ServiceUnitTest {
 
             // then
             assertThat(result).isEmpty();
+        }
+
+        @Test
+        void 만료된_WAITING_로비이면_삭제하고_빈_Optional을_반환한다() {
+            // given
+            Game game = GameFixture.WAITING_GAME();
+            setId(game, 1L);
+            ReflectionTestUtils.setField(game, "createdAt", LocalDateTime.now().minusHours(25));
+            GameParticipant participant = GameParticipantFixture.HOST_PARTICIPANT(game, user);
+            setId(participant, 10L);
+
+            given(gameParticipantRepository.findActiveParticipantByUserId(user.getId()))
+                    .willReturn(Optional.of(participant));
+
+            // when
+            Optional<UserGameInfoResult> result = userService.getUserGameInfo(user.getId());
+
+            // then
+            assertThat(result).isEmpty();
+            then(gameParticipantRepository).should().deleteAllByGameId(game.getId());
+            then(gameAreaRepository).should().deleteByGameId(game.getId());
+            then(gameRepository).should().delete(game);
+        }
+
+        @Test
+        void IN_PROGRESS_게임은_만료_시간이_지나도_삭제하지_않는다() {
+            // given
+            Game game = GameFixture.IN_PROGRESS_GAME();
+            setId(game, 1L);
+            ReflectionTestUtils.setField(game, "createdAt", LocalDateTime.now().minusHours(25));
+            GameParticipant participant = GameParticipantFixture.HOST_PARTICIPANT(game, user);
+            setId(participant, 10L);
+
+            given(gameParticipantRepository.findActiveParticipantByUserId(user.getId()))
+                    .willReturn(Optional.of(participant));
+
+            // when
+            Optional<UserGameInfoResult> result = userService.getUserGameInfo(user.getId());
+
+            // then
+            assertThat(result).isPresent();
+            then(gameParticipantRepository).should(never()).deleteAllByGameId(any());
+            then(gameAreaRepository).should(never()).deleteByGameId(any());
+            then(gameRepository).should(never()).delete(any());
         }
     }
 
