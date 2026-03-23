@@ -22,8 +22,10 @@ public class ReportController implements ReportControllerDocs {
     private final ReportService reportService;
 
     @PostMapping("/chat")
-    public ResponseEntity<Void> reportChat(@AuthUser LoginUser loginUser,
-                                           @RequestBody @Valid ReportRequest request) {
+    public ResponseEntity<Void> reportChat(
+            @AuthUser LoginUser loginUser,
+            @RequestBody @Valid ReportRequest request
+    ) {
         ReportCommand command = ReportCommand.of(loginUser.userId(), request);
         reportService.reportChat(command);
         return ResponseEntity.status(HttpStatus.CREATED).build();
