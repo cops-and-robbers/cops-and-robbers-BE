@@ -7,6 +7,7 @@ import com.team.cops_and_robbers.game.participant.exception.GameParticipantExcep
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.report.application.dto.command.ReportCommand;
 import com.team.cops_and_robbers.report.domain.ChatReport;
+import com.team.cops_and_robbers.report.domain.ReportType;
 import com.team.cops_and_robbers.report.exception.ReportException;
 import com.team.cops_and_robbers.report.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,10 +25,18 @@ public class ReportService {
     @Transactional
     public void reportChat(ReportCommand command) {
         Long reportedUserId = validateReport(command);
+        validateEtcReason(command);
         try {
-            reportRepository.save(ChatReport.create(command.gameId(), command.reporterUserId(), reportedUserId, command.messageContent()));
+            reportRepository.save(ChatReport.create(command.gameId(), command.reporterUserId(), reportedUserId,
+                    command.messageContent(), command.reportType(), command.etcReason()));
         } catch (DataIntegrityViolationException e) {
             throw new ApplicationException(ReportException.DUPLICATE_REPORT);
+        }
+    }
+
+    private void validateEtcReason(ReportCommand command) {
+        if (command.reportType() == ReportType.ETC && (command.etcReason() == null || command.etcReason().isBlank())) {
+            throw new ApplicationException(ReportException.ETC_REASON_REQUIRED);
         }
     }
 

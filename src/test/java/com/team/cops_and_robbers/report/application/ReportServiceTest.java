@@ -7,6 +7,7 @@ import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.report.application.dto.command.ReportCommand;
+import com.team.cops_and_robbers.report.domain.ReportType;
 import com.team.cops_and_robbers.report.exception.ReportException;
 import com.team.cops_and_robbers.report.repository.ReportRepository;
 import com.team.cops_and_robbers.user.domain.User;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.Optional;
 
@@ -65,10 +67,8 @@ class ReportServiceTest extends ServiceUnitTest {
         void 신고에_성공하면_저장된다() {
             given(gameParticipantRepository.findByGameIdAndUserIdWithGame(10L, 1L)).willReturn(Optional.of(reporterParticipant));
             given(gameParticipantRepository.findByIdAndGameId(99L, 10L)).willReturn(Optional.of(reportedParticipant));
-            given(reportRepository.existsByReporterUserIdAndReportedUserIdAndGameId(1L, 2L, 10L)).willReturn(false);
-            given(reportRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
 
-            reportService.reportChat(new ReportCommand(10L, 1L, 99L, "나쁜 말"));
+            reportService.reportChat(new ReportCommand(10L, 1L, 99L, "나쁜 말", ReportType.VERBAL_ABUSE, null));
 
             then(reportRepository).should().save(any());
         }
@@ -77,7 +77,7 @@ class ReportServiceTest extends ServiceUnitTest {
         void 신고자가_해당_게임_참가자가_아니면_예외가_발생한다() {
             given(gameParticipantRepository.findByGameIdAndUserIdWithGame(10L, 1L)).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> reportService.reportChat(new ReportCommand(10L, 1L, 99L, "나쁜 말")))
+            assertThatThrownBy(() -> reportService.reportChat(new ReportCommand(10L, 1L, 99L, "나쁜 말", ReportType.VERBAL_ABUSE, null)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(GameParticipantException.PARTICIPANT_NOT_FOUND.getDetail());
         }
@@ -89,7 +89,7 @@ class ReportServiceTest extends ServiceUnitTest {
             GameParticipant waitingParticipant = GUEST_PARTICIPANT(waitingGame, reporter);
             given(gameParticipantRepository.findByGameIdAndUserIdWithGame(10L, 1L)).willReturn(Optional.of(waitingParticipant));
 
-            assertThatThrownBy(() -> reportService.reportChat(new ReportCommand(10L, 1L, 99L, "나쁜 말")))
+            assertThatThrownBy(() -> reportService.reportChat(new ReportCommand(10L, 1L, 99L, "나쁜 말", ReportType.VERBAL_ABUSE, null)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(GameException.GAME_NOT_IN_PROGRESS.getDetail());
         }
@@ -99,7 +99,7 @@ class ReportServiceTest extends ServiceUnitTest {
             given(gameParticipantRepository.findByGameIdAndUserIdWithGame(10L, 1L)).willReturn(Optional.of(reporterParticipant));
             given(gameParticipantRepository.findByIdAndGameId(99L, 10L)).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> reportService.reportChat(new ReportCommand(10L, 1L, 99L, "나쁜 말")))
+            assertThatThrownBy(() -> reportService.reportChat(new ReportCommand(10L, 1L, 99L, "나쁜 말", ReportType.VERBAL_ABUSE, null)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(ReportException.REPORT_TARGET_NOT_FOUND.getDetail());
         }
@@ -109,7 +109,7 @@ class ReportServiceTest extends ServiceUnitTest {
             given(gameParticipantRepository.findByGameIdAndUserIdWithGame(10L, 1L)).willReturn(Optional.of(reporterParticipant));
             given(gameParticipantRepository.findByIdAndGameId(98L, 10L)).willReturn(Optional.of(reporterParticipant));
 
-            assertThatThrownBy(() -> reportService.reportChat(new ReportCommand(10L, 1L, 98L, "나쁜 말")))
+            assertThatThrownBy(() -> reportService.reportChat(new ReportCommand(10L, 1L, 98L, "나쁜 말", ReportType.VERBAL_ABUSE, null)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(ReportException.SELF_REPORT.getDetail());
         }
@@ -118,11 +118,31 @@ class ReportServiceTest extends ServiceUnitTest {
         void 이미_신고한_유저면_예외가_발생한다() {
             given(gameParticipantRepository.findByGameIdAndUserIdWithGame(10L, 1L)).willReturn(Optional.of(reporterParticipant));
             given(gameParticipantRepository.findByIdAndGameId(99L, 10L)).willReturn(Optional.of(reportedParticipant));
-            given(reportRepository.existsByReporterUserIdAndReportedUserIdAndGameId(1L, 2L, 10L)).willReturn(true);
+            given(reportRepository.save(any())).willThrow(DataIntegrityViolationException.class);
 
-            assertThatThrownBy(() -> reportService.reportChat(new ReportCommand(10L, 1L, 99L, "나쁜 말")))
+            assertThatThrownBy(() -> reportService.reportChat(new ReportCommand(10L, 1L, 99L, "나쁜 말", ReportType.VERBAL_ABUSE, null)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(ReportException.DUPLICATE_REPORT.getDetail());
+        }
+
+        @Test
+        void ETC_신고_유형에_사유가_없으면_예외가_발생한다() {
+            given(gameParticipantRepository.findByGameIdAndUserIdWithGame(10L, 1L)).willReturn(Optional.of(reporterParticipant));
+            given(gameParticipantRepository.findByIdAndGameId(99L, 10L)).willReturn(Optional.of(reportedParticipant));
+
+            assertThatThrownBy(() -> reportService.reportChat(new ReportCommand(10L, 1L, 99L, "나쁜 말", ReportType.ETC, null)))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(ReportException.ETC_REASON_REQUIRED.getDetail());
+        }
+
+        @Test
+        void ETC_신고_유형에_사유가_있으면_저장된다() {
+            given(gameParticipantRepository.findByGameIdAndUserIdWithGame(10L, 1L)).willReturn(Optional.of(reporterParticipant));
+            given(gameParticipantRepository.findByIdAndGameId(99L, 10L)).willReturn(Optional.of(reportedParticipant));
+
+            reportService.reportChat(new ReportCommand(10L, 1L, 99L, "나쁜 말", ReportType.ETC, "기타 사유입니다."));
+
+            then(reportRepository).should().save(any());
         }
     }
 }

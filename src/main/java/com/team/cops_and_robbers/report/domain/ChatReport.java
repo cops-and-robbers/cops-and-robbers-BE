@@ -33,12 +33,21 @@ public class ChatReport extends BaseTimeEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String messageContent;
 
-    public static ChatReport create(Long gameId, Long reporterUserId, Long reportedUserId, String messageContent) {
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReportType reportType;
+
+    @Column(columnDefinition = "TEXT")
+    private String etcReason;
+
+    public static ChatReport create(Long gameId, Long reporterUserId, Long reportedUserId, String messageContent, ReportType reportType, String etcReason) {
         return ChatReport.builder()
                 .gameId(gameId)
                 .reporterUserId(reporterUserId)
                 .reportedUserId(reportedUserId)
                 .messageContent(messageContent)
+                .reportType(reportType)
+                .etcReason(etcReason)
                 .build();
     }
 }
