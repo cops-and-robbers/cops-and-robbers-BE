@@ -82,12 +82,14 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-          envs: DB_PASSWORD,ACCESS_SECRET_KEY,REFRESH_SECRET_KEY,ACCESS_EXPIRATION,REFRESH_EXPIRATION
+          envs: DB_URL,DB_USERNAME,DB_PASSWORD,ACCESS_SECRET_KEY,REFRESH_SECRET_KEY,ACCESS_EXPIRATION,REFRESH_EXPIRATION
           script: |
             chmod +x /home/${{ secrets.EC2_USER }}/cops-and-robbers/scripts/deploy.sh
 
             /home/${{ secrets.EC2_USER }}/cops-and-robbers/scripts/deploy.sh
         env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           ACCESS_SECRET_KEY: ${{ secrets.ACCESS_SECRET_KEY }}
           REFRESH_SECRET_KEY: ${{ secrets.REFRESH_SECRET_KEY }}
