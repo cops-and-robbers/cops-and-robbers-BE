@@ -1,19 +1,6 @@
 version: '3.8'
 
 services:
-  cops-and-robbers-db:
-    image: postgis/postgis:15-3.3
-    container_name: cops-and-robbers-db
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_DB: cops_and_robbers_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - ./prod-db-data:/var/lib/postgresql/data
-    restart: always
-
   cops-and-robbers-redis:
     image: redis:7
     container_name: cops-and-robbers-redis
@@ -30,8 +17,8 @@ services:
 
       FIREBASE_KEY_PATH: /app/firebase-key.json
 
-      DB_HOST: jdbc:postgresql://cops-and-robbers-db:5432/cops_and_robbers_db
-      DB_USERNAME: postgres
+      DB_URL: ${DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
 
       REDIS_HOST: cops-and-robbers-redis
@@ -47,6 +34,5 @@ services:
       - /home/ubuntu/log:/log
 
     depends_on:
-      - cops-and-robbers-db
       - cops-and-robbers-redis
     restart: always
