@@ -4,6 +4,9 @@ services:
   cops-and-robbers-redis:
     image: redis:7
     container_name: cops-and-robbers-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - ./redis-data:/data
     restart: always
 
   cops-and-robbers-app:
