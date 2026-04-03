@@ -24,6 +24,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -34,6 +35,7 @@ public class UserService {
 
     private static final long LOBBY_TTL_HOURS = 24;
 
+    private final Clock clock;
     private final FirebaseAuth firebaseAuth;
     private final UserRepository userRepository;
     private final UserDeviceRepository userDeviceRepository;
@@ -49,12 +51,12 @@ public class UserService {
 
     @Transactional
     public Optional<UserGameInfoResult> getUserGameInfo(Long userId) {
-        Optional<GameParticipant> participantOpt = gameParticipantRepository.findActiveParticipantByUserId(userId);
-        if (participantOpt.isEmpty()) {
+        Optional<GameParticipant> OptionalParticipant = gameParticipantRepository.findActiveParticipantByUserId(userId);
+        if (OptionalParticipant.isEmpty()) {
             return Optional.empty();
         }
 
-        GameParticipant participant = participantOpt.get();
+        GameParticipant participant = OptionalParticipant.get();
         Game game = participant.getGame();
 
         if (isExpiredLobby(game)) {
@@ -68,10 +70,9 @@ public class UserService {
     }
 
     private boolean isExpiredLobby(Game game) {
-        LocalDateTime lobbyExpirationTime = LocalDateTime.now().minusHours(LOBBY_TTL_HOURS);
+        LocalDateTime lobbyExpirationTime = LocalDateTime.now(clock).minusHours(LOBBY_TTL_HOURS);
 
-        return game.isWaiting()
-                && game.getCreatedAt().isBefore(lobbyExpirationTime);
+        return game.isWaiting() && game.getCreatedAt().isBefore(lobbyExpirationTime);
     }
 
     @Transactional(readOnly = true)
