@@ -27,7 +27,7 @@ public class UserDevice extends BaseTimeEntity {
     @Column(nullable = false, length = 10)
     private DeviceType deviceType;
 
-    @Column(nullable = false)
+    @Column
     private String fcmToken;
 
 
@@ -45,7 +45,9 @@ public class UserDevice extends BaseTimeEntity {
     public void reconnect(String deviceId, DeviceType deviceType, String fcmToken) {
         this.deviceId = deviceId;
         this.deviceType = deviceType;
-        this.fcmToken = fcmToken;
+        if (fcmToken != null) {
+            this.fcmToken = fcmToken;
+        }
     }
 
 }

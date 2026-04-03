@@ -17,8 +17,7 @@ public record LoginRequest(
         @NotBlank(message = "소셜 인증 토큰(ID Token)은 필수입니다.")
         String idToken,
 
-        @Schema(description = "FCM 디바이스 토큰", example = "fcm-device-token-here")
-        @NotBlank(message = "FCM 토큰은 필수입니다.")
+        @Schema(description = "FCM 디바이스 토큰 (선택)", example = "fcm-device-token-here", nullable = true)
         String fcmToken,
 
         @Schema(description = "기기 타입", example = "IOS")
