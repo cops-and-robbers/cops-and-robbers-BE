@@ -15,7 +15,7 @@ import java.util.Optional;
 
 public interface GameRepository extends JpaRepository<Game, Long> {
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("delete from Game g where g.id = :gameId")
     void deleteByGameId(@Param("gameId") Long gameId);
 
