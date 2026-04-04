@@ -122,7 +122,7 @@ class UserServiceTest extends ServiceUnitTest {
             assertThat(result).isEmpty();
             then(gameParticipantRepository).should().deleteAllByGameId(game.getId());
             then(gameAreaRepository).should().deleteByGameId(game.getId());
-            then(gameRepository).should().delete(game);
+            then(gameRepository).should().deleteByGameId(game.getId());
         }
 
         @Test
@@ -144,7 +144,7 @@ class UserServiceTest extends ServiceUnitTest {
             assertThat(result).isPresent();
             then(gameParticipantRepository).should(never()).deleteAllByGameId(any());
             then(gameAreaRepository).should(never()).deleteByGameId(any());
-            then(gameRepository).should(never()).delete(any());
+            then(gameRepository).should(never()).deleteByGameId(any());
         }
     }
 
