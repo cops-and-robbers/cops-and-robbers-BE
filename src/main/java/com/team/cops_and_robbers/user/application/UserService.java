@@ -51,18 +51,18 @@ public class UserService {
 
     @Transactional
     public Optional<UserGameInfoResult> getUserGameInfo(Long userId) {
-        Optional<GameParticipant> OptionalParticipant = gameParticipantRepository.findActiveParticipantByUserId(userId);
-        if (OptionalParticipant.isEmpty()) {
+        Optional<GameParticipant> optionalParticipant = gameParticipantRepository.findActiveParticipantByUserId(userId);
+        if (optionalParticipant.isEmpty()) {
             return Optional.empty();
         }
 
-        GameParticipant participant = OptionalParticipant.get();
+        GameParticipant participant = optionalParticipant.get();
         Game game = participant.getGame();
 
         if (isExpiredLobby(game)) {
             gameParticipantRepository.deleteAllByGameId(game.getId());
             gameAreaRepository.deleteByGameId(game.getId());
-            gameRepository.delete(game);
+            gameRepository.deleteByGameId(game.getId());
             return Optional.empty();
         }
 

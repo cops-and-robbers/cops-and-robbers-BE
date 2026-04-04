@@ -6,11 +6,18 @@ import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface GameRepository extends JpaRepository<Game, Long> {
+
+    @Modifying
+    @Query("delete from Game g where g.id = :gameId")
+    void deleteByGameId(@Param("gameId") Long gameId);
 
     boolean existsByInviteCode(String inviteCode);
 
