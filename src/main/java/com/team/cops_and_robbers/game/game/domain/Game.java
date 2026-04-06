@@ -53,6 +53,10 @@ public class Game extends BaseTimeEntity {
 
     private LocalDateTime lastEndedAt;
 
+    private LocalDateTime additionalTimeStartedAt;
+
+    private LocalDateTime scheduledEndTime;
+
     public boolean isWaiting() {
         return this.status == GameStatus.WAITING;
     }
@@ -61,14 +65,33 @@ public class Game extends BaseTimeEntity {
         return this.status == GameStatus.IN_PROGRESS;
     }
 
+    public boolean isInAdditionalTime() {
+        return this.additionalTimeStartedAt != null;
+    }
+
     public void startGame(LocalDateTime startTime) {
         this.startedAt = startTime;
         this.status = GameStatus.IN_PROGRESS;
+        this.scheduledEndTime = startTime.plusMinutes(this.roundDurationMinutes);
+    }
+
+    public void startAdditionalTime(LocalDateTime startedAt) {
+        this.additionalTimeStartedAt = startedAt;
+    }
+
+    public void endAdditionalTime() {
+        this.additionalTimeStartedAt = null;
+    }
+
+    public void updateScheduledEndTime(LocalDateTime newEndTime) {
+        this.scheduledEndTime = newEndTime;
     }
 
     public void resetForNextRound() {
         this.status = GameStatus.WAITING;
         this.lastEndedAt = LocalDateTime.now();
+        this.additionalTimeStartedAt = null;
+        this.scheduledEndTime = null;
     }
 
     public static Game createGame(String inviteCode, GameCreateCommand command) {

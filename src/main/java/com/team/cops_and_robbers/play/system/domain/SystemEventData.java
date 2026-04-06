@@ -12,7 +12,9 @@ public sealed interface SystemEventData permits
         SystemEventData.RobberLocationRevealData,
         SystemEventData.ArrestData,
         SystemEventData.EscapeData,
-        SystemEventData.GameEndData {
+        SystemEventData.GameEndData,
+        SystemEventData.AdditionalTimeStartedData,
+        SystemEventData.GameResumedData {
 
     record SystemParticipantInfo(Long participantId, String nickname, ParticipantStatus status) {
         public static SystemParticipantInfo from(GameParticipant participant) {
@@ -58,6 +60,18 @@ public sealed interface SystemEventData permits
     record GameEndData(Long gameResultId, Team winnerTeam, GameEndReason reason) implements SystemEventData {
         public static GameEndData of(Long gameResultId, Team winnerTeam, GameEndReason reason) {
             return new GameEndData(gameResultId, winnerTeam, reason);
+        }
+    }
+
+    record AdditionalTimeStartedData(GameEndReason trigger, int additionalTimeSeconds) implements SystemEventData {
+        public static AdditionalTimeStartedData of(GameEndReason trigger, int additionalTimeSeconds) {
+            return new AdditionalTimeStartedData(trigger, additionalTimeSeconds);
+        }
+    }
+
+    record GameResumedData(long remainingSeconds) implements SystemEventData {
+        public static GameResumedData of(long remainingSeconds) {
+            return new GameResumedData(remainingSeconds);
         }
     }
 }

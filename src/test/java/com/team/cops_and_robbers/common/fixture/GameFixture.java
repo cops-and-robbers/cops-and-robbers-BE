@@ -31,6 +31,7 @@ public class GameFixture {
     }
 
     public static Game IN_PROGRESS_GAME() {
+        LocalDateTime startedAt = LocalDateTime.now();
         return Game.builder()
                 .inviteCode(UUID.randomUUID().toString().substring(0, 6))
                 .status(GameStatus.IN_PROGRESS)
@@ -38,7 +39,8 @@ public class GameFixture {
                 .locationRevealIntervalMinutes(5)
                 .policeWaitMinutes(3)
                 .maxParticipants(10)
-                .startedAt(LocalDateTime.now())
+                .startedAt(startedAt)
+                .scheduledEndTime(startedAt.plusMinutes(30))
                 .build();
     }
 
@@ -51,6 +53,7 @@ public class GameFixture {
                 .policeWaitMinutes(3)
                 .maxParticipants(10)
                 .startedAt(startedAt)
+                .scheduledEndTime(startedAt.plusMinutes(30))
                 .build();
     }
 

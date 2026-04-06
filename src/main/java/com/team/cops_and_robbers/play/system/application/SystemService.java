@@ -8,6 +8,7 @@ import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
+import com.team.cops_and_robbers.history.domain.GameEndReason;
 import com.team.cops_and_robbers.play.system.application.dto.command.ArrestCommand;
 import com.team.cops_and_robbers.play.system.application.dto.command.EscapeCommand;
 import com.team.cops_and_robbers.play.system.application.dto.result.ArrestResult;
@@ -28,11 +29,11 @@ public class SystemService {
 
     private final ApplicationEventPublisher eventPublisher;
     private final SystemEventFactory systemEventFactory;
-    private final GameTerminationService gameTerminationService;
+    private final AdditionalTimeService additionalTimeService;
 
     /**
      * 경찰이 도둑을 체포합니다.
-     * - 남은 도둑이 없을 경우 게임 종료 이벤트가 추가로 발생합니다.
+     * - 남은 도둑이 없을 경우 추가 시간이 시작됩니다.
      */
     @Transactional
     public ArrestResult arrestRobber(ArrestCommand command) {
@@ -54,7 +55,7 @@ public class SystemService {
         eventPublisher.publishEvent(event);
 
         if (remainingThieves == 0) {
-            gameTerminationService.endGameByAllArrested(game.getId());
+            additionalTimeService.startAdditionalTime(game.getId(), GameEndReason.ALL_ARRESTED);
         }
 
         return ArrestResult.from((SystemEventData.ArrestData) event.data());

@@ -56,7 +56,7 @@ class GameSchedulerServiceTest extends ServiceUnitTest {
     private RobberLocationService robberLocationService;
 
     @Mock
-    private GameTerminationService gameTerminationService;
+    private AdditionalTimeService additionalTimeService;
 
     @Mock
     private TransactionTemplate transactionTemplate;
