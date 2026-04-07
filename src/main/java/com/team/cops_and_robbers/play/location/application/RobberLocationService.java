@@ -1,11 +1,14 @@
 package com.team.cops_and_robbers.play.location.application;
 
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.play.location.application.dto.command.LocationUpdateCommand;
+import com.team.cops_and_robbers.play.location.application.dto.command.RobberLocationsCommand;
+import com.team.cops_and_robbers.play.location.application.dto.result.RobberLocationResult;
 import com.team.cops_and_robbers.play.location.repository.RobberLocationRepository;
 import com.team.cops_and_robbers.play.system.domain.SystemEventData;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +23,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class RobberLocationService {
 
+    private final GameRepository gameRepository;
     private final GameParticipantRepository gameParticipantRepository;
     private final RobberLocationRepository robberLocationRepository;
 
@@ -58,5 +62,14 @@ public class RobberLocationService {
 
     public void clearRobberLocations(Long gameId) {
         robberLocationRepository.deleteAllByGameId(gameId);
+    }
+
+    public List<RobberLocationResult> getRobberLocations(RobberLocationsCommand command) {
+        gameRepository.getByGameId(command.gameId());
+        gameParticipantRepository.getByGameIdAndUserId(command.gameId(), command.userId());
+
+        return getCurrentRobberLocations(command.gameId()).stream()
+                .map(RobberLocationResult::from)
+                .toList();
     }
 }
