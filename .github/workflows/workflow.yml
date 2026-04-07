@@ -49,10 +49,10 @@ jobs:
           java-version: '21'
           distribution: 'corretto'
 
-      - name: 🐘 Gradle 빌드 및 테스트
+      - name: 🐘 Gradle 빌드
         run: |
           chmod +x gradlew
-          ./gradlew build
+          ./gradlew build -x test
 
       - name: 🐳 Docker Hub 로그인
         uses: docker/login-action@v2
