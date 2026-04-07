@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.time.Duration;
 import java.util.List;
 
 @Repository
@@ -20,6 +21,7 @@ public class RobberLocationRepository {
 
     public void save(Long gameId, Long participantId, SystemEventData.RobberLocation location) {
         redisTemplate.opsForHash().put(key(gameId), field(participantId), location);
+        redisTemplate.expire(key(gameId), Duration.ofMinutes(10));
     }
 
     public List<SystemEventData.RobberLocation> findAllByGameId(Long gameId) {
