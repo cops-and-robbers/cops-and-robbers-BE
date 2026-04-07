@@ -28,7 +28,7 @@ public class SwaggerConfig {
         ResolvedSchema resolvedSchema = ModelConverters.getInstance()
                 .resolveAsResolvedSchema(new AnnotatedType(ErrorResponse.class));
 
-        Info info = new Info().title("👮 경찰과 도둑 API 🥷").version("1.0.0");
+        Info info = new Info().title("👮 경찰과 도둑 API 🥷").version("1.1.0");
 
         return new OpenAPI()
                 .info(info)
