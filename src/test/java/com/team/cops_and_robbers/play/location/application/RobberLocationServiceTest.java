@@ -9,12 +9,15 @@ import com.team.cops_and_robbers.game.participant.exception.GameParticipantExcep
 import com.team.cops_and_robbers.play.location.application.dto.command.LocationUpdateCommand;
 import com.team.cops_and_robbers.play.location.application.dto.command.RobberLocationsCommand;
 import com.team.cops_and_robbers.play.location.application.dto.result.RobberLocationResult;
+import com.team.cops_and_robbers.play.location.repository.RobberLocationRepository;
+import com.team.cops_and_robbers.play.system.domain.SystemEventData;
 import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +33,9 @@ class RobberLocationServiceTest extends ServiceUnitTest {
 
     @InjectMocks
     private RobberLocationService robberLocationService;
+
+    @Mock
+    private RobberLocationRepository robberLocationRepository;
 
     private static final Long TEST_GAME_ID = 1L;
     private static final Long TEST_USER_ID = 1L;
@@ -62,6 +68,8 @@ class RobberLocationServiceTest extends ServiceUnitTest {
 
             RobberLocationsCommand command = RobberLocationsCommand.of(TEST_GAME_ID, TEST_USER_ID);
             given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(game);
+            given(robberLocationRepository.findAllByGameId(TEST_GAME_ID))
+                    .willReturn(List.of(SystemEventData.RobberLocation.of(TEST_PARTICIPANT_ID, user.getNickname(), 37.5665, 126.9780)));
             given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_USER_ID)).willReturn(robberParticipant);
 
             // when

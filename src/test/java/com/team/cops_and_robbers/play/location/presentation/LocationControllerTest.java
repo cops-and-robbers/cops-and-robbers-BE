@@ -15,9 +15,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.util.ReflectionTestUtils;
-
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
@@ -47,8 +44,7 @@ class LocationControllerTest extends ControllerTest {
         policeParticipant = givenPolice(game, police);
         robberParticipant = givenRobber(game, robber);
 
-        Map<?, ?> locationCache = (Map<?, ?>) ReflectionTestUtils.getField(robberLocationService, "locationCache");
-        locationCache.clear();
+        robberLocationService.clearRobberLocations(game.getId());
     }
 
     @Nested
