@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
-class LocationControllerTest extends ControllerTest {
+class RobberLocationControllerTest extends ControllerTest {
 
     private static final String ROBBER_LOCATION_URL = "/api/games/{gameId}/robbers/location";
 

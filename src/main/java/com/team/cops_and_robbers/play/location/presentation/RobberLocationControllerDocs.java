@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import java.util.List;
 
 @Tag(name = "Location", description = "게임 위치 API")
-public interface LocationControllerDocs {
+public interface RobberLocationControllerDocs {
 
     @Operation(
             summary = "도둑 위치 조회",
