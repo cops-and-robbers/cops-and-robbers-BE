@@ -1,0 +1,22 @@
+#!/bin/sh
+
+if [ "$SKIP" = "1" ]; then
+  echo "⏭️  Swagger 버전 체크를 건너뜁니다. (SKIP=1)"
+  exit 0
+fi
+
+TYPE=$(head -1 "$1" | sed 's/:.*//')
+
+if [ "$TYPE" = "docs" ]; then
+  DOCS_CHANGED=$(git diff --cached --name-only | grep -c "ControllerDocs.java")
+  SWAGGER_CHANGED=$(git diff --cached --name-only | grep -c "SwaggerConfig.java")
+
+  if [ "$DOCS_CHANGED" -gt 0 ] && [ "$SWAGGER_CHANGED" -eq 0 ]; then
+    echo ""
+    echo "❌ ControllerDocs.java가 변경됐는데 SwaggerConfig.java 버전이 업데이트되지 않았습니다."
+    echo "   API 스펙이 변경된 경우 SwaggerConfig.java의 버전을 함께 올려주세요."
+    echo "   스킵이 필요한 경우: SKIP=1 git commit ..."
+    echo ""
+    exit 1
+  fi
+fi
