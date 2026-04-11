@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
+import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_ROBBER;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -96,6 +97,21 @@ class RobberLocationServiceTest extends ServiceUnitTest {
 
             // then
             assertThat(results).isEmpty();
+        }
+
+        @Test
+        void 게임이_진행_중이_아니면_예외가_발생한다() {
+            // given
+            Game waitingGame = WAITING_GAME();
+            setId(waitingGame, TEST_GAME_ID);
+            RobberLocationsCommand command = RobberLocationsCommand.of(TEST_GAME_ID, TEST_USER_ID);
+
+            given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(waitingGame);
+
+            // when & then
+            assertThatThrownBy(() -> robberLocationService.getRobberLocations(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessage(GameException.GAME_NOT_IN_PROGRESS.getDetail());
         }
 
         @Test

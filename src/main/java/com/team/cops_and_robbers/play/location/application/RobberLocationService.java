@@ -1,6 +1,8 @@
 package com.team.cops_and_robbers.play.location.application;
 
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.Team;
@@ -65,7 +67,10 @@ public class RobberLocationService {
     }
 
     public List<RobberLocationResult> getRobberLocations(RobberLocationsCommand command) {
-        gameRepository.getByGameId(command.gameId());
+        Game game = gameRepository.getByGameId(command.gameId());
+        if (!game.isInProgress()) {
+            throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
+        }
         gameParticipantRepository.getByGameIdAndUserId(command.gameId(), command.userId());
 
         return getCurrentRobberLocations(command.gameId()).stream()

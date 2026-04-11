@@ -152,6 +152,23 @@ class RobberLocationControllerTest extends ControllerTest {
         }
 
         @Test
+        void 게임이_진행_중이_아니면_400_BadRequest를_응답한다() {
+            // given
+            Game waitingGame = gameRepository.save(GameFixture.WAITING_GAME());
+            givenPolice(waitingGame, police);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(policeToken)
+                    .when()
+                    .get(ROBBER_LOCATION_URL, waitingGame.getId())
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(400);
+        }
+
+        @Test
         void 인증_토큰_없이_요청하면_401_Unauthorized를_응답한다() {
             // when
             ExtractableResponse<Response> response = unauthenticated()

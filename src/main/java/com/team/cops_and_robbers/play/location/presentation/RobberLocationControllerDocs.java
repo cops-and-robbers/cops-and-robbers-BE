@@ -29,7 +29,7 @@ public interface RobberLocationControllerDocs {
                     """,
             security = @SecurityRequirement(name = "JWT")
     )
-    @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_FOUND"})
+    @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_FOUND", "GAME_NOT_IN_PROGRESS"})
     @ApiErrorCode(value = GameParticipantException.class, codes = {"PARTICIPANT_NOT_FOUND"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공")
