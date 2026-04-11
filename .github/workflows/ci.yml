@@ -38,6 +38,26 @@ jobs:
       - name: 🔄 소스 코드 가져오기
         uses: actions/checkout@v3
 
+      - name: 📋 Swagger 버전 업데이트 검증
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=1
+
+          DOCS_CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '.*ControllerDocs\.java$' || true)
+
+          if [ -n "$DOCS_CHANGED" ]; then
+            SWAGGER_CHANGED=$(git diff origin/${{ github.base_ref }}...HEAD -- src/main/java/com/team/cops_and_robbers/common/swagger/SwaggerConfig.java | grep '^+' | grep -v '^+++' || true)
+            if [ -z "$SWAGGER_CHANGED" ]; then
+              echo "❌ ControllerDocs.java가 변경됐는데 SwaggerConfig.java의 버전이 업데이트되지 않았습니다."
+              echo "변경된 파일:"
+              echo "$DOCS_CHANGED"
+              exit 1
+            fi
+            echo "✅ Swagger 버전이 업데이트되었습니다."
+          else
+            echo "✅ ControllerDocs 변경 없음 — Swagger 버전 검사 생략."
+          fi
+
+
       - name: 📝 테스트용 Firebase 더미 키 생성
         run: |
           mkdir -p src/test/resources

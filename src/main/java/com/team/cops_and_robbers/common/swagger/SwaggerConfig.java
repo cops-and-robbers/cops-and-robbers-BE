@@ -28,7 +28,13 @@ public class SwaggerConfig {
         ResolvedSchema resolvedSchema = ModelConverters.getInstance()
                 .resolveAsResolvedSchema(new AnnotatedType(ErrorResponse.class));
 
-        Info info = new Info().title("👮 경찰과 도둑 API 🥷").version("1.0.0");
+        Info info = new Info()
+                .title("👮 경찰과 도둑 API 🥷")
+                .version("1.2.0")
+                .description("""
+                        ## 업데이트 항목
+                        - 도둑 위치 조회 API 추가 (GET /api/games/{gameId}/robbers/location)
+                        """);
 
         return new OpenAPI()
                 .info(info)
