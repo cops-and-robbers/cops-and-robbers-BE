@@ -11,7 +11,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
+        format_sql: false
 
   flyway:
     enabled: true
@@ -23,9 +23,18 @@ spring:
       port: 6379
       password: ${REDIS_PASSWORD}
 
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: true
+      multiline: true
+      log-format: "\n\t[%(category)] %(executionTime)ms\n\t%(sqlSingleLine)"
+
 logging:
   level:
-    org.hibernate.SQL: debug
+    org.hibernate.SQL: off
+    org.hibernate.type.descriptor.sql: off
+    p6spy: info
 
 firebase:
   key-path: classpath:firebase-key.json
