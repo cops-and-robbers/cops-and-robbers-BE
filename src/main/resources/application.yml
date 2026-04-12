@@ -24,6 +24,9 @@ springdoc:
     persist-authorization: true
     filter: true
 
+encryption:
+  secret-key: ${ENCRYPTION_KEY}
+
 management:
   server:
     port: 9091
