@@ -5,7 +5,10 @@ import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
+import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
+import com.team.cops_and_robbers.play.common.domain.InGameParticipantCache;
+import com.team.cops_and_robbers.play.common.repository.InGameParticipantCacheRepository;
 import com.team.cops_and_robbers.play.location.application.dto.command.LocationUpdateCommand;
 import com.team.cops_and_robbers.play.location.application.dto.command.RobberLocationsCommand;
 import com.team.cops_and_robbers.play.location.application.dto.result.RobberLocationResult;
@@ -38,6 +41,9 @@ class RobberLocationServiceTest extends ServiceUnitTest {
     @Mock
     private RobberLocationRepository robberLocationRepository;
 
+    @Mock
+    private InGameParticipantCacheRepository inGameParticipantCacheRepository;
+
     private static final Long TEST_GAME_ID = 1L;
     private static final Long TEST_USER_ID = 1L;
     private static final Long TEST_PARTICIPANT_ID = 1L;
@@ -63,8 +69,8 @@ class RobberLocationServiceTest extends ServiceUnitTest {
         @Test
         void 위치를_전송한_도둑의_위치가_반환된다() {
             // given
-            given(gameParticipantRepository.findByIdWithUser(TEST_PARTICIPANT_ID))
-                    .willReturn(Optional.of(robberParticipant));
+            given(inGameParticipantCacheRepository.findByParticipantId(TEST_GAME_ID, TEST_PARTICIPANT_ID))
+                    .willReturn(Optional.of(new InGameParticipantCache(user.getNickname(), Team.ROBBER)));
             robberLocationService.updateLocation(new LocationUpdateCommand(TEST_GAME_ID, TEST_PARTICIPANT_ID, 37.5665, 126.9780));
 
             RobberLocationsCommand command = RobberLocationsCommand.of(TEST_GAME_ID, TEST_USER_ID);

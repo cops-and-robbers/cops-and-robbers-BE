@@ -4,6 +4,7 @@ import com.team.cops_and_robbers.common.ControllerTest;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
+import com.team.cops_and_robbers.play.common.application.InGameParticipantCacheService;
 import com.team.cops_and_robbers.play.location.application.RobberLocationService;
 import com.team.cops_and_robbers.play.location.application.dto.command.LocationUpdateCommand;
 import com.team.cops_and_robbers.play.location.presentation.dto.RobberLocationResponse;
@@ -26,6 +27,9 @@ class RobberLocationControllerTest extends ControllerTest {
     @Autowired
     private RobberLocationService robberLocationService;
 
+    @Autowired
+    private InGameParticipantCacheService inGameParticipantCacheService;
+
     private User police;
     private User robber;
     private Game game;
@@ -44,6 +48,8 @@ class RobberLocationControllerTest extends ControllerTest {
         policeParticipant = givenPolice(game, police);
         robberParticipant = givenRobber(game, robber);
 
+        inGameParticipantCacheService.clearCache(game.getId());
+        inGameParticipantCacheService.loadCache(game.getId());
         robberLocationService.clearRobberLocations(game.getId());
     }
 

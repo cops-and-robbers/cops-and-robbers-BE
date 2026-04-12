@@ -4,7 +4,7 @@ import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.history.application.GameResultService;
 import com.team.cops_and_robbers.history.domain.GameResult;
-import com.team.cops_and_robbers.play.location.application.RobberLocationService;
+import com.team.cops_and_robbers.play.system.domain.SystemEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -34,9 +34,6 @@ class GameTerminationServiceTest extends ServiceUnitTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
-    @Mock
-    private RobberLocationService robberLocationService;
-
     private static final Long TEST_GAME_ID = 1L;
 
     @Nested
@@ -44,22 +41,23 @@ class GameTerminationServiceTest extends ServiceUnitTest {
     class EndGameByAllArrested {
 
         @Test
-        void 게임_종료_시_도둑_위치_데이터가_삭제된다() {
+        void 게임_종료_시_게임_종료_이벤트가_발행된다() {
             // given
             Game game = IN_PROGRESS_GAME();
             setId(game, TEST_GAME_ID);
             given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(game);
             given(gameResultService.recordGameResult(any(), any(), any())).willReturn(mock(GameResult.class));
+            given(systemEventFactory.createGameEndEvent(any(), any(), any(), any())).willReturn(mock(SystemEvent.class));
 
             // when
             gameTerminationService.endGameByAllArrested(TEST_GAME_ID);
 
             // then
-            then(robberLocationService).should().clearRobberLocations(TEST_GAME_ID);
+            then(eventPublisher).should().publishEvent(any(SystemEvent.class));
         }
 
         @Test
-        void 이미_종료된_게임은_위치_데이터를_삭제하지_않는다() {
+        void 이미_종료된_게임은_이벤트가_발행되지_않는다() {
             // given
             Game game = FINISHED_GAME();
             setId(game, TEST_GAME_ID);
@@ -69,7 +67,7 @@ class GameTerminationServiceTest extends ServiceUnitTest {
             gameTerminationService.endGameByAllArrested(TEST_GAME_ID);
 
             // then
-            then(robberLocationService).should(never()).clearRobberLocations(any());
+            then(eventPublisher).should(never()).publishEvent(any());
         }
     }
 
@@ -78,22 +76,23 @@ class GameTerminationServiceTest extends ServiceUnitTest {
     class EndGameByTimeOver {
 
         @Test
-        void 게임_종료_시_도둑_위치_데이터가_삭제된다() {
+        void 게임_종료_시_게임_종료_이벤트가_발행된다() {
             // given
             Game game = IN_PROGRESS_GAME();
             setId(game, TEST_GAME_ID);
             given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(game);
             given(gameResultService.recordGameResult(any(), any(), any())).willReturn(mock(GameResult.class));
+            given(systemEventFactory.createGameEndEvent(any(), any(), any(), any())).willReturn(mock(SystemEvent.class));
 
             // when
             gameTerminationService.endGameByTimeOver(TEST_GAME_ID);
 
             // then
-            then(robberLocationService).should().clearRobberLocations(TEST_GAME_ID);
+            then(eventPublisher).should().publishEvent(any(SystemEvent.class));
         }
 
         @Test
-        void 이미_종료된_게임은_위치_데이터를_삭제하지_않는다() {
+        void 이미_종료된_게임은_이벤트가_발행되지_않는다() {
             // given
             Game game = FINISHED_GAME();
             setId(game, TEST_GAME_ID);
@@ -103,7 +102,7 @@ class GameTerminationServiceTest extends ServiceUnitTest {
             gameTerminationService.endGameByTimeOver(TEST_GAME_ID);
 
             // then
-            then(robberLocationService).should(never()).clearRobberLocations(any());
+            then(eventPublisher).should(never()).publishEvent(any());
         }
     }
 }
