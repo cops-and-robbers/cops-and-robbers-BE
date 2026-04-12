@@ -13,15 +13,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RobberLocationRepository {
 
-    private static final String KEY_PREFIX = "robber-location:";
-    private static final String FIELD_PREFIX = "participant:";
+    private static final String KEY_PREFIX = "game:";
+    private static final String KEY_SUFFIX = ":robber-location";
+    private static final Duration TTL = Duration.ofMinutes(10);
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
 
     public void save(Long gameId, Long participantId, SystemEventData.RobberLocation location) {
         redisTemplate.opsForHash().put(key(gameId), field(participantId), location);
-        redisTemplate.expire(key(gameId), Duration.ofMinutes(10));
+        redisTemplate.expire(key(gameId), TTL);
     }
 
     public List<SystemEventData.RobberLocation> findAllByGameId(Long gameId) {
@@ -35,10 +36,10 @@ public class RobberLocationRepository {
     }
 
     private String key(Long gameId) {
-        return KEY_PREFIX + gameId;
+        return KEY_PREFIX + gameId + KEY_SUFFIX;
     }
 
     private String field(Long participantId) {
-        return FIELD_PREFIX + participantId;
+        return String.valueOf(participantId);
     }
 }
