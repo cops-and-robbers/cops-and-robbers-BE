@@ -4,6 +4,7 @@ import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.area.domain.GameArea;
 import com.team.cops_and_robbers.game.area.exception.GameAreaException;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -13,6 +14,8 @@ public interface GameAreaRepository extends JpaRepository <GameArea, Long>{
 
     Optional<GameArea> findByGameId(Long gameId);
 
+    @Modifying(clearAutomatically = true)
+    @Query("delete from GameArea ga where ga.game.id = :gameId")
     void deleteByGameId(Long gameId);
 
     default GameArea getByGameId(Long gameId) {
