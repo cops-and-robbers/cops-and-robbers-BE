@@ -8,7 +8,6 @@ import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepo
 import com.team.cops_and_robbers.history.application.GameResultService;
 import com.team.cops_and_robbers.history.domain.GameEndReason;
 import com.team.cops_and_robbers.history.domain.GameResult;
-import com.team.cops_and_robbers.play.location.application.RobberLocationService;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +25,6 @@ public class GameTerminationService {
     private final ApplicationEventPublisher eventPublisher;
     private final SystemEventFactory systemEventFactory;
     private final GameResultService gameResultService;
-    private final RobberLocationService robberLocationService;
 
     @Transactional
     public void endGameByAllArrested(Long gameId) {
@@ -54,7 +52,6 @@ public class GameTerminationService {
         GameResult result = gameResultService.recordGameResult(game, winner, reason);
         game.resetForNextRound();
         gameParticipantRepository.resetAllParticipantsForNextRound(game.getId(), ParticipantStatus.WAITING);
-        robberLocationService.clearRobberLocations(game.getId());
 
         SystemEvent gameEndEvent = systemEventFactory.createGameEndEvent(
                 game.getId(), winner, reason, result.getId()
