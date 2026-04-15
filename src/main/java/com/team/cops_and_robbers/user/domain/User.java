@@ -90,8 +90,6 @@ public class User extends BaseTimeEntity {
         this.locationTermsAgreed = true;
         this.termsAgreedAt = now;
         this.allowMarketingPush = marketing;
-        if (marketing) {
-            this.marketingAgreedAt = now;
-        }
+        this.marketingAgreedAt = marketing ? now : null;
     }
 }
