@@ -80,7 +80,11 @@ public class User extends BaseTimeEntity {
         return this.nickname.equals(modifiedNickname);
     }
 
-    public void agreeToEssentialTerms() {
+    public boolean hasAgreedRequiredTerms() {
+        return this.locationTermsAgreed && this.termsOfServiceAgreed && this.privacyPolicyAgreed;
+    }
+
+    public void agreeToRequiredTerms() {
         this.termsOfServiceAgreed = true;
         this.privacyPolicyAgreed = true;
         this.locationTermsAgreed = true;
