@@ -59,7 +59,7 @@ class UserControllerTest extends ControllerTest {
             ExtractableResponse<Response> extract = authenticated(accessToken)
                     .body(request)
                     .when()
-                    .post("/api/user/agreements")
+                    .put("/api/user/agreements")
                     .then()
                     .extract();
 
@@ -87,7 +87,7 @@ class UserControllerTest extends ControllerTest {
             ExtractableResponse<Response> extract = authenticated(accessToken)
                     .body(request)
                     .when()
-                    .post("/api/user/agreements")
+                    .put("/api/user/agreements")
                     .then()
                     .extract();
 
@@ -111,7 +111,7 @@ class UserControllerTest extends ControllerTest {
             ExtractableResponse<Response> extract = authenticated(accessToken)
                     .body(request)
                     .when()
-                    .post("/api/user/agreements")
+                    .put("/api/user/agreements")
                     .then()
                     .extract();
 

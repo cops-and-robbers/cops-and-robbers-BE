@@ -91,7 +91,7 @@ public class UserController implements UserControllerDocs {
     /**
      * 7. 사용자 이용 약관 동의 여부를 업데이트 합니다.
      */
-    @PostMapping("/agreements")
+    @PutMapping("/agreements")
     public ResponseEntity<Void> updateTerms(
             @AuthUser LoginUser loginUser,
             @RequestBody @Valid AgreementRequest request
