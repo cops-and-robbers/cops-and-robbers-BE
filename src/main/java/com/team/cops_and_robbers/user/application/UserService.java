@@ -12,6 +12,7 @@ import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
+import com.team.cops_and_robbers.user.application.dto.command.AgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
 import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.User;
@@ -115,5 +116,15 @@ public class UserService {
             }
             throw new InfrastructureException(AuthException.FIREBASE_SERVER_ERROR);
         }
+    }
+
+    @Transactional
+    public void updateTermsAgreement(AgreementCommand command) {
+        User user = userRepository.getByUserId(command.userId());
+
+        if (!command.hasRequiredTermsAgreed()) {
+            throw new ApplicationException(UserException.REQUIRED_TERMS_NOT_AGREED);
+        }
+        user.agree(command.marketing(), LocalDateTime.now(clock));
     }
 }
