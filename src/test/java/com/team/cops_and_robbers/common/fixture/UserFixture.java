@@ -14,6 +14,9 @@ public class UserFixture {
                 .nickname("testUser")
                 .allowGamePush(true)
                 .allowMarketingPush(false)
+                .termsOfServiceAgreed(true)
+                .privacyPolicyAgreed(true)
+                .locationTermsAgreed(true)
                 .build();
     }
 
@@ -24,6 +27,9 @@ public class UserFixture {
                 .nickname(nickname)
                 .allowGamePush(true)
                 .allowMarketingPush(false)
+                .termsOfServiceAgreed(true)
+                .privacyPolicyAgreed(true)
+                .locationTermsAgreed(true)
                 .build();
     }
 
@@ -34,6 +40,9 @@ public class UserFixture {
                 .nickname("kakaoUser")
                 .allowGamePush(true)
                 .allowMarketingPush(false)
+                .termsOfServiceAgreed(true)
+                .privacyPolicyAgreed(true)
+                .locationTermsAgreed(true)
                 .build();
     }
 
@@ -44,6 +53,9 @@ public class UserFixture {
                 .nickname("googleUser")
                 .allowGamePush(true)
                 .allowMarketingPush(false)
+                .termsOfServiceAgreed(true)
+                .privacyPolicyAgreed(true)
+                .locationTermsAgreed(true)
                 .build();
     }
 
@@ -54,6 +66,9 @@ public class UserFixture {
                 .nickname("appleUser")
                 .allowGamePush(true)
                 .allowMarketingPush(false)
+                .termsOfServiceAgreed(true)
+                .privacyPolicyAgreed(true)
+                .locationTermsAgreed(true)
                 .build();
     }
 }
