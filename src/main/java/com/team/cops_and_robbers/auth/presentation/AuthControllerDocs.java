@@ -41,7 +41,8 @@ public interface AuthControllerDocs {
                                                     "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzY4NDk1MDA1LCJleHAiOjE3Njg0OTg2MDV9...",
                                                     "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzY4NDk1MDA1LCJleHAiOjE3Njk3MDQ2MDV9..."
                                                 },
-                                                "isNewUser": false
+                                                "isNewUser": false,
+                                                "requiresAgreement": true
                                             }
                                             """
                             )
@@ -51,7 +52,7 @@ public interface AuthControllerDocs {
                     content = @Content(
                             schema = @Schema(implementation = LoginResponse.class),
                             examples = @ExampleObject(
-                                    name = "신규 회원 가입 성공 예시",
+                                    name = "신규 회원 가입 성공 예시 (신규 회원은 항상 필수 이용 약관에 동의를 하지 않은 상태를 갖는다)",
                                     value = """
                                             {
                                                 "userId": 2,
@@ -60,7 +61,8 @@ public interface AuthControllerDocs {
                                                     "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzY4NDk1MDEwLCJleHAiOjE3Njg0OTg2MTB9...",
                                                     "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzY4NDk1MDEwLCJleHAiOjE3Njk3MDQ2MTB9..."
                                                 },
-                                                "isNewUser": true
+                                                "isNewUser": true,
+                                                "requiresAgreement": false
                                             }
                                             """
                             )
