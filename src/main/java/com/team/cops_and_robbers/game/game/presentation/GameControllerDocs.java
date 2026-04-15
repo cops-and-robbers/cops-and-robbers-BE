@@ -14,6 +14,7 @@ import com.team.cops_and_robbers.game.game.presentation.dto.response.GameCreateR
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameInfoResponse;
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameSettingsUpdateResponse;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
+import com.team.cops_and_robbers.user.exception.UserException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -36,6 +37,7 @@ public interface GameControllerDocs {
             security = @SecurityRequirement(name = "JWT")
     )
     @ApiErrorCode(value = GameAreaException.class, codes = {"INVALID_JAIL_RADIUS", "JAIL_OUTSIDE_PLAYGROUND"})
+    @ApiErrorCode(value = UserException.class, codes = {"REQUIRED_TERMS_NOT_AGREED"})
     @ApiErrorCode(value = GameException.class, codes = {"INVALID_LOCATION_INTERVAL", "INVALID_POLICE_WAIT_TIME"})
     @ApiErrorCode(value = GameParticipantException.class, codes = {"ALREADY_PARTICIPATING"})
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})

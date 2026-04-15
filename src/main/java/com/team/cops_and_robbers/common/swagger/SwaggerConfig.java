@@ -36,6 +36,8 @@ public class SwaggerConfig {
                         - (신규) 이용 약관 동의 API 추가 (POST /api/user/agreements)
                         - (신규) 이용 약관 동의 여부 조회 API 추가 (GET /api/auth/agreements)
                         - (수정) 로그인 API 필수 이용약관 동의 여부 응답 필드 추가 (POST /api/auth/login)
+                        - (수정) 게임 방 생성 API 호스트 필수 이용약관 동의 여부 검증 추가 (POST /api/games)
+                        - (수정) 게임 방 참여 API 유저 필수 이용약관 동의 여부 검증 추가 (POST /api/games/join)
                         """);
 
         return new OpenAPI()
