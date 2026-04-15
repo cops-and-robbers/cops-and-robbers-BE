@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(
         name = "users",
@@ -44,6 +46,19 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean allowMarketingPush;
 
+    @Column(nullable = false)
+    private boolean termsOfServiceAgreed;
+
+    @Column(nullable = false)
+    private boolean privacyPolicyAgreed;
+
+    @Column(nullable = false)
+    private boolean locationTermsAgreed;
+
+    private LocalDateTime termsAgreedAt;
+
+    private LocalDateTime marketingAgreedAt;
+
     public static User signUp(String socialId, SocialType socialType, String nickname) {
         return User.builder()
                 .socialId(socialId)
@@ -51,6 +66,9 @@ public class User extends BaseTimeEntity {
                 .nickname(nickname)
                 .allowGamePush(true)
                 .allowMarketingPush(false)
+                .termsOfServiceAgreed(false)
+                .privacyPolicyAgreed(false)
+                .locationTermsAgreed(false)
                 .build();
     }
 
@@ -60,5 +78,15 @@ public class User extends BaseTimeEntity {
 
     public boolean hasSameNickname(String modifiedNickname) {
         return this.nickname.equals(modifiedNickname);
+    }
+
+    public void agreeToEssentialTerms() {
+        this.termsOfServiceAgreed = true;
+        this.privacyPolicyAgreed = true;
+        this.locationTermsAgreed = true;
+    }
+
+    public void updateMarketingConsent(boolean isAgreed) {
+        this.allowMarketingPush = isAgreed;
     }
 }
