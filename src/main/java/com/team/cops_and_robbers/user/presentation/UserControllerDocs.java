@@ -6,10 +6,7 @@ import com.team.cops_and_robbers.common.swagger.ApiErrorCode;
 import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.presentation.dto.request.AgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
-import com.team.cops_and_robbers.user.presentation.dto.response.DeleteAccountResponse;
-import com.team.cops_and_robbers.user.presentation.dto.response.MyPageResponse;
-import com.team.cops_and_robbers.user.presentation.dto.response.NicknameCheckResponse;
-import com.team.cops_and_robbers.user.presentation.dto.response.UserGameInfoResponse;
+import com.team.cops_and_robbers.user.presentation.dto.response.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -74,6 +71,17 @@ public interface UserControllerDocs {
             @ApiResponse(responseCode = "200", description = "탈퇴 성공")
     })
     ResponseEntity<DeleteAccountResponse> deleteAccount(@Parameter(hidden = true) LoginUser loginUser);
+
+
+    @Operation(summary = "약관 동의 현황 조회",
+            description = "로그인한 사용자의 약관 동의 현황을 조회합니다."
+    )
+    @ApiErrorCode(value = UserException.class, codes = {"USER_NOT_FOUND"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
+    ResponseEntity<AgreementResponse> getAgreements(@Parameter(hidden = true) LoginUser loginUser);
+
 
     @Operation(summary = "약관 동의",
             description = "이용약관, 개인정보처리방침, 위치정보 이용약관(필수), 마케팅 수신 동의(선택)를 저장합니다. 필수 동의 약관들은 모두 true 여야 합니다."
