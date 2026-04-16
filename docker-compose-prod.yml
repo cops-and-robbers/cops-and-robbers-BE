@@ -32,6 +32,7 @@ services:
       REFRESH_SECRET_KEY: ${REFRESH_SECRET_KEY}
       ACCESS_EXPIRATION: ${ACCESS_EXPIRATION}
       REFRESH_EXPIRATION: ${REFRESH_EXPIRATION}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
 
     volumes:
       - ./firebase-key.json:/app/firebase-key.json

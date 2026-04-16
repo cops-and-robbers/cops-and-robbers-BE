@@ -38,3 +38,6 @@ logging:
 firebase:
   key-path: classpath:dummy-firebase-key.json
 
+encryption:
+  secret-key: "ZYmgBIo7U4s58oc+qDmA+MTg04gBlkOMNmjgl1wlw9A="
+

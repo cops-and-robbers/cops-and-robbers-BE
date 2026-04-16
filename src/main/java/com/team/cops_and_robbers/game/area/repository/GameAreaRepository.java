@@ -18,6 +18,7 @@ public interface GameAreaRepository extends JpaRepository <GameArea, Long>{
     @Query("delete from GameArea ga where ga.game.id = :gameId")
     void deleteByGameId(@Param("gameId") Long gameId);
 
+
     default GameArea getByGameId(Long gameId) {
         return findByGameId(gameId)
                 .orElseThrow(() -> new ApplicationException(GameAreaException.GAME_AREA_NOT_FOUND));

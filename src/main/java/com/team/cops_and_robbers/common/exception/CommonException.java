@@ -19,7 +19,10 @@ public enum CommonException implements ExceptionCode {
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "지원하지 않는 메소드", "해당 엔드 포인트는 서버에서 지원하지 않는 HTTP 메소드 입니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "알 수 없는 오류", "서버 내부에 알 수 없는 오류가 발생했습니다. 관리자에게 문의 하세요."),
     FIREBASE_INIT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "파이어베이스 SDK 오류", "파이어베이스 SDK 초기화 중 알 수 없는 오류가 발생했습니다."),
-    FIREBASE_CONFIG_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "설정 파일 누락", "지정된 경로에서 파이어베이스 서비스 계정 키(JSON)를 찾을 수 없습니다.");
+    FIREBASE_CONFIG_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "설정 파일 누락", "지정된 경로에서 파이어베이스 서비스 계정 키(JSON)를 찾을 수 없습니다."),
+    ENCRYPTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "암호화 실패", "데이터 암호화 중 오류가 발생했습니다."),
+    DECRYPTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "복호화 실패", "데이터 복호화 중 오류가 발생했습니다."),
+    INVALID_ENCRYPTION_KEY(HttpStatus.INTERNAL_SERVER_ERROR, "잘못된 암호화 키", "암호화 키는 256bit(32바이트)여야 합니다.");
 
     private final HttpStatus httpStatus;
     private final String title;

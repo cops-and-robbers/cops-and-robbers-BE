@@ -14,6 +14,9 @@
             <appender-ref ref="ERROR_CONSOLE"/>
         </root>
         <logger name="com.team.cops_and_robbers" level="INFO"/>
+        <logger name="p6spy" level="INFO" additivity="false">
+            <appender-ref ref="APP_CONSOLE"/>
+        </logger>
     </springProfile>
 
     <!-- prod 환경: 파일 + 콘솔 -->

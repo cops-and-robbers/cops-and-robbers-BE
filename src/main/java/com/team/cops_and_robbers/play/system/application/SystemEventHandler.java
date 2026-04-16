@@ -1,5 +1,7 @@
 package com.team.cops_and_robbers.play.system.application;
 
+import com.team.cops_and_robbers.play.common.application.InGameParticipantCacheService;
+import com.team.cops_and_robbers.play.location.application.RobberLocationService;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
 import com.team.cops_and_robbers.play.system.domain.SystemEventType;
 import lombok.RequiredArgsConstructor;
@@ -13,11 +15,16 @@ public class SystemEventHandler {
 
     private final SystemPublisher systemPublisher;
     private final GameSchedulerService gameSchedulerService;
+    private final RobberLocationService robberLocationService;
+    private final InGameParticipantCacheService inGameParticipantCacheService;
+
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleSystemEvent(SystemEvent event) {
         if (event.type() == SystemEventType.GAME_OVER) {
             gameSchedulerService.cancelSchedule(event.gameId());
+            robberLocationService.clearRobberLocations(event.gameId());
+            inGameParticipantCacheService.clearCache(event.gameId());
         }
         systemPublisher.publish(event);
     }
