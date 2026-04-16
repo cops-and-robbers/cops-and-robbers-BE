@@ -125,6 +125,6 @@ public class UserService {
         if (!command.hasRequiredTermsAgreed()) {
             throw new ApplicationException(UserException.REQUIRED_TERMS_NOT_AGREED);
         }
-        user.agree(command.marketing(), LocalDateTime.now(clock));
+        user.agreeTerms(command.marketing(), LocalDateTime.now(clock));
     }
 }

@@ -84,12 +84,26 @@ public class User extends BaseTimeEntity {
         return this.locationTermsAgreed && this.termsOfServiceAgreed && this.privacyPolicyAgreed;
     }
 
-    public void agree(boolean marketing, LocalDateTime now) {
+    public void agreeTerms(boolean marketing, LocalDateTime now) {
+        agreeRequiredTerms(now);
+        updateMarketingPush(marketing, now);
+    }
+
+    private void updateMarketingPush(boolean marketing, LocalDateTime now) {
+        this.allowMarketingPush = marketing;
+        if (!marketing) {
+            this.marketingAgreedAt = null;
+        } else if (this.marketingAgreedAt == null) {
+            this.marketingAgreedAt = now;
+        }
+    }
+
+    private void agreeRequiredTerms(LocalDateTime now) {
         this.termsOfServiceAgreed = true;
         this.privacyPolicyAgreed = true;
         this.locationTermsAgreed = true;
-        this.termsAgreedAt = now;
-        this.allowMarketingPush = marketing;
-        this.marketingAgreedAt = marketing ? now : null;
+        if (this.termsAgreedAt == null) {
+            this.termsAgreedAt = now;
+        }
     }
 }
