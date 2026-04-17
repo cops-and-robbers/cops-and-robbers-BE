@@ -1,6 +1,5 @@
 package com.team.cops_and_robbers.play.system.presentation;
 
-import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.common.exception.CommonException;
 import com.team.cops_and_robbers.common.swagger.ApiErrorCode;
@@ -12,7 +11,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -31,8 +29,7 @@ public interface SystemControllerDocs {
                     - 도둑만 체포 대상이 될 수 있음
                     - 이미 체포된 도둑은 체포 불가
                     - 같은 게임 내 참가자끼리만 상호작용 가능
-                    """,
-            security = @SecurityRequirement(name = "JWT")
+                    """
     )
     @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_IN_PROGRESS", "GAME_NOT_FOUND"})
     @ApiErrorCode(value = GameParticipantException.class, codes = {
@@ -44,7 +41,7 @@ public interface SystemControllerDocs {
             @ApiResponse(responseCode = "200", description = "체포 성공")
     })
     ResponseEntity<ArrestResponse> arrestRobber(
-            @Parameter(hidden = true) @AuthUser LoginUser loginUser,
+            @Parameter(hidden = true) LoginUser loginUser,
             @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId,
             @RequestBody @Valid ArrestRequest request
     );
@@ -56,8 +53,7 @@ public interface SystemControllerDocs {
 
                     - 도둑만 요청 가능
                     - 수감된 상태(JAILED)에서만 탈옥 가능
-                    """,
-            security = @SecurityRequirement(name = "JWT")
+                    """
     )
     @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_IN_PROGRESS", "GAME_NOT_FOUND"})
     @ApiErrorCode(value = GameParticipantException.class, codes = {"NOT_JAILED", "PARTICIPANT_NOT_FOUND"})
@@ -66,7 +62,7 @@ public interface SystemControllerDocs {
             @ApiResponse(responseCode = "204", description = "탈옥 성공")
     })
     ResponseEntity<Void> escapeFromPrison(
-            @Parameter(hidden = true) @AuthUser LoginUser loginUser,
+            @Parameter(hidden = true) LoginUser loginUser,
             @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId
     );
 }
