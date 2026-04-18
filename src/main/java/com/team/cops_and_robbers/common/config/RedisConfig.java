@@ -12,6 +12,7 @@ import com.team.cops_and_robbers.play.system.application.SystemSubscriber;
 import lombok.RequiredArgsConstructor;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
+import org.redisson.codec.JsonJacksonCodec;
 import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
 import org.redisson.spring.data.connection.RedissonConnectionFactory;
@@ -39,6 +40,8 @@ public class RedisConfig {
     @Bean(destroyMethod = "shutdown")
     public RedissonClient redissonClient() {
         Config config = new Config();
+        config.setCodec(new JsonJacksonCodec());
+
         String address = redisProperties.getRedissonAddress();
         SingleServerConfig serverConfig = config.useSingleServer().setAddress(address);
         String password = redisProperties.password();
