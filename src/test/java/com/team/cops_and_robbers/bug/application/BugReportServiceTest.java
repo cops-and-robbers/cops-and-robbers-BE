@@ -1,7 +1,6 @@
 package com.team.cops_and_robbers.bug.application;
 
 import com.team.cops_and_robbers.bug.application.dto.command.BugReportCommand;
-import com.team.cops_and_robbers.bug.repository.BugReportRepository;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.infrastructure.discord.DiscordNotifier;
 import com.team.cops_and_robbers.user.domain.User;
@@ -20,9 +19,6 @@ class BugReportServiceTest extends ServiceUnitTest {
 
     @InjectMocks
     private BugReportService bugReportService;
-
-    @Mock
-    private BugReportRepository bugReportRepository;
 
     @Mock
     private DiscordNotifier discordNotifier;
