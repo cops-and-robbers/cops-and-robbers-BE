@@ -1,5 +1,6 @@
 package com.team.cops_and_robbers.play.system.application;
 
+import com.team.cops_and_robbers.play.notification.application.GameFcmNotifier;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
 import com.team.cops_and_robbers.play.system.domain.SystemEventType;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ public class SystemEventHandler {
 
     private final SystemPublisher systemPublisher;
     private final GameSchedulerService gameSchedulerService;
+    private final GameFcmNotifier gameFcmNotifier;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleSystemEvent(SystemEvent event) {
@@ -20,5 +22,6 @@ public class SystemEventHandler {
             gameSchedulerService.cancelSchedule(event.gameId());
         }
         systemPublisher.publish(event);
+        gameFcmNotifier.notifySystemEvent(event);
     }
 }
