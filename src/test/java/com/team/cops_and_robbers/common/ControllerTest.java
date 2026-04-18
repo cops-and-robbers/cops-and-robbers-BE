@@ -123,10 +123,6 @@ public abstract class ControllerTest {
         return gameParticipantRepository.save(GameParticipantFixture.ALIVE_ROBBER(game, user));
     }
 
-    protected GameParticipant givenWaitingPolice(Game game, User user) {
-        return gameParticipantRepository.save(GameParticipantFixture.WAITING_POLICE(game, user));
-    }
-
     protected RequestSpecification authenticated(String token) {
         return given()
                 .contentType(ContentType.JSON)

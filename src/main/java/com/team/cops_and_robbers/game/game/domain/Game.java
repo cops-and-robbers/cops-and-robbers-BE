@@ -53,6 +53,10 @@ public class Game extends BaseTimeEntity {
 
     private LocalDateTime lastEndedAt;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer arrestCount = 0;
+
     public boolean isWaiting() {
         return this.status == GameStatus.WAITING;
     }
@@ -69,6 +73,7 @@ public class Game extends BaseTimeEntity {
     public void resetForNextRound() {
         this.status = GameStatus.WAITING;
         this.lastEndedAt = LocalDateTime.now();
+        this.arrestCount = 0;
     }
 
     public static Game createGame(String inviteCode, GameCreateCommand command) {
@@ -80,6 +85,10 @@ public class Game extends BaseTimeEntity {
                 .policeWaitMinutes(command.policeWaitMinutes())
                 .maxParticipants(command.maxParticipants())
                 .build();
+    }
+
+    public void incrementArrestCount() {
+        this.arrestCount++;
     }
 
     public void updateSettings(

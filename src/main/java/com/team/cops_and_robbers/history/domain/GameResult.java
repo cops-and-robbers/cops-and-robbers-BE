@@ -47,6 +47,9 @@ public class GameResult extends BaseTimeEntity {
     private Integer arrestedRobberCount;
 
     @Column(nullable = false)
+    private Integer totalArrestCount;
+
+    @Column(nullable = false)
     private Integer durationSeconds;
 
     @Column(nullable = false, columnDefinition = "GEOMETRY(POINT, 4326)")
@@ -61,7 +64,8 @@ public class GameResult extends BaseTimeEntity {
             GameEndReason endReason,
             Integer totalPolice,
             Integer totalRobber,
-            Integer capturedRobber,
+            Integer jailedAtEnd,
+            Integer totalArrestCount,
             Point center,
             Integer radius
     ) {
@@ -75,7 +79,8 @@ public class GameResult extends BaseTimeEntity {
                 .endReason(endReason)
                 .totalPoliceCount(totalPolice)
                 .totalRobberCount(totalRobber)
-                .arrestedRobberCount(capturedRobber)
+                .arrestedRobberCount(jailedAtEnd)
+                .totalArrestCount(totalArrestCount)
                 .durationSeconds(durationSeconds)
                 .playgroundCenter(center)
                 .playgroundRadiusInMeters(radius)

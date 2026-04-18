@@ -14,7 +14,7 @@ public record GameResultResult(
         return new GameResultResult(
                 gameResult.getWinnerTeam(),
                 gameResult.getDurationSeconds(),
-                gameResult.getArrestedRobberCount(),
+                gameResult.getTotalArrestCount(),
                 remaining
         );
     }

@@ -43,6 +43,7 @@ public class SystemService {
         validateArrest(game, police, robber);
 
         robber.updateStatus(ParticipantStatus.JAILED);
+        game.incrementArrestCount();
 
         int remainingThieves = gameParticipantRepository.countByGameIdAndRobberStatus(
                 game.getId(), ParticipantStatus.ALIVE

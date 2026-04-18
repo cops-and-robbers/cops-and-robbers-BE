@@ -21,6 +21,7 @@ public class GameResultFixture {
                 .totalPoliceCount(2)
                 .totalRobberCount(3)
                 .arrestedRobberCount(3)
+                .totalArrestCount(5)
                 .durationSeconds(300)
                 .playgroundCenter(center)
                 .playgroundRadiusInMeters(500)
