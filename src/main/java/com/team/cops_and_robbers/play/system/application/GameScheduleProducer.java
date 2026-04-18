@@ -1,5 +1,6 @@
 package com.team.cops_and_robbers.play.system.application;
 
+import com.team.cops_and_robbers.common.constant.RedisQueue;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.play.system.domain.GameScheduleEvent;
@@ -21,6 +22,8 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class GameScheduleProducer {
 
+    private static final String QUEUE_NAME = RedisQueue.GAME_SCHEDULE.getName();
+
     private final Clock clock;
     private final RedissonClient redissonClient;
     private final GameRepository gameRepository;
@@ -35,7 +38,7 @@ public class GameScheduleProducer {
         Game game = gameRepository.getByGameId(gameId);
         log.info("[Producer] Scheduling events for newly started game. GameId: {}", game.getId());
 
-        RBlockingQueue<GameScheduleEvent> queue = redissonClient.getBlockingQueue(GameEventConsumer.QUEUE_NAME);
+        RBlockingQueue<GameScheduleEvent> queue = redissonClient.getBlockingQueue(QUEUE_NAME);
         RDelayedQueue<GameScheduleEvent> delayedQueue = redissonClient.getDelayedQueue(queue);
 
         LocalDateTime now = LocalDateTime.now(clock);
@@ -53,29 +56,29 @@ public class GameScheduleProducer {
             return;
         }
         delayedQueue.offer(
-                new GameScheduleEvent(game.getId(), GameScheduleEventType.POLICE_MOVE_START),
+                new GameScheduleEvent(game.getId(), GameScheduleEventType.POLICE_MOVE_START, game.getRoundNumber()),
                 delayMs, TimeUnit.MILLISECONDS
         );
         log.info("[Producer] POLICE_MOVE_START enqueued in {}ms for GameId: {}", delayMs, game.getId());
     }
 
+    /**
+     * 첫 번째 REVEAL만 등록한다.
+     * 이후 반복은 GameEventConsumer가 실행 후 재등록한다.
+     * 게임 조기 종료 시 재등록이 멈추므로 zombie 이벤트가 남지 않는다.
+     */
     private void scheduleRobberLocationReveals(RDelayedQueue<GameScheduleEvent> delayedQueue, Game game, LocalDateTime now) {
-        LocalDateTime revealTime = firstRobberRevealTime(game);
-        LocalDateTime gameOverTime = gameOverTime(game);
-        int count = 0;
+        LocalDateTime firstRevealTime = firstRobberRevealTime(game);
+        long delayMs = delayMillis(now, firstRevealTime);
 
-        while (revealTime.isBefore(gameOverTime)) {
-            long delayMs = delayMillis(now, revealTime);
-            if (delayMs > 0) {
-                delayedQueue.offer(
-                        new GameScheduleEvent(game.getId(), GameScheduleEventType.ROBBER_LOCATION_REVEAL),
-                        delayMs, TimeUnit.MILLISECONDS
-                );
-                count++;
-            }
-            revealTime = revealTime.plusMinutes(game.getLocationRevealIntervalMinutes());
+        if (delayMs <= 0) {
+            return;
         }
-        log.info("[Producer] {} ROBBER_LOCATION_REVEAL event(s) enqueued for GameId: {}", count, game.getId());
+        delayedQueue.offer(
+                new GameScheduleEvent(game.getId(), GameScheduleEventType.ROBBER_LOCATION_REVEAL, game.getRoundNumber()),
+                delayMs, TimeUnit.MILLISECONDS
+        );
+        log.info("[Producer] First ROBBER_LOCATION_REVEAL enqueued in {}ms for GameId: {}", delayMs, game.getId());
     }
 
     private void scheduleGameOver(RDelayedQueue<GameScheduleEvent> delayedQueue, Game game, LocalDateTime now) {
@@ -88,7 +91,7 @@ public class GameScheduleProducer {
         }
 
         delayedQueue.offer(
-                new GameScheduleEvent(game.getId(), GameScheduleEventType.GAME_OVER),
+                new GameScheduleEvent(game.getId(), GameScheduleEventType.GAME_OVER, game.getRoundNumber()),
                 delayMs, TimeUnit.MILLISECONDS
         );
         log.info("[Producer] GAME_OVER enqueued in {}ms for GameId: {}", delayMs, game.getId());

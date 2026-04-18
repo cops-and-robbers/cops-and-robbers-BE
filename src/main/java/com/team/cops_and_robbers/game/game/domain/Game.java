@@ -57,6 +57,9 @@ public class Game extends BaseTimeEntity {
     @Builder.Default
     private Integer totalArrestCount = 0;
 
+    @Column(nullable = false)
+    private int roundNumber = 0;
+
     public boolean isWaiting() {
         return this.status == GameStatus.WAITING;
     }
@@ -68,6 +71,7 @@ public class Game extends BaseTimeEntity {
     public void startGame(LocalDateTime startTime) {
         this.startedAt = startTime;
         this.status = GameStatus.IN_PROGRESS;
+        this.roundNumber++;
     }
 
     public void resetForNextRound() {
@@ -101,5 +105,9 @@ public class Game extends BaseTimeEntity {
         this.locationRevealIntervalMinutes = locationRevealIntervalMinutes;
         this.policeWaitMinutes = policeWaitMinutes;
         this.maxParticipants = maxParticipants;
+    }
+
+    public boolean isSameRound(int eventRound) {
+        return this.roundNumber == eventRound;
     }
 }
