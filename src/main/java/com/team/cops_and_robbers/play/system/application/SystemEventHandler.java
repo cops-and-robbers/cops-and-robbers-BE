@@ -1,5 +1,6 @@
 package com.team.cops_and_robbers.play.system.application;
 
+import com.team.cops_and_robbers.play.notification.application.GameFcmNotifier;
 import com.team.cops_and_robbers.play.common.application.InGameParticipantCacheService;
 import com.team.cops_and_robbers.play.location.application.RobberLocationService;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
@@ -17,6 +18,7 @@ public class SystemEventHandler {
     private final RobberLocationService robberLocationService;
     private final InGameParticipantCacheService inGameParticipantCacheService;
 
+    private final GameFcmNotifier gameFcmNotifier;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleSystemEvent(SystemEvent event) {
@@ -25,5 +27,6 @@ public class SystemEventHandler {
             inGameParticipantCacheService.clearCache(event.gameId());
         }
         systemPublisher.publish(event);
+        gameFcmNotifier.notifySystemEvent(event);
     }
 }
