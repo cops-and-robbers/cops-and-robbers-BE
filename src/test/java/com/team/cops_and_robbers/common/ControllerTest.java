@@ -8,6 +8,7 @@ import com.team.cops_and_robbers.auth.infrastructure.social.strategy.GoogleLogin
 import com.team.cops_and_robbers.auth.infrastructure.social.strategy.KakaoLoginStrategy;
 import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
+import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.common.fixture.UserDeviceFixture;
 import com.team.cops_and_robbers.common.fixture.UserFixture;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
@@ -121,6 +122,12 @@ public abstract class ControllerTest {
 
     protected GameParticipant givenRobber(Game game, User user) {
         return gameParticipantRepository.save(GameParticipantFixture.ALIVE_ROBBER(game, user));
+    }
+
+    protected GameParticipant givenWaitingPolice(Game game, User user) {
+        GameParticipant participant = gameParticipantRepository.getByGameIdAndUserId(game.getId(), user.getId());
+        participant.updateStatus(ParticipantStatus.POLICE_WAITING);
+        return gameParticipantRepository.save(participant);
     }
 
     protected RequestSpecification authenticated(String token) {
