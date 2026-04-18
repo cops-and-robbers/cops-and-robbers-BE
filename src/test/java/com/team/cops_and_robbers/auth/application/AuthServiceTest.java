@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.auth.application;
 
 import com.team.cops_and_robbers.auth.application.dto.command.LoginCommand;
 import com.team.cops_and_robbers.auth.application.dto.result.LoginResult;
+import com.team.cops_and_robbers.auth.application.event.UserFcmTokenUpdatedEvent;
 import com.team.cops_and_robbers.auth.domain.Tokens;
 import com.team.cops_and_robbers.auth.exception.AuthException;
 import com.team.cops_and_robbers.auth.infrastructure.social.strategy.SocialLoginStrategy;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Map;
@@ -40,6 +42,8 @@ class AuthServiceTest extends ServiceUnitTest {
     private RandomNicknameGenerator randomNicknameGenerator;
     @Mock
     private SocialLoginStrategy socialLoginStrategy;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @BeforeEach
     void setUp() {
@@ -81,12 +85,13 @@ class AuthServiceTest extends ServiceUnitTest {
             });
             verify(userRepository).save(any(User.class));
             verify(userDeviceRepository).save(any(UserDevice.class));
+            verify(eventPublisher, never()).publishEvent(any());
         }
 
         @Test
-        void 기존_사용자라면_정보를_업데이트하고_로그인을_진행한다() {
+        void 기존_사용자라면_FCM_토큰_변경시_이벤트를_발행하고_기기_정보_업데이트_후_로그인을_진행한다() {
             // given
-            LoginCommand command = createLoginCommand(SocialType.KAKAO);
+            LoginCommand command = new LoginCommand(SocialType.KAKAO, "token", "new_fcm_token", DeviceType.IOS, "new_device_id");
             String socialId = "social_123";
             User existingUser = User.signUp(socialId, SocialType.KAKAO, "old_nick");
             setId(existingUser, 1L);
@@ -112,7 +117,33 @@ class AuthServiceTest extends ServiceUnitTest {
 
             // 기존 기기 정보가 새로운 정보로 업데이트(reconnect) 되었는지 검증
             verify(existingDevice).reconnect(command.deviceId(), command.deviceType(), command.fcmToken());
-            then(userDeviceRepository).should(never()).save(any(UserDevice.class));
+            verify(eventPublisher).publishEvent(any(UserFcmTokenUpdatedEvent.class)); // 이벤트 정상 발행 검증
+        }
+
+        @Test
+        void 기존_사용자라면_FCM_토큰이_동일할때_이벤트_발행없이_기기_정보만_업데이트_후_로그인을_진행한다() {
+            // given
+            LoginCommand command = new LoginCommand(SocialType.KAKAO, "token", "same_fcm_token", DeviceType.IOS, "new_device_id");
+            String socialId = "social_123";
+            User existingUser = User.signUp(socialId, SocialType.KAKAO, "old_nick");
+            setId(existingUser, 1L);
+
+            UserDevice existingDevice = spy(UserDevice.connect(existingUser, "old_device", DeviceType.IOS, "same_fcm_token"));
+
+            when(socialLoginStrategy.validateAndGetSocialId(anyString())).thenReturn(socialId);
+            when(userRepository.findBySocialIdAndSocialType(socialId, SocialType.KAKAO))
+                    .thenReturn(Optional.of(existingUser));
+            when(userDeviceRepository.findByUser(existingUser)).thenReturn(Optional.of(existingDevice));
+
+            when(jwtTokenProvider.createAccessToken(any())).thenReturn("access");
+            when(jwtTokenProvider.createRefreshToken(any())).thenReturn("refresh");
+
+            // when
+            authService.login(command);
+
+            // then
+            verify(existingDevice).reconnect(command.deviceId(), command.deviceType(), command.fcmToken());
+            verify(eventPublisher, never()).publishEvent(any(UserFcmTokenUpdatedEvent.class));
         }
     }
 
