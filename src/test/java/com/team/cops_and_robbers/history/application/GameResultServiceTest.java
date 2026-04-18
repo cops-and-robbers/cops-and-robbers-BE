@@ -45,7 +45,7 @@ class GameResultServiceTest extends ServiceUnitTest {
             // then
             assertThat(result.winnerTeam()).isEqualTo(gameResult.getWinnerTeam());
             assertThat(result.durationSeconds()).isEqualTo(gameResult.getDurationSeconds());
-            assertThat(result.arrestedRobberCount()).isEqualTo(gameResult.getTotalArrestCount());
+            assertThat(result.totalArrestCount()).isEqualTo(gameResult.getTotalArrestCount());
             assertThat(result.remainingRobberCount())
                     .isEqualTo(gameResult.getTotalRobberCount() - gameResult.getArrestedRobberCount());
         }

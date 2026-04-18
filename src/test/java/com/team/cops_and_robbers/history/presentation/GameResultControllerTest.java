@@ -52,7 +52,7 @@ class GameResultControllerTest extends ControllerTest {
                 softly.assertThat(response.statusCode()).isEqualTo(200);
                 softly.assertThat(response.jsonPath().getString("winnerTeam")).isEqualTo("POLICE");
                 softly.assertThat(response.jsonPath().getInt("durationSeconds")).isEqualTo(300);
-                softly.assertThat(response.jsonPath().getInt("arrestedRobberCount")).isEqualTo(5);
+                softly.assertThat(response.jsonPath().getInt("totalArrestCount")).isEqualTo(5);
                 softly.assertThat(response.jsonPath().getInt("remainingRobberCount")).isEqualTo(0);
             });
         }

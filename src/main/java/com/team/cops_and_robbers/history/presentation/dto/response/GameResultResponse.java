@@ -9,8 +9,8 @@ public record GameResultResponse(
         Team winnerTeam,
         @Schema(description = "게임 진행 시간(초)", example = "300")
         Integer durationSeconds,
-        @Schema(description = "체포된 도둑 수", example = "3")
-        Integer arrestedRobberCount,
+        @Schema(description = "총 체포 횟수", example = "5")
+        Integer totalArrestCount,
         @Schema(description = "남은 도둑 수", example = "1")
         Integer remainingRobberCount
 ) {
@@ -18,7 +18,7 @@ public record GameResultResponse(
         return new GameResultResponse(
                 result.winnerTeam(),
                 result.durationSeconds(),
-                result.arrestedRobberCount(),
+                result.totalArrestCount(),
                 result.remainingRobberCount()
         );
     }

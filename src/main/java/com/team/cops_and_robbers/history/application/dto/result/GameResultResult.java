@@ -6,7 +6,7 @@ import com.team.cops_and_robbers.history.domain.GameResult;
 public record GameResultResult(
         Team winnerTeam,
         Integer durationSeconds,
-        Integer arrestedRobberCount,
+        Integer totalArrestCount,
         Integer remainingRobberCount
 ) {
     public static GameResultResult from(GameResult gameResult) {

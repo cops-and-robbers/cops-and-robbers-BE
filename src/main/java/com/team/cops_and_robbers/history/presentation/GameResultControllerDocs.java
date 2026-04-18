@@ -20,7 +20,7 @@ public interface GameResultControllerDocs {
 
     @Operation(
             summary = "게임 결과 조회",
-            description = "게임 종료 후 결과(승리 팀, 진행 시간, 체포 횟수, 남은 도둑 수)를 조회합니다.",
+            description = "게임 종료 후 결과(승리 팀, 진행 시간, 총 체포 횟수, 남은 도둑 수)를 조회합니다.",
             security = @SecurityRequirement(name = "JWT")
     )
     @ApiErrorCode(value = GameResultException.class, codes = {"GAME_RESULT_NOT_FOUND"})
