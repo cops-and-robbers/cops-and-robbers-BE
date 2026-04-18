@@ -62,14 +62,17 @@ public class FcmService {
                 FirebaseMessagingException ex = sendResponse.getException();
                 if (ex != null) {
                     MessagingErrorCode errorCode = ex.getMessagingErrorCode();
-                    if (errorCode == MessagingErrorCode.UNREGISTERED
-                            || errorCode == MessagingErrorCode.INVALID_ARGUMENT) {
-                        log.warn("[FCM 발송 실패] 만료되거나 유효하지 않은 토큰 감지 | token={}", tokens.get(i));
+                    String token = tokens.get(i);
+                    if (errorCode == MessagingErrorCode.UNREGISTERED) {
+                        log.warn("[FCM 발송 실패] 앱 삭제 또는 알림 차단으로 인한 만료 토큰 감지 | token={}", token);
+                    } else if (errorCode == MessagingErrorCode.INVALID_ARGUMENT) {
+                        log.warn("[FCM 발송 실패] 토큰 형식 오류 (잘못된 토큰값) | token={}", token);
                     } else {
-                        log.error("[FCM 발송 실패] 전송 실패 | code={}, token={}", errorCode, tokens.get(i));
+                        log.error("[FCM 발송 실패] 전송 실패 | code={}, token={}", errorCode, token);
                     }
                 }
             }
         }
     }
+
 }

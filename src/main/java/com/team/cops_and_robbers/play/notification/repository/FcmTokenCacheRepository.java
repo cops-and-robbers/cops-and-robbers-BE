@@ -42,17 +42,16 @@ public class FcmTokenCacheRepository {
 
     @SuppressWarnings("unchecked")
     private List<String> find(String key) {
-        Object cachedValue = redisTemplate.opsForValue().get(key);
+        List<String> cachedValues = (List<String>) redisTemplate.opsForValue().get(key);
 
-        if (cachedValue == null) return null;
-        if (EMPTY.equals(cachedValue)) return List.of();
+        if (cachedValues == null) return null;
+        if (cachedValues.size() == 1 && EMPTY.equals(cachedValues.get(0))) return List.of();
 
-        List<String> cachedTokens = (List<String>) cachedValue;
-        return List.copyOf(cachedTokens);
+        return List.copyOf(cachedValues);
     }
 
     private void save(String key, List<String> tokens) {
-        Object valueToCache = tokens.isEmpty() ? EMPTY : tokens;
+        List<String> valueToCache = tokens.isEmpty() ? List.of(EMPTY) : tokens;
         redisTemplate.opsForValue().set(key, valueToCache, Duration.ofMinutes(190));
     }
 
