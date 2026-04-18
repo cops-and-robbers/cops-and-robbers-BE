@@ -158,6 +158,22 @@ class RobberLocationControllerTest extends ControllerTest {
         }
 
         @Test
+        void 경찰_대기_시간에_요청하면_400_BadRequest를_응답한다() {
+            // given
+            givenWaitingPolice(game, police);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(policeToken)
+                    .when()
+                    .get(ROBBER_LOCATION_URL, game.getId())
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(400);
+        }
+
+        @Test
         void 게임이_진행_중이_아니면_400_BadRequest를_응답한다() {
             // given
             Game waitingGame = gameRepository.save(GameFixture.WAITING_GAME());
