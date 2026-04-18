@@ -14,7 +14,6 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class SystemEventHandler {
 
     private final SystemPublisher systemPublisher;
-    private final GameSchedulerService gameSchedulerService;
     private final RobberLocationService robberLocationService;
     private final InGameParticipantCacheService inGameParticipantCacheService;
 
@@ -22,7 +21,6 @@ public class SystemEventHandler {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleSystemEvent(SystemEvent event) {
         if (event.type() == SystemEventType.GAME_OVER) {
-            gameSchedulerService.cancelSchedule(event.gameId());
             robberLocationService.clearRobberLocations(event.gameId());
             inGameParticipantCacheService.clearCache(event.gameId());
         }
