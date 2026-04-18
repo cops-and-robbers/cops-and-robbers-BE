@@ -156,6 +156,21 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
 
     Optional<GameParticipant> findFirstByGameIdOrderByCreatedAtAsc(Long gameId);
 
+    @Query("""
+        select gp.user.id
+        from GameParticipant gp
+        where gp.game.id = :gameId
+        """)
+    List<Long> findUserIdsByGameId(@Param("gameId") Long gameId);
+
+    @Query("""
+        select gp.user.id
+        from GameParticipant gp
+        where gp.game.id = :gameId
+        and gp.team = :team
+        """)
+    List<Long> findUserIdsByGameIdAndTeam(@Param("gameId") Long gameId, @Param("team") Team team);
+
     default GameParticipant getByGameIdAndUserId(Long gameId, Long userId) {
         return findByGameIdAndUserId(gameId, userId)
                 .orElseThrow(() ->
