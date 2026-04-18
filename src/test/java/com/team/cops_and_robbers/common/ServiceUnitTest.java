@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.common;
 
 import com.team.cops_and_robbers.auth.infrastructure.jwt.JwtTokenProvider;
+import com.team.cops_and_robbers.bug.repository.BugReportRepository;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
@@ -30,6 +31,9 @@ public abstract class ServiceUnitTest {
 
     @Mock
     protected UserRepository userRepository;
+
+    @Mock
+    protected BugReportRepository bugReportRepository;
 
     @Mock
     protected UserDeviceRepository userDeviceRepository;
