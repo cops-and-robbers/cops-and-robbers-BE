@@ -30,6 +30,10 @@ springdoc:
 encryption:
   secret-key: ${ENCRYPTION_KEY}
 
+discord:
+  webhook:
+    bug: ${DISCORD_WEBHOOK_BUG}
+
 server:
   shutdown: graceful
 

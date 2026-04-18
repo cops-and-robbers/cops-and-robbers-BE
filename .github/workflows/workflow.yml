@@ -82,7 +82,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-          envs: DB_URL,DB_USERNAME,DB_PASSWORD,ACCESS_SECRET_KEY,REFRESH_SECRET_KEY,ACCESS_EXPIRATION,REFRESH_EXPIRATION,ENCRYPTION_KEY
+          envs: DB_URL,DB_USERNAME,DB_PASSWORD,ACCESS_SECRET_KEY,REFRESH_SECRET_KEY,ACCESS_EXPIRATION,REFRESH_EXPIRATION,ENCRYPTION_KEY,DISCORD_WEBHOOK_BUG
           script: |
             chmod +x /home/${{ secrets.EC2_USER }}/cops-and-robbers/scripts/deploy.sh
 
@@ -96,3 +96,4 @@ jobs:
           ACCESS_EXPIRATION: ${{ secrets.ACCESS_EXPIRATION }}
           REFRESH_EXPIRATION: ${{ secrets.REFRESH_EXPIRATION }}
           ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+          DISCORD_WEBHOOK_BUG: ${{ secrets.DISCORD_WEBHOOK_BUG }}

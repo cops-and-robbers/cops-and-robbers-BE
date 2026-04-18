@@ -1,5 +1,8 @@
 package com.team.cops_and_robbers.common.config;
 
+
+import com.team.cops_and_robbers.common.infrastructure.discord.DiscordProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -8,8 +11,9 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
-@EnableAsync
 @Configuration
+@EnableAsync
+@EnableConfigurationProperties(DiscordProperties.class)
 public class AsyncConfig {
 
     private static final String FCM_NOTIFIER_PREFIX = "fcm-notifier-";
