@@ -8,11 +8,14 @@ import com.team.cops_and_robbers.play.system.domain.SystemEvent;
 import com.team.cops_and_robbers.play.system.domain.SystemEventType;
 import com.team.cops_and_robbers.user.repository.UserDeviceRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GameFcmNotifier {
@@ -22,15 +25,20 @@ public class GameFcmNotifier {
     private final UserDeviceRepository userDeviceRepository;
     private final FcmTokenCacheRepository fcmTokenCacheRepository;
 
+    @Async("taskScheduler")
     public void notifySystemEvent(SystemEvent event) {
-        List<String> tokens = getGameTokens(event.gameId());
-        if (tokens.isEmpty()) return;
+        try {
+            if (event.type() == SystemEventType.GAME_OVER) {
+                fcmTokenCacheRepository.deleteAllByGameId(event.gameId());
+            }
 
-        FcmPayload payload = resolveSystemPayload(event.type(), event.gameId());
-        fcmService.send(new FcmMessage(tokens, payload.title(), payload.body(), payload.data()));
+            List<String> tokens = getGameTokens(event.gameId());
+            if (tokens.isEmpty()) return;
 
-        if (event.type() == SystemEventType.GAME_OVER) {
-            fcmTokenCacheRepository.deleteAllByGameId(event.gameId());
+            FcmPayload payload = resolveSystemPayload(event.type(), event.gameId());
+            fcmService.send(new FcmMessage(tokens, payload.title(), payload.body(), payload.data()));
+        } catch (Exception e) {
+            log.error("[FCM 알림] 비동기 발송 중 오류 발생 | gameId={}, type={}", event.gameId(), event.type(), e);
         }
     }
 
