@@ -16,6 +16,7 @@ import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.history.repository.GameResultRepository;
+import com.team.cops_and_robbers.notice.repository.NoticeRepository;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.domain.UserDevice;
 import com.team.cops_and_robbers.user.repository.UserDeviceRepository;
@@ -71,6 +72,9 @@ public abstract class ControllerTest {
 
     @Autowired
     protected RefreshTokenRepository refreshTokenRepository;
+
+    @Autowired
+    protected NoticeRepository noticeRepository;
 
     @Autowired
     protected JwtTokenProvider jwtTokenProvider;

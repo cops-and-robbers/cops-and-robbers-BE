@@ -27,7 +27,6 @@ class NoticeServiceTest extends ServiceUnitTest {
     @InjectMocks
     private NoticeService noticeService;
 
-
     @Nested
     @DisplayName("공지사항 생성")
     class Create {

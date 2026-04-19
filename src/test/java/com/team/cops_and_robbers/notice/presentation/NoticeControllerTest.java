@@ -3,7 +3,6 @@ package com.team.cops_and_robbers.notice.presentation;
 import com.team.cops_and_robbers.common.ControllerTest;
 import com.team.cops_and_robbers.notice.presentation.dto.request.NoticeCreateRequest;
 import com.team.cops_and_robbers.notice.presentation.dto.request.NoticeUpdateRequest;
-import com.team.cops_and_robbers.notice.repository.NoticeRepository;
 import com.team.cops_and_robbers.user.domain.User;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
@@ -11,7 +10,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import static com.team.cops_and_robbers.common.fixture.NoticeFixture.NOTICE;
 import static com.team.cops_and_robbers.common.fixture.NoticeFixture.PINNED_NOTICE;
@@ -20,9 +18,6 @@ import static org.assertj.core.api.SoftAssertions.assertSoftly;
 class NoticeControllerTest extends ControllerTest {
 
     private static final String NOTICE_API_URL = "/api/notices";
-
-    @Autowired
-    private NoticeRepository noticeRepository;
 
     private User user;
     private String accessToken;
