@@ -46,7 +46,7 @@ public interface NoticeControllerDocs {
             @PathVariable Long noticeId
     );
 
-    @Operation(summary = "공지사항 수정", description = "특정 공지사항을 수정합니다.")
+    @Operation(summary = "공지사항 수정", description = "특정 공지사항 전체를 수정합니다.")
     @ApiErrorCode(value = NoticeException.class, codes = {"NOTICE_NOT_FOUND"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "수정 성공")

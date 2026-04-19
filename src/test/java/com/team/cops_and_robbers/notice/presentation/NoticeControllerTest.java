@@ -170,7 +170,7 @@ class NoticeControllerTest extends ControllerTest {
             ExtractableResponse<Response> extract = authenticated(accessToken)
                     .body(request)
                     .when()
-                    .patch(NOTICE_API_URL + "/" + noticeId)
+                    .put(NOTICE_API_URL + "/" + noticeId)
                     .then()
                     .extract();
 
@@ -189,7 +189,7 @@ class NoticeControllerTest extends ControllerTest {
             ExtractableResponse<Response> extract = authenticated(accessToken)
                     .body(request)
                     .when()
-                    .patch(NOTICE_API_URL + "/999")
+                    .put(NOTICE_API_URL + "/999")
                     .then()
                     .extract();
 
@@ -205,7 +205,7 @@ class NoticeControllerTest extends ControllerTest {
             ExtractableResponse<Response> extract = unauthenticated()
                     .body(request)
                     .when()
-                    .patch(NOTICE_API_URL + "/1")
+                    .put(NOTICE_API_URL + "/1")
                     .then()
                     .extract();
 
