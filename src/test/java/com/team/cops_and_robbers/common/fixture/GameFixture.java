@@ -39,6 +39,7 @@ public class GameFixture {
                 .policeWaitMinutes(3)
                 .maxParticipants(10)
                 .startedAt(LocalDateTime.now())
+                .roundNumber(1)
                 .build();
     }
 
@@ -51,6 +52,7 @@ public class GameFixture {
                 .policeWaitMinutes(3)
                 .maxParticipants(10)
                 .startedAt(startedAt)
+                .roundNumber(1)
                 .build();
     }
 
