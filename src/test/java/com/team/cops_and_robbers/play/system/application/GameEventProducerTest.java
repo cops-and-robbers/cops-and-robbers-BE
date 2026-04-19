@@ -20,14 +20,14 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 
-class GameScheduleProducerTest extends ServiceUnitTest {
+class GameEventProducerTest extends ServiceUnitTest {
 
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     private static final LocalDateTime FIXED_NOW = LocalDateTime.of(2026, 1, 1, 12, 0);
     private static final Clock FIXED_CLOCK = Clock.fixed(FIXED_NOW.atZone(KST).toInstant(), KST);
 
     @InjectMocks
-    private GameScheduleProducer gameScheduleProducer;
+    private GameEventProducer gameEventProducer;
 
     @Spy
     private Clock clock = FIXED_CLOCK;
@@ -52,7 +52,7 @@ class GameScheduleProducerTest extends ServiceUnitTest {
             given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(game);
 
             // when
-            gameScheduleProducer.scheduleAllEvents(TEST_GAME_ID);
+            gameEventProducer.scheduleAllEvents(TEST_GAME_ID);
 
             // then
             then(gameScheduleQueue).should().enqueuePoliceMoveStart(game, FIXED_NOW);
@@ -68,7 +68,7 @@ class GameScheduleProducerTest extends ServiceUnitTest {
             given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(game);
 
             // when
-            gameScheduleProducer.scheduleAllEvents(TEST_GAME_ID);
+            gameEventProducer.scheduleAllEvents(TEST_GAME_ID);
 
             // then
             then(gameScheduleQueue).should(never()).enqueueGameOver(any(Game.class), any(LocalDateTime.class));

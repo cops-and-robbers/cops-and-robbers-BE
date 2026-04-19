@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class GameScheduleProducer {
+public class GameEventProducer {
 
     private final Clock clock;
     private final GameScheduleQueue gameScheduleQueue;
