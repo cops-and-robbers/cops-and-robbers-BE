@@ -1,6 +1,5 @@
 package com.team.cops_and_robbers.play.system.application;
 
-import com.team.cops_and_robbers.common.constant.RedisQueue;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
@@ -9,33 +8,24 @@ import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepo
 import com.team.cops_and_robbers.play.location.application.RobberLocationService;
 import com.team.cops_and_robbers.play.system.domain.GameScheduleEvent;
 import com.team.cops_and_robbers.play.system.domain.SystemEventData;
+import com.team.cops_and_robbers.play.system.infrastructure.GameScheduleQueue;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RBlockingQueue;
-import org.redisson.api.RDelayedQueue;
-import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import com.team.cops_and_robbers.play.system.domain.GameScheduleEventType;
-
-import java.time.Clock;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class GameEventConsumer {
 
-    private static final String QUEUE_NAME = RedisQueue.GAME_SCHEDULE.getName();
-    private static final String VIRTUAL_THREAD_NAME = "game:schedule:events";
+    private static final String VIRTUAL_THREAD_NAME = "game-event-consumer";
 
-    private final Clock clock;
-    private final RedissonClient redissonClient;
+    private final GameScheduleQueue gameScheduleQueue;
     private final GameRepository gameRepository;
     private final GameParticipantRepository gameParticipantRepository;
     private final RobberLocationService robberLocationService;
@@ -44,29 +34,37 @@ public class GameEventConsumer {
     private final SystemEventFactory systemEventFactory;
     private final TransactionTemplate transactionTemplate;
 
+    private volatile Thread consumerThread;
+
     @PostConstruct
     public void start() {
-        RBlockingQueue<GameScheduleEvent> queue = redissonClient.getBlockingQueue(QUEUE_NAME);
-        Thread.ofVirtual()
+        consumerThread = Thread.ofVirtual()
                 .name(VIRTUAL_THREAD_NAME)
-                .start(() -> consume(queue));
+                .start(this::consume);
         log.info("[GameEventConsumer] Consumer started.");
     }
 
-    /**
-     * 루프를 돌며 이벤트를 큐에서 꺼내 실행
-     */
-    private void consume(RBlockingQueue<GameScheduleEvent> queue) {
+    @PreDestroy
+    public void shutdown() {
+        if (consumerThread != null) {
+            consumerThread.interrupt();
+            log.info("[GameEventConsumer] Consumer shutdown initiated.");
+        }
+    }
+
+    private void consume() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                GameScheduleEvent event = queue.take();
+                GameScheduleEvent event = gameScheduleQueue.take();
                 dispatch(event);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                break;
             } catch (Exception e) {
                 log.error("[GameEventConsumer] Unexpected error while processing event.", e);
             }
         }
+        log.info("[GameEventConsumer] Consumer stopped gracefully.");
     }
 
     /**
@@ -116,21 +114,7 @@ public class GameEventConsumer {
                 robberLocationService.getCurrentRobberLocations(game.getId());
         systemPublisher.publish(systemEventFactory.createRobberLocationRevealEvent(game.getId(), locations));
 
-        LocalDateTime nextReveal = LocalDateTime.now(clock).plusMinutes(game.getLocationRevealIntervalMinutes());
-        LocalDateTime gameOverTime = game.getStartedAt().plusMinutes(game.getRoundDurationMinutes());
-
-        if (nextReveal.isBefore(gameOverTime)) {
-            long delayMs = Duration.ofMinutes(game.getLocationRevealIntervalMinutes()).toMillis();
-            RBlockingQueue<GameScheduleEvent> queue = redissonClient.getBlockingQueue(QUEUE_NAME);
-            RDelayedQueue<GameScheduleEvent> delayedQueue = redissonClient.getDelayedQueue(queue);
-            delayedQueue.offer(
-                    new GameScheduleEvent(game.getId(), GameScheduleEventType.ROBBER_LOCATION_REVEAL, game.getRoundNumber()),
-                    delayMs, TimeUnit.MILLISECONDS
-            );
-            log.info("[GameEventConsumer] Next ROBBER_LOCATION_REVEAL re-enqueued in {}ms for GameId: {}", delayMs, game.getId());
-        } else {
-            log.info("[GameEventConsumer] No more ROBBER_LOCATION_REVEAL for GameId: {}", game.getId());
-        }
+        gameScheduleQueue.enqueueNextReveal(game);
     }
 
     /**
