@@ -37,9 +37,7 @@ public class GameScheduleProducer {
     }
 
     private void scheduleGameOver(Game game, LocalDateTime now) {
-        LocalDateTime gameOverTime = game.getStartedAt().plusMinutes(game.getRoundDurationMinutes());
-
-        if (!now.isBefore(gameOverTime)) {
+        if (game.isGameOverTimeReached(now)) {
             log.warn("[Producer] Time-over already reached for GameId: {}. Executing immediate termination.", game.getId());
             gameTerminationService.endGameByTimeOver(game.getId());
             return;

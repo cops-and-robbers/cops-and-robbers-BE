@@ -110,4 +110,24 @@ public class Game extends BaseTimeEntity {
     public boolean isSameRound(int eventRound) {
         return this.roundNumber == eventRound;
     }
+
+    public boolean isGameOverTimeReached(LocalDateTime now) {
+        return !now.isBefore(getGameOverTime());
+    }
+
+    public boolean isBeforeGameOver(LocalDateTime time) {
+        return time.isBefore(getGameOverTime());
+    }
+
+    public LocalDateTime getPoliceMoveStartTime() {
+        return this.startedAt.plusMinutes(this.policeWaitMinutes);
+    }
+
+    public LocalDateTime getGameOverTime() {
+        return this.startedAt.plusMinutes(this.roundDurationMinutes);
+    }
+
+    public LocalDateTime getFirstRobberRevealTime() {
+        return getPoliceMoveStartTime().plusMinutes(this.locationRevealIntervalMinutes);
+    }
 }

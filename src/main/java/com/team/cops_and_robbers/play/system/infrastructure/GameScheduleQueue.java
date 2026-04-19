@@ -33,7 +33,7 @@ public class GameScheduleQueue {
     }
 
     public void enqueuePoliceMoveStart(Game game, LocalDateTime now) {
-        long delayMs = delayMillis(now, policeMoveStartTime(game));
+        long delayMs = delayMillis(now, game.getPoliceMoveStartTime());
         if (delayMs <= 0) {
             return;
         }
@@ -42,7 +42,7 @@ public class GameScheduleQueue {
     }
 
     public void enqueueFirstReveal(Game game, LocalDateTime now) {
-        long delayMs = delayMillis(now, firstRobberRevealTime(game));
+        long delayMs = delayMillis(now, game.getFirstRobberRevealTime());
         if (delayMs <= 0) {
             return;
         }
@@ -52,9 +52,8 @@ public class GameScheduleQueue {
 
     public void enqueueNextReveal(Game game) {
         LocalDateTime nextReveal = LocalDateTime.now(clock).plusMinutes(game.getLocationRevealIntervalMinutes());
-        LocalDateTime gameOverTime = gameOverTime(game);
 
-        if (nextReveal.isBefore(gameOverTime)) {
+        if (game.isBeforeGameOver(nextReveal)) {
             long delayMs = Duration.ofMinutes(game.getLocationRevealIntervalMinutes()).toMillis();
             enqueue(new GameScheduleEvent(game.getId(), GameScheduleEventType.ROBBER_LOCATION_REVEAL, game.getRoundNumber()), delayMs);
             log.info("[Queue] Next ROBBER_LOCATION_REVEAL enqueued in {}ms for GameId: {}", delayMs, game.getId());
@@ -64,7 +63,7 @@ public class GameScheduleQueue {
     }
 
     public void enqueueGameOver(Game game, LocalDateTime now) {
-        long delayMs = delayMillis(now, gameOverTime(game));
+        long delayMs = delayMillis(now, game.getGameOverTime());
         if (delayMs <= 0) {
             return;
         }
@@ -82,17 +81,5 @@ public class GameScheduleQueue {
 
     private long delayMillis(LocalDateTime now, LocalDateTime target) {
         return Duration.between(now, target).toMillis();
-    }
-
-    private LocalDateTime policeMoveStartTime(Game game) {
-        return game.getStartedAt().plusMinutes(game.getPoliceWaitMinutes());
-    }
-
-    private LocalDateTime gameOverTime(Game game) {
-        return game.getStartedAt().plusMinutes(game.getRoundDurationMinutes());
-    }
-
-    private LocalDateTime firstRobberRevealTime(Game game) {
-        return policeMoveStartTime(game).plusMinutes(game.getLocationRevealIntervalMinutes());
     }
 }
