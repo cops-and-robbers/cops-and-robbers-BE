@@ -42,7 +42,7 @@ public interface AuthControllerDocs {
                                                     "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzY4NDk1MDA1LCJleHAiOjE3Njk3MDQ2MDV9..."
                                                 },
                                                 "isNewUser": false,
-                                                "requiresAgreement": true
+                                                "requiresAgreement": false
                                             }
                                             """
                             )
@@ -62,7 +62,7 @@ public interface AuthControllerDocs {
                                                     "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzY4NDk1MDEwLCJleHAiOjE3Njk3MDQ2MTB9..."
                                                 },
                                                 "isNewUser": true,
-                                                "requiresAgreement": false
+                                                "requiresAgreement": true
                                             }
                                             """
                             )

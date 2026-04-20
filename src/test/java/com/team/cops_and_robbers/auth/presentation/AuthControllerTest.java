@@ -56,6 +56,7 @@ class AuthControllerTest extends ControllerTest {
                 softly.assertThat(response.userId()).isNotNull();
                 softly.assertThat(response.tokens().accessToken()).isNotNull();
                 softly.assertThat(response.tokens().refreshToken()).isNotNull();
+                softly.assertThat(response.requiresAgreement()).isTrue();
             });
         }
 
@@ -85,6 +86,7 @@ class AuthControllerTest extends ControllerTest {
                 softly.assertThat(response.isNewUser()).isFalse();
                 softly.assertThat(response.userId()).isEqualTo(user.getId());
                 softly.assertThat(response.nickname()).isEqualTo(user.getNickname());
+                softly.assertThat(response.requiresAgreement()).isFalse();
             });
         }
 
