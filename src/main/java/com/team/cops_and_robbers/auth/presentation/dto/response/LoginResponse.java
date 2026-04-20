@@ -22,7 +22,7 @@ public record LoginResponse(
                 result.user().getNickname(),
                 result.tokens(),
                 result.isNewUser(),
-                result.user().hasAgreedRequiredTerms()
+                !result.user().hasAgreedRequiredTerms()
         );
     }
 }
