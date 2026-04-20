@@ -32,6 +32,8 @@ import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.GUEST_PARTICIPANT;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.HOST_PARTICIPANT;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
+import static com.team.cops_and_robbers.common.fixture.UserFixture.USER_WITHOUT_TERMS;
+import com.team.cops_and_robbers.user.exception.UserException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -118,6 +120,24 @@ class GameServiceTest extends ServiceUnitTest {
 
             then(gameRepository).should(never()).save(any(Game.class));
             then(gameAreaRepository).should(never()).save(any(GameArea.class));
+            then(gameParticipantRepository).should(never()).save(any(GameParticipant.class));
+        }
+
+        @Test
+        void 필수_약관에_미동의한_유저라면_예외가_발생한다() {
+            // given
+            User unagreedHost = USER_WITHOUT_TERMS("unagreedHost");
+            setId(unagreedHost, TEST_HOST_ID);
+            GameCreateCommand command = createGameCommand(unagreedHost.getId());
+
+            given(userRepository.getByUserId(unagreedHost.getId())).willReturn(unagreedHost);
+
+            // when & then
+            assertThatThrownBy(() -> gameService.createGame(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessage(UserException.REQUIRED_TERMS_NOT_AGREED.getDetail());
+
+            then(gameRepository).should(never()).save(any(Game.class));
             then(gameParticipantRepository).should(never()).save(any(GameParticipant.class));
         }
     }

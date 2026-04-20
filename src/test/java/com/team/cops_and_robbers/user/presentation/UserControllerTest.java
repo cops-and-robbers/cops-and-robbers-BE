@@ -17,6 +17,7 @@ import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.exception.UserException;
+import com.team.cops_and_robbers.user.presentation.dto.request.AgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
 import com.team.cops_and_robbers.user.presentation.dto.response.MyPageResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.NicknameCheckResponse;
@@ -42,6 +43,86 @@ class UserControllerTest extends ControllerTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Nested
+    @DisplayName("약관 동의 API")
+    class UpdateAgreements {
+
+        @Test
+        void 필수_약관에_모두_동의하면_204_NO_CONTENT를_응답한다() {
+            // given
+            User user = givenUser();
+            String accessToken = givenAccessToken(user);
+            AgreementRequest request = new AgreementRequest(true, true, true, false);
+
+            // when
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .put("/api/user/agreements")
+                    .then()
+                    .extract();
+
+            // then
+            User updatedUser = userRepository.getByUserId(user.getId());
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(204);
+                softly.assertThat(updatedUser.isTermsOfServiceAgreed()).isTrue();
+                softly.assertThat(updatedUser.isPrivacyPolicyAgreed()).isTrue();
+                softly.assertThat(updatedUser.isLocationTermsAgreed()).isTrue();
+                softly.assertThat(updatedUser.getTermsAgreedAt()).isNotNull();
+                softly.assertThat(updatedUser.isAllowMarketingPush()).isFalse();
+                softly.assertThat(updatedUser.getMarketingAgreedAt()).isNull();
+            });
+        }
+
+        @Test
+        void 마케팅_동의시_마케팅_동의_시각이_함께_저장되고_204_NO_CONTENT를_응답한다() {
+            // given
+            User user = givenUser();
+            String accessToken = givenAccessToken(user);
+            AgreementRequest request = new AgreementRequest(true, true, true, true);
+
+            // when
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .put("/api/user/agreements")
+                    .then()
+                    .extract();
+
+            // then
+            User updatedUser = userRepository.getByUserId(user.getId());
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(204);
+                softly.assertThat(updatedUser.isAllowMarketingPush()).isTrue();
+                softly.assertThat(updatedUser.getMarketingAgreedAt()).isNotNull();
+            });
+        }
+
+        @Test
+        void 필수_약관에_미동의하면_400_BAD_REQUEST를_응답한다() {
+            // given
+            User user = givenUser();
+            String accessToken = givenAccessToken(user);
+            AgreementRequest request = new AgreementRequest(false, true, true, false);
+
+            // when
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .put("/api/user/agreements")
+                    .then()
+                    .extract();
+
+            // then
+            ErrorResponse response = extract.as(ErrorResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+                softly.assertThat(response.title()).isEqualTo(UserException.REQUIRED_TERMS_NOT_AGREED.getTitle());
+            });
+        }
+    }
 
     @Nested
     @DisplayName("내 정보 조회 API")

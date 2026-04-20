@@ -10,6 +10,7 @@ import com.team.cops_and_robbers.game.participant.presentation.dto.request.GameJ
 import com.team.cops_and_robbers.game.participant.presentation.dto.response.GameJoinResponse;
 import com.team.cops_and_robbers.game.participant.presentation.dto.response.GameLeaveResponse;
 import com.team.cops_and_robbers.game.participant.presentation.dto.response.GameParticipantListResponse;
+import com.team.cops_and_robbers.user.exception.UserException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -29,6 +30,7 @@ public interface GameParticipantControllerDocs {
             security = @SecurityRequirement(name = "JWT")
     )
     @ApiErrorCode(value = GameParticipantException.class, codes = {"ALREADY_PARTICIPATING", "GAME_ALREADY_STARTED", "GAME_FULL", "INVALID_INVITE_CODE"})
+    @ApiErrorCode(value = UserException.class, codes = {"REQUIRED_TERMS_NOT_AGREED"})
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "게임 참여 성공")

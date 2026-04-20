@@ -21,6 +21,7 @@ import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepo
 import com.team.cops_and_robbers.play.lobby.application.LobbyEventFactory;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
 import com.team.cops_and_robbers.user.domain.User;
+import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
@@ -63,8 +64,7 @@ public class GameService {
     @Transactional
     public GameCreateResult createGame(GameCreateCommand command) {
 
-        User host = userRepository.getByUserId(command.hostUserId());
-
+        User host = getUser(command.hostUserId());
         if (gameParticipantRepository.existsActiveGameByUserId(host.getId())) {
             throw new ApplicationException(GameParticipantException.ALREADY_PARTICIPATING);
         }
@@ -75,6 +75,14 @@ public class GameService {
         saveHostAsParticipant(game, host);
 
         return GameCreateResult.from(game);
+    }
+
+    private User getUser(Long userId) {
+        User user = userRepository.getByUserId(userId);
+        if (!user.hasAgreedRequiredTerms()) {
+            throw  new ApplicationException(UserException.REQUIRED_TERMS_NOT_AGREED);
+        }
+        return user;
     }
 
     private Game saveGame(GameCreateCommand command, String inviteCode) {

@@ -16,8 +16,7 @@ import com.team.cops_and_robbers.game.participant.exception.GameParticipantExcep
 import com.team.cops_and_robbers.play.lobby.application.LobbyEventFactory;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
 import com.team.cops_and_robbers.user.domain.User;
-
-import java.util.List;
+import com.team.cops_and_robbers.user.exception.UserException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -26,20 +25,20 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.util.List;
+
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
-import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_POLICE;
-import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_ROBBER;
-import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.GUEST_PARTICIPANT;
-import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.HOST_PARTICIPANT;
-import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.WAITING_POLICE;
+import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.*;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
+import static com.team.cops_and_robbers.common.fixture.UserFixture.USER_WITHOUT_TERMS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 class GameParticipantServiceTest extends ServiceUnitTest {
@@ -136,6 +135,25 @@ class GameParticipantServiceTest extends ServiceUnitTest {
             assertThatThrownBy(() -> gameParticipantService.joinGame(command))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(GameParticipantException.GAME_ALREADY_STARTED.getDetail());
+        }
+
+        @Test
+        void 필수_약관에_미동의한_유저라면_예외가_발생한다() {
+            // given
+            User unagreedUser = USER_WITHOUT_TERMS("unagreedUser");
+            setId(unagreedUser, TEST_USER_ID);
+            GameJoinCommand command = createGameJoinCommand(unagreedUser.getId(), INVITE_CODE);
+
+            given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(waitingGame);
+            given(gameParticipantRepository.existsActiveGameByUserId(unagreedUser.getId())).willReturn(false);
+            given(userRepository.getByUserId(unagreedUser.getId())).willReturn(unagreedUser);
+
+            // when & then
+            assertThatThrownBy(() -> gameParticipantService.joinGame(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessage(UserException.REQUIRED_TERMS_NOT_AGREED.getDetail());
+
+            then(gameParticipantRepository).should(never()).save(any(GameParticipant.class));
         }
 
         @Test

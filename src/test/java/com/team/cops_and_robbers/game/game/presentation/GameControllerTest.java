@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.game.game.presentation;
 import com.team.cops_and_robbers.common.ControllerTest;
 import com.team.cops_and_robbers.common.fixture.GameAreaFixture;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
+import com.team.cops_and_robbers.common.fixture.UserFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.CoordinatesRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameAreaRequest;
@@ -147,6 +148,24 @@ class GameControllerTest extends ControllerTest {
 
             // then
             assertThat(response.statusCode()).isEqualTo(401);
+        }
+
+        @Test
+        void 필수_약관에_미동의한_유저라면_400_BadRequest를_응답한다() {
+            // given
+            User unagreedUser = userRepository.save(UserFixture.USER_WITHOUT_TERMS("unagreedHost"));
+            String unagreedToken = givenAccessToken(unagreedUser);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(unagreedToken)
+                    .body(createGameCreateRequest())
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
         }
     }
 
