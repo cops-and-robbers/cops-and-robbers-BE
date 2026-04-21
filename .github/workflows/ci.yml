@@ -37,10 +37,12 @@ jobs:
     steps:
       - name: 🔄 소스 코드 가져오기
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: 📋 Swagger 버전 업데이트 검증
         run: |
-          git fetch origin ${{ github.base_ref }} --depth=1
+          git fetch origin ${{ github.base_ref }}
 
           DOCS_CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '.*ControllerDocs\.java$' || true)
 
