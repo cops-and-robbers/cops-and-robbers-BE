@@ -58,20 +58,23 @@ public class FcmService {
         List<SendResponse> responses = response.getResponses();
         for (int i = 0; i < responses.size(); i++) {
             SendResponse sendResponse = responses.get(i);
-            if (!sendResponse.isSuccessful()) {
-                FirebaseMessagingException ex = sendResponse.getException();
-                if (ex != null) {
-                    MessagingErrorCode errorCode = ex.getMessagingErrorCode();
-                    String token = tokens.get(i);
-                    if (errorCode == MessagingErrorCode.UNREGISTERED) {
-                        log.warn("[FCM 발송 실패] 앱 삭제 또는 알림 차단으로 인한 만료 토큰 감지 | token={}", token);
-                    } else if (errorCode == MessagingErrorCode.INVALID_ARGUMENT) {
-                        log.warn("[FCM 발송 실패] 토큰 형식 오류 (잘못된 토큰값) | token={}", token);
-                    } else {
-                        log.error("[FCM 발송 실패] 전송 실패 | code={}, token={}", errorCode, token);
-                    }
-                }
-            }
+            if (sendResponse.isSuccessful()) continue;
+
+            FirebaseMessagingException ex = sendResponse.getException();
+            if (ex == null) continue;
+
+            logTokenFailure(tokens.get(i), ex.getMessagingErrorCode());
+        }
+    }
+
+    private void logTokenFailure(String token, MessagingErrorCode errorCode) {
+        switch (errorCode) {
+            case UNREGISTERED ->
+                log.warn("[FCM 발송 실패] 만료된 토큰 (앱 삭제 또는 알림 차단) | token={}", token);
+            case INVALID_ARGUMENT ->
+                log.warn("[FCM 발송 실패] 잘못된 토큰 형식 | token={}", token);
+            default ->
+                log.error("[FCM 발송 실패] 전송 실패 | code={}, token={}", errorCode, token);
         }
     }
 
