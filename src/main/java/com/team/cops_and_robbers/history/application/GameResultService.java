@@ -37,7 +37,7 @@ public class GameResultService {
         int totalRobber = gameParticipantRepository.countByGameIdAndTeam(
                 game.getId(), Team.ROBBER
         );
-        int jailedAtEnd = gameParticipantRepository.countByGameIdAndRobberStatus(
+        int jailedCountAtEnd = gameParticipantRepository.countByGameIdAndRobberStatus(
                 game.getId(), ParticipantStatus.JAILED
         );
 
@@ -48,7 +48,7 @@ public class GameResultService {
                 reason,
                 totalPolice,
                 totalRobber,
-                jailedAtEnd,
+                jailedCountAtEnd,
                 game.getTotalArrestCount(),
                 gameArea.getPlaygroundCenter(),
                 gameArea.getPlaygroundRadiusInMeters()
