@@ -30,14 +30,10 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.1.0")
+                .version("2.2.0")
                 .description("""
                         ## 업데이트 항목
-                        - (신규) 이용 약관 동의 API 추가 (PUT /api/user/agreements)
-                        - (신규) 이용 약관 동의 여부 조회 API 추가 (GET /api/user/agreements)
-                        - (수정) 로그인 API 필수 이용약관 동의 여부 응답 필드 추가 (POST /api/auth/login) - 기존 반대 의미로 되어 있던 boolean응답 수정
-                        - (수정) 게임 방 생성 API 호스트 필수 이용약관 동의 여부 검증 추가 (POST /api/games)
-                        - (수정) 게임 방 참여 API 유저 필수 이용약관 동의 여부 검증 추가 (POST /api/games/join)
+                        - (신규) 게임 결과 조회 API 추가 (GET /api/game-results/{gameResultId})
                         """);
 
         return new OpenAPI()
