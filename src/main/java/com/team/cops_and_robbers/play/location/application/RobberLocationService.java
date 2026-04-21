@@ -73,7 +73,7 @@ public class RobberLocationService {
         }
         GameParticipant participant = gameParticipantRepository.getByGameIdAndUserId(command.gameId(), command.userId());
         if (participant.isPoliceWaiting()) {
-            throw new ApplicationException(GameParticipantException.POLICE_WAITING_TIME);
+            return List.of();
         }
 
         return getCurrentRobberLocations(command.gameId()).stream()
