@@ -7,6 +7,7 @@ import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
+import com.team.cops_and_robbers.history.application.dto.command.GameResultCommand;
 import com.team.cops_and_robbers.history.application.dto.result.GameResultResult;
 import com.team.cops_and_robbers.history.domain.GameEndReason;
 import com.team.cops_and_robbers.history.domain.GameResult;
@@ -48,7 +49,7 @@ public class GameResultService {
                 totalPolice,
                 totalRobber,
                 jailedAtEnd,
-                game.getArrestCount(),
+                game.getTotalArrestCount(),
                 gameArea.getPlaygroundCenter(),
                 gameArea.getPlaygroundRadiusInMeters()
         );
@@ -57,10 +58,10 @@ public class GameResultService {
     }
 
     @Transactional(readOnly = true)
-    public GameResultResult getGameResult(Long gameResultId, Long userId) {
-        GameResult gameResult = gameResultRepository.findById(gameResultId)
+    public GameResultResult getGameResult(GameResultCommand command) {
+        GameResult gameResult = gameResultRepository.findById(command.gameResultId())
                 .orElseThrow(() -> new ApplicationException(GameResultException.GAME_RESULT_NOT_FOUND));
-        gameParticipantRepository.getByGameIdAndUserId(gameResult.getGameId(), userId);
+        gameParticipantRepository.getByGameIdAndUserId(gameResult.getGameId(), command.userId());
         return GameResultResult.from(gameResult);
     }
 

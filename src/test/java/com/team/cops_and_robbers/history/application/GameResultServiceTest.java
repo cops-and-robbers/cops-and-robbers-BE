@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.history.application;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
+import com.team.cops_and_robbers.history.application.dto.command.GameResultCommand;
 import com.team.cops_and_robbers.history.application.dto.result.GameResultResult;
 import com.team.cops_and_robbers.history.domain.GameResult;
 import com.team.cops_and_robbers.history.exception.GameResultException;
@@ -40,7 +41,7 @@ class GameResultServiceTest extends ServiceUnitTest {
             given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(gameResult));
 
             // when
-            GameResultResult result = gameResultService.getGameResult(TEST_GAME_RESULT_ID, TEST_USER_ID);
+            GameResultResult result = gameResultService.getGameResult(GameResultCommand.of(TEST_USER_ID, TEST_GAME_RESULT_ID));
 
             // then
             assertThat(result.winnerTeam()).isEqualTo(gameResult.getWinnerTeam());
@@ -56,7 +57,7 @@ class GameResultServiceTest extends ServiceUnitTest {
             given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> gameResultService.getGameResult(TEST_GAME_RESULT_ID, TEST_USER_ID))
+            assertThatThrownBy(() -> gameResultService.getGameResult(GameResultCommand.of(TEST_USER_ID, TEST_GAME_RESULT_ID)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessage(GameResultException.GAME_RESULT_NOT_FOUND.getDetail());
         }
@@ -72,7 +73,7 @@ class GameResultServiceTest extends ServiceUnitTest {
                     .willThrow(new ApplicationException(GameParticipantException.PARTICIPANT_NOT_FOUND));
 
             // when & then
-            assertThatThrownBy(() -> gameResultService.getGameResult(TEST_GAME_RESULT_ID, TEST_USER_ID))
+            assertThatThrownBy(() -> gameResultService.getGameResult(GameResultCommand.of(TEST_USER_ID, TEST_GAME_RESULT_ID)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessage(GameParticipantException.PARTICIPANT_NOT_FOUND.getDetail());
         }
