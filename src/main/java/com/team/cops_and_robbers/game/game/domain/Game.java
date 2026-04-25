@@ -127,6 +127,10 @@ public class Game extends BaseTimeEntity {
         return this.startedAt.plusMinutes(this.roundDurationMinutes);
     }
 
+    public boolean isLocationRevealDisabled() {
+        return this.locationRevealIntervalMinutes == 0;
+    }
+
     public LocalDateTime getFirstRobberRevealTime() {
         return getPoliceMoveStartTime().plusMinutes(this.locationRevealIntervalMinutes);
     }

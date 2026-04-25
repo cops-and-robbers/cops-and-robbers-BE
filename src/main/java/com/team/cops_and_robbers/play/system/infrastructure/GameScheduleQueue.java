@@ -42,6 +42,9 @@ public class GameScheduleQueue {
     }
 
     public void enqueueFirstReveal(Game game, LocalDateTime now) {
+        if (game.isLocationRevealDisabled()) {
+            return;
+        }
         long delayMs = delayMillis(now, game.getFirstRobberRevealTime());
         if (delayMs <= 0) {
             return;
@@ -51,6 +54,9 @@ public class GameScheduleQueue {
     }
 
     public void enqueueNextReveal(Game game) {
+        if (game.isLocationRevealDisabled()) {
+            return;
+        }
         LocalDateTime nextReveal = LocalDateTime.now(clock).plusMinutes(game.getLocationRevealIntervalMinutes());
 
         if (game.isBeforeGameOver(nextReveal)) {
