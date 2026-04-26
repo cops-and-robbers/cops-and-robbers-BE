@@ -1,17 +1,9 @@
 version: '3.8'
 
 services:
-  cops-and-robbers-redis:
-    image: redis:7
-    container_name: cops-and-robbers-redis
-    command: redis-server --appendonly yes
-    volumes:
-      - ./redis-data:/data
-    restart: always
-
-  cops-and-robbers-app:
+  cops-and-robbers-blue:
     image: copsnro66ers/cops-and-robbers:latest
-    container_name: cops-and-robbers-app
+    container_name: cops-and-robbers-blue
     ports:
       - "127.0.0.1:8080:8080"
       - "9091:9091"
@@ -38,22 +30,10 @@ services:
       - ./firebase-key.json:/app/firebase-key.json
       - /home/ubuntu/log:/log
 
-    depends_on:
-      - cops-and-robbers-redis
-    restart: always
+    networks:
+      - cops-network
+    restart: unless-stopped
 
-  node-exporter:
-    image: prom/node-exporter:latest
-    container_name: node-exporter
-    ports:
-      - "9100:9100"
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    command:
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - '--path.rootfs=/rootfs'
-    pid: "host"
-    restart: always
+networks:
+  cops-network:
+    external: true
