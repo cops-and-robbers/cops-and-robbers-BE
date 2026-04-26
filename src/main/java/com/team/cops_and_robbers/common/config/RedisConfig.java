@@ -28,6 +28,7 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.util.Map;
+import org.springframework.util.StringUtils;
 
 @Configuration
 @RequiredArgsConstructor
@@ -46,7 +47,7 @@ public class RedisConfig {
         SingleServerConfig serverConfig = config.useSingleServer().setAddress(address);
         String password = redisProperties.password();
 
-        if (password != null && !password.isBlank()) {
+        if (StringUtils.hasText(password)) {
             serverConfig.setPassword(password);
         }
         return Redisson.create(config);
