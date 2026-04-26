@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.Duration;
 import java.util.List;
 
 @Slf4j
@@ -45,9 +46,10 @@ public class GameEventConsumer {
     }
 
     @PreDestroy
-    public void shutdown() {
+    public void shutdown() throws InterruptedException {
         if (consumerThread != null) {
             consumerThread.interrupt();
+            consumerThread.join(Duration.ofSeconds(5));
             log.info("[GameEventConsumer] Consumer shutdown initiated.");
         }
     }
