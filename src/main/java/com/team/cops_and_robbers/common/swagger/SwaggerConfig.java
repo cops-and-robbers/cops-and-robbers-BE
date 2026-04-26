@@ -30,10 +30,11 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.2.0")
+                .version("2.3.0")
                 .description("""
                         ## 업데이트 항목
-                        - (신규) 게임 결과 조회 API 추가 (GET /api/game-results/{gameResultId})
+                        - (신규) 게임 생성 시 도둑 위치 공개 주기 0 분 허용 (POST /api/games)
+                        - (신규) 게임 설정 수정 시 도둑 위치 공개 주기 0 분 허용 (PUT /api/games/{gameId}/settings)
                         """);
 
         return new OpenAPI()
