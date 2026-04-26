@@ -2,7 +2,7 @@ name: 👮🏻 CI/CD 파이프라인 🥷
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "chxghee/feat-91-zero-shutdown" ]
 
 jobs:
   deploy:

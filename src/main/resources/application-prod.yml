@@ -15,11 +15,6 @@ spring:
     show-sql: false
     open-in-view: false
 
-decorator:
-  datasource:
-    p6spy:
-      enabled: false
-
   data:
     redis:
       host: ${REDIS_HOST}
@@ -32,3 +27,8 @@ logging:
   level:
     root: INFO
     com.team.cops_and_robbers: INFO
+
+decorator:
+  datasource:
+    p6spy:
+      enabled: false
