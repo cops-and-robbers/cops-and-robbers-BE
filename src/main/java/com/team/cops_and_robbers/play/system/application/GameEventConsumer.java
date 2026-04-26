@@ -46,11 +46,15 @@ public class GameEventConsumer {
     }
 
     @PreDestroy
-    public void shutdown() throws InterruptedException {
+    public void shutdown() {
         if (consumerThread != null) {
             consumerThread.interrupt();
-            consumerThread.join(Duration.ofSeconds(5));
-            log.info("[GameEventConsumer] Consumer shutdown initiated.");
+            try {
+                consumerThread.join(Duration.ofSeconds(5));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            log.info("[GameEventConsumer] Consumer shutdown completed.");
         }
     }
 
