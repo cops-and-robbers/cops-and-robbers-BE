@@ -44,12 +44,12 @@ public class FcmService {
                     .build();
 
             BatchResponse response = firebaseMessaging.sendEachForMulticast(message);
-            log.info("[FCM 발송] 멀티캐스트 발송 완료 | 성공={}, 실패={}",
+            log.info("[FCM] Multicast sent | success={}, failure={}",
                     response.getSuccessCount(), response.getFailureCount());
 
             logFailures(response, validTokens);
         } catch (FirebaseMessagingException e) {
-            log.error("[FCM 발송 실패] 멀티캐스트 전송 중 오류 발생 | code={}, message={}",
+            log.error("[FCM] Multicast send failed | code={}, message={}",
                     e.getMessagingErrorCode(), e.getMessage());
         }
     }
@@ -70,11 +70,11 @@ public class FcmService {
     private void logTokenFailure(String token, MessagingErrorCode errorCode) {
         switch (errorCode) {
             case UNREGISTERED ->
-                log.warn("[FCM 발송 실패] 만료된 토큰 (앱 삭제 또는 알림 차단) | token={}", token);
+                log.warn("[FCM] Token expired (app uninstalled or notifications blocked) | token={}", token);
             case INVALID_ARGUMENT ->
-                log.warn("[FCM 발송 실패] 잘못된 토큰 형식 | token={}", token);
+                log.warn("[FCM] Invalid token format | token={}", token);
             default ->
-                log.error("[FCM 발송 실패] 전송 실패 | code={}, token={}", errorCode, token);
+                log.error("[FCM] Send failed | code={}, token={}", errorCode, token);
         }
     }
 

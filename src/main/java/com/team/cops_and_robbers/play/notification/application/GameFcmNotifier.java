@@ -38,7 +38,7 @@ public class GameFcmNotifier {
             FcmPayload payload = resolveSystemPayload(event.type(), event.gameId());
             fcmService.send(new FcmMessage(tokens, payload.title(), payload.body(), payload.data()));
         } catch (Exception e) {
-            log.error("[FCM 알림] 비동기 발송 중 오류 발생 | gameId={}, type={}", event.gameId(), event.type(), e);
+            log.error("[FCM] Async send failed | gameId={}, type={}", event.gameId(), event.type(), e);
         }
     }
 

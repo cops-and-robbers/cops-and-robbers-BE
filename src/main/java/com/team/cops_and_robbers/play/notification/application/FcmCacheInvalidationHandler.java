@@ -25,7 +25,7 @@ public class FcmCacheInvalidationHandler {
                 .ifPresent(participant -> {
                     Long gameId = participant.getGame().getId();
                     fcmTokenCacheRepository.deleteAllByGameId(gameId);
-                    log.info("[FCM 캐시 무효화] 로그인 완료 및 토큰 갱신 감지 | userId={}, gameId={}", userId, gameId);
+                    log.info("[FCM] Token cache invalidated on login | userId={}, gameId={}", userId, gameId);
                 });
     }
 }
