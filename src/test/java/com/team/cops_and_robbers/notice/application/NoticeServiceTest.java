@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.notice.application;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.notice.application.dto.command.NoticeCreateCommand;
+import com.team.cops_and_robbers.notice.application.dto.command.NoticeListCommand;
 import com.team.cops_and_robbers.notice.application.dto.command.NoticeUpdateCommand;
 import com.team.cops_and_robbers.notice.application.dto.result.NoticeResult;
 import com.team.cops_and_robbers.notice.domain.Notice;
@@ -11,6 +12,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 
 import java.util.List;
 
@@ -56,13 +59,14 @@ class NoticeServiceTest extends ServiceUnitTest {
             Notice pinned = PINNED_NOTICE();
             setId(normal, 2L);
             setId(pinned, 1L);
-            given(noticeRepository.findAllByOrderByPinnedDescCreatedAtDesc()).willReturn(List.of(pinned, normal));
+            given(noticeRepository.findAllByOrderByPinnedDescCreatedAtDesc(any()))
+                    .willReturn(new PageImpl<>(List.of(pinned, normal)));
 
-            List<NoticeResult> results = noticeService.getNoticeList();
+            Page<NoticeResult> result = noticeService.getNoticeList(NoticeListCommand.of(0, 10));
 
-            assertThat(results).hasSize(2);
-            assertThat(results.get(0).pinned()).isTrue();
-            assertThat(results.get(1).pinned()).isFalse();
+            assertThat(result.getContent()).hasSize(2);
+            assertThat(result.getContent().get(0).pinned()).isTrue();
+            assertThat(result.getContent().get(1).pinned()).isFalse();
         }
     }
 

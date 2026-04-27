@@ -79,6 +79,8 @@ class NoticeControllerTest extends ControllerTest {
             noticeRepository.save(PINNED_NOTICE());
 
             ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .queryParam("page", 0)
+                    .queryParam("size", 10)
                     .when()
                     .get(NOTICE_API_URL)
                     .then()
@@ -86,9 +88,39 @@ class NoticeControllerTest extends ControllerTest {
 
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
-                softly.assertThat(extract.jsonPath().getList("")).hasSize(2);
-                softly.assertThat(extract.jsonPath().getBoolean("[0].pinned")).isTrue();
-                softly.assertThat(extract.jsonPath().getBoolean("[1].pinned")).isFalse();
+                softly.assertThat(extract.jsonPath().getList("content")).hasSize(2);
+                softly.assertThat(extract.jsonPath().getBoolean("content[0].pinned")).isTrue();
+                softly.assertThat(extract.jsonPath().getBoolean("content[1].pinned")).isFalse();
+                softly.assertThat(extract.jsonPath().getLong("page.totalElements")).isEqualTo(2);
+                softly.assertThat(extract.jsonPath().getInt("page.totalPages")).isEqualTo(1);
+            });
+        }
+
+        @Test
+        void 음수_페이지를_요청하면_400을_응답한다() {
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .queryParam("page", -1)
+                    .when()
+                    .get(NOTICE_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
+        void size가_0이면_400을_응답한다() {
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .queryParam("size", 0)
+                    .when()
+                    .get(NOTICE_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
             });
         }
 
