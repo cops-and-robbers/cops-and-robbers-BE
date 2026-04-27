@@ -70,7 +70,7 @@ class RobberLocationServiceTest extends ServiceUnitTest {
         void 위치를_전송한_도둑의_위치가_반환된다() {
             // given
             given(inGameParticipantCacheRepository.findByParticipantId(TEST_GAME_ID, TEST_PARTICIPANT_ID))
-                    .willReturn(Optional.of(new InGameParticipantCache(user.getNickname(), Team.ROBBER)));
+                    .willReturn(Optional.of(new InGameParticipantCache(user.getNickname(), Team.ROBBER, null)));
             robberLocationService.updateLocation(new LocationUpdateCommand(TEST_GAME_ID, TEST_PARTICIPANT_ID, 37.5665, 126.9780));
 
             RobberLocationsCommand command = RobberLocationsCommand.of(TEST_GAME_ID, TEST_USER_ID);
