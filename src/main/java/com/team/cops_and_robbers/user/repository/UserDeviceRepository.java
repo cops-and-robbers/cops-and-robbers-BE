@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface UserDeviceRepository extends JpaRepository<UserDevice, Long> {
@@ -18,21 +17,4 @@ public interface UserDeviceRepository extends JpaRepository<UserDevice, Long> {
     @Query("delete from UserDevice ud where ud.user.id = :userId")
     void deleteByUserId(@Param("userId") Long userId);
 
-    @Query("""
-        select ud.fcmToken
-        from UserDevice ud
-        where ud.user.id in :userIds
-        and ud.fcmToken is not null
-        and ud.user.allowGamePush = true
-        """)
-    List<String> findFcmTokensByUserIdsAndAllowPush(@Param("userIds") List<Long> userIds);
-
-    @Query("""
-        select ud.user.id as userId, ud.fcmToken as fcmToken
-        from UserDevice ud
-        where ud.user.id in :userIds
-        and ud.fcmToken is not null
-        and ud.user.allowGamePush = true
-        """)
-    List<UserFcmTokenProjection> findFcmTokenProjectionsByUserIdsAndAllowGamePush(@Param("userIds") List<Long> userIds);
 }

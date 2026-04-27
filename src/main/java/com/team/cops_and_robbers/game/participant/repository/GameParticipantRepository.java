@@ -157,19 +157,15 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
     Optional<GameParticipant> findFirstByGameIdOrderByCreatedAtAsc(Long gameId);
 
     @Query("""
-        select gp.user.id
+        select new com.team.cops_and_robbers.game.participant.repository.GameParticipantCacheProjection(
+            gp.id, gp.user.nickname, gp.team, ud.fcmToken
+        )
         from GameParticipant gp
+        join gp.user u
+        left join UserDevice ud on ud.user.id = u.id and ud.fcmToken is not null and u.allowGamePush = true
         where gp.game.id = :gameId
         """)
-    List<Long> findUserIdsByGameId(@Param("gameId") Long gameId);
-
-    @Query("""
-        select gp.user.id
-        from GameParticipant gp
-        where gp.game.id = :gameId
-        and gp.team = :team
-        """)
-    List<Long> findUserIdsByGameIdAndTeam(@Param("gameId") Long gameId, @Param("team") Team team);
+    List<GameParticipantCacheProjection> findCacheProjectionsByGameId(@Param("gameId") Long gameId);
 
     default GameParticipant getByGameIdAndUserId(Long gameId, Long userId) {
         return findByGameIdAndUserId(gameId, userId)
