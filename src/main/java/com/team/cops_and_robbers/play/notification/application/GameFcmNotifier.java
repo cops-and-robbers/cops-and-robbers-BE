@@ -2,11 +2,10 @@ package com.team.cops_and_robbers.play.notification.application;
 
 import com.team.cops_and_robbers.common.fcm.FcmMessage;
 import com.team.cops_and_robbers.common.fcm.FcmService;
-import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
-import com.team.cops_and_robbers.play.notification.repository.FcmTokenCacheRepository;
+import com.team.cops_and_robbers.play.common.domain.InGameParticipantCache;
+import com.team.cops_and_robbers.play.common.repository.InGameParticipantCacheRepository;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
 import com.team.cops_and_robbers.play.system.domain.SystemEventType;
-import com.team.cops_and_robbers.user.repository.UserDeviceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -14,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -21,17 +21,11 @@ import java.util.Map;
 public class GameFcmNotifier {
 
     private final FcmService fcmService;
-    private final GameParticipantRepository gameParticipantRepository;
-    private final UserDeviceRepository userDeviceRepository;
-    private final FcmTokenCacheRepository fcmTokenCacheRepository;
+    private final InGameParticipantCacheRepository inGameParticipantCacheRepository;
 
     @Async("fcmExecutor")
     public void notifySystemEvent(SystemEvent event) {
         try {
-            if (event.type() == SystemEventType.GAME_OVER) {
-                fcmTokenCacheRepository.deleteAllByGameId(event.gameId());
-            }
-
             List<String> tokens = getGameTokens(event.gameId());
             if (tokens.isEmpty()) return;
 
@@ -43,15 +37,10 @@ public class GameFcmNotifier {
     }
 
     private List<String> getGameTokens(Long gameId) {
-        List<String> cached = fcmTokenCacheRepository.findGameTokens(gameId);
-        if (cached != null) return cached;
-
-        List<Long> userIds = gameParticipantRepository.findUserIdsByGameId(gameId);
-        List<String> tokens = userIds.isEmpty()
-                ? List.of()
-                : userDeviceRepository.findFcmTokensByUserIdsAndAllowPush(userIds);
-        fcmTokenCacheRepository.saveGameTokens(gameId, tokens);
-        return tokens;
+        return inGameParticipantCacheRepository.findAllByGameId(gameId).stream()
+                .map(InGameParticipantCache::fcmToken)
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     private FcmPayload resolveSystemPayload(SystemEventType type, Long gameId) {

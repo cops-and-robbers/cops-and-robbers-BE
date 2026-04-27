@@ -7,7 +7,7 @@ import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.common.fixture.UserFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
-import com.team.cops_and_robbers.play.notification.repository.FcmTokenCacheRepository;
+import com.team.cops_and_robbers.play.common.application.InGameParticipantCacheService;
 import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -28,7 +28,7 @@ class FcmCacheInvalidationHandlerTest extends ServiceUnitTest {
     private FcmCacheInvalidationHandler fcmCacheInvalidationHandler;
 
     @Mock
-    private FcmTokenCacheRepository fcmTokenCacheRepository;
+    private InGameParticipantCacheService inGameParticipantCacheService;
 
     private static final Long TEST_USER_ID = 1L;
 
@@ -37,7 +37,7 @@ class FcmCacheInvalidationHandlerTest extends ServiceUnitTest {
     class HandleUserFcmTokenUpdated {
 
         @Test
-        void 유저가_참여중인_게임이_있다면_해당_게임의_FCM_캐시를_삭제한다() {
+        void 유저가_참여중인_게임이_있다면_해당_게임의_참여자_캐시를_리로드한다() {
             // given
             UserFcmTokenUpdatedEvent event = new UserFcmTokenUpdatedEvent(TEST_USER_ID);
             User user = UserFixture.USER();
@@ -55,11 +55,11 @@ class FcmCacheInvalidationHandlerTest extends ServiceUnitTest {
             fcmCacheInvalidationHandler.handleUserFcmTokenUpdated(event);
 
             // then
-            then(fcmTokenCacheRepository).should().deleteAllByGameId(game.getId());
+            then(inGameParticipantCacheService).should().loadCache(game.getId());
         }
 
         @Test
-        void 유저가_참여중인_게임이_없다면_캐시를_삭제하지_않고_넘어간다() {
+        void 유저가_참여중인_게임이_없다면_캐시를_리로드하지_않고_넘어간다() {
             // given
             UserFcmTokenUpdatedEvent event = new UserFcmTokenUpdatedEvent(TEST_USER_ID);
 
@@ -70,7 +70,7 @@ class FcmCacheInvalidationHandlerTest extends ServiceUnitTest {
             fcmCacheInvalidationHandler.handleUserFcmTokenUpdated(event);
 
             // then
-            then(fcmTokenCacheRepository).should(never()).deleteAllByGameId(any());
+            then(inGameParticipantCacheService).should(never()).loadCache(any());
         }
     }
 }
