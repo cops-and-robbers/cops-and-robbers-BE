@@ -14,7 +14,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -47,7 +50,9 @@ public class FcmService {
             log.info("[FCM] Multicast sent | success={}, failure={}",
                     response.getSuccessCount(), response.getFailureCount());
 
-            logFailures(response, validTokens);
+            if (response.getFailureCount() > 0) {
+                logFailures(response, validTokens);
+            }
         } catch (FirebaseMessagingException e) {
             log.error("[FCM] Multicast send failed | code={}, message={}",
                     e.getMessagingErrorCode(), e.getMessage());
@@ -56,25 +61,30 @@ public class FcmService {
 
     private void logFailures(BatchResponse response, List<String> tokens) {
         List<SendResponse> responses = response.getResponses();
+        Map<MessagingErrorCode, List<String>> failures = new EnumMap<>(MessagingErrorCode.class);
+
         for (int i = 0; i < responses.size(); i++) {
             SendResponse sendResponse = responses.get(i);
-            if (sendResponse.isSuccessful()) continue;
+            if (sendResponse.isSuccessful() || sendResponse.getException() == null) continue;
 
-            FirebaseMessagingException ex = sendResponse.getException();
-            if (ex == null) continue;
-
-            logTokenFailure(tokens.get(i), ex.getMessagingErrorCode());
+            MessagingErrorCode errorCode = sendResponse.getException().getMessagingErrorCode();
+            failures.computeIfAbsent(errorCode, key -> new ArrayList<>()).add(tokens.get(i));
         }
+
+        failures.forEach(this::logFailureSummary);
     }
 
-    private void logTokenFailure(String token, MessagingErrorCode errorCode) {
+    private void logFailureSummary(MessagingErrorCode errorCode, List<String> failedTokens) {
         switch (errorCode) {
             case UNREGISTERED ->
-                log.warn("[FCM] Token expired (app uninstalled or notifications blocked) | token={}", token);
+                log.warn("[FCM] Token expired (app uninstalled or notifications blocked) | count={}, tokens={}",
+                        failedTokens.size(), failedTokens);
             case INVALID_ARGUMENT ->
-                log.warn("[FCM] Invalid token format | token={}", token);
+                log.warn("[FCM] Invalid token format | count={}, tokens={}",
+                        failedTokens.size(), failedTokens);
             default ->
-                log.error("[FCM] Send failed | code={}, token={}", errorCode, token);
+                log.error("[FCM] Send failed | code={}, count={}, tokens={}",
+                        errorCode, failedTokens.size(), failedTokens);
         }
     }
 
