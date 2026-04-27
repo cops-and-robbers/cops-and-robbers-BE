@@ -1,0 +1,28 @@
+package com.team.cops_and_robbers.notice.application.dto.command;
+
+import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.common.exception.CommonException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+public record NoticeListCommand(
+        int page,
+        int size
+) {
+    public NoticeListCommand {
+        if (page < 0) {
+            throw new ApplicationException(CommonException.INVALID_QUERY_PARAMETER);
+        }
+        if (size < 1) {
+            throw new ApplicationException(CommonException.INVALID_QUERY_PARAMETER);
+        }
+    }
+
+    public static NoticeListCommand of(int page, int size) {
+        return new NoticeListCommand(page, size);
+    }
+
+    public Pageable toPageable() {
+        return PageRequest.of(page, size);
+    }
+}

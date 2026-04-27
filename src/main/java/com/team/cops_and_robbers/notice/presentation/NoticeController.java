@@ -3,12 +3,15 @@ package com.team.cops_and_robbers.notice.presentation;
 import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.notice.application.NoticeService;
+import com.team.cops_and_robbers.notice.application.dto.command.NoticeListCommand;
 import com.team.cops_and_robbers.notice.application.dto.result.NoticeResult;
 import com.team.cops_and_robbers.notice.presentation.dto.request.NoticeCreateRequest;
 import com.team.cops_and_robbers.notice.presentation.dto.request.NoticeUpdateRequest;
+import com.team.cops_and_robbers.notice.presentation.dto.response.NoticeListResponse;
 import com.team.cops_and_robbers.notice.presentation.dto.response.NoticeResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,9 +21,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/notices")
@@ -35,16 +37,20 @@ public class NoticeController implements NoticeControllerDocs {
             @RequestBody @Valid NoticeCreateRequest request
     ) {
         NoticeResult result = noticeService.createNotice(request.toCommand());
-        return ResponseEntity.status(HttpStatus.CREATED).body(NoticeResponse.from(result));
+        NoticeResponse response = NoticeResponse.from(result);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
-    public ResponseEntity<List<NoticeResponse>> getNoticeList(@AuthUser LoginUser loginUser) {
-        List<NoticeResponse> responses = noticeService.getNoticeList()
-                .stream()
-                .map(NoticeResponse::from)
-                .toList();
-        return ResponseEntity.ok(responses);
+    public ResponseEntity<NoticeListResponse> getNoticeList(
+            @AuthUser LoginUser loginUser,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        NoticeListCommand command = NoticeListCommand.of(page, size);
+        Page<NoticeResult> result = noticeService.getNoticeList(command);
+        NoticeListResponse response = NoticeListResponse.from(result);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{noticeId}")
@@ -53,7 +59,8 @@ public class NoticeController implements NoticeControllerDocs {
             @PathVariable Long noticeId
     ) {
         NoticeResult result = noticeService.getNotice(noticeId);
-        return ResponseEntity.ok(NoticeResponse.from(result));
+        NoticeResponse response = NoticeResponse.from(result);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{noticeId}")
@@ -63,7 +70,8 @@ public class NoticeController implements NoticeControllerDocs {
             @RequestBody @Valid NoticeUpdateRequest request
     ) {
         NoticeResult result = noticeService.updateNotice(request.toCommand(noticeId));
-        return ResponseEntity.ok(NoticeResponse.from(result));
+        NoticeResponse response = NoticeResponse.from(result);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{noticeId}")

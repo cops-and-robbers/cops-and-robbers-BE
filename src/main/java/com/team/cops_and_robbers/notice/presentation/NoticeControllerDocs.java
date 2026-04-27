@@ -5,6 +5,7 @@ import com.team.cops_and_robbers.common.swagger.ApiErrorCode;
 import com.team.cops_and_robbers.notice.exception.NoticeException;
 import com.team.cops_and_robbers.notice.presentation.dto.request.NoticeCreateRequest;
 import com.team.cops_and_robbers.notice.presentation.dto.request.NoticeUpdateRequest;
+import com.team.cops_and_robbers.notice.presentation.dto.response.NoticeListResponse;
 import com.team.cops_and_robbers.notice.presentation.dto.response.NoticeResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -15,8 +16,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "Notice", description = "공지사항 관리 API")
 public interface NoticeControllerDocs {
@@ -34,7 +34,11 @@ public interface NoticeControllerDocs {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
-    ResponseEntity<List<NoticeResponse>> getNoticeList(@Parameter(hidden = true) LoginUser loginUser);
+    ResponseEntity<NoticeListResponse> getNoticeList(
+            @Parameter(hidden = true) LoginUser loginUser,
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 크기 (1부터~)", example = "10") @RequestParam(defaultValue = "10") int size
+    );
 
     @Operation(summary = "공지사항 단건 조회", description = "특정 공지사항을 조회합니다.")
     @ApiErrorCode(value = NoticeException.class, codes = {"NOTICE_NOT_FOUND"})
