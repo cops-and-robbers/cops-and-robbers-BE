@@ -8,6 +8,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,14 +25,21 @@ public class InGameParticipantCacheRepository {
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
 
-    public void saveAll(Long gameId, List<GameParticipant> participants) {
+    public void saveAll(Long gameId, List<GameParticipant> participants, Map<Long, String> fcmTokenByUserId) {
         Map<String, InGameParticipantCache> entries = participants.stream()
                 .collect(Collectors.toMap(
                         p -> field(p.getId()),
-                        InGameParticipantCache::from
+                        p -> InGameParticipantCache.from(p, fcmTokenByUserId.get(p.getUser().getId()))
                 ));
         redisTemplate.opsForHash().putAll(key(gameId), entries);
         redisTemplate.expire(key(gameId), TTL);
+    }
+
+    public List<InGameParticipantCache> findAllByGameId(Long gameId) {
+        Collection<Object> values = redisTemplate.opsForHash().entries(key(gameId)).values();
+        return values.stream()
+                .map(v -> objectMapper.convertValue(v, InGameParticipantCache.class))
+                .toList();
     }
 
     public Optional<InGameParticipantCache> findByParticipantId(Long gameId, Long participantId) {

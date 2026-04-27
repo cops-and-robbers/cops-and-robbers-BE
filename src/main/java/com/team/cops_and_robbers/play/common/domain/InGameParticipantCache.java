@@ -5,12 +5,14 @@ import com.team.cops_and_robbers.game.participant.domain.Team;
 
 public record InGameParticipantCache(
         String nickname,
-        Team team
+        Team team,
+        String fcmToken
 ) {
-    public static InGameParticipantCache from(GameParticipant participant) {
+    public static InGameParticipantCache from(GameParticipant participant, String fcmToken) {
         return new InGameParticipantCache(
                 participant.getUser().getNickname(),
-                participant.getTeam()
+                participant.getTeam(),
+                fcmToken
         );
     }
 }
