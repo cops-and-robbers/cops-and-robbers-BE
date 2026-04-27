@@ -16,8 +16,8 @@ public class AsyncConfig {
     @Bean
     public Executor fcmExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(7);
-        executor.setMaxPoolSize(15);
+        executor.setCorePoolSize(10);
+        executor.setMaxPoolSize(30);
         executor.setQueueCapacity(100);
         executor.setThreadNamePrefix(FCM_NOTIFIER_PREFIX);
         executor.setWaitForTasksToCompleteOnShutdown(true);
