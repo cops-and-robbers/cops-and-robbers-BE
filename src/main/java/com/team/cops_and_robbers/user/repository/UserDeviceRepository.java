@@ -26,4 +26,13 @@ public interface UserDeviceRepository extends JpaRepository<UserDevice, Long> {
         and ud.user.allowGamePush = true
         """)
     List<String> findFcmTokensByUserIdsAndAllowPush(@Param("userIds") List<Long> userIds);
+
+    @Query("""
+        select ud.user.id as userId, ud.fcmToken as fcmToken
+        from UserDevice ud
+        where ud.user.id in :userIds
+        and ud.fcmToken is not null
+        and ud.user.allowGamePush = true
+        """)
+    List<UserFcmTokenProjection> findFcmTokenProjectionsByUserIdsAndAllowGamePush(@Param("userIds") List<Long> userIds);
 }
