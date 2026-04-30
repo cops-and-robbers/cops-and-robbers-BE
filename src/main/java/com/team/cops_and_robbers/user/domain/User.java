@@ -44,6 +44,10 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean allowMarketingPush;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
     public static User signUp(String socialId, SocialType socialType, String nickname) {
         return User.builder()
                 .socialId(socialId)
@@ -51,7 +55,12 @@ public class User extends BaseTimeEntity {
                 .nickname(nickname)
                 .allowGamePush(true)
                 .allowMarketingPush(false)
+                .role(Role.USER)
                 .build();
+    }
+
+    public boolean isAdmin() {
+        return this.role == Role.ADMIN;
     }
 
     public void updateNickname(String modifiedNickname) {
