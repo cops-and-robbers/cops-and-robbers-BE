@@ -30,6 +30,9 @@ public class UserFixture {
                 .allowGamePush(true)
                 .allowMarketingPush(false)
                 .role(Role.USER)
+                .termsOfServiceAgreed(true)
+                .privacyPolicyAgreed(true)
+                .locationTermsAgreed(true)
                 .build();
     }
 
@@ -107,6 +110,7 @@ public class UserFixture {
                 .nickname(nickname)
                 .allowGamePush(true)
                 .allowMarketingPush(false)
+                .role(Role.USER)
                 .termsOfServiceAgreed(false)
                 .privacyPolicyAgreed(false)
                 .locationTermsAgreed(false)
