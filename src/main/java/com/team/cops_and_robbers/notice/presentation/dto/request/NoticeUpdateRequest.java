@@ -20,7 +20,7 @@ public record NoticeUpdateRequest(
         @NotNull(message = "고정 여부는 필수 입력 항목입니다.")
         Boolean pinned
 ) {
-    public NoticeUpdateCommand toCommand(Long noticeId) {
-        return new NoticeUpdateCommand(noticeId, title, content, pinned);
+    public NoticeUpdateCommand toCommand(Long userId, Long noticeId) {
+        return new NoticeUpdateCommand(userId, noticeId, title, content, pinned);
     }
 }

@@ -20,7 +20,7 @@ public record NoticeCreateRequest(
         @NotNull(message = "고정 여부는 필수 입력 항목입니다.")
         Boolean pinned
 ) {
-    public NoticeCreateCommand toCommand() {
-        return new NoticeCreateCommand(title, content, pinned);
+    public NoticeCreateCommand toCommand(Long userId) {
+        return new NoticeCreateCommand(userId, title, content, pinned);
     }
 }

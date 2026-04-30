@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.notice.presentation;
 import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.notice.application.NoticeService;
+import com.team.cops_and_robbers.notice.application.dto.command.NoticeDeleteCommand;
 import com.team.cops_and_robbers.notice.application.dto.command.NoticeListCommand;
 import com.team.cops_and_robbers.notice.application.dto.result.NoticeResult;
 import com.team.cops_and_robbers.notice.presentation.dto.request.NoticeCreateRequest;
@@ -36,7 +37,7 @@ public class NoticeController implements NoticeControllerDocs {
             @AuthUser LoginUser loginUser,
             @RequestBody @Valid NoticeCreateRequest request
     ) {
-        NoticeResult result = noticeService.createNotice(request.toCommand());
+        NoticeResult result = noticeService.createNotice(request.toCommand(loginUser.userId()));
         NoticeResponse response = NoticeResponse.from(result);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -69,7 +70,7 @@ public class NoticeController implements NoticeControllerDocs {
             @PathVariable Long noticeId,
             @RequestBody @Valid NoticeUpdateRequest request
     ) {
-        NoticeResult result = noticeService.updateNotice(request.toCommand(noticeId));
+        NoticeResult result = noticeService.updateNotice(request.toCommand(loginUser.userId(), noticeId));
         NoticeResponse response = NoticeResponse.from(result);
         return ResponseEntity.ok(response);
     }
@@ -79,7 +80,7 @@ public class NoticeController implements NoticeControllerDocs {
             @AuthUser LoginUser loginUser,
             @PathVariable Long noticeId
     ) {
-        noticeService.deleteNotice(noticeId);
+        noticeService.deleteNotice(new NoticeDeleteCommand(loginUser.userId(), noticeId));
         return ResponseEntity.noContent().build();
     }
 }
