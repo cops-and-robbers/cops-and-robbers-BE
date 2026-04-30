@@ -100,6 +100,14 @@ public abstract class ControllerTest {
         return userRepository.save(UserFixture.USER(nickname));
     }
 
+    protected User givenAdminUser() {
+        return userRepository.save(UserFixture.ADMIN());
+    }
+
+    protected User givenAdminUser(String nickname) {
+        return userRepository.save(UserFixture.ADMIN(nickname));
+    }
+
     protected UserDevice givenUserDevice() {
         return userDeviceRepository.save(UserDeviceFixture.IOS_DEVICE(givenUser()));
     }

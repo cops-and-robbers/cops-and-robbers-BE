@@ -19,13 +19,15 @@ class NoticeControllerTest extends ControllerTest {
 
     private static final String NOTICE_API_URL = "/api/notices";
 
-    private User user;
-    private String accessToken;
+    private User adminUser;
+    private String adminAccessToken;
+    private String userAccessToken;
 
     @BeforeEach
     void setUpData() {
-        user = givenUser();
-        accessToken = givenAccessToken(user);
+        adminUser = givenAdminUser();
+        adminAccessToken = givenAccessToken(adminUser);
+        userAccessToken = givenAccessToken(givenUser("일반유저"));
     }
 
     @Nested
@@ -33,10 +35,10 @@ class NoticeControllerTest extends ControllerTest {
     class CreateNotice {
 
         @Test
-        void 공지사항_생성에_성공하면_201을_응답한다() {
+        void 관리자가_공지사항_생성에_성공하면_201을_응답한다() {
             NoticeCreateRequest request = new NoticeCreateRequest("공지사항 제목", "공지사항 내용", false);
 
-            ExtractableResponse<Response> extract = authenticated(accessToken)
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .body(request)
                     .when()
                     .post(NOTICE_API_URL)
@@ -49,6 +51,22 @@ class NoticeControllerTest extends ControllerTest {
                 softly.assertThat(extract.jsonPath().getString("title")).isEqualTo("공지사항 제목");
                 softly.assertThat(extract.jsonPath().getString("content")).isEqualTo("공지사항 내용");
                 softly.assertThat(extract.jsonPath().getBoolean("pinned")).isFalse();
+            });
+        }
+
+        @Test
+        void 일반_사용자가_요청하면_403을_응답한다() {
+            NoticeCreateRequest request = new NoticeCreateRequest("공지사항 제목", "공지사항 내용", false);
+
+            ExtractableResponse<Response> extract = authenticated(userAccessToken)
+                    .body(request)
+                    .when()
+                    .post(NOTICE_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(403);
             });
         }
 
@@ -78,7 +96,7 @@ class NoticeControllerTest extends ControllerTest {
             noticeRepository.save(NOTICE());
             noticeRepository.save(PINNED_NOTICE());
 
-            ExtractableResponse<Response> extract = authenticated(accessToken)
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .queryParam("page", 0)
                     .queryParam("size", 10)
                     .when()
@@ -98,7 +116,7 @@ class NoticeControllerTest extends ControllerTest {
 
         @Test
         void 음수_페이지를_요청하면_400을_응답한다() {
-            ExtractableResponse<Response> extract = authenticated(accessToken)
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .queryParam("page", -1)
                     .when()
                     .get(NOTICE_API_URL)
@@ -112,7 +130,7 @@ class NoticeControllerTest extends ControllerTest {
 
         @Test
         void size가_0이면_400을_응답한다() {
-            ExtractableResponse<Response> extract = authenticated(accessToken)
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .queryParam("size", 0)
                     .when()
                     .get(NOTICE_API_URL)
@@ -146,7 +164,7 @@ class NoticeControllerTest extends ControllerTest {
         void 존재하는_공지사항_조회에_성공하면_200을_응답한다() {
             Long noticeId = noticeRepository.save(NOTICE()).getId();
 
-            ExtractableResponse<Response> extract = authenticated(accessToken)
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .when()
                     .get(NOTICE_API_URL + "/" + noticeId)
                     .then()
@@ -160,7 +178,7 @@ class NoticeControllerTest extends ControllerTest {
 
         @Test
         void 존재하지_않는_공지사항_조회시_404를_응답한다() {
-            ExtractableResponse<Response> extract = authenticated(accessToken)
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .when()
                     .get(NOTICE_API_URL + "/999")
                     .then()
@@ -190,11 +208,11 @@ class NoticeControllerTest extends ControllerTest {
     class UpdateNotice {
 
         @Test
-        void 공지사항_수정에_성공하면_200을_응답한다() {
+        void 관리자가_공지사항_수정에_성공하면_200을_응답한다() {
             Long noticeId = noticeRepository.save(NOTICE()).getId();
             NoticeUpdateRequest request = new NoticeUpdateRequest("수정된 제목", "수정된 내용", true);
 
-            ExtractableResponse<Response> extract = authenticated(accessToken)
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .body(request)
                     .when()
                     .put(NOTICE_API_URL + "/" + noticeId)
@@ -210,10 +228,27 @@ class NoticeControllerTest extends ControllerTest {
         }
 
         @Test
+        void 일반_사용자가_요청하면_403을_응답한다() {
+            Long noticeId = noticeRepository.save(NOTICE()).getId();
+            NoticeUpdateRequest request = new NoticeUpdateRequest("수정된 제목", "수정된 내용", true);
+
+            ExtractableResponse<Response> extract = authenticated(userAccessToken)
+                    .body(request)
+                    .when()
+                    .put(NOTICE_API_URL + "/" + noticeId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(403);
+            });
+        }
+
+        @Test
         void 존재하지_않는_공지사항_수정시_404를_응답한다() {
             NoticeUpdateRequest request = new NoticeUpdateRequest("수정된 제목", "수정된 내용", true);
 
-            ExtractableResponse<Response> extract = authenticated(accessToken)
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .body(request)
                     .when()
                     .put(NOTICE_API_URL + "/999")
@@ -247,10 +282,10 @@ class NoticeControllerTest extends ControllerTest {
     class DeleteNotice {
 
         @Test
-        void 공지사항_삭제에_성공하면_204를_응답한다() {
+        void 관리자가_공지사항_삭제에_성공하면_204를_응답한다() {
             Long noticeId = noticeRepository.save(NOTICE()).getId();
 
-            ExtractableResponse<Response> extract = authenticated(accessToken)
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .when()
                     .delete(NOTICE_API_URL + "/" + noticeId)
                     .then()
@@ -263,8 +298,23 @@ class NoticeControllerTest extends ControllerTest {
         }
 
         @Test
+        void 일반_사용자가_요청하면_403을_응답한다() {
+            Long noticeId = noticeRepository.save(NOTICE()).getId();
+
+            ExtractableResponse<Response> extract = authenticated(userAccessToken)
+                    .when()
+                    .delete(NOTICE_API_URL + "/" + noticeId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(403);
+            });
+        }
+
+        @Test
         void 존재하지_않는_공지사항_삭제시_404를_응답한다() {
-            ExtractableResponse<Response> extract = authenticated(accessToken)
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .when()
                     .delete(NOTICE_API_URL + "/999")
                     .then()
