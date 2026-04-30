@@ -1,0 +1,2 @@
+ALTER TABLE games
+    ADD COLUMN round_number INT NOT NULL DEFAULT 0;

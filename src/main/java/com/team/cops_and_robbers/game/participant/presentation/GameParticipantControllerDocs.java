@@ -9,6 +9,7 @@ import com.team.cops_and_robbers.game.participant.presentation.dto.request.GameJ
 import com.team.cops_and_robbers.game.participant.presentation.dto.response.GameJoinResponse;
 import com.team.cops_and_robbers.game.participant.presentation.dto.response.GameLeaveResponse;
 import com.team.cops_and_robbers.game.participant.presentation.dto.response.GameParticipantListResponse;
+import com.team.cops_and_robbers.user.exception.UserException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -26,6 +27,7 @@ public interface GameParticipantControllerDocs {
             description = "초대 코드를 사용하여 게임 방에 참여합니다. 이미 다른 활성 게임에 참여 중이거나, 게임이 이미 시작되었거나, 최대 참여 인원에 도달한 경우 참여할 수 없습니다."
     )
     @ApiErrorCode(value = GameParticipantException.class, codes = {"ALREADY_PARTICIPATING", "GAME_ALREADY_STARTED", "GAME_FULL", "INVALID_INVITE_CODE"})
+    @ApiErrorCode(value = UserException.class, codes = {"REQUIRED_TERMS_NOT_AGREED"})
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "게임 참여 성공")

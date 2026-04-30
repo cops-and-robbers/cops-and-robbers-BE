@@ -17,6 +17,7 @@ import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepo
 import com.team.cops_and_robbers.play.lobby.application.LobbyEventFactory;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
 import com.team.cops_and_robbers.user.domain.User;
+import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -45,7 +46,8 @@ public class GameParticipantService {
         Game game = gameRepository.getByInviteCode(command.inviteCode());
         validateJoinable(command.userId(), game);
 
-        User user = userRepository.getByUserId(command.userId());
+        User user = getUser(command.userId());
+
         GameParticipant participant = GameParticipant.createParticipant(game, user, false);
         gameParticipantRepository.save(participant);
 
@@ -71,6 +73,14 @@ public class GameParticipantService {
         if (participantCount >= game.getMaxParticipants()) {
             throw new ApplicationException(GameParticipantException.GAME_FULL);
         }
+    }
+
+    private User getUser(Long userId) {
+        User user = userRepository.getByUserId(userId);
+        if (!user.hasAgreedRequiredTerms()) {
+            throw  new ApplicationException(UserException.REQUIRED_TERMS_NOT_AGREED);
+        }
+        return user;
     }
 
     @Transactional

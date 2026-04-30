@@ -25,8 +25,46 @@ public interface AuthControllerDocs {
     @ApiErrorCode(value = AuthException.class, codes = {"INVALID_FIREBASE_TOKEN", "EXPIRED_FIREBASE_TOKEN"})
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "기존 회원 로그인 성공"),
-            @ApiResponse(responseCode = "201", description = "신규 회원 가입 및 로그인 성공 (회원 리소스 생성)")
+            @ApiResponse(responseCode = "200", description = "기존 회원 로그인 성공",
+                    content = @Content(
+                            schema = @Schema(implementation = LoginResponse.class),
+                            examples = @ExampleObject(
+                                    name = "기존 회원 로그인 성공 예시",
+                                    value = """
+                                            {
+                                                "userId": 1,
+                                                "nickname": "민첩한괴도5308",
+                                                "tokens": {
+                                                    "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzY4NDk1MDA1LCJleHAiOjE3Njg0OTg2MDV9...",
+                                                    "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzY4NDk1MDA1LCJleHAiOjE3Njk3MDQ2MDV9..."
+                                                },
+                                                "isNewUser": false,
+                                                "requiresAgreement": false
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @ApiResponse(responseCode = "201", description = "신규 회원 가입 및 로그인 성공 (회원 리소스 생성)",
+                    content = @Content(
+                            schema = @Schema(implementation = LoginResponse.class),
+                            examples = @ExampleObject(
+                                    name = "신규 회원 가입 성공 예시 (신규 회원은 항상 필수 이용 약관에 동의를 하지 않은 상태를 갖는다)",
+                                    value = """
+                                            {
+                                                "userId": 2,
+                                                "nickname": "집요한괴도4053",
+                                                "tokens": {
+                                                    "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzY4NDk1MDEwLCJleHAiOjE3Njg0OTg2MTB9...",
+                                                    "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzY4NDk1MDEwLCJleHAiOjE3Njk3MDQ2MTB9..."
+                                                },
+                                                "isNewUser": true,
+                                                "requiresAgreement": true
+                                            }
+                                            """
+                            )
+                    )
+            )
     })
     ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request);
 

@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.game.participant.presentation;
 
 import com.team.cops_and_robbers.common.ControllerTest;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
+import com.team.cops_and_robbers.common.fixture.UserFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
@@ -159,6 +160,25 @@ class GameParticipantControllerTest extends ControllerTest {
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+        }
+
+        @Test
+        void 필수_약관에_미동의한_유저라면_400_BadRequest를_응답한다() {
+            // given
+            User unagreedUser = userRepository.save(UserFixture.USER_WITHOUT_TERMS("unagreedGuest"));
+            String unagreedToken = givenAccessToken(unagreedUser);
+            GameJoinRequest request = new GameJoinRequest(waitingGame.getInviteCode());
+
+            // when
+            ExtractableResponse<Response> response = authenticated(unagreedToken)
+                    .body(request)
+                    .when()
+                    .post(JOIN_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
         }
 
         @Test

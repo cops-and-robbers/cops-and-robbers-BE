@@ -12,14 +12,17 @@ public record LoginResponse(
         @Schema(description = "JWT 토큰 정보")
         Tokens tokens,
         @Schema(description = "신규 회원 여부", example = "false")
-        boolean isNewUser
+        boolean isNewUser,
+        @Schema(description = "필수 이용약관 동의 여부", example = "true")
+        boolean requiresAgreement
 ) {
     public static LoginResponse from(LoginResult result) {
         return new LoginResponse(
                 result.user().getId(),
                 result.user().getNickname(),
                 result.tokens(),
-                result.isNewUser()
+                result.isNewUser(),
+                !result.user().hasAgreedRequiredTerms()
         );
     }
 }

@@ -3,10 +3,13 @@ package com.team.cops_and_robbers.user.presentation;
 import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.user.application.UserService;
+import com.team.cops_and_robbers.user.application.dto.command.AgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
 import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.User;
+import com.team.cops_and_robbers.user.presentation.dto.request.AgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
+import com.team.cops_and_robbers.user.presentation.dto.response.AgreementResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.DeleteAccountResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.MyPageResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.NicknameCheckResponse;
@@ -74,5 +77,33 @@ public class UserController implements UserControllerDocs {
     public ResponseEntity<DeleteAccountResponse> deleteAccount(@AuthUser LoginUser loginUser) {
         userService.deleteAccount(loginUser.userId());
         return ResponseEntity.ok(DeleteAccountResponse.from());
+    }
+
+    /**
+     * 6. 사용자 이용 약관 동의 여부를 조회합니다.
+     */
+    @GetMapping("/agreements")
+    public ResponseEntity<AgreementResponse> getAgreements(@AuthUser LoginUser loginUser) {
+        User user = userService.getUserInfo(loginUser.userId());
+        return ResponseEntity.ok(AgreementResponse.from(user));
+    }
+
+    /**
+     * 7. 사용자 이용 약관 동의 여부를 업데이트 합니다.
+     */
+    @PutMapping("/agreements")
+    public ResponseEntity<Void> updateTerms(
+            @AuthUser LoginUser loginUser,
+            @RequestBody @Valid AgreementRequest request
+    ) {
+        AgreementCommand command = AgreementCommand.of(
+                loginUser.userId(),
+                request.termsOfService(),
+                request.privacyPolicy(),
+                request.locationTerms(),
+                request.marketing()
+        );
+        userService.updateTermsAgreement(command);
+        return ResponseEntity.noContent().build();
     }
 }

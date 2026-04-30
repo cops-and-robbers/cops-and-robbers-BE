@@ -16,6 +16,9 @@ public class UserFixture {
                 .allowGamePush(true)
                 .allowMarketingPush(false)
                 .role(Role.USER)
+                .termsOfServiceAgreed(true)
+                .privacyPolicyAgreed(true)
+                .locationTermsAgreed(true)
                 .build();
     }
 
@@ -49,6 +52,9 @@ public class UserFixture {
                 .allowGamePush(true)
                 .allowMarketingPush(false)
                 .role(Role.ADMIN)
+                .termsOfServiceAgreed(true)
+                .privacyPolicyAgreed(true)
+                .locationTermsAgreed(true)
                 .build();
     }
 
@@ -60,6 +66,9 @@ public class UserFixture {
                 .allowGamePush(true)
                 .allowMarketingPush(false)
                 .role(Role.USER)
+                .termsOfServiceAgreed(true)
+                .privacyPolicyAgreed(true)
+                .locationTermsAgreed(true)
                 .build();
     }
 
@@ -71,6 +80,9 @@ public class UserFixture {
                 .allowGamePush(true)
                 .allowMarketingPush(false)
                 .role(Role.USER)
+                .termsOfServiceAgreed(true)
+                .privacyPolicyAgreed(true)
+                .locationTermsAgreed(true)
                 .build();
     }
 
@@ -82,6 +94,22 @@ public class UserFixture {
                 .allowGamePush(true)
                 .allowMarketingPush(false)
                 .role(Role.USER)
+                .termsOfServiceAgreed(true)
+                .privacyPolicyAgreed(true)
+                .locationTermsAgreed(true)
+                .build();
+    }
+
+    public static User USER_WITHOUT_TERMS(String nickname) {
+        return User.builder()
+                .socialId(UUID.randomUUID().toString())
+                .socialType(SocialType.GOOGLE)
+                .nickname(nickname)
+                .allowGamePush(true)
+                .allowMarketingPush(false)
+                .termsOfServiceAgreed(false)
+                .privacyPolicyAgreed(false)
+                .locationTermsAgreed(false)
                 .build();
     }
 }

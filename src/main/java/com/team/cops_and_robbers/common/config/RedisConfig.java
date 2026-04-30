@@ -10,11 +10,15 @@ import com.team.cops_and_robbers.play.location.application.PoliceLocationSubscri
 import com.team.cops_and_robbers.play.location.application.RobberLocationSubscriber;
 import com.team.cops_and_robbers.play.system.application.SystemSubscriber;
 import lombok.RequiredArgsConstructor;
+import org.redisson.Redisson;
+import org.redisson.api.RedissonClient;
+import org.redisson.codec.JsonJacksonCodec;
+import org.redisson.config.Config;
+import org.redisson.config.SingleServerConfig;
+import org.redisson.spring.data.connection.RedissonConnectionFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.PatternTopic;
@@ -24,6 +28,7 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.util.Map;
+import org.springframework.util.StringUtils;
 
 @Configuration
 @RequiredArgsConstructor
@@ -33,11 +38,24 @@ public class RedisConfig {
 
     private final RedisProperties redisProperties;
 
+    @Bean(destroyMethod = "shutdown")
+    public RedissonClient redissonClient() {
+        Config config = new Config();
+        config.setCodec(new JsonJacksonCodec());
+
+        String address = redisProperties.getRedissonAddress();
+        SingleServerConfig serverConfig = config.useSingleServer().setAddress(address);
+        String password = redisProperties.password();
+
+        if (StringUtils.hasText(password)) {
+            serverConfig.setPassword(password);
+        }
+        return Redisson.create(config);
+    }
+
     @Bean
-    public RedisConnectionFactory redisConnectionFactory() {
-        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(redisProperties.host(), redisProperties.port());
-        config.setPassword(redisProperties.password());
-        return new LettuceConnectionFactory(config);
+    public RedisConnectionFactory redisConnectionFactory(RedissonClient redissonClient) {
+        return new RedissonConnectionFactory(redissonClient);
     }
 
     /**
@@ -45,9 +63,9 @@ public class RedisConfig {
      * 용도: 리프레시 토큰 (문자열 데이터)
      */
     @Bean
-    public StringRedisTemplate stringRedisTemplate() {
+    public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
         StringRedisTemplate stringRedisTemplate = new StringRedisTemplate();
-        stringRedisTemplate.setConnectionFactory(redisConnectionFactory());
+        stringRedisTemplate.setConnectionFactory(redisConnectionFactory);
         return stringRedisTemplate;
     }
 

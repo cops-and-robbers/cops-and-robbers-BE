@@ -53,6 +53,13 @@ public class Game extends BaseTimeEntity {
 
     private LocalDateTime lastEndedAt;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer totalArrestCount = 0;
+
+    @Column(nullable = false)
+    private int roundNumber = 0;
+
     public boolean isWaiting() {
         return this.status == GameStatus.WAITING;
     }
@@ -64,11 +71,13 @@ public class Game extends BaseTimeEntity {
     public void startGame(LocalDateTime startTime) {
         this.startedAt = startTime;
         this.status = GameStatus.IN_PROGRESS;
+        this.roundNumber++;
     }
 
     public void resetForNextRound() {
         this.status = GameStatus.WAITING;
         this.lastEndedAt = LocalDateTime.now();
+        this.totalArrestCount = 0;
     }
 
     public static Game createGame(String inviteCode, GameCreateCommand command) {
@@ -82,6 +91,10 @@ public class Game extends BaseTimeEntity {
                 .build();
     }
 
+    public void incrementArrestCount() {
+        this.totalArrestCount++;
+    }
+
     public void updateSettings(
             Integer roundDurationMinutes,
             Integer locationRevealIntervalMinutes,
@@ -92,5 +105,33 @@ public class Game extends BaseTimeEntity {
         this.locationRevealIntervalMinutes = locationRevealIntervalMinutes;
         this.policeWaitMinutes = policeWaitMinutes;
         this.maxParticipants = maxParticipants;
+    }
+
+    public boolean isSameRound(int eventRound) {
+        return this.roundNumber == eventRound;
+    }
+
+    public boolean isGameOverTimeReached(LocalDateTime now) {
+        return !now.isBefore(getGameOverTime());
+    }
+
+    public boolean isBeforeGameOver(LocalDateTime time) {
+        return time.isBefore(getGameOverTime());
+    }
+
+    public LocalDateTime getPoliceMoveStartTime() {
+        return this.startedAt.plusMinutes(this.policeWaitMinutes);
+    }
+
+    public LocalDateTime getGameOverTime() {
+        return this.startedAt.plusMinutes(this.roundDurationMinutes);
+    }
+
+    public boolean isLocationRevealDisabled() {
+        return this.locationRevealIntervalMinutes == 0;
+    }
+
+    public LocalDateTime getFirstRobberRevealTime() {
+        return getPoliceMoveStartTime().plusMinutes(this.locationRevealIntervalMinutes);
     }
 }

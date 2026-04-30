@@ -8,4 +8,7 @@ public record RedisProperties(
         int port,
         String password
 ) {
+    public String getRedissonAddress() {
+        return String.format("redis://%s:%d", host, port);
+    }
 }

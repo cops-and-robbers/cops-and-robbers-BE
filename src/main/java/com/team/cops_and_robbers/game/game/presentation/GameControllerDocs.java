@@ -13,6 +13,7 @@ import com.team.cops_and_robbers.game.game.presentation.dto.response.GameCreateR
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameInfoResponse;
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameSettingsUpdateResponse;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
+import com.team.cops_and_robbers.user.exception.UserException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -30,6 +31,7 @@ public interface GameControllerDocs {
             description = "새로운 게임 방을 생성하고 초대 코드를 발급받습니다. 게임 영역(플레이그라운드, 감옥)과 게임 규칙을 설정할 수 있습니다. 방을 생성한 사용자는 자동으로 방장이 됩니다."
     )
     @ApiErrorCode(value = GameAreaException.class, codes = {"INVALID_JAIL_RADIUS", "JAIL_OUTSIDE_PLAYGROUND"})
+    @ApiErrorCode(value = UserException.class, codes = {"REQUIRED_TERMS_NOT_AGREED"})
     @ApiErrorCode(value = GameException.class, codes = {"INVALID_LOCATION_INTERVAL", "INVALID_POLICE_WAIT_TIME"})
     @ApiErrorCode(value = GameParticipantException.class, codes = {"ALREADY_PARTICIPATING"})
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})

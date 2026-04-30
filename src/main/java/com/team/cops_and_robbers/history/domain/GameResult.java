@@ -9,8 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Builder;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 import org.locationtech.jts.geom.Point;
 
 import java.time.Duration;
@@ -49,12 +47,10 @@ public class GameResult extends BaseTimeEntity {
     private Integer arrestedRobberCount;
 
     @Column(nullable = false)
-    private Integer durationSeconds;
+    private Integer totalArrestCount;
 
-    // TODO: 어떤 정보를 저장하고 통계를 낼지 추후 구체화
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb")
-    private GameHighlights highlights;
+    @Column(nullable = false)
+    private Integer durationSeconds;
 
     @Column(nullable = false, columnDefinition = "GEOMETRY(POINT, 4326)")
     private Point playgroundCenter;
@@ -68,14 +64,13 @@ public class GameResult extends BaseTimeEntity {
             GameEndReason endReason,
             Integer totalPolice,
             Integer totalRobber,
-            Integer capturedRobber,
-            GameHighlights highlights,
+            Integer jailedAtEnd,
+            Integer totalArrestCount,
             Point center,
             Integer radius
     ) {
-        LocalDateTime now = LocalDateTime.now();        // 임시~~
         int durationSeconds = (int) Duration
-                .between(game.getStartedAt(), now)
+                .between(game.getStartedAt(), LocalDateTime.now())
                 .getSeconds();
 
         return GameResult.builder()
@@ -84,9 +79,9 @@ public class GameResult extends BaseTimeEntity {
                 .endReason(endReason)
                 .totalPoliceCount(totalPolice)
                 .totalRobberCount(totalRobber)
-                .arrestedRobberCount(capturedRobber)
+                .arrestedRobberCount(jailedAtEnd)
+                .totalArrestCount(totalArrestCount)
                 .durationSeconds(durationSeconds)
-                .highlights(highlights)
                 .playgroundCenter(center)
                 .playgroundRadiusInMeters(radius)
                 .build();

@@ -30,7 +30,7 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("1.3.0")
+                .version("2.4.0")
                 .description("""
                         ## 업데이트 항목
                         - 공지사항 CRUD API 추가 (POST/GET/PATCH/DELETE /api/notices)

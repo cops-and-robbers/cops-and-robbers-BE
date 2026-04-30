@@ -14,7 +14,7 @@ public record GameSettingsRequest(
 
         @Schema(description = "위치 공개 주기(분)", example = "5")
         @NotNull(message = "위치 공개 주기를 입력해주세요.")
-        @Min(value = 1, message = "위치 공개 주기는 최소 1분입니다.")
+        @Min(value = 0, message = "위치 공개 주기는 0분 이상이어야 합니다.")
         Integer locationRevealIntervalMinutes,
 
         @Schema(description = "경찰 대기 시간(분)", example = "3")

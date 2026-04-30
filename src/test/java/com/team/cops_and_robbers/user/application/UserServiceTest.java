@@ -12,6 +12,7 @@ import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.Team;
+import com.team.cops_and_robbers.user.application.dto.command.AgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
 import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.User;
@@ -61,6 +62,54 @@ class UserServiceTest extends ServiceUnitTest {
     void setUp() {
         user = USER();
         setId(user, TEST_USER_ID);
+    }
+
+    @Nested
+    @DisplayName("약관 동의")
+    class UpdateTermsAgreement {
+
+        @Test
+        void 필수_약관과_마케팅_미동의로_약관_동의에_성공한다() {
+            // given
+            AgreementCommand command = AgreementCommand.of(TEST_USER_ID, true, true, true, false);
+            given(userRepository.getByUserId(TEST_USER_ID)).willReturn(user);
+
+            // when
+            userService.updateTermsAgreement(command);
+
+            // then
+            assertThat(user.isTermsOfServiceAgreed()).isTrue();
+            assertThat(user.isPrivacyPolicyAgreed()).isTrue();
+            assertThat(user.isLocationTermsAgreed()).isTrue();
+            assertThat(user.getTermsAgreedAt()).isNotNull();
+            assertThat(user.isAllowMarketingPush()).isFalse();
+            assertThat(user.getMarketingAgreedAt()).isNull();
+        }
+
+        @Test
+        void 마케팅_동의시_마케팅_동의_시각이_함께_저장된다() {
+            // given
+            AgreementCommand command = AgreementCommand.of(TEST_USER_ID, true, true, true, true);
+            given(userRepository.getByUserId(TEST_USER_ID)).willReturn(user);
+
+            // when
+            userService.updateTermsAgreement(command);
+
+            // then
+            assertThat(user.isAllowMarketingPush()).isTrue();
+            assertThat(user.getMarketingAgreedAt()).isNotNull();
+        }
+
+        @Test
+        void 필수_약관에_미동의하면_예외가_발생한다() {
+            // given
+            AgreementCommand command = AgreementCommand.of(TEST_USER_ID, false, true, true, false);
+
+            // when & then
+            assertThatThrownBy(() -> userService.updateTermsAgreement(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessage(UserException.REQUIRED_TERMS_NOT_AGREED.getDetail());
+        }
     }
 
     @Nested
