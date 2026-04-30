@@ -3,7 +3,7 @@ spring:
     name: cops-and-robbers
 
   lifecycle:
-    timeout-per-shutdown-phase: 30s
+    timeout-per-shutdown-phase: 60s
 
   flyway:
     enabled: true
