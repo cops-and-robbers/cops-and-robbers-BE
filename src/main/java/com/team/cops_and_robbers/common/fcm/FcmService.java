@@ -13,6 +13,7 @@ import com.google.firebase.messaging.SendResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -28,7 +29,7 @@ public class FcmService {
 
     public void send(FcmMessage fcmMessage) {
         List<String> validTokens = fcmMessage.tokens().stream()
-                .filter(token -> token != null && !token.isBlank())
+                .filter(StringUtils::hasText)
                 .toList();
         if (validTokens.isEmpty()) return;
 
