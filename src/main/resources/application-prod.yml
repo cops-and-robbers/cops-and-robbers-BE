@@ -13,6 +13,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
     show-sql: false
+    open-in-view: false
 
   data:
     redis:
@@ -26,3 +27,8 @@ logging:
   level:
     root: INFO
     com.team.cops_and_robbers: INFO
+
+decorator:
+  datasource:
+    p6spy:
+      enabled: false

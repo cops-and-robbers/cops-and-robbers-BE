@@ -73,7 +73,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-          source: "docker-compose-prod.yml,scripts/deploy.sh,scripts/logging.sh"
+          source: "docker-compose-blue.yml,docker-compose-green.yml,docker-compose-infra.yml,scripts/deploy.sh,scripts/logging.sh"
           target: "/home/${{ secrets.EC2_USER }}/cops-and-robbers/"
 
       - name: 🚀 EC2 배포 및 실행

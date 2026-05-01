@@ -33,6 +33,7 @@
             <appender-ref ref="ERROR_CONSOLE"/>
         </root>
         <logger name="com.team.cops_and_robbers" level="INFO"/>
+        <logger name="p6spy" level="OFF"/>
     </springProfile>
 
 </configuration>
