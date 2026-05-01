@@ -1,4 +1,5 @@
 TRUNCATE TABLE
+    notices,
     reports,
     game_areas,
     participants,

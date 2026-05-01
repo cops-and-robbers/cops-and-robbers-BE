@@ -1,0 +1,86 @@
+package com.team.cops_and_robbers.notice.presentation;
+
+import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
+import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
+import com.team.cops_and_robbers.notice.application.NoticeService;
+import com.team.cops_and_robbers.notice.application.dto.command.NoticeDeleteCommand;
+import com.team.cops_and_robbers.notice.application.dto.command.NoticeListCommand;
+import com.team.cops_and_robbers.notice.application.dto.result.NoticeResult;
+import com.team.cops_and_robbers.notice.presentation.dto.request.NoticeCreateRequest;
+import com.team.cops_and_robbers.notice.presentation.dto.request.NoticeUpdateRequest;
+import com.team.cops_and_robbers.notice.presentation.dto.response.NoticeListResponse;
+import com.team.cops_and_robbers.notice.presentation.dto.response.NoticeResponse;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/notices")
+@RequiredArgsConstructor
+public class NoticeController implements NoticeControllerDocs {
+
+    private final NoticeService noticeService;
+
+    @PostMapping
+    public ResponseEntity<NoticeResponse> createNotice(
+            @AuthUser LoginUser loginUser,
+            @RequestBody @Valid NoticeCreateRequest request
+    ) {
+        NoticeResult result = noticeService.createNotice(request.toCommand(loginUser.userId()));
+        NoticeResponse response = NoticeResponse.from(result);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<NoticeListResponse> getNoticeList(
+            @AuthUser LoginUser loginUser,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        NoticeListCommand command = NoticeListCommand.of(page, size);
+        Page<NoticeResult> result = noticeService.getNoticeList(command);
+        NoticeListResponse response = NoticeListResponse.from(result);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{noticeId}")
+    public ResponseEntity<NoticeResponse> getNotice(
+            @AuthUser LoginUser loginUser,
+            @PathVariable Long noticeId
+    ) {
+        NoticeResult result = noticeService.getNotice(noticeId);
+        NoticeResponse response = NoticeResponse.from(result);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{noticeId}")
+    public ResponseEntity<NoticeResponse> updateNotice(
+            @AuthUser LoginUser loginUser,
+            @PathVariable Long noticeId,
+            @RequestBody @Valid NoticeUpdateRequest request
+    ) {
+        NoticeResult result = noticeService.updateNotice(request.toCommand(loginUser.userId(), noticeId));
+        NoticeResponse response = NoticeResponse.from(result);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{noticeId}")
+    public ResponseEntity<Void> deleteNotice(
+            @AuthUser LoginUser loginUser,
+            @PathVariable Long noticeId
+    ) {
+        noticeService.deleteNotice(new NoticeDeleteCommand(loginUser.userId(), noticeId));
+        return ResponseEntity.noContent().build();
+    }
+}

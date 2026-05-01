@@ -4,6 +4,7 @@ import com.team.cops_and_robbers.auth.infrastructure.jwt.JwtTokenProvider;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
+import com.team.cops_and_robbers.notice.repository.NoticeRepository;
 import com.team.cops_and_robbers.history.repository.GameResultRepository;
 import com.team.cops_and_robbers.user.repository.UserDeviceRepository;
 import com.team.cops_and_robbers.user.repository.UserRepository;
@@ -32,6 +33,9 @@ public abstract class ServiceUnitTest {
 
     @Mock
     protected UserDeviceRepository userDeviceRepository;
+
+    @Mock
+    protected NoticeRepository noticeRepository;
 
     @Mock
     protected JwtTokenProvider jwtTokenProvider;

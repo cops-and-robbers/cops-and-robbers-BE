@@ -69,29 +69,7 @@ public interface AuthControllerDocs {
                     )
             )
     })
-    ResponseEntity<LoginResponse> login(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "소셜 로그인 요청",
-                    required = true,
-                    content = @Content(
-                            schema = @Schema(implementation = LoginRequest.class),
-                            examples = {
-                                    @ExampleObject(
-                                            name = "정상 요청 예시",
-                                            value = """
-                                                    {
-                                                        "socialPlatform": "KAKAO",
-                                                        "idToken": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
-                                                        "fcmToken": "fcm-device-token-here",
-                                                        "deviceType": "IOS",
-                                                        "deviceId": "unique-device-id-123"
-                                                    }
-                                                    """
-                                    )
-                            }
-                    )
-            ) @RequestBody @Valid LoginRequest request
-    );
+    ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request);
 
     @Operation(summary = "토큰 재발급",
             description = "만료된 Access Token을 Refresh Token을 사용하여 재발급받습니다."
@@ -99,68 +77,16 @@ public interface AuthControllerDocs {
     @ApiErrorCode(value = AuthException.class, codes = {"REFRESH_TOKEN_EXPIRED", "INVALID_TOKEN"})
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "토큰 재발급 성공",
-                    content = @Content(
-                            schema = @Schema(implementation = ReissueResponse.class),
-                            examples = @ExampleObject(
-                                    name = "토큰 재발급 성공 예시",
-                                    value = """
-                                            {
-                                                "tokens": {
-                                                    "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIx.....",
-                                                    "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIx....."
-                                                }
-                                            }
-                                            """
-                            )
-                    )
-            )
+            @ApiResponse(responseCode = "200", description = "토큰 재발급 성공")
     })
-    ResponseEntity<ReissueResponse> reissue(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "토큰 재발급 요청",
-                    required = true,
-                    content = @Content(
-                            schema = @Schema(implementation = ReissueRequest.class),
-                            examples = {
-                                    @ExampleObject(
-                                            name = "정상 요청 예시",
-                                            value = """
-                                                    {
-                                                        "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzY4NDk1MDA1LCJleHAiOjE3Njk3MDQ2MDV9..."
-                                                    }
-                                                    """
-                                    )
-                            }
-                    )
-            ) @RequestBody @Valid ReissueRequest request
-    );
-
+    ResponseEntity<ReissueResponse> reissue(@RequestBody @Valid ReissueRequest request);
 
     @Operation(summary = "로그아웃",
             description = "로그아웃합니다. (리프레시 토큰 삭제 + 유저 디바이스 정보 삭제)"
     )
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "로그아웃 성공 (항상 204 응답)"),
+            @ApiResponse(responseCode = "204", description = "로그아웃 성공 (항상 204 응답)")
     })
-    ResponseEntity<Void> logout(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "로그아웃 요청",
-                    required = true,
-                    content = @Content(
-                            schema = @Schema(implementation = LogoutRequest.class),
-                            examples = {
-                                    @ExampleObject(
-                                            name = "정상 요청 예시",
-                                            value = """
-                                                    {
-                                                        "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzY4NDk1MDA1LCJleHAiOjE3Njk3MDQ2MDV9..."
-                                                    }
-                                                    """
-                                    )
-                            }
-                    )
-            ) @RequestBody @Valid LogoutRequest request
-    );
+    ResponseEntity<Void> logout(@RequestBody @Valid LogoutRequest request);
 }

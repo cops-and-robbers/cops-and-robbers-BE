@@ -1,5 +1,6 @@
 package com.team.cops_and_robbers.common.fixture;
 
+import com.team.cops_and_robbers.user.domain.Role;
 import com.team.cops_and_robbers.user.domain.SocialType;
 import com.team.cops_and_robbers.user.domain.User;
 
@@ -14,6 +15,7 @@ public class UserFixture {
                 .nickname("testUser")
                 .allowGamePush(true)
                 .allowMarketingPush(false)
+                .role(Role.USER)
                 .termsOfServiceAgreed(true)
                 .privacyPolicyAgreed(true)
                 .locationTermsAgreed(true)
@@ -27,6 +29,32 @@ public class UserFixture {
                 .nickname(nickname)
                 .allowGamePush(true)
                 .allowMarketingPush(false)
+                .role(Role.USER)
+                .termsOfServiceAgreed(true)
+                .privacyPolicyAgreed(true)
+                .locationTermsAgreed(true)
+                .build();
+    }
+
+    public static User ADMIN() {
+        return User.builder()
+                .socialId("admin_123456")
+                .socialType(SocialType.GOOGLE)
+                .nickname("adminUser")
+                .allowGamePush(true)
+                .allowMarketingPush(false)
+                .role(Role.ADMIN)
+                .build();
+    }
+
+    public static User ADMIN(String nickname) {
+        return User.builder()
+                .socialId(UUID.randomUUID().toString())
+                .socialType(SocialType.GOOGLE)
+                .nickname(nickname)
+                .allowGamePush(true)
+                .allowMarketingPush(false)
+                .role(Role.ADMIN)
                 .termsOfServiceAgreed(true)
                 .privacyPolicyAgreed(true)
                 .locationTermsAgreed(true)
@@ -40,6 +68,7 @@ public class UserFixture {
                 .nickname("kakaoUser")
                 .allowGamePush(true)
                 .allowMarketingPush(false)
+                .role(Role.USER)
                 .termsOfServiceAgreed(true)
                 .privacyPolicyAgreed(true)
                 .locationTermsAgreed(true)
@@ -53,6 +82,7 @@ public class UserFixture {
                 .nickname("googleUser")
                 .allowGamePush(true)
                 .allowMarketingPush(false)
+                .role(Role.USER)
                 .termsOfServiceAgreed(true)
                 .privacyPolicyAgreed(true)
                 .locationTermsAgreed(true)
@@ -66,6 +96,7 @@ public class UserFixture {
                 .nickname("appleUser")
                 .allowGamePush(true)
                 .allowMarketingPush(false)
+                .role(Role.USER)
                 .termsOfServiceAgreed(true)
                 .privacyPolicyAgreed(true)
                 .locationTermsAgreed(true)
@@ -79,6 +110,7 @@ public class UserFixture {
                 .nickname(nickname)
                 .allowGamePush(true)
                 .allowMarketingPush(false)
+                .role(Role.USER)
                 .termsOfServiceAgreed(false)
                 .privacyPolicyAgreed(false)
                 .locationTermsAgreed(false)
