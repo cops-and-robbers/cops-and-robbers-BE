@@ -17,7 +17,7 @@ public class InGameParticipantCacheService {
     public void loadCache(Long gameId) {
         inGameParticipantCacheRepository.saveAll(
                 gameId,
-                gameParticipantRepository.findAllByGameIdWithUser(gameId)
+                gameParticipantRepository.findCacheProjectionsByGameId(gameId)
         );
     }
 

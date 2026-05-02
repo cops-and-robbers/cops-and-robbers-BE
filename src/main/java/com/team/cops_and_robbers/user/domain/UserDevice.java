@@ -43,9 +43,13 @@ public class UserDevice extends BaseTimeEntity {
     }
 
     public void reconnect(String deviceId, DeviceType deviceType, String fcmToken) {
-        this.deviceId = deviceId;
-        this.deviceType = deviceType;
-        if (fcmToken != null) {
+        if (!deviceId.equals(this.deviceId)) {
+            this.deviceId = deviceId;
+        }
+        if (!deviceType.equals(this.deviceType)) {
+            this.deviceType = deviceType;
+        }
+        if (fcmToken != null && !fcmToken.equals(this.fcmToken)) {
             this.fcmToken = fcmToken;
         }
     }

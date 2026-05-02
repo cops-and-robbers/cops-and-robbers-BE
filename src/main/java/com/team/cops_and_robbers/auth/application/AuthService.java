@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.auth.application;
 
 import com.team.cops_and_robbers.auth.application.dto.command.LoginCommand;
 import com.team.cops_and_robbers.auth.application.dto.result.LoginResult;
+import com.team.cops_and_robbers.auth.application.event.UserFcmTokenUpdatedEvent;
 import com.team.cops_and_robbers.auth.domain.Tokens;
 import com.team.cops_and_robbers.auth.exception.AuthException;
 import com.team.cops_and_robbers.auth.infrastructure.jwt.JwtTokenProvider;
@@ -16,6 +17,7 @@ import com.team.cops_and_robbers.user.repository.UserDeviceRepository;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +37,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RandomNicknameGenerator randomNicknameGenerator;
     private final Map<SocialType, SocialLoginStrategy> socialLoginStrategies;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 1. 소셜 로그인 진행
@@ -88,21 +91,20 @@ public class AuthService {
 
         if (deviceOptional.isPresent()) {
             UserDevice existingDevice = deviceOptional.get();
-            existingDevice.reconnect(
+            boolean isFcmTokenChanged = command.fcmToken() != null
+                    && !command.fcmToken().equals(existingDevice.getFcmToken());
+            existingDevice.reconnect(command.deviceId(), command.deviceType(), command.fcmToken());
+            if (isFcmTokenChanged) {
+                eventPublisher.publishEvent(new UserFcmTokenUpdatedEvent(user.getId()));
+            }
+        } else {
+            userDeviceRepository.save(UserDevice.connect(
+                    user,
                     command.deviceId(),
                     command.deviceType(),
                     command.fcmToken()
-            );
-            return;
+            ));
         }
-
-        UserDevice newUserDevice = UserDevice.connect(
-                user,
-                command.deviceId(),
-                command.deviceType(),
-                command.fcmToken()
-        );
-        userDeviceRepository.save(newUserDevice);
     }
 
     private String generateUniqueNickname() {

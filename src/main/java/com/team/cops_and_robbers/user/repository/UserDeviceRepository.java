@@ -16,4 +16,5 @@ public interface UserDeviceRepository extends JpaRepository<UserDevice, Long> {
     @Modifying(clearAutomatically = true)
     @Query("delete from UserDevice ud where ud.user.id = :userId")
     void deleteByUserId(@Param("userId") Long userId);
+
 }

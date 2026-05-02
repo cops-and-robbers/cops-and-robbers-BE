@@ -1,13 +1,14 @@
 package com.team.cops_and_robbers.play.common.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
+import com.team.cops_and_robbers.game.participant.repository.GameParticipantCacheProjection;
 import com.team.cops_and_robbers.play.common.domain.InGameParticipantCache;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,14 +25,21 @@ public class InGameParticipantCacheRepository {
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
 
-    public void saveAll(Long gameId, List<GameParticipant> participants) {
-        Map<String, InGameParticipantCache> entries = participants.stream()
+    public void saveAll(Long gameId, List<GameParticipantCacheProjection> projections) {
+        Map<String, InGameParticipantCache> entries = projections.stream()
                 .collect(Collectors.toMap(
-                        p -> field(p.getId()),
+                        p -> field(p.participantId()),
                         InGameParticipantCache::from
                 ));
         redisTemplate.opsForHash().putAll(key(gameId), entries);
         redisTemplate.expire(key(gameId), TTL);
+    }
+
+    public List<InGameParticipantCache> findAllByGameId(Long gameId) {
+        Collection<Object> values = redisTemplate.opsForHash().entries(key(gameId)).values();
+        return values.stream()
+                .map(v -> objectMapper.convertValue(v, InGameParticipantCache.class))
+                .toList();
     }
 
     public Optional<InGameParticipantCache> findByParticipantId(Long gameId, Long participantId) {
