@@ -41,3 +41,7 @@ firebase:
 encryption:
   secret-key: "ZYmgBIo7U4s58oc+qDmA+MTg04gBlkOMNmjgl1wlw9A="
 
+discord:
+  webhook:
+    bug: "https://discord.com/api/webhooks/dummy"
+
