@@ -25,6 +25,7 @@ services:
       ACCESS_EXPIRATION: ${ACCESS_EXPIRATION}
       REFRESH_EXPIRATION: ${REFRESH_EXPIRATION}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      DISCORD_WEBHOOK_BUG: ${DISCORD_WEBHOOK_BUG}
 
     volumes:
       - ./firebase-key.json:/app/firebase-key.json
