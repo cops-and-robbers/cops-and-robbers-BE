@@ -6,7 +6,9 @@ import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.play.location.application.RobberLocationService;
+import com.team.cops_and_robbers.play.notification.application.GameFcmNotifier;
 import com.team.cops_and_robbers.play.system.domain.GameScheduleEvent;
+import com.team.cops_and_robbers.play.system.domain.SystemEvent;
 import com.team.cops_and_robbers.play.system.domain.SystemEventData;
 import com.team.cops_and_robbers.play.system.infrastructure.GameScheduleQueue;
 import jakarta.annotation.PostConstruct;
@@ -33,6 +35,7 @@ public class GameEventConsumer {
     private final GameTerminationService gameTerminationService;
     private final SystemPublisher systemPublisher;
     private final SystemEventFactory systemEventFactory;
+    private final GameFcmNotifier gameFcmNotifier;
     private final TransactionTemplate transactionTemplate;
 
     private volatile Thread consumerThread;
@@ -109,7 +112,9 @@ public class GameEventConsumer {
                 gameParticipantRepository.updateStatusByGameIdAndTeam(
                         gameId, Team.POLICE, ParticipantStatus.ALIVE)
         );
-        systemPublisher.publish(systemEventFactory.createPoliceMoveStartEvent(gameId));
+        SystemEvent event = systemEventFactory.createPoliceMoveStartEvent(gameId);
+        systemPublisher.publish(event);
+        gameFcmNotifier.notifySystemEvent(event);
     }
 
     /**
@@ -118,7 +123,9 @@ public class GameEventConsumer {
     private void executeRobberLocationReveal(Game game) {
         List<SystemEventData.RobberLocation> locations =
                 robberLocationService.getCurrentRobberLocations(game.getId());
-        systemPublisher.publish(systemEventFactory.createRobberLocationRevealEvent(game.getId(), locations));
+        SystemEvent event = systemEventFactory.createRobberLocationRevealEvent(game.getId(), locations);
+        systemPublisher.publish(event);
+        gameFcmNotifier.notifySystemEvent(event);
 
         gameScheduleQueue.enqueueNextReveal(game);
     }

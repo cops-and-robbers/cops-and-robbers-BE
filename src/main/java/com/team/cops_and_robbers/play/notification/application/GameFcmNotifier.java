@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -24,16 +25,20 @@ public class GameFcmNotifier {
     private final InGameParticipantCacheRepository inGameParticipantCacheRepository;
 
     @Async("fcmExecutor")
-    public void notifySystemEvent(SystemEvent event) {
+    public CompletableFuture<Void> notifySystemEvent(SystemEvent event) {
         try {
             List<String> tokens = getGameTokens(event.gameId());
-            if (tokens.isEmpty()) return;
+            if (tokens.isEmpty()) {
+                log.warn("[FCM] No tokens found | gameId={}, type={}", event.gameId(), event.type());
+                return CompletableFuture.completedFuture(null);
+            }
 
             FcmPayload payload = resolveSystemPayload(event.type(), event.gameId());
             fcmService.send(new FcmMessage(tokens, payload.title(), payload.body(), payload.data()));
         } catch (Exception e) {
             log.error("[FCM] Async send failed | gameId={}, type={}", event.gameId(), event.type(), e);
         }
+        return CompletableFuture.completedFuture(null);
     }
 
     private List<String> getGameTokens(Long gameId) {

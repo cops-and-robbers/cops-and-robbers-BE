@@ -22,11 +22,14 @@ public class SystemEventHandler {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleSystemEvent(SystemEvent event) {
-        if (event.type() == SystemEventType.GAME_OVER) {
-            robberLocationService.clearRobberLocations(event.gameId());
-            inGameParticipantCacheService.clearCache(event.gameId());
-        }
         systemPublisher.publish(event);
-        gameFcmNotifier.notifySystemEvent(event);
+        if (event.type() == SystemEventType.GAME_OVER) {
+            gameFcmNotifier.notifySystemEvent(event).whenComplete((r, ex) -> {
+                robberLocationService.clearRobberLocations(event.gameId());
+                inGameParticipantCacheService.clearCache(event.gameId());
+            });
+        } else {
+            gameFcmNotifier.notifySystemEvent(event);
+        }
     }
 }
