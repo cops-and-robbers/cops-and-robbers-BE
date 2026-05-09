@@ -19,10 +19,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import java.util.List;
+import java.util.Set;
 
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_ROBBER;
+import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.JAILED_ROBBER;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -39,6 +41,7 @@ class RobberLocationServiceTest extends ServiceUnitTest {
     private static final Long TEST_GAME_ID = 1L;
     private static final Long TEST_USER_ID = 1L;
     private static final Long TEST_PARTICIPANT_ID = 1L;
+    private static final Long JAILED_PARTICIPANT_ID = 2L;
 
     private User user;
     private Game game;
@@ -64,6 +67,7 @@ class RobberLocationServiceTest extends ServiceUnitTest {
             RobberLocationsCommand command = RobberLocationsCommand.of(TEST_GAME_ID, TEST_USER_ID);
             given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(game);
             given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_USER_ID)).willReturn(robberParticipant);
+            given(gameParticipantRepository.findAliveRobberIdsByGameId(TEST_GAME_ID)).willReturn(Set.of(TEST_PARTICIPANT_ID));
             given(robberLocationSnapshotRepository.findAllByGameId(TEST_GAME_ID))
                     .willReturn(List.of(SystemEventData.RobberLocation.of(TEST_PARTICIPANT_ID, user.getNickname(), 37.5665, 126.9780)));
 
@@ -84,6 +88,7 @@ class RobberLocationServiceTest extends ServiceUnitTest {
             RobberLocationsCommand command = RobberLocationsCommand.of(TEST_GAME_ID, TEST_USER_ID);
             given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(game);
             given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_USER_ID)).willReturn(robberParticipant);
+            given(gameParticipantRepository.findAliveRobberIdsByGameId(TEST_GAME_ID)).willReturn(Set.of(TEST_PARTICIPANT_ID));
             given(robberLocationSnapshotRepository.findAllByGameId(TEST_GAME_ID)).willReturn(List.of());
 
             // when
@@ -95,20 +100,41 @@ class RobberLocationServiceTest extends ServiceUnitTest {
 
         @Test
         void 스냅샷_이후_도둑이_이동해도_스냅샷_기준_위치가_반환된다() {
-            // given: 스냅샷은 첫 번째 위치, 실시간은 두 번째 위치
+            // given
             RobberLocationsCommand command = RobberLocationsCommand.of(TEST_GAME_ID, TEST_USER_ID);
             given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(game);
             given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_USER_ID)).willReturn(robberParticipant);
+            given(gameParticipantRepository.findAliveRobberIdsByGameId(TEST_GAME_ID)).willReturn(Set.of(TEST_PARTICIPANT_ID));
             given(robberLocationSnapshotRepository.findAllByGameId(TEST_GAME_ID))
                     .willReturn(List.of(SystemEventData.RobberLocation.of(TEST_PARTICIPANT_ID, user.getNickname(), 37.5665, 126.9780)));
 
             // when
             List<RobberLocationResult> results = robberLocationService.getRobberLocations(command);
 
-            // then: 스냅샷(첫 번째 위치) 반환, 실시간 위치(두 번째) 미반영
+            // then
             assertThat(results).hasSize(1);
             assertThat(results.get(0).latitude()).isEqualTo(37.5665);
             assertThat(results.get(0).longitude()).isEqualTo(126.9780);
+        }
+
+        @Test
+        void 잡힌_도둑의_위치는_응답에서_제외된다() {
+            // given: 스냅샷에 생존+체포 도둑 위치가 있지만 aliveIds에는 생존 도둑만
+            RobberLocationsCommand command = RobberLocationsCommand.of(TEST_GAME_ID, TEST_USER_ID);
+            given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(game);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_USER_ID)).willReturn(robberParticipant);
+            given(gameParticipantRepository.findAliveRobberIdsByGameId(TEST_GAME_ID)).willReturn(Set.of(TEST_PARTICIPANT_ID));
+            given(robberLocationSnapshotRepository.findAllByGameId(TEST_GAME_ID)).willReturn(List.of(
+                    SystemEventData.RobberLocation.of(TEST_PARTICIPANT_ID, "생존도둑", 37.5665, 126.9780),
+                    SystemEventData.RobberLocation.of(JAILED_PARTICIPANT_ID, "체포도둑", 37.1111, 126.1111)
+            ));
+
+            // when
+            List<RobberLocationResult> results = robberLocationService.getRobberLocations(command);
+
+            // then
+            assertThat(results).hasSize(1);
+            assertThat(results.get(0).participantId()).isEqualTo(TEST_PARTICIPANT_ID);
         }
 
         @Test
