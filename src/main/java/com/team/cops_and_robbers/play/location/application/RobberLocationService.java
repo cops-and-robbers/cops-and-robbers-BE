@@ -14,6 +14,7 @@ import com.team.cops_and_robbers.play.location.application.dto.command.LocationU
 import com.team.cops_and_robbers.play.location.application.dto.command.RobberLocationsCommand;
 import com.team.cops_and_robbers.play.location.application.dto.result.RobberLocationResult;
 import com.team.cops_and_robbers.play.location.repository.RobberLocationRepository;
+import com.team.cops_and_robbers.play.location.repository.RobberLocationSnapshotRepository;
 import com.team.cops_and_robbers.play.system.domain.SystemEventData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ public class RobberLocationService {
     private final GameRepository gameRepository;
     private final GameParticipantRepository gameParticipantRepository;
     private final RobberLocationRepository robberLocationRepository;
+    private final RobberLocationSnapshotRepository robberLocationSnapshotRepository;
     private final InGameParticipantCacheRepository inGameParticipantCacheRepository;
 
     public void updateLocation(LocationUpdateCommand command) {
@@ -58,12 +60,22 @@ public class RobberLocationService {
         robberLocationRepository.save(gameId, participantId, location);
     }
 
-    public List<SystemEventData.RobberLocation> getCurrentRobberLocations(Long gameId) {
-        return robberLocationRepository.findAllByGameId(gameId);
+    public List<SystemEventData.RobberLocation> revealRobberLocations(Long gameId) {
+        List<SystemEventData.RobberLocation> locations = robberLocationRepository.findAllByGameId(gameId);
+        saveRobberLocationSnapshot(gameId, locations);
+        return locations;
+    }
+
+    private void saveRobberLocationSnapshot(Long gameId, List<SystemEventData.RobberLocation> locations) {
+        robberLocationSnapshotRepository.saveAll(gameId, locations);
     }
 
     public void clearRobberLocations(Long gameId) {
         robberLocationRepository.deleteAllByGameId(gameId);
+    }
+
+    public void clearRobberLocationSnapshot(Long gameId) {
+        robberLocationSnapshotRepository.deleteAllByGameId(gameId);
     }
 
     public List<RobberLocationResult> getRobberLocations(RobberLocationsCommand command) {
@@ -76,7 +88,7 @@ public class RobberLocationService {
             return List.of();
         }
 
-        return getCurrentRobberLocations(command.gameId()).stream()
+        return robberLocationSnapshotRepository.findAllByGameId(command.gameId()).stream()
                 .map(RobberLocationResult::from)
                 .toList();
     }
