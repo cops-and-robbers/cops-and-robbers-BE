@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.play.location.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team.cops_and_robbers.common.util.AesEncryptor;
+import com.team.cops_and_robbers.play.location.domain.RobberLocationHash;
 import com.team.cops_and_robbers.play.system.domain.SystemEventData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -25,14 +26,14 @@ public class RobberLocationSnapshotRepository {
     private final AesEncryptor aesEncryptor;
 
     public void saveAll(Long gameId, List<SystemEventData.RobberLocation> locations) {
-        Map<String, EncryptedRobberLocation> entries = locations.stream()
+        Map<String, RobberLocationHash> entries = locations.stream()
                 .collect(Collectors.toMap(
-                        loc -> field(loc.participantId()),
-                        loc -> new EncryptedRobberLocation(
-                                loc.participantId(),
-                                loc.nickname(),
-                                aesEncryptor.encrypt(String.valueOf(loc.latitude())),
-                                aesEncryptor.encrypt(String.valueOf(loc.longitude()))
+                        location -> field(location.participantId()),
+                        location -> new RobberLocationHash(
+                                location.participantId(),
+                                location.nickname(),
+                                aesEncryptor.encrypt(String.valueOf(location.latitude())),
+                                aesEncryptor.encrypt(String.valueOf(location.longitude()))
                         )
                 ));
         redisTemplate.opsForHash().putAll(key(gameId), entries);
@@ -41,12 +42,12 @@ public class RobberLocationSnapshotRepository {
 
     public List<SystemEventData.RobberLocation> findAllByGameId(Long gameId) {
         return redisTemplate.opsForHash().values(key(gameId)).stream()
-                .map(value -> objectMapper.convertValue(value, EncryptedRobberLocation.class))
-                .map(enc -> SystemEventData.RobberLocation.of(
-                        enc.participantId(),
-                        enc.nickname(),
-                        Double.parseDouble(aesEncryptor.decrypt(enc.latitude())),
-                        Double.parseDouble(aesEncryptor.decrypt(enc.longitude()))
+                .map(value -> objectMapper.convertValue(value, RobberLocationHash.class))
+                .map(location -> SystemEventData.RobberLocation.of(
+                        location.participantId(),
+                        location.nickname(),
+                        Double.parseDouble(aesEncryptor.decrypt(location.encryptedLatitude())),
+                        Double.parseDouble(aesEncryptor.decrypt(location.encryptedLongitude()))
                 ))
                 .toList();
     }
@@ -62,11 +63,4 @@ public class RobberLocationSnapshotRepository {
     private String field(Long participantId) {
         return String.valueOf(participantId);
     }
-
-    private record EncryptedRobberLocation(
-            Long participantId,
-            String nickname,
-            String latitude,
-            String longitude
-    ) {}
 }
