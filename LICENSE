@@ -1,0 +1,328 @@
+=======================================================================
+                 Cops and Robbers Source-Available License
+                       경찰과 도둑 소스 공개 라이선스
+                          Version 1.5, May 2026
+   Inspired by Elastic License 2.0 (ELv2), with additional
+   non-commercial restrictions.
+
+  This license is provided in both Korean and English. In case of
+  conflict, the Korean version prevails.
+  본 라이선스는 한국어와 영어로 제공됩니다. 두 버전이 충돌하는 경우
+  한국어 버전이 우선합니다.
+=======================================================================
+
+                              NOTICE
+
+  This is NOT an open-source license. Commercial use is prohibited
+  without explicit permission from the licensor.
+
+  본 라이선스는 오픈소스 라이선스가 아닙니다. 라이선서의 명시적
+  허가 없이 상업적 사용은 금지됩니다.
+
+=======================================================================
+
+
+=======================================================================
+                              KOREAN
+=======================================================================
+
+동의
+
+본 저작물(소프트웨어 및 디자인 자산을 모두 포함, 이하 "본 저작물")을
+사용함으로써, 귀하는 아래의 모든 약관에 동의합니다.
+
+저작권 라이선스
+
+라이선서는 귀하에게 본 저작물을 사용, 복제, 배포, 제공, 2차적
+저작물을 작성할 수 있는 비독점적, 무료, 전 세계적, 재라이선스 불가,
+양도 불가의 라이선스를 부여합니다. 단, 아래의 제한 및 조건에 따릅니다.
+
+제한사항
+
+귀하는 본 저작물의 핵심 기능 또는 그 상당 부분에 접근할 수 있는
+호스팅 서비스나 매니지드 서비스로 제3자에게 제공할 수 없습니다.
+
+귀하는 본 저작물(소스코드 및 디자인 자산 모두 포함)을 다음을 포함한
+어떠한 상업적 목적으로도 사용할 수 없습니다: 상업 서비스 운영, 수익화
+애플리케이션, 광고 기반 서비스, SaaS 제공, 어필리에이트 마케팅,
+프로모션 제휴, 쿠폰 서비스, 위치 기반 커머스, 본 저작물의 판매, 또는
+유료로 판매·제공되는 제품·서비스에 본 저작물을 통합하는 행위.
+
+상업적 사용에는 상업적 이익이나 금전적 보상을 목적으로 하거나 그를
+지향하는 모든 사용이 포함되며, 유료 서비스 운영, 광고 기반 서비스,
+SaaS 제공, 어필리에이트 마케팅, 프로모션 제휴, 쿠폰 서비스, 위치 기반
+커머스, 또는 내부 업무 사용을 포함합니다.
+
+귀하는 본 저작물의 디자인 자산(캐릭터 디자인, 로고, UI/UX, 아이콘,
+일러스트, 비주얼 아이덴티티 등)을 별도의 상품, 굿즈, 마케팅 자료,
+다른 게임이나 애플리케이션, 또는 어떠한 형태의 파생 디자인으로도
+상업적으로 사용할 수 없습니다.
+
+본 제한은 디자인 자산이 수정, 리컬러링, 트레이싱, 부분 사용,
+AI 기반 변형 또는 기타 어떠한 형태로 파생 저작물에 포함된 경우에도
+동일하게 적용됩니다.
+
+귀하는 본 저작물 내의 라이선스, 저작권 및 기타 표시를 변경, 제거,
+또는 가릴 수 없습니다. 라이선서의 상표 사용은 관련 법률에 따릅니다.
+
+허용되는 사용
+
+다음의 사용은 명시적으로 허용됩니다:
+
+- 개인 학습 목적의 소스코드 및 디자인 자산 열람 및 학습.
+
+- 저장소 포크 및 원본 프로젝트로의 기여(풀 리퀘스트) 제출.
+
+- 개인적, 교육적, 연구 목적 또는 기타 비상업적 용도로의 사용
+  (예: 개인 학습, 학교 수업, 연구실 데모, 동아리 내부 테스트 등).
+
+상업적 라이선스
+
+상업적 라이선스 문의 또는 본 약관의 예외에 관해서는 아래로
+연락 바랍니다:
+
+copsnro66ers@gmail.com
+
+특허
+
+라이선서는 귀하에게 라이선서가 라이선스할 수 있거나 라이선스 가능하게
+되는 특허 청구에 관하여, 본 라이선스에서 허용된 범위 내에서만 본
+저작물을 제작, 제작 의뢰, 사용, 수입, 수입 의뢰할 수 있는 라이선스를
+부여합니다. 본 라이선스는 귀하가 본 저작물의 수정 또는 추가에 의하여
+침해되도록 한 특허 청구는 포함하지 않습니다.
+
+귀하 또는 귀하의 회사가 본 저작물이 특허를 침해하거나 그 침해에
+기여한다고 서면으로 주장하는 경우, 본 약관에 따라 부여된 본 저작물에
+대한 귀하의 특허 라이선스는 즉시 종료됩니다.
+
+표시 의무
+
+귀하는 귀하로부터 본 저작물의 일부를 받는 모든 자에게 본 약관의
+사본이 함께 전달되도록 하여야 합니다.
+
+귀하가 본 저작물을 수정하는 경우, 수정된 사본에 본 저작물을
+수정하였다는 사실을 명확히 표시하여야 합니다.
+
+기타 권리 없음
+
+본 약관은 본 약관에 명시적으로 부여된 라이선스 이외의 어떠한
+라이선스도 의미하지 않습니다.
+
+준거법
+
+본 약관은 대한민국 법률에 따라 해석되고 규율됩니다.
+
+종료
+
+귀하가 본 약관을 위반하여 본 저작물을 사용하는 경우, 그 사용은
+라이선스되지 않으며, 귀하의 라이선스는 자동으로 종료됩니다.
+
+라이선서가 귀하에게 위반 통지를 한 후, 귀하가 통지를 받은 날로부터
+30일 이내에 본 라이선스의 위반을 모두 중단하는 경우, 귀하의
+라이선스는 소급하여 회복됩니다.
+
+다만, 회복 이후 귀하가 본 약관을 다시 위반하는 경우, 추가 위반은
+귀하의 라이선스를 자동적이고 영구적으로 종료시킵니다.
+
+면책
+
+법률이 허용하는 한도 내에서, 본 저작물은 어떠한 보증이나 조건 없이
+있는 그대로 제공되며, 라이선서는 본 약관 또는 본 저작물의 사용이나
+성격에서 발생하는 어떠한 종류의 법적 청구에 대하여도 귀하에 대하여
+책임을 지지 않습니다.
+
+정의
+
+"라이선서"란 동심지키미(Innocare)이며, GitHub에서는
+cops-and-robbers organization을 통해 운영됩니다.
+
+"본 저작물"이란 라이선서가 본 약관에 따라 제공하는 일체의 저작물을
+의미하며, 다음을 모두 포함합니다:
+  - 소스코드 및 컴파일된 바이너리
+  - 디자인 자산 (UI/UX, 캐릭터, 로고, 아이콘, 일러스트, 비주얼
+    아이덴티티, 타이포그래피 시스템, 컬러 시스템 등)
+  - 오디오 자산 (효과음, 음악 등 라이선서가 권리를 보유한 것)
+  - 문서, 기획서, 와이어프레임
+  - 기타 라이선서가 제공하는 모든 창작물
+
+"귀하"란 본 약관에 동의하는 개인 또는 법인을 의미합니다.
+
+"귀하의 회사"란 귀하가 소속된 모든 법인, 개인사업자 또는 기타 형태의
+조직과, 해당 조직을 지배하거나, 해당 조직의 지배를 받거나, 해당
+조직과 공통의 지배 하에 있는 모든 조직을 의미합니다.
+
+"지배"란 어떤 조직의 자산 대부분에 대한 소유권, 또는 의결, 계약,
+기타 방법으로 그 경영과 정책을 지시할 권한을 의미합니다. 지배는
+직접적이거나 간접적일 수 있습니다.
+
+"귀하의 라이선스"란 본 약관에 따라 본 저작물에 대하여 귀하에게
+부여된 모든 라이선스를 의미합니다.
+
+"사용"이란 귀하의 라이선스 중 하나가 필요한, 귀하가 본 저작물로
+행하는 모든 행위를 의미합니다.
+
+"상표"란 상표, 서비스표 및 유사한 권리를 의미합니다.
+
+
+=======================================================================
+                              ENGLISH
+=======================================================================
+
+Acceptance
+
+By using the work (which includes both software and design assets,
+collectively the "Work"), you agree to all of the terms and conditions
+below.
+
+Copyright License
+
+The licensor grants you a non-exclusive, royalty-free, worldwide,
+non-sublicensable, non-transferable license to use, copy, distribute,
+make available, and prepare derivative works of the Work, in each case
+subject to the limitations and conditions below.
+
+Limitations
+
+You may not provide the Work to third parties as a hosted or managed
+service, where the service provides users with access to any
+substantial set of the features or functionality of the Work.
+
+You may not use the Work (including both source code and design
+assets) for any commercial purpose, including but not limited to
+operating commercial services, monetized applications, advertising-
+supported services, SaaS offerings, affiliate marketing, promotional
+partnerships, coupon services, location-based commerce, selling the
+Work, or incorporating the Work into a product or service that is
+sold or offered for a fee.
+
+Commercial use includes any use intended for or directed toward
+commercial advantage or monetary compensation, including operating
+paid services, advertising-supported services, SaaS offerings,
+affiliate marketing, promotional partnerships, coupon services,
+location-based commerce, or internal business use.
+
+You may not use the design assets of the Work (including character
+designs, logos, UI/UX, icons, illustrations, visual identity, etc.)
+in any commercial form, including but not limited to separate
+products, merchandise, marketing materials, other games or
+applications, or any form of derivative design.
+
+This restriction applies even if the design assets are modified,
+recolored, traced, partially used, AI-retouched, or otherwise
+incorporated into derivative works.
+
+You may not alter, remove, or obscure any licensing, copyright, or
+other notices of the licensor in the Work. Any use of the licensor's
+trademarks is subject to applicable law.
+
+Permitted Uses
+
+The following uses are expressly permitted:
+
+- Viewing, studying, and learning from the source code and design
+  assets for personal educational purposes.
+
+- Forking the repository and submitting contributions (pull requests)
+  back to the original project.
+
+- Using the Work for personal, educational, research, or other
+  non-commercial purposes (e.g., personal learning, classroom use,
+  research lab demonstrations, internal club testing).
+
+Commercial Licensing
+
+For commercial licensing inquiries or exceptions to these terms,
+please contact:
+
+copsnro66ers@gmail.com
+
+Patents
+
+The licensor grants you a license, under any patent claims the
+licensor can license, or becomes able to license, to make, have made,
+use, import and have imported the Work, solely as permitted under
+this license. This license does not cover any patent claims that you
+cause to be infringed by modifications or additions to the Work.
+
+If you or your company make any written claim that the Work infringes
+or contributes to infringement of any patent, your patent license for
+the Work granted under these terms ends immediately.
+
+Notices
+
+You must ensure that anyone who gets a copy of any part of the Work
+from you also gets a copy of these terms.
+
+If you modify the Work, you must include in any modified copies of
+the Work prominent notices stating that you have modified the Work.
+
+No Other Rights
+
+These terms do not imply any licenses other than those expressly
+granted in these terms.
+
+Governing Law
+
+These terms shall be governed by and construed in accordance with
+the laws of the Republic of Korea.
+
+Termination
+
+If you use the Work in violation of these terms, such use is not
+licensed, and your licenses will automatically terminate.
+
+If the licensor provides you with a notice of your violation, and you
+cease all violation of this license no later than 30 days after you
+receive that notice, your licenses will be reinstated retroactively.
+
+However, if you violate these terms after such reinstatement, any
+additional violation of these terms will cause your licenses to
+terminate automatically and permanently.
+
+No Liability
+
+As far as the law allows, the Work comes as is, without any warranty
+or condition, and the licensor will not be liable to you for any
+damages arising out of these terms or the use or nature of the Work,
+under any kind of legal claim.
+
+Definitions
+
+The "licensor" is Innocare (동심지키미), also operating through the
+cops-and-robbers organization on GitHub.
+
+The "Work" is everything the licensor makes available under these
+terms, including:
+  - Source code and compiled binaries
+  - Design assets (UI/UX, characters, logos, icons, illustrations,
+    visual identity, typography systems, color systems, etc.)
+  - Audio assets (sound effects, music, etc., owned by the licensor)
+  - Documentation, design specs, wireframes
+  - Any other creative materials provided by the licensor
+
+"You" refers to the individual or entity agreeing to these terms.
+
+"Your company" is any legal entity, sole proprietorship, or other
+kind of organization that you work for, plus all organizations that
+have control over, are under the control of, or are under common
+control with that organization.
+
+"Control" means ownership of substantially all the assets of an
+entity, or the power to direct its management and policies by vote,
+contract, or otherwise. Control can be direct or indirect.
+
+"Your licenses" are all the licenses granted to you for the Work
+under these terms.
+
+"Use" means anything you do with the Work requiring one of your
+licenses.
+
+"Trademark" means trademarks, service marks, and similar rights.
+
+
+=======================================================================
+
+저작권 (c) 2026 동심지키미 (Innocare). 모든 권리 보유.
+Copyright (c) 2026 Innocare (동심지키미). All rights reserved.
+
+=======================================================================
