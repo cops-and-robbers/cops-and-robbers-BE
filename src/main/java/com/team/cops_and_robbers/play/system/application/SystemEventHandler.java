@@ -26,6 +26,7 @@ public class SystemEventHandler {
         if (event.type() == SystemEventType.GAME_OVER) {
             gameFcmNotifier.notifySystemEvent(event).whenComplete((r, ex) -> {
                 robberLocationService.clearRobberLocations(event.gameId());
+                robberLocationService.clearRobberLocationSnapshot(event.gameId());
                 inGameParticipantCacheService.clearCache(event.gameId());
             });
         } else {

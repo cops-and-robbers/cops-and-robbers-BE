@@ -121,8 +121,7 @@ public class GameEventConsumer {
      * 도둑 위치 공개: 위치 발행 후 다음 공개 이벤트 재등록
      */
     private void executeRobberLocationReveal(Game game) {
-        List<SystemEventData.RobberLocation> locations =
-                robberLocationService.getCurrentRobberLocations(game.getId());
+        List<SystemEventData.RobberLocation> locations = robberLocationService.revealRobberLocations(game.getId());
         SystemEvent event = systemEventFactory.createRobberLocationRevealEvent(game.getId(), locations);
         systemPublisher.publish(event);
         gameFcmNotifier.notifySystemEvent(event);
