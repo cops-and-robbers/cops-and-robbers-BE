@@ -80,7 +80,7 @@ class LocationE2ETest extends WebSocketE2ETest {
         Thread.sleep(500);
 
         // then
-        List<SystemEventData.RobberLocation> locations = robberLocationService.getCurrentRobberLocations(setup.game().getId());
+        List<SystemEventData.RobberLocation> locations = robberLocationService.revealRobberLocations(setup.game().getId());
 
         assertThat(locations.get(0).participantId()).isEqualTo(setup.robberParticipant().getId());
         assertThat(locations.get(0).latitude()).isEqualTo(37.5);
@@ -98,7 +98,7 @@ class LocationE2ETest extends WebSocketE2ETest {
         Thread.sleep(500);
 
         // when
-        List<SystemEventData.RobberLocation> locations = robberLocationService.getCurrentRobberLocations(setup.game().getId());
+        List<SystemEventData.RobberLocation> locations = robberLocationService.revealRobberLocations(setup.game().getId());
         systemPublisher.publish(systemEventFactory.createRobberLocationRevealEvent(setup.game().getId(), locations));
 
         // then

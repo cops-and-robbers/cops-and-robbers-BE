@@ -5,14 +5,10 @@ import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
-import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
-import com.team.cops_and_robbers.play.common.domain.InGameParticipantCache;
-import com.team.cops_and_robbers.play.common.repository.InGameParticipantCacheRepository;
-import com.team.cops_and_robbers.play.location.application.dto.command.LocationUpdateCommand;
 import com.team.cops_and_robbers.play.location.application.dto.command.RobberLocationsCommand;
 import com.team.cops_and_robbers.play.location.application.dto.result.RobberLocationResult;
-import com.team.cops_and_robbers.play.location.repository.RobberLocationRepository;
+import com.team.cops_and_robbers.play.location.repository.RobberLocationSnapshotRepository;
 import com.team.cops_and_robbers.play.system.domain.SystemEventData;
 import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +19,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import java.util.List;
-import java.util.Optional;
 
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
@@ -39,10 +34,7 @@ class RobberLocationServiceTest extends ServiceUnitTest {
     private RobberLocationService robberLocationService;
 
     @Mock
-    private RobberLocationRepository robberLocationRepository;
-
-    @Mock
-    private InGameParticipantCacheRepository inGameParticipantCacheRepository;
+    private RobberLocationSnapshotRepository robberLocationSnapshotRepository;
 
     private static final Long TEST_GAME_ID = 1L;
     private static final Long TEST_USER_ID = 1L;
@@ -67,17 +59,13 @@ class RobberLocationServiceTest extends ServiceUnitTest {
     class GetRobberLocations {
 
         @Test
-        void 위치를_전송한_도둑의_위치가_반환된다() {
+        void 도둑위치는_스냅샷_기준으로_위치가_반환된다() {
             // given
-            given(inGameParticipantCacheRepository.findByParticipantId(TEST_GAME_ID, TEST_PARTICIPANT_ID))
-                    .willReturn(Optional.of(new InGameParticipantCache(user.getNickname(), Team.ROBBER, null)));
-            robberLocationService.updateLocation(new LocationUpdateCommand(TEST_GAME_ID, TEST_PARTICIPANT_ID, 37.5665, 126.9780));
-
             RobberLocationsCommand command = RobberLocationsCommand.of(TEST_GAME_ID, TEST_USER_ID);
             given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(game);
-            given(robberLocationRepository.findAllByGameId(TEST_GAME_ID))
-                    .willReturn(List.of(SystemEventData.RobberLocation.of(TEST_PARTICIPANT_ID, user.getNickname(), 37.5665, 126.9780)));
             given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_USER_ID)).willReturn(robberParticipant);
+            given(robberLocationSnapshotRepository.findAllByGameId(TEST_GAME_ID))
+                    .willReturn(List.of(SystemEventData.RobberLocation.of(TEST_PARTICIPANT_ID, user.getNickname(), 37.5665, 126.9780)));
 
             // when
             List<RobberLocationResult> results = robberLocationService.getRobberLocations(command);
@@ -91,18 +79,36 @@ class RobberLocationServiceTest extends ServiceUnitTest {
         }
 
         @Test
-        void 위치를_전송하지_않은_경우_빈_목록이_반환된다() {
+        void 첫_위치_공개_전에는_스냅샷이_없어_빈_목록이_반환된다() {
             // given
             RobberLocationsCommand command = RobberLocationsCommand.of(TEST_GAME_ID, TEST_USER_ID);
-
             given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(game);
             given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_USER_ID)).willReturn(robberParticipant);
+            given(robberLocationSnapshotRepository.findAllByGameId(TEST_GAME_ID)).willReturn(List.of());
 
             // when
             List<RobberLocationResult> results = robberLocationService.getRobberLocations(command);
 
             // then
             assertThat(results).isEmpty();
+        }
+
+        @Test
+        void 스냅샷_이후_도둑이_이동해도_스냅샷_기준_위치가_반환된다() {
+            // given: 스냅샷은 첫 번째 위치, 실시간은 두 번째 위치
+            RobberLocationsCommand command = RobberLocationsCommand.of(TEST_GAME_ID, TEST_USER_ID);
+            given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(game);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_USER_ID)).willReturn(robberParticipant);
+            given(robberLocationSnapshotRepository.findAllByGameId(TEST_GAME_ID))
+                    .willReturn(List.of(SystemEventData.RobberLocation.of(TEST_PARTICIPANT_ID, user.getNickname(), 37.5665, 126.9780)));
+
+            // when
+            List<RobberLocationResult> results = robberLocationService.getRobberLocations(command);
+
+            // then: 스냅샷(첫 번째 위치) 반환, 실시간 위치(두 번째) 미반영
+            assertThat(results).hasSize(1);
+            assertThat(results.get(0).latitude()).isEqualTo(37.5665);
+            assertThat(results.get(0).longitude()).isEqualTo(126.9780);
         }
 
         @Test

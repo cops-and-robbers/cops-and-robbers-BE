@@ -99,7 +99,7 @@ class SystemE2ETest extends WebSocketE2ETest {
         );
 
         // when
-        List<SystemEventData.RobberLocation> locations = robberLocationService.getCurrentRobberLocations(setup.game().getId());
+        List<SystemEventData.RobberLocation> locations = robberLocationService.revealRobberLocations(setup.game().getId());
         SystemEvent event = systemEventFactory.createRobberLocationRevealEvent(setup.game().getId(), locations);
         systemPublisher.publish(event);
 

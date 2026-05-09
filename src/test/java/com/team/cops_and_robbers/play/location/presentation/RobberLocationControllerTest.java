@@ -51,6 +51,7 @@ class RobberLocationControllerTest extends ControllerTest {
         inGameParticipantCacheService.clearCache(game.getId());
         inGameParticipantCacheService.loadCache(game.getId());
         robberLocationService.clearRobberLocations(game.getId());
+        robberLocationService.clearRobberLocationSnapshot(game.getId());
     }
 
     @Nested
@@ -58,11 +59,12 @@ class RobberLocationControllerTest extends ControllerTest {
     class GetRobberLocations {
 
         @Test
-        void 위치를_전송한_도둑의_위치가_반환된다() {
-            // given
+        void 도둑위치는_스냅샷_기준으로_위치가_반환된다() {
+            // given: 위치 업데이트 후 공개(스냅샷 저장) 시뮬레이션
             robberLocationService.updateLocation(
                     new LocationUpdateCommand(game.getId(), robberParticipant.getId(), 37.5665, 126.9780)
             );
+            robberLocationService.revealRobberLocations(game.getId());
 
             // when
             ExtractableResponse<Response> response = authenticated(policeToken)
@@ -84,7 +86,12 @@ class RobberLocationControllerTest extends ControllerTest {
         }
 
         @Test
-        void 위치를_한_번도_전송하지_않은_경우_빈_목록이_반환된다() {
+        void 첫_위치_공개_전에는_빈_목록이_반환된다() {
+            // given: 도둑이 위치를 전송했지만 아직 공개 주기가 도래하지 않은 상태
+            robberLocationService.updateLocation(
+                    new LocationUpdateCommand(game.getId(), robberParticipant.getId(), 37.5665, 126.9780)
+            );
+
             // when
             ExtractableResponse<Response> response = authenticated(policeToken)
                     .when()
@@ -101,11 +108,12 @@ class RobberLocationControllerTest extends ControllerTest {
         }
 
         @Test
-        void 위치를_여러_번_전송한_경우_마지막_위치만_반환된다() {
-            // given
+        void 공개_후_도둑이_이동해도_스냅샷_기준_위치가_반환된다() {
+            // given: 첫 번째 위치로 공개(스냅샷), 이후 다른 위치로 이동
             robberLocationService.updateLocation(
                     new LocationUpdateCommand(game.getId(), robberParticipant.getId(), 37.5665, 126.9780)
             );
+            robberLocationService.revealRobberLocations(game.getId());
             robberLocationService.updateLocation(
                     new LocationUpdateCommand(game.getId(), robberParticipant.getId(), 37.9999, 127.9999)
             );
@@ -117,13 +125,13 @@ class RobberLocationControllerTest extends ControllerTest {
                     .then()
                     .extract();
 
-            // then
+            // then: 스냅샷(공개 시점) 위치 반환, 이동 후 실시간 위치 미반영
             RobberLocationResponse[] results = response.as(RobberLocationResponse[].class);
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(200);
                 softly.assertThat(results).hasSize(1);
-                softly.assertThat(results[0].latitude()).isEqualTo(37.9999);
-                softly.assertThat(results[0].longitude()).isEqualTo(127.9999);
+                softly.assertThat(results[0].latitude()).isEqualTo(37.5665);
+                softly.assertThat(results[0].longitude()).isEqualTo(126.9780);
             });
         }
 
