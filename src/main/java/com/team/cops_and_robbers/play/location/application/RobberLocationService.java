@@ -5,7 +5,6 @@ import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.Team;
-import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.play.common.domain.InGameParticipantCache;
@@ -21,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -49,25 +49,21 @@ public class RobberLocationService {
                         command.longitude()
                 );
 
-        storeRobberLocation(command.gameId(), command.participantId(), location);
+        robberLocationRepository.save(command.gameId(), command.participantId(), location);
     }
 
-    private void storeRobberLocation(
-            Long gameId,
-            Long participantId,
-            SystemEventData.RobberLocation location
-    ) {
-        robberLocationRepository.save(gameId, participantId, location);
-    }
-
+    /**
+     * 도둑 위치 조회 (주기적 공개 스케줄러 용)
+     *   - ALIVE 상태의 도둑 위치만 조회
+     *   - 조회 후, 스냅샷 생성
+     */
     public List<SystemEventData.RobberLocation> revealRobberLocations(Long gameId) {
-        List<SystemEventData.RobberLocation> locations = robberLocationRepository.findAllByGameId(gameId);
-        saveRobberLocationSnapshot(gameId, locations);
-        return locations;
-    }
-
-    private void saveRobberLocationSnapshot(Long gameId, List<SystemEventData.RobberLocation> locations) {
+        Set<Long> aliveRobberIds = gameParticipantRepository.findAliveRobberIdsByGameId(gameId);
+        List<SystemEventData.RobberLocation> locations = robberLocationRepository.findAllByGameId(gameId).stream()
+                .filter(loc -> aliveRobberIds.contains(loc.participantId()))
+                .toList();
         robberLocationSnapshotRepository.saveAll(gameId, locations);
+        return locations;
     }
 
     public void clearRobberLocations(Long gameId) {
@@ -78,17 +74,17 @@ public class RobberLocationService {
         robberLocationSnapshotRepository.deleteAllByGameId(gameId);
     }
 
+    @Deprecated
     public List<RobberLocationResult> getRobberLocations(RobberLocationsCommand command) {
         Game game = gameRepository.getByGameId(command.gameId());
         if (!game.isInProgress()) {
             throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
         }
-        GameParticipant participant = gameParticipantRepository.getByGameIdAndUserId(command.gameId(), command.userId());
-        if (participant.isPoliceWaiting()) {
-            return List.of();
-        }
+        gameParticipantRepository.getByGameIdAndUserId(command.gameId(), command.userId());
 
+        Set<Long> aliveRobberIds = gameParticipantRepository.findAliveRobberIdsByGameId(command.gameId());
         return robberLocationSnapshotRepository.findAllByGameId(command.gameId()).stream()
+                .filter(loc -> aliveRobberIds.contains(loc.participantId()))
                 .map(RobberLocationResult::from)
                 .toList();
     }
