@@ -3,8 +3,6 @@ package com.team.cops_and_robbers.notice.presentation.dto.response;
 import com.team.cops_and_robbers.notice.application.dto.result.NoticeResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.time.LocalDateTime;
-
 public record NoticeResponse(
         @Schema(description = "공지사항 ID", example = "1")
         Long id,
@@ -14,10 +12,10 @@ public record NoticeResponse(
         String content,
         @Schema(description = "고정 여부", example = "false")
         boolean pinned,
-        @Schema(description = "생성일시", example = "2024-01-01T00:00:00")
-        LocalDateTime createdAt,
-        @Schema(description = "수정일시", example = "2024-01-01T00:00:00")
-        LocalDateTime updatedAt
+        @Schema(description = "생성일시", example = "2024-01-01T00:00:00+09:00")
+        String createdAt,
+        @Schema(description = "수정일시", example = "2024-01-01T00:00:00+09:00")
+        String updatedAt
 ) {
     public static NoticeResponse from(NoticeResult result) {
         return new NoticeResponse(

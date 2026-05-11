@@ -2,8 +2,6 @@ package com.team.cops_and_robbers.game.game.presentation.dto.response;
 
 import com.team.cops_and_robbers.game.game.application.dto.result.GameCreateResult;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.time.LocalDateTime;
-
 public record GameCreateResponse(
         @Schema(description = "게임 ID", example = "1")
         Long gameId,
@@ -19,8 +17,8 @@ public record GameCreateResponse(
         Integer policeWaitMinutes,
         @Schema(description = "최대 참가 인원", example = "10")
         Integer maxParticipants,
-        @Schema(description = "생성 시각", example = "2026-01-16T01:25:37.543066")
-        LocalDateTime createdAt
+        @Schema(description = "생성 시각", example = "2026-01-16T01:25:37+09:00")
+        String createdAt
 ) {
 
     public static GameCreateResponse from(GameCreateResult result) {

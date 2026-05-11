@@ -1,7 +1,7 @@
 package com.team.cops_and_robbers.game.game.application.dto.result;
 
+import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.game.game.domain.Game;
-import java.time.LocalDateTime;
 
 public record GameCreateResult(
         Long gameId,
@@ -11,7 +11,7 @@ public record GameCreateResult(
         Integer locationRevealIntervalMinutes,
         Integer policeWaitMinutes,
         Integer maxParticipants,
-        LocalDateTime createdAt
+        String createdAt
 ) {
 
     public static GameCreateResult from(Game game) {
@@ -23,7 +23,7 @@ public record GameCreateResult(
                 game.getLocationRevealIntervalMinutes(),
                 game.getPoliceWaitMinutes(),
                 game.getMaxParticipants(),
-                game.getCreatedAt()
+                TimestampUtil.toIsoString(game.getCreatedAt())
         );
     }
 }

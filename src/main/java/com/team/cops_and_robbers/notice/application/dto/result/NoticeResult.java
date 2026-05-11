@@ -1,16 +1,15 @@
 package com.team.cops_and_robbers.notice.application.dto.result;
 
+import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.notice.domain.Notice;
-
-import java.time.LocalDateTime;
 
 public record NoticeResult(
         Long id,
         String title,
         String content,
         boolean pinned,
-        LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        String createdAt,
+        String updatedAt
 ) {
     public static NoticeResult from(Notice notice) {
         return new NoticeResult(
@@ -18,8 +17,8 @@ public record NoticeResult(
                 notice.getTitle(),
                 notice.getContent(),
                 notice.isPinned(),
-                notice.getCreatedAt(),
-                notice.getUpdatedAt()
+                TimestampUtil.toIsoString(notice.getCreatedAt()),
+                TimestampUtil.toIsoString(notice.getUpdatedAt())
         );
     }
 }

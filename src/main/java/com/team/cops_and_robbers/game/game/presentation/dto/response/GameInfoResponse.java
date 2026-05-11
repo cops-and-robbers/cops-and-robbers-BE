@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameInfoResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.time.LocalDateTime;
-
 public record GameInfoResponse(
         @Schema(description = "라운드 시간(분)", example = "30")
         Integer roundDurationMinutes,
@@ -18,8 +16,8 @@ public record GameInfoResponse(
         @Schema(description = "게임 시작 여부", example = "false")
         boolean isStarted,
         @JsonInclude(JsonInclude.Include.NON_NULL)
-        @Schema(description = "게임 시작 시간 (진행 중일 때만 포함)", example = "2026-03-21T15:30:00")
-        LocalDateTime gameStartTime
+        @Schema(description = "게임 시작 시간 (진행 중일 때만 포함)", example = "2026-03-21T15:30:00+09:00")
+        String gameStartTime
 ) {
     public static GameInfoResponse from(GameInfoResult result) {
         return new GameInfoResponse(
