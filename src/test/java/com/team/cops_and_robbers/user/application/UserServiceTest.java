@@ -13,7 +13,9 @@ import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.user.application.dto.command.AgreementCommand;
+import com.team.cops_and_robbers.user.application.dto.command.GamePushAgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
+import com.team.cops_and_robbers.user.application.dto.result.GamePushAgreementResult;
 import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.exception.UserException;
@@ -228,6 +230,54 @@ class UserServiceTest extends ServiceUnitTest {
             assertThatThrownBy(() -> userService.updateNickname(command))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessage(UserException.DUPLICATED_NICKNAME.getDetail());
+        }
+    }
+
+    @Nested
+    @DisplayName("게임 푸시 알림 수신 동의 여부 조회")
+    class GetGamePushAgreement {
+
+        @Test
+        void 게임_푸시_동의_여부를_반환한다() {
+            // given
+            given(userRepository.getByUserId(user.getId())).willReturn(user);
+
+            // when
+            GamePushAgreementResult result = userService.getGamePushAgreement(user.getId());
+
+            // then
+            assertThat(result.allowGamePush()).isEqualTo(user.isAllowGamePush());
+        }
+    }
+
+    @Nested
+    @DisplayName("게임 푸시 알림 수신 동의 여부 업데이트")
+    class UpdateGamePushAgreement {
+
+        @Test
+        void true로_업데이트에_성공한다() {
+            // given
+            GamePushAgreementCommand command = GamePushAgreementCommand.of(user.getId(), true);
+            given(userRepository.getByUserId(user.getId())).willReturn(user);
+
+            // when
+            userService.updateGamePushAgreement(command);
+
+            // then
+            assertThat(user.isAllowGamePush()).isTrue();
+        }
+
+        @Test
+        void false로_업데이트에_성공한다() {
+            // given
+            GamePushAgreementCommand command = GamePushAgreementCommand.of(user.getId(), false);
+            given(userRepository.getByUserId(user.getId())).willReturn(user);
+
+            // when
+            userService.updateGamePushAgreement(command);
+
+            // then
+            assertThat(user.isAllowGamePush()).isFalse();
         }
     }
 
