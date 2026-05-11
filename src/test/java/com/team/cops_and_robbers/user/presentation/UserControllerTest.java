@@ -18,7 +18,9 @@ import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.presentation.dto.request.AgreementRequest;
+import com.team.cops_and_robbers.user.presentation.dto.request.GamePushAgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
+import com.team.cops_and_robbers.user.presentation.dto.response.GamePushAgreementResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.MyPageResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.NicknameCheckResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.UserGameInfoResponse;
@@ -544,6 +546,137 @@ class UserControllerTest extends ControllerTest {
             GameParticipant participant = GameParticipantFixture.HOST_PARTICIPANT(game, user);
             gameRepository.save(game);
             gameParticipantRepository.save(participant);
+        }
+    }
+
+    @Nested
+    @DisplayName("게임 푸시 알림 수신 동의 여부 조회 API")
+    class GetGamePushAgreement {
+
+        @Test
+        void 유효한_토큰으로_요청하면_게임_푸시_동의_여부와_200_OK를_응답한다() {
+            // given
+            User user = givenUser();
+            String accessToken = givenAccessToken(user);
+
+            // when
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .when()
+                    .get("/api/user/agreements/game-push")
+                    .then()
+                    .extract();
+
+            // then
+            GamePushAgreementResponse response = extract.as(GamePushAgreementResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(response.allowGamePush()).isEqualTo(user.isAllowGamePush());
+            });
+        }
+
+        @Test
+        void 토큰이_없으면_401_UNAUTHORIZED를_응답한다() {
+            // when
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .when()
+                    .get("/api/user/agreements/game-push")
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(401);
+            });
+        }
+    }
+
+    @Nested
+    @DisplayName("게임 푸시 알림 수신 동의 여부 업데이트 API")
+    class UpdateGamePushAgreement {
+
+        @Test
+        void true로_업데이트하면_DB에_반영되고_204_NO_CONTENT를_응답한다() {
+            // given
+            User user = givenUser();
+            String accessToken = givenAccessToken(user);
+            GamePushAgreementRequest request = new GamePushAgreementRequest(true);
+
+            // when
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .put("/api/user/agreements/game-push")
+                    .then()
+                    .extract();
+
+            // then
+            User updatedUser = userRepository.getByUserId(user.getId());
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(204);
+                softly.assertThat(updatedUser.isAllowGamePush()).isTrue();
+            });
+        }
+
+        @Test
+        void false로_업데이트하면_DB에_반영되고_204_NO_CONTENT를_응답한다() {
+            // given
+            User user = givenUser();
+            String accessToken = givenAccessToken(user);
+            GamePushAgreementRequest request = new GamePushAgreementRequest(false);
+
+            // when
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .put("/api/user/agreements/game-push")
+                    .then()
+                    .extract();
+
+            // then
+            User updatedUser = userRepository.getByUserId(user.getId());
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(204);
+                softly.assertThat(updatedUser.isAllowGamePush()).isFalse();
+            });
+        }
+
+        @Test
+        void allowGamePush가_null이면_400_BAD_REQUEST를_응답한다() {
+            // given
+            User user = givenUser();
+            String accessToken = givenAccessToken(user);
+            GamePushAgreementRequest request = new GamePushAgreementRequest(null);
+
+            // when
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .put("/api/user/agreements/game-push")
+                    .then()
+                    .extract();
+
+            // then
+            ErrorResponse response = extract.as(ErrorResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+                softly.assertThat(response.title()).isEqualTo(CommonException.INVALID_INPUT_VALUE.getTitle());
+            });
+        }
+
+        @Test
+        void 토큰이_없으면_401_UNAUTHORIZED를_응답한다() {
+            // when
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .body(new GamePushAgreementRequest(true))
+                    .when()
+                    .put("/api/user/agreements/game-push")
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(401);
+            });
         }
     }
 }
