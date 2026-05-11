@@ -4,13 +4,17 @@ import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.user.application.UserService;
 import com.team.cops_and_robbers.user.application.dto.command.AgreementCommand;
+import com.team.cops_and_robbers.user.application.dto.command.GamePushAgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
+import com.team.cops_and_robbers.user.application.dto.result.GamePushAgreementResult;
 import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.presentation.dto.request.AgreementRequest;
+import com.team.cops_and_robbers.user.presentation.dto.request.GamePushAgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
 import com.team.cops_and_robbers.user.presentation.dto.response.AgreementResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.DeleteAccountResponse;
+import com.team.cops_and_robbers.user.presentation.dto.response.GamePushAgreementResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.MyPageResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.NicknameCheckResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.UserGameInfoResponse;
@@ -104,6 +108,29 @@ public class UserController implements UserControllerDocs {
                 request.marketing()
         );
         userService.updateTermsAgreement(command);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 8. 게임 푸시 알림 수신 동의 여부를 조회합니다.
+     */
+    @GetMapping("/agreements/game-push")
+    public ResponseEntity<GamePushAgreementResponse> getGamePushAgreement(@AuthUser LoginUser loginUser) {
+        GamePushAgreementResult result = userService.getGamePushAgreement(loginUser.userId());
+        GamePushAgreementResponse response = GamePushAgreementResponse.from(result);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 9. 게임 푸시 알림 수신 동의 여부를 업데이트합니다.
+     */
+    @PutMapping("/agreements/game-push")
+    public ResponseEntity<Void> updateGamePushAgreement(
+            @AuthUser LoginUser loginUser,
+            @RequestBody @Valid GamePushAgreementRequest request
+    ) {
+        GamePushAgreementCommand command = GamePushAgreementCommand.of(loginUser.userId(), request.allowGamePush());
+        userService.updateGamePushAgreement(command);
         return ResponseEntity.noContent().build();
     }
 }
