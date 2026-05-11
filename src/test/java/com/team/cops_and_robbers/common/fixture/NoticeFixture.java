@@ -1,22 +1,31 @@
 package com.team.cops_and_robbers.common.fixture;
 
 import com.team.cops_and_robbers.notice.domain.Notice;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.time.LocalDateTime;
 
 public class NoticeFixture {
 
     public static Notice NOTICE() {
-        return Notice.builder()
+        Notice notice = Notice.builder()
                 .title("공지사항 제목")
                 .content("공지사항 내용")
                 .pinned(false)
                 .build();
+        ReflectionTestUtils.setField(notice, "createdAt", LocalDateTime.now());
+        ReflectionTestUtils.setField(notice, "updatedAt", LocalDateTime.now());
+        return notice;
     }
 
     public static Notice PINNED_NOTICE() {
-        return Notice.builder()
+        Notice notice = Notice.builder()
                 .title("고정 공지사항")
                 .content("고정된 내용")
                 .pinned(true)
                 .build();
+        ReflectionTestUtils.setField(notice, "createdAt", LocalDateTime.now());
+        ReflectionTestUtils.setField(notice, "updatedAt", LocalDateTime.now());
+        return notice;
     }
 }
