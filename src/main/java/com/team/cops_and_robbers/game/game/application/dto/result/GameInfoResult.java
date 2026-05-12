@@ -1,7 +1,8 @@
 package com.team.cops_and_robbers.game.game.application.dto.result;
 
-import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.game.game.domain.Game;
+
+import java.time.LocalDateTime;
 
 public record GameInfoResult(
         Integer roundDurationMinutes,
@@ -9,7 +10,7 @@ public record GameInfoResult(
         Integer policeWaitMinutes,
         Integer maxParticipants,
         boolean isStarted,
-        String gameStartTime
+        LocalDateTime gameStartTime
 ) {
     public static GameInfoResult from(Game game) {
         return new GameInfoResult(
@@ -18,7 +19,7 @@ public record GameInfoResult(
                 game.getPoliceWaitMinutes(),
                 game.getMaxParticipants(),
                 game.isInProgress(),
-                game.getStartedAt() != null ? TimestampUtil.toIsoString(game.getStartedAt()) : null
+                game.getStartedAt()
         );
     }
 }

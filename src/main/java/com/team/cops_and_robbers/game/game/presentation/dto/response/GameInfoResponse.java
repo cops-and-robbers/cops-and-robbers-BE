@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.game.game.presentation.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameInfoResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -26,7 +27,7 @@ public record GameInfoResponse(
                 result.policeWaitMinutes(),
                 result.maxParticipants(),
                 result.isStarted(),
-                result.gameStartTime()
+                result.gameStartTime() != null ? TimestampUtil.toIsoString(result.gameStartTime()) : null
         );
     }
 }
