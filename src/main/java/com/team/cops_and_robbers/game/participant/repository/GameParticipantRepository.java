@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface GameParticipantRepository extends JpaRepository<GameParticipant, Long> {
 
@@ -78,6 +79,19 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
         and p.status = :status
         """)
     int countByGameIdAndRobberStatus(@Param("gameId") Long gameId, @Param("status") ParticipantStatus status);
+
+
+    /**
+     * 현재 잡히지 않는 상태의 도둑 id 들을 조회
+     */
+    @Query("""
+        select gp.id
+        from GameParticipant gp
+        where gp.game.id = :gameId
+        and gp.team = 'ROBBER'
+        and gp.status = 'ALIVE'
+        """)
+    Set<Long> findAliveRobberIdsByGameId(@Param("gameId") Long gameId);
 
     /**
      * 게임에서 준비하지 않은 참가자가 있는지 확인

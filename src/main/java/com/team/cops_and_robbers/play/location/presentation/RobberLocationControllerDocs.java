@@ -18,13 +18,20 @@ import java.util.List;
 @Tag(name = "Location", description = "게임 위치 API")
 public interface RobberLocationControllerDocs {
 
+    @Deprecated
     @Operation(
-            summary = "도둑 위치 조회",
+            summary = "도둑 위치 조회 (deprecated)",
             description = """
                     현재 게임에 참여 중인 도둑들의 마지막 위치를 조회합니다.
 
+                    - 가장 최근 도둑 위치 공개 시점의 위치를 기준으로 목록을 응답합니다.
+                    - JAILED 상태의 도둑은 목록에 포함되지 않습니다.
                     - 위치를 한 번도 전송하지 않은 도둑은 목록에 포함되지 않습니다.
-                    """
+                    
+                    - **Deprecated**: /api/games/{gameId}/state 로 대체됩니다.
+                         (프론트로직 마이그레이션 되면 해당 API는 삭제 예정, 현재 까지는 호출 가능)
+                    """,
+            deprecated = true
     )
     @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_FOUND", "GAME_NOT_IN_PROGRESS"})
     @ApiErrorCode(value = GameParticipantException.class, codes = {"PARTICIPANT_NOT_FOUND"})

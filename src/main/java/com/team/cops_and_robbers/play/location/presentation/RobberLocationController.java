@@ -22,6 +22,7 @@ public class RobberLocationController implements RobberLocationControllerDocs {
 
     private final RobberLocationService robberLocationService;
 
+    @Deprecated
     @GetMapping("/{gameId}/robbers/location")
     public ResponseEntity<List<RobberLocationResponse>> getRobberLocations(
             @AuthUser LoginUser loginUser,

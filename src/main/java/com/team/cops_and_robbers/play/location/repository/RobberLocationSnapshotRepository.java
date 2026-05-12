@@ -10,27 +10,33 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
-public class RobberLocationRepository {
+public class RobberLocationSnapshotRepository {
 
     private static final String KEY_PREFIX = "game:";
-    private static final String KEY_SUFFIX = ":robber-location";
-    private static final Duration TTL = Duration.ofMinutes(10);
+    private static final String KEY_SUFFIX = ":robber-location-snapshot";
+    private static final Duration TTL = Duration.ofMinutes(35);
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
     private final AesEncryptor aesEncryptor;
 
-    public void save(Long gameId, Long participantId, SystemEventData.RobberLocation location) {
-        RobberLocationHash hash = new RobberLocationHash(
-                location.participantId(),
-                location.nickname(),
-                aesEncryptor.encrypt(String.valueOf(location.latitude())),
-                aesEncryptor.encrypt(String.valueOf(location.longitude()))
-        );
-        redisTemplate.opsForHash().put(key(gameId), field(participantId), hash);
+    public void saveAll(Long gameId, List<SystemEventData.RobberLocation> locations) {
+        Map<String, RobberLocationHash> entries = locations.stream()
+                .collect(Collectors.toMap(
+                        location -> field(location.participantId()),
+                        location -> new RobberLocationHash(
+                                location.participantId(),
+                                location.nickname(),
+                                aesEncryptor.encrypt(String.valueOf(location.latitude())),
+                                aesEncryptor.encrypt(String.valueOf(location.longitude()))
+                        )
+                ));
+        redisTemplate.opsForHash().putAll(key(gameId), entries);
         redisTemplate.expire(key(gameId), TTL);
     }
 
