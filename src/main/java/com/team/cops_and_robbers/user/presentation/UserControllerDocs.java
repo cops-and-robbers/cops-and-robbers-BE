@@ -5,6 +5,7 @@ import com.team.cops_and_robbers.common.exception.CommonException;
 import com.team.cops_and_robbers.common.swagger.ApiErrorCode;
 import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.presentation.dto.request.AgreementRequest;
+import com.team.cops_and_robbers.user.presentation.dto.request.GamePushAgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
 import com.team.cops_and_robbers.user.presentation.dto.response.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -94,5 +95,27 @@ public interface UserControllerDocs {
     ResponseEntity<Void> updateTerms(
             @Parameter(hidden = true) LoginUser loginUser,
             @RequestBody @Valid AgreementRequest request
+    );
+
+    @Operation(summary = "게임 푸시 알림 수신 동의 여부 조회",
+            description = "로그인한 사용자의 게임 푸시 알림 수신 동의 여부를 조회합니다."
+    )
+    @ApiErrorCode(value = UserException.class, codes = {"USER_NOT_FOUND"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
+    ResponseEntity<GamePushAgreementResponse> getGamePushAgreement(@Parameter(hidden = true) LoginUser loginUser);
+
+    @Operation(summary = "게임 푸시 알림 수신 동의 여부 업데이트",
+            description = "로그인한 사용자의 게임 푸시 알림 수신 동의 여부를 업데이트합니다."
+    )
+    @ApiErrorCode(value = UserException.class, codes = {"USER_NOT_FOUND"})
+    @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "업데이트 성공 (응답 본문 없음)")
+    })
+    ResponseEntity<Void> updateGamePushAgreement(
+            @Parameter(hidden = true) LoginUser loginUser,
+            @RequestBody @Valid GamePushAgreementRequest request
     );
 }

@@ -51,11 +51,11 @@ public class GameFcmNotifier {
     private FcmPayload resolveSystemPayload(SystemEventType type, Long gameId) {
         Map<String, String> data = Map.of("type", type.name(), "gameId", String.valueOf(gameId));
         return switch (type) {
-            case ARREST -> new FcmPayload("🚔 도둑 체포!", "도둑이 체포되었습니다.", data);
-            case ESCAPE -> new FcmPayload("🏃 도둑 탈옥!", "도둑이 감옥에서 탈옥했습니다!", data);
-            case GAME_OVER -> new FcmPayload("🏁 게임 종료", "게임이 종료되었습니다. 결과를 확인하세요!", data);
-            case ROBBER_LOCATION_REVEAL -> new FcmPayload("📍 도둑 위치 공개!", "도둑의 현재 위치가 공개되었습니다!", data);
-            case POLICE_MOVE_START -> new FcmPayload("🚨 경찰 이동 시작!", "경찰이 이동을 시작했습니다!", data);
+            case ARREST -> new FcmPayload("도둑 체포!", "도둑이 체포되었습니다.", data);
+            case ESCAPE -> new FcmPayload("도둑 탈옥!", "도둑이 감옥에서 탈옥했습니다!", data);
+            case GAME_OVER -> new FcmPayload("게임 종료", "게임이 종료되었습니다. 결과를 확인하세요!", data);
+            case ROBBER_LOCATION_REVEAL -> new FcmPayload("도둑 위치 공개!", "도둑의 현재 위치가 공개되었습니다!", data);
+            case POLICE_MOVE_START -> new FcmPayload("경찰 이동 시작!", "경찰이 이동을 시작했습니다!", data);
         };
     }
 

@@ -114,4 +114,8 @@ public class User extends BaseTimeEntity {
             this.termsAgreedAt = now;
         }
     }
+
+    public void updateGamePush(boolean allowGamePush) {
+        this.allowGamePush = allowGamePush;
+    }
 }

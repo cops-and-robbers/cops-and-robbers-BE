@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.common.fixture;
 
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -9,7 +10,7 @@ import java.util.UUID;
 public class GameFixture {
 
     public static Game WAITING_GAME() {
-        return Game.builder()
+        Game game = Game.builder()
                 .inviteCode(UUID.randomUUID().toString().substring(0, 6))
                 .status(GameStatus.WAITING)
                 .roundDurationMinutes(30)
@@ -17,10 +18,12 @@ public class GameFixture {
                 .policeWaitMinutes(3)
                 .maxParticipants(10)
                 .build();
+        ReflectionTestUtils.setField(game, "createdAt", LocalDateTime.now());
+        return game;
     }
 
     public static Game WAITING_GAME(String inviteCode) {
-        return Game.builder()
+        Game game = Game.builder()
                 .inviteCode(inviteCode)
                 .status(GameStatus.WAITING)
                 .roundDurationMinutes(30)
@@ -28,10 +31,12 @@ public class GameFixture {
                 .policeWaitMinutes(3)
                 .maxParticipants(10)
                 .build();
+        ReflectionTestUtils.setField(game, "createdAt", LocalDateTime.now());
+        return game;
     }
 
     public static Game IN_PROGRESS_GAME() {
-        return Game.builder()
+        Game game = Game.builder()
                 .inviteCode(UUID.randomUUID().toString().substring(0, 6))
                 .status(GameStatus.IN_PROGRESS)
                 .roundDurationMinutes(30)
@@ -41,10 +46,12 @@ public class GameFixture {
                 .startedAt(LocalDateTime.now())
                 .roundNumber(1)
                 .build();
+        ReflectionTestUtils.setField(game, "createdAt", LocalDateTime.now());
+        return game;
     }
 
     public static Game IN_PROGRESS_GAME(LocalDateTime startedAt) {
-        return Game.builder()
+        Game game = Game.builder()
                 .inviteCode(UUID.randomUUID().toString().substring(0, 6))
                 .status(GameStatus.IN_PROGRESS)
                 .roundDurationMinutes(30)
@@ -54,10 +61,12 @@ public class GameFixture {
                 .startedAt(startedAt)
                 .roundNumber(1)
                 .build();
+        ReflectionTestUtils.setField(game, "createdAt", LocalDateTime.now());
+        return game;
     }
 
     public static Game FINISHED_GAME() {
-        return Game.builder()
+        Game game = Game.builder()
                 .inviteCode(UUID.randomUUID().toString().substring(0, 6))
                 .status(GameStatus.FINISHED)
                 .roundDurationMinutes(30)
@@ -67,10 +76,12 @@ public class GameFixture {
                 .startedAt(LocalDateTime.now().minusMinutes(30))
                 .lastEndedAt(LocalDateTime.now())
                 .build();
+        ReflectionTestUtils.setField(game, "createdAt", LocalDateTime.now());
+        return game;
     }
 
     public static Game CANCELED_GAME() {
-        return Game.builder()
+        Game game = Game.builder()
                 .inviteCode(UUID.randomUUID().toString().substring(0, 6))
                 .status(GameStatus.CANCELED)
                 .roundDurationMinutes(30)
@@ -78,5 +89,7 @@ public class GameFixture {
                 .policeWaitMinutes(3)
                 .maxParticipants(10)
                 .build();
+        ReflectionTestUtils.setField(game, "createdAt", LocalDateTime.now());
+        return game;
     }
 }

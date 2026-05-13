@@ -13,7 +13,9 @@ import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.user.application.dto.command.AgreementCommand;
+import com.team.cops_and_robbers.user.application.dto.command.GamePushAgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
+import com.team.cops_and_robbers.user.application.dto.result.GamePushAgreementResult;
 import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.exception.UserException;
@@ -126,5 +128,17 @@ public class UserService {
             throw new ApplicationException(UserException.REQUIRED_TERMS_NOT_AGREED);
         }
         user.agreeTerms(command.marketing(), LocalDateTime.now(clock));
+    }
+
+    @Transactional(readOnly = true)
+    public GamePushAgreementResult getGamePushAgreement(Long userId) {
+        User user = userRepository.getByUserId(userId);
+        return GamePushAgreementResult.from(user);
+    }
+
+    @Transactional
+    public void updateGamePushAgreement(GamePushAgreementCommand command) {
+        User user = userRepository.getByUserId(command.userId());
+        user.updateGamePush(command.allowGamePush());
     }
 }
