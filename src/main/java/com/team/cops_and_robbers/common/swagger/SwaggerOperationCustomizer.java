@@ -87,6 +87,7 @@ public class SwaggerOperationCustomizer implements OperationCustomizer {
 
     private Example toExample(ExceptionCode code, String pathPattern) {
         Map<String, Object> value = new LinkedHashMap<>();
+        value.put("errorCode", code.getErrorCode());
         value.put("title", code.getTitle());
         value.put("status", code.getHttpStatus().value());
         value.put("detail", code.getDetail());
