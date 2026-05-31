@@ -57,7 +57,8 @@ public class StompExceptionHandler extends StompSubProtocolErrorHandler {
         } catch (JsonProcessingException e) {
             log.error("[WebSocket Error] JSON Serialization Failed", e);
             jsonBody = String.format(
-                    "{\"title\":\"%s\",\"status\":%d,\"detail\":\"%s\",\"instance\":\"STOMP\"}",
+                    "{\"errorCode\":\"%s\",\"title\":\"%s\",\"status\":%d,\"detail\":\"%s\",\"instance\":\"STOMP\"}",
+                    exceptionCode.getErrorCode(),
                     exceptionCode.getTitle(),
                     exceptionCode.getHttpStatus().value(),
                     exceptionCode.getDetail()

@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "에러 응답")
 public record ErrorResponse(
+        @Schema(description = "에러 코드", example = "INVALID_INPUT_VALUE")
+        String errorCode,
         @Schema(description = "에러 제목", example = "유효하지 않은 입력값")
         String title,
         @Schema(description = "HTTP 상태 코드", example = "400")
@@ -14,11 +16,11 @@ public record ErrorResponse(
         String instance
 ) {
     public static ErrorResponse of(ExceptionCode code, String instance) {
-        return new ErrorResponse(code.getTitle(), code.getHttpStatus().value(), code.getDetail(), instance);
+        return new ErrorResponse(code.getErrorCode(), code.getTitle(), code.getHttpStatus().value(), code.getDetail(), instance);
     }
 
     // 동적인 상세 메시지를 직접 응답에 지정
     public static ErrorResponse of(ExceptionCode code, String detail, String instance) {
-        return new ErrorResponse(code.getTitle(), code.getHttpStatus().value(), detail, instance);
+        return new ErrorResponse(code.getErrorCode(), code.getTitle(), code.getHttpStatus().value(), detail, instance);
     }
 }

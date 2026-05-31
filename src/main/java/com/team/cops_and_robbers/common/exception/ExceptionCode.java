@@ -6,4 +6,7 @@ public interface ExceptionCode {
     HttpStatus getHttpStatus();
     String getTitle();
     String getDetail();
+    default String getErrorCode() {
+        return ((Enum<?>) this).name();
+    }
 }
