@@ -16,7 +16,10 @@ public enum StompSubscribeChannel {
     CHAT_ROBBER("/subscribe/game/%s/chat/robber"),
 
     LOCATION_POLICE("/subscribe/game/%s/location/police"),
-    LOCATION_ROBBER("/subscribe/game/%s/location/robber");
+    LOCATION_ROBBER("/subscribe/game/%s/location/robber"),
+
+    PING_POLICE("/subscribe/game/%s/ping/police"),
+    PING_ROBBER("/subscribe/game/%s/ping/robber");
 
     private final String format;
 

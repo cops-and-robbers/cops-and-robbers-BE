@@ -15,7 +15,10 @@ public enum RedisChannel {
     CHAT_ROBBER("game:%s:chat:robber"),
 
     LOCATION_POLICE("game:%s:location:police"),
-    LOCATION_ROBBER("game:%s:location:robber");
+    LOCATION_ROBBER("game:%s:location:robber"),
+
+    PING_POLICE("game:%s:ping:police"),
+    PING_ROBBER("game:%s:ping:robber");
 
     private final String format;
 
