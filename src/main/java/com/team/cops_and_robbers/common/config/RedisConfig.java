@@ -8,6 +8,8 @@ import com.team.cops_and_robbers.play.chat.application.RobberChatSubscriber;
 import com.team.cops_and_robbers.play.lobby.application.LobbySubscriber;
 import com.team.cops_and_robbers.play.location.application.PoliceLocationSubscriber;
 import com.team.cops_and_robbers.play.location.application.RobberLocationSubscriber;
+import com.team.cops_and_robbers.play.ping.application.PolicePingSubscriber;
+import com.team.cops_and_robbers.play.ping.application.RobberPingSubscriber;
 import com.team.cops_and_robbers.play.system.application.SystemSubscriber;
 import lombok.RequiredArgsConstructor;
 import org.redisson.Redisson;
@@ -117,7 +119,9 @@ public class RedisConfig {
             MessageListenerAdapter policeChatAdapter,
             MessageListenerAdapter robberChatAdapter,
             MessageListenerAdapter policeLocationAdapter,
-            MessageListenerAdapter robberLocationAdapter
+            MessageListenerAdapter robberLocationAdapter,
+            MessageListenerAdapter policePingAdapter,
+            MessageListenerAdapter robberPingAdapter
     ) {
         return Map.of(
                 RedisChannel.LOBBY.getPattern(), lobbyListenerAdapter,
@@ -126,7 +130,9 @@ public class RedisConfig {
                 RedisChannel.CHAT_POLICE.getPattern(), policeChatAdapter,
                 RedisChannel.CHAT_ROBBER.getPattern(), robberChatAdapter,
                 RedisChannel.LOCATION_POLICE.getPattern(), policeLocationAdapter,
-                RedisChannel.LOCATION_ROBBER.getPattern(), robberLocationAdapter
+                RedisChannel.LOCATION_ROBBER.getPattern(), robberLocationAdapter,
+                RedisChannel.PING_POLICE.getPattern(), policePingAdapter,
+                RedisChannel.PING_ROBBER.getPattern(), robberPingAdapter
         );
     }
 
@@ -166,6 +172,16 @@ public class RedisConfig {
 
     @Bean
     public MessageListenerAdapter robberLocationAdapter(RobberLocationSubscriber subscriber) {
+        return new MessageListenerAdapter(subscriber, LISTENER_METHOD_NAME);
+    }
+
+    @Bean
+    public MessageListenerAdapter policePingAdapter(PolicePingSubscriber subscriber) {
+        return new MessageListenerAdapter(subscriber, LISTENER_METHOD_NAME);
+    }
+
+    @Bean
+    public MessageListenerAdapter robberPingAdapter(RobberPingSubscriber subscriber) {
         return new MessageListenerAdapter(subscriber, LISTENER_METHOD_NAME);
     }
 }
