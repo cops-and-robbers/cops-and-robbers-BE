@@ -24,6 +24,21 @@ public interface GameAreaRepository extends JpaRepository <GameArea, Long>{
                 .orElseThrow(() -> new ApplicationException(GameAreaException.GAME_AREA_NOT_FOUND));
     }
 
+    @Query(value = """
+        SELECT ST_DWithin(
+            st_makepoint(:lon, :lat)::geography,
+            ga.playground_center::geography,
+            ga.playground_radius_in_meters
+        )
+        FROM game_areas ga
+        WHERE ga.game_id = :gameId
+        """, nativeQuery = true)
+    boolean isPointInsidePlayground(
+            @Param("gameId") Long gameId,
+            @Param("lon") double longitude,
+            @Param("lat") double latitude
+    );
+
     /**
      * postgis를 활용하여 내부 원이 외부 원에 완전히 포함되는지 검증합니다.
      *
