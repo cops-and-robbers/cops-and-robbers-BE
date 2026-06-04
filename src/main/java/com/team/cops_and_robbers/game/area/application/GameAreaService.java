@@ -33,4 +33,8 @@ public class GameAreaService {
         GameArea gameArea = gameAreaRepository.getByGameId(command.gameId());
         return GameAreaResult.from(gameArea);
     }
+
+    public boolean isInsidePlayground(Long gameId, double longitude, double latitude) {
+        return gameAreaRepository.isPointInsidePlayground(gameId, longitude, latitude);
+    }
 }
