@@ -37,4 +37,9 @@ public class SystemEventFactory {
         SystemEventData.GameEndData data = SystemEventData.GameEndData.of(gameResultId, winnerTeam, reason);
         return SystemEvent.of(gameId, SystemEventType.GAME_OVER, data);
     }
+
+    public SystemEvent createPlayerLeftEvent(Long gameId, GameParticipant participant) {
+        SystemEventData.PlayerLeftData data = SystemEventData.PlayerLeftData.of(participant);
+        return SystemEvent.of(gameId, SystemEventType.PLAYER_LEFT, data);
+    }
 }

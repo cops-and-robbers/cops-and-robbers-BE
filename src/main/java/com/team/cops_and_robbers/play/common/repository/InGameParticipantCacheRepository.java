@@ -50,6 +50,10 @@ public class InGameParticipantCacheRepository {
         return Optional.of(objectMapper.convertValue(value, InGameParticipantCache.class));
     }
 
+    public void deleteByParticipantId(Long gameId, Long participantId) {
+        redisTemplate.opsForHash().delete(key(gameId), field(participantId));
+    }
+
     public void deleteAllByGameId(Long gameId) {
         redisTemplate.delete(key(gameId));
     }
