@@ -148,6 +148,14 @@ public abstract class ControllerTest {
         return gameParticipantRepository.save(GameParticipantFixture.ALIVE_ROBBER(game, user));
     }
 
+    protected GameParticipant givenJailedRobber(Game game, User user) {
+        return gameParticipantRepository.save(GameParticipantFixture.JAILED_ROBBER(game, user));
+    }
+
+    protected GameParticipant givenInGameHost(Game game, User user) {
+        return gameParticipantRepository.save(GameParticipantFixture.HOST_WAITING_POLICE(game, user));
+    }
+
     protected GameParticipant givenWaitingPolice(Game game, User user) {
         GameParticipant participant = gameParticipantRepository.getByGameIdAndUserId(game.getId(), user.getId());
         participant.updateStatus(ParticipantStatus.POLICE_WAITING);
