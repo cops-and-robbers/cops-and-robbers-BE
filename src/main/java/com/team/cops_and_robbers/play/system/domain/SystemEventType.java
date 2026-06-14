@@ -5,5 +5,6 @@ public enum SystemEventType {
     ROBBER_LOCATION_REVEAL,
     ARREST,
     ESCAPE,
-    GAME_OVER
+    GAME_OVER,
+    PLAYER_LEFT
 }
