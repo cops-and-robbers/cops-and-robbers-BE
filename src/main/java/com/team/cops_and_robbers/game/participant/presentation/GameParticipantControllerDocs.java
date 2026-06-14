@@ -83,7 +83,10 @@ public interface GameParticipantControllerDocs {
                     **[PLAYER_LEFT 이벤트 페이로드]**
                     ```json
                     {
+                      "eventId": "550e8400-e29b-41d4-a716-446655440000",
+                      "gameId": 1,
                       "type": "PLAYER_LEFT",
+                      "timestamp": "2026-06-15T10:00:00+09:00",
                       "data": {
                         "participantId": 42,
                         "nickname": "닉네임",
@@ -95,7 +98,10 @@ public interface GameParticipantControllerDocs {
                     **[GAME_OVER 이벤트 페이로드]**
                     ```json
                     {
+                      "eventId": "550e8400-e29b-41d4-a716-446655440001",
+                      "gameId": 1,
                       "type": "GAME_OVER",
+                      "timestamp": "2026-06-15T10:00:05+09:00",
                       "data": {
                         "gameResultId": 1,
                         "winnerTeam": "POLICE 또는 ROBBER",
