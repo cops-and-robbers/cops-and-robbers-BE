@@ -9,6 +9,8 @@ build/
 postgres-data/
 redis-data/
 src/main/resources/firebase-key.json
+docs/
+
 
 ### STS ###
 .apt_generated
