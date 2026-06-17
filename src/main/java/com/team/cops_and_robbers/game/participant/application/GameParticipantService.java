@@ -156,11 +156,9 @@ public class GameParticipantService {
 
         transferHostIfNeeded(wasHost && remainingCount > NO_PARTICIPANTS, gameId);
 
-        if (tryEndGameByForfeit(gameId, team, status)) {
-            return GameLeaveResult.from(userId, remainingCount);
-        }
-
         eventPublisher.publishEvent(playerLeftEvent);
+
+        tryEndGameByForfeit(gameId, team, status);
         return GameLeaveResult.from(userId, remainingCount);
     }
 
