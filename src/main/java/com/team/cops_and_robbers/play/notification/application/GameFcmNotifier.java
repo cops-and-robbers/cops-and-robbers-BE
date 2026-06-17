@@ -60,7 +60,7 @@ public class GameFcmNotifier {
             case POLICE_MOVE_START -> new FcmPayload("경찰 이동 시작!", "경찰이 이동을 시작했습니다!", data);
             case PLAYER_LEFT -> {
                 SystemEventData.PlayerLeftData playerLeft = (SystemEventData.PlayerLeftData) event.data();
-                yield new FcmPayload(playerLeft.team().getDisplayName() + " 참가자 퇴장", playerLeft.nickname() + "이(가) 게임에서 퇴장했습니다.", data);
+                yield new FcmPayload(playerLeft.team().getDisplayName() + " 참가자 퇴장", playerLeft.nickname() + "님이 게임에서 퇴장했습니다.", data);
             }
         };
     }
