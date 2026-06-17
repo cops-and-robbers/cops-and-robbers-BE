@@ -274,7 +274,7 @@ class GameParticipantServiceTest extends ServiceUnitTest {
 
             // then
             then(gameTerminationService).should().endGameByPoliceForfeited(TEST_GAME_ID);
-            then(eventPublisher).should(never()).publishEvent(any(SystemEvent.class));
+            then(eventPublisher).should().publishEvent(any(SystemEvent.class));
         }
 
         @Test
@@ -308,7 +308,7 @@ class GameParticipantServiceTest extends ServiceUnitTest {
 
             // then
             then(gameTerminationService).should().endGameByRobberForfeited(TEST_GAME_ID);
-            then(eventPublisher).should(never()).publishEvent(any(SystemEvent.class));
+            then(eventPublisher).should().publishEvent(any(SystemEvent.class));
         }
 
         @Test
