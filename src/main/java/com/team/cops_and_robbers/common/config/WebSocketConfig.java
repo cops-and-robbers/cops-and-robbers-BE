@@ -32,7 +32,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
      */
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker(SUBSCRIBE_PATH_PREFIX);
+        registry.enableSimpleBroker(SUBSCRIBE_PATH_PREFIX)
+                .setHeartbeatValue(new long[]{10000, 10000});
         registry.setApplicationDestinationPrefixes(PUBLISH_PATH_PREFIX);
     }
 
