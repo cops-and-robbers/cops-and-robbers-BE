@@ -24,9 +24,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface GameParticipantControllerDocs {
 
     @Operation(summary = "게임 방 참여",
-            description = "초대 코드를 사용하여 게임 방에 참여합니다. 이미 다른 활성 게임에 참여 중이거나, 게임이 이미 시작되었거나, 최대 참여 인원에 도달한 경우 참여할 수 없습니다."
+            description = """
+                    초대 코드를 사용하여 게임 방에 참여합니다.
+
+                    - **일반 게임**: 게임이 WAITING 상태일 때만 입장 가능하며, 최대 인원 초과 시 참여 불가
+                    - **이벤트 게임** (`isEventGame: true`): 게임이 IN_PROGRESS 상태에서도 자유롭게 입장 가능하며 인원 제한 없음. 항상 경찰 팀으로 배정됨.
+
+                    응답의 `isEventGame` 필드가 `true`이면 클라이언트는 로비 화면 없이 인게임 화면으로 직접 진입해야 합니다.
+                    """
     )
     @ApiErrorCode(value = GameParticipantException.class, codes = {"ALREADY_PARTICIPATING", "GAME_ALREADY_STARTED", "GAME_FULL", "INVALID_INVITE_CODE"})
+    @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_IN_PROGRESS"})
     @ApiErrorCode(value = UserException.class, codes = {"REQUIRED_TERMS_NOT_AGREED"})
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
