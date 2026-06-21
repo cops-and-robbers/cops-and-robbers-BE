@@ -42,7 +42,9 @@ public class SystemService {
 
         validateArrest(game, police, robber);
 
-        robber.updateStatus(ParticipantStatus.JAILED);
+        if (!game.isEventGame()) {
+            robber.updateStatus(ParticipantStatus.JAILED);
+        }
         game.incrementArrestCount();
 
         int remainingThieves = gameParticipantRepository.countByGameIdAndRobberStatus(
@@ -54,7 +56,7 @@ public class SystemService {
         );
         eventPublisher.publishEvent(event);
 
-        if (remainingThieves == 0) {
+        if (!game.isEventGame() && remainingThieves == 0) {
             gameTerminationService.endGameByAllArrested(game.getId());
         }
 
