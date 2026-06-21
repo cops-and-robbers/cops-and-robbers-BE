@@ -13,8 +13,14 @@ import com.team.cops_and_robbers.game.participant.application.dto.result.GameLea
 import com.team.cops_and_robbers.game.participant.application.dto.result.GameParticipantListResult;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
+import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
+import com.team.cops_and_robbers.game.participant.domain.Team;
+import com.team.cops_and_robbers.play.common.repository.InGameParticipantCacheRepository;
 import com.team.cops_and_robbers.play.lobby.application.LobbyEventFactory;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
+import com.team.cops_and_robbers.play.system.application.GameTerminationService;
+import com.team.cops_and_robbers.play.system.application.SystemEventFactory;
+import com.team.cops_and_robbers.play.system.domain.SystemEvent;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.exception.UserException;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +44,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
@@ -51,6 +58,15 @@ class GameParticipantServiceTest extends ServiceUnitTest {
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private InGameParticipantCacheRepository inGameParticipantCacheRepository;
+
+    @Mock
+    private SystemEventFactory systemEventFactory;
+
+    @Mock
+    private GameTerminationService gameTerminationService;
 
     @Mock
     private LobbyEvent lobbyEvent;
@@ -220,19 +236,120 @@ class GameParticipantServiceTest extends ServiceUnitTest {
             then(eventPublisher).should(times(2)).publishEvent(lobbyEvent);
         }
 
+    }
+
+    @Nested
+    @DisplayName("인게임 중도 퇴장")
+    class leaveFromInGame {
+
         @Test
-        void 참가자의_상태가_WAITING이_아니면_예외가_발생한다() {
+        void 경찰이_퇴장하고_경찰이_남아있으면_PLAYER_LEFT_이벤트를_발행한다() {
             // given
-            GameParticipant aliveParticipant = ALIVE_POLICE(waitingGame, user);
-            GameLeaveCommand command = createGameLeaveCommand(user.getId(), waitingGame.getId());
+            GameLeaveCommand command = createGameLeaveCommand(user.getId(), TEST_GAME_ID);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user.getId())).willReturn(policeParticipant);
+            given(gameParticipantRepository.countByGameId(TEST_GAME_ID)).willReturn(1);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.POLICE)).willReturn(1);
+            given(systemEventFactory.createPlayerLeftEvent(any(), any())).willReturn(mock(SystemEvent.class));
 
-            given(gameParticipantRepository.getByGameIdAndUserId(waitingGame.getId(), user.getId()))
-                    .willReturn(aliveParticipant);
+            // when
+            gameParticipantService.leaveGame(command);
 
-            // when & then
-            assertThatThrownBy(() -> gameParticipantService.leaveGame(command))
-                    .isInstanceOf(ApplicationException.class)
-                    .hasMessageContaining(GameParticipantException.CANNOT_LEAVE_DURING_GAME.getDetail());
+            // then
+            then(inGameParticipantCacheRepository).should().deleteByParticipantId(any(), any());
+            then(gameTerminationService).should(never()).endGameByPoliceForfeited(any());
+            then(eventPublisher).should().publishEvent(any(SystemEvent.class));
+        }
+
+        @Test
+        void 마지막_경찰이_퇴장하면_POLICE_FORFEITED로_게임이_종료된다() {
+            // given
+            GameLeaveCommand command = createGameLeaveCommand(user.getId(), TEST_GAME_ID);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user.getId())).willReturn(policeParticipant);
+            given(gameParticipantRepository.countByGameId(TEST_GAME_ID)).willReturn(0);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.POLICE)).willReturn(0);
+            given(systemEventFactory.createPlayerLeftEvent(any(), any())).willReturn(mock(SystemEvent.class));
+
+            // when
+            gameParticipantService.leaveGame(command);
+
+            // then
+            then(gameTerminationService).should().endGameByPoliceForfeited(TEST_GAME_ID);
+            then(eventPublisher).should().publishEvent(any(SystemEvent.class));
+        }
+
+        @Test
+        void ALIVE_도둑이_퇴장하고_생존_도둑이_남아있으면_PLAYER_LEFT_이벤트를_발행한다() {
+            // given
+            GameLeaveCommand command = createGameLeaveCommand(user2.getId(), TEST_GAME_ID);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user2.getId())).willReturn(robberParticipant);
+            given(gameParticipantRepository.countByGameId(TEST_GAME_ID)).willReturn(1);
+            given(gameParticipantRepository.countByGameIdAndRobberStatus(TEST_GAME_ID, ParticipantStatus.ALIVE)).willReturn(1);
+            given(systemEventFactory.createPlayerLeftEvent(any(), any())).willReturn(mock(SystemEvent.class));
+
+            // when
+            gameParticipantService.leaveGame(command);
+
+            // then
+            then(gameTerminationService).should(never()).endGameByRobberForfeited(any());
+            then(eventPublisher).should().publishEvent(any(SystemEvent.class));
+        }
+
+        @Test
+        void 마지막_생존_도둑이_퇴장하면_ROBBER_FORFEITED로_게임이_종료된다() {
+            // given
+            GameLeaveCommand command = createGameLeaveCommand(user2.getId(), TEST_GAME_ID);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user2.getId())).willReturn(robberParticipant);
+            given(gameParticipantRepository.countByGameId(TEST_GAME_ID)).willReturn(0);
+            given(gameParticipantRepository.countByGameIdAndRobberStatus(TEST_GAME_ID, ParticipantStatus.ALIVE)).willReturn(0);
+            given(systemEventFactory.createPlayerLeftEvent(any(), any())).willReturn(mock(SystemEvent.class));
+
+            // when
+            gameParticipantService.leaveGame(command);
+
+            // then
+            then(gameTerminationService).should().endGameByRobberForfeited(TEST_GAME_ID);
+            then(eventPublisher).should().publishEvent(any(SystemEvent.class));
+        }
+
+        @Test
+        void JAILED_도둑이_퇴장하면_forfeit_조건_체크_없이_PLAYER_LEFT_이벤트를_발행한다() {
+            // given
+            GameParticipant jailedRobber = JAILED_ROBBER(inProgressGame, user);
+            GameLeaveCommand command = createGameLeaveCommand(user.getId(), TEST_GAME_ID);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user.getId())).willReturn(jailedRobber);
+            given(gameParticipantRepository.countByGameId(TEST_GAME_ID)).willReturn(1);
+            given(systemEventFactory.createPlayerLeftEvent(any(), any())).willReturn(mock(SystemEvent.class));
+
+            // when
+            gameParticipantService.leaveGame(command);
+
+            // then
+            then(gameParticipantRepository).should(never()).countByGameIdAndTeam(any(), any());
+            then(gameParticipantRepository).should(never()).countByGameIdAndRobberStatus(any(), any());
+            then(gameTerminationService).should(never()).endGameByPoliceForfeited(any());
+            then(gameTerminationService).should(never()).endGameByRobberForfeited(any());
+            then(eventPublisher).should().publishEvent(any(SystemEvent.class));
+        }
+
+        @Test
+        void 방장이_인게임에서_퇴장하면_다음_참가자에게_방장이_위임된다() {
+            // given
+            GameParticipant hostPolice = HOST_WAITING_POLICE(inProgressGame, user);
+            GameLeaveCommand command = createGameLeaveCommand(user.getId(), TEST_GAME_ID);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user.getId())).willReturn(hostPolice);
+            given(gameParticipantRepository.countByGameId(TEST_GAME_ID)).willReturn(1);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.POLICE)).willReturn(1);
+            given(gameParticipantRepository.getNextParticipant(TEST_GAME_ID)).willReturn(robberParticipant);
+            given(lobbyEventFactory.createHostChangedEvent(any(), any())).willReturn(lobbyEvent);
+            given(systemEventFactory.createPlayerLeftEvent(any(), any())).willReturn(mock(SystemEvent.class));
+
+            // when
+            gameParticipantService.leaveGame(command);
+
+            // then
+            assertThat(robberParticipant.isHost()).isTrue();
+            then(eventPublisher).should().publishEvent(lobbyEvent);
+            then(eventPublisher).should().publishEvent(any(SystemEvent.class));
         }
     }
 

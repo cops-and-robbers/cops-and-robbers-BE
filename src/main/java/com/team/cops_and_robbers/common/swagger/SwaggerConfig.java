@@ -30,15 +30,13 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.8.0")
+                .version("2.10.0")
                 .description("""
-                        ## v2.9.0 업데이트 내역
+                        ## v2.10.0 업데이트 내역
 
                         ### 🛠 변경 및 수정
-                        - 모든 에러 응답에 `errorCode` 필드 추가 (예: `INVALID_INVITE_CODE`, `GAME_NOT_FOUND`)
-                        - STOMP 에러 응답에도 동일하게 적용
-                        - USER_NOT_FOUND 응답 오타 수정
-                        - 핑 기능 추가 (노션 명세 "핑" 문서 참고)
+                        - DELETE /api/games/{gameId}/leave API 인게임 중도 퇴장 분기처리 추가
+                          (제세한 변경 내용은 해당 항목 참고)
                         """);
 
         return new OpenAPI()

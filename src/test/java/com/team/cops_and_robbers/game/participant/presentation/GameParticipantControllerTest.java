@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.game.participant.presentation;
 
 import com.team.cops_and_robbers.common.ControllerTest;
+import com.team.cops_and_robbers.common.fixture.GameAreaFixture;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.common.fixture.UserFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
@@ -318,6 +319,183 @@ class GameParticipantControllerTest extends ControllerTest {
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        }
+    }
+
+    @Nested
+    @DisplayName("인게임 중 퇴장 API")
+    class LeaveFromInGame {
+
+        private Game inProgressGame;
+
+        @BeforeEach
+        void setUp() {
+            inProgressGame = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
+            gameAreaRepository.save(GameAreaFixture.GAME_AREA(inProgressGame));
+        }
+
+        @Test
+        void 경찰이_퇴장하고_경찰이_남아있으면_성공_응답을_반환한다() {
+            // given
+            User police1 = givenUser("police1");
+            String police1Token = givenAccessToken(police1);
+            givenPolice(inProgressGame, police1);
+
+            User police2 = givenUser("police2");
+            givenPolice(inProgressGame, police2);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(police1Token)
+                    .pathParam(GAME_ID_PARAM, inProgressGame.getId())
+                    .when()
+                    .delete(LEAVE_URL)
+                    .then()
+                    .extract();
+
+            // then
+            GameLeaveResponse result = response.as(GameLeaveResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                softly.assertThat(result.leftUserId()).isEqualTo(police1.getId());
+                softly.assertThat(result.remainingCount()).isEqualTo(1);
+            });
+        }
+
+        @Test
+        void 마지막_경찰이_퇴장하면_게임이_종료된다() {
+            // given
+            User police = givenUser("police");
+            String policeToken = givenAccessToken(police);
+            givenPolice(inProgressGame, police);
+
+            User robber = givenUser("robber");
+            givenRobber(inProgressGame, robber);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(policeToken)
+                    .pathParam(GAME_ID_PARAM, inProgressGame.getId())
+                    .when()
+                    .delete(LEAVE_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+            Game game = gameRepository.findById(inProgressGame.getId()).orElseThrow();
+            assertThat(game.isInProgress()).isFalse();
+        }
+
+        @Test
+        void ALIVE_도둑이_퇴장하고_생존_도둑이_남아있으면_성공_응답을_반환한다() {
+            // given
+            User police = givenUser("police");
+            givenPolice(inProgressGame, police);
+
+            User robber1 = givenUser("robber1");
+            String robber1Token = givenAccessToken(robber1);
+            givenRobber(inProgressGame, robber1);
+
+            User robber2 = givenUser("robber2");
+            givenRobber(inProgressGame, robber2);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(robber1Token)
+                    .pathParam(GAME_ID_PARAM, inProgressGame.getId())
+                    .when()
+                    .delete(LEAVE_URL)
+                    .then()
+                    .extract();
+
+            // then
+            GameLeaveResponse result = response.as(GameLeaveResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                softly.assertThat(result.leftUserId()).isEqualTo(robber1.getId());
+                softly.assertThat(result.remainingCount()).isEqualTo(2);
+            });
+        }
+
+        @Test
+        void 마지막_ALIVE_도둑이_퇴장하면_게임이_종료된다() {
+            // given
+            User police = givenUser("police");
+            givenPolice(inProgressGame, police);
+
+            User aliveRobber = givenUser("aliveRobber");
+            String aliveRobberToken = givenAccessToken(aliveRobber);
+            givenRobber(inProgressGame, aliveRobber);
+
+            User jailedRobber = givenUser("jailedRobber");
+            givenJailedRobber(inProgressGame, jailedRobber);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(aliveRobberToken)
+                    .pathParam(GAME_ID_PARAM, inProgressGame.getId())
+                    .when()
+                    .delete(LEAVE_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+            Game game = gameRepository.findById(inProgressGame.getId()).orElseThrow();
+            assertThat(game.isInProgress()).isFalse();
+        }
+
+        @Test
+        void JAILED_도둑이_퇴장하면_게임이_종료되지_않는다() {
+            // given
+            User police = givenUser("police");
+            givenPolice(inProgressGame, police);
+
+            User aliveRobber = givenUser("aliveRobber");
+            givenRobber(inProgressGame, aliveRobber);
+
+            User jailedRobber = givenUser("jailedRobber");
+            String jailedRobberToken = givenAccessToken(jailedRobber);
+            givenJailedRobber(inProgressGame, jailedRobber);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(jailedRobberToken)
+                    .pathParam(GAME_ID_PARAM, inProgressGame.getId())
+                    .when()
+                    .delete(LEAVE_URL)
+                    .then()
+                    .extract();
+
+            // then
+            GameLeaveResponse result = response.as(GameLeaveResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                softly.assertThat(result.leftUserId()).isEqualTo(jailedRobber.getId());
+            });
+            Game game = gameRepository.findById(inProgressGame.getId()).orElseThrow();
+            assertThat(game.isInProgress()).isTrue();
+        }
+
+        @Test
+        void 방장이_인게임에서_퇴장하면_다음_참가자에게_방장이_위임된다() {
+            // given
+            User inGameHost = givenUser("inGameHost");
+            String inGameHostToken = givenAccessToken(inGameHost);
+            givenInGameHost(inProgressGame, inGameHost);
+
+            User guest = givenUser("inGameGuest");
+            givenPolice(inProgressGame, guest);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(inGameHostToken)
+                    .pathParam(GAME_ID_PARAM, inProgressGame.getId())
+                    .when()
+                    .delete(LEAVE_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+            GameParticipant newHost = gameParticipantRepository.findByGameIdAndUserId(inProgressGame.getId(), guest.getId())
+                    .orElseThrow();
+            assertThat(newHost.isHost()).isTrue();
         }
     }
 

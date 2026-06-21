@@ -5,6 +5,7 @@ import com.team.cops_and_robbers.common.fcm.FcmService;
 import com.team.cops_and_robbers.play.common.domain.InGameParticipantCache;
 import com.team.cops_and_robbers.play.common.repository.InGameParticipantCacheRepository;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
+import com.team.cops_and_robbers.play.system.domain.SystemEventData;
 import com.team.cops_and_robbers.play.system.domain.SystemEventType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,7 @@ public class GameFcmNotifier {
                 return CompletableFuture.completedFuture(null);
             }
 
-            FcmPayload payload = resolveSystemPayload(event.type(), event.gameId());
+            FcmPayload payload = resolveSystemPayload(event);
             fcmService.send(new FcmMessage(tokens, payload.title(), payload.body(), payload.data()));
         } catch (Exception e) {
             log.error("[FCM] Async send failed | gameId={}, type={}", event.gameId(), event.type(), e);
@@ -48,14 +49,19 @@ public class GameFcmNotifier {
                 .toList();
     }
 
-    private FcmPayload resolveSystemPayload(SystemEventType type, Long gameId) {
-        Map<String, String> data = Map.of("type", type.name(), "gameId", String.valueOf(gameId));
+    private FcmPayload resolveSystemPayload(SystemEvent event) {
+        SystemEventType type = event.type();
+        Map<String, String> data = Map.of("type", type.name(), "gameId", String.valueOf(event.gameId()));
         return switch (type) {
             case ARREST -> new FcmPayload("도둑 체포!", "도둑이 체포되었습니다.", data);
             case ESCAPE -> new FcmPayload("도둑 탈옥!", "도둑이 감옥에서 탈옥했습니다!", data);
             case GAME_OVER -> new FcmPayload("게임 종료", "게임이 종료되었습니다. 결과를 확인하세요!", data);
             case ROBBER_LOCATION_REVEAL -> new FcmPayload("도둑 위치 공개!", "도둑의 현재 위치가 공개되었습니다!", data);
             case POLICE_MOVE_START -> new FcmPayload("경찰 이동 시작!", "경찰이 이동을 시작했습니다!", data);
+            case PLAYER_LEFT -> {
+                SystemEventData.PlayerLeftData playerLeft = (SystemEventData.PlayerLeftData) event.data();
+                yield new FcmPayload(playerLeft.team().getDisplayName() + " 참가자 퇴장", playerLeft.nickname() + "님이 게임에서 퇴장했습니다.", data);
+            }
         };
     }
 

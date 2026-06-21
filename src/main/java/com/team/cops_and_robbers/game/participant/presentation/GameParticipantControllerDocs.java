@@ -38,7 +38,85 @@ public interface GameParticipantControllerDocs {
     );
 
     @Operation(summary = "게임 방 퇴장",
-            description = "현재 참여 중인 게임 방에서 퇴장합니다. 방장이 퇴장하는 경우 가장 먼저 참여한 참여자에게 방장 권한이 이전됩니다. 마지막 참여자가 퇴장하면 게임 방이 자동으로 삭제됩니다."
+            description = """
+                    게임 상태(로비 / 인게임)에 따라 퇴장 처리가 다르게 동작합니다.
+
+                    ---
+
+                    **[로비 상태 (WAITING)]**
+
+                    - 방장이 퇴장하면 가장 먼저 참여한 참여자에게 방장이 이전됩니다.
+                      → `/subscribe/game/{gameId}/lobby` 채널로 `HOST_CHANGED` 이벤트 수신
+                    - 마지막 참여자가 퇴장하면 게임 방이 삭제됩니다. (이벤트 없음)
+                    - 그 외 일반 퇴장: `/subscribe/game/{gameId}/lobby` 채널로 `EXIT` 이벤트 수신
+
+                    ---
+
+                    **[인게임 상태 (IN_PROGRESS)]**
+
+                    퇴장자의 팀과 상태에 따라 아래 네 가지 케이스로 분기됩니다.
+
+                    ■ 경찰 퇴장 & 경찰이 아직 남아 있는 경우
+                    → `/subscribe/game/{gameId}/system` 채널로 `PLAYER_LEFT` 이벤트 수신
+
+                    ■ 경찰 퇴장 & 마지막 경찰인 경우 (도둑팀 몰수(forfeit) 승리)
+                    → `/subscribe/game/{gameId}/system` 채널로 `GAME_OVER` 이벤트 수신
+                    ```json
+                    { "winnerTeam": "ROBBER", "reason": "POLICE_FORFEITED" }
+                    ```
+
+                    ■ 생존(ALIVE) 도둑 퇴장 & 생존 도둑이 아직 남아 있는 경우
+                    → `/subscribe/game/{gameId}/system` 채널로 `PLAYER_LEFT` 이벤트 수신
+
+                    ■ 생존(ALIVE) 도둑 퇴장 & 마지막 생존 도둑인 경우 (경찰팀 forfeit 승리)
+                    → `/subscribe/game/{gameId}/system` 채널로 `GAME_OVER` 이벤트 수신
+                    ```json
+                    { "winnerTeam": "POLICE", "reason": "ROBBER_FORFEITED" }
+                    ```
+
+                    ■ JAILED 도둑 퇴장 (게임 종료 조건 무관)
+                    → `/subscribe/game/{gameId}/system` 채널로 `PLAYER_LEFT` 이벤트 수신
+                    (JAILED 상태의 도둑은 생존 도둑 카운트에 포함되지 않으므로 forfeit 조건을 체크하지 않습니다.)
+
+                    ---
+
+                    **[PLAYER_LEFT 이벤트 페이로드]**
+                    ```json
+                    {
+                      "eventId": "550e8400-e29b-41d4-a716-446655440000",
+                      "gameId": 1,
+                      "type": "PLAYER_LEFT",
+                      "timestamp": "2026-06-15T10:00:00+09:00",
+                      "data": {
+                        "participantId": 42,
+                        "nickname": "닉네임",
+                        "team": "POLICE 또는 ROBBER"
+                      }
+                    }
+                    ```
+
+                    **[GAME_OVER 이벤트 페이로드]**
+                    ```json
+                    {
+                      "eventId": "550e8400-e29b-41d4-a716-446655440001",
+                      "gameId": 1,
+                      "type": "GAME_OVER",
+                      "timestamp": "2026-06-15T10:00:05+09:00",
+                      "data": {
+                        "gameResultId": 1,
+                        "winnerTeam": "POLICE 또는 ROBBER",
+                        "reason": "POLICE_FORFEITED 또는 ROBBER_FORFEITED"
+                      }
+                    }
+                    ```
+
+                    ---
+
+                    **[방장 위임]**
+
+                    방장이 퇴장하는 경우, 게임 상태(로비/인게임)와 무관하게 다음 참여자에게 방장이 이전됩니다.
+                    → `/subscribe/game/{gameId}/lobby` 채널로 `HOST_CHANGED` 이벤트 추가 수신
+                    """
     )
     @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_FOUND"})
     @ApiErrorCode(value = GameParticipantException.class, codes = {"PARTICIPANT_NOT_FOUND"})

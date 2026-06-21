@@ -48,6 +48,28 @@ public class GameTerminationService {
         endGame(game, Team.ROBBER, GameEndReason.TIME_OVER);
     }
 
+    @Transactional
+    public void endGameByPoliceForfeited(Long gameId) {
+        Game game = gameRepository.getByGameId(gameId);
+
+        if (!game.isInProgress()) {
+            log.info("[GameTermination] Already finished game (GameId: {}, request: POLICE_FORFEITED)", gameId);
+            return;
+        }
+        endGame(game, Team.ROBBER, GameEndReason.POLICE_FORFEITED);
+    }
+
+    @Transactional
+    public void endGameByRobberForfeited(Long gameId) {
+        Game game = gameRepository.getByGameId(gameId);
+
+        if (!game.isInProgress()) {
+            log.info("[GameTermination] Already finished game (GameId: {}, request: ROBBER_FORFEITED)", gameId);
+            return;
+        }
+        endGame(game, Team.POLICE, GameEndReason.ROBBER_FORFEITED);
+    }
+
     private void endGame(Game game, Team winner, GameEndReason reason) {
         GameResult result = gameResultService.recordGameResult(game, winner, reason);
         game.resetForNextRound();
