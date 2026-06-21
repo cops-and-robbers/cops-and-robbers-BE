@@ -117,4 +117,26 @@ public class GameParticipantFixture {
                 .isHost(true)
                 .build();
     }
+
+    public static GameParticipant EVENT_POLICE_WAITING(Game game, User user) {
+        return GameParticipant.builder()
+                .game(game)
+                .user(user)
+                .team(Team.POLICE)
+                .status(ParticipantStatus.POLICE_WAITING)
+                .isReady(true)
+                .isHost(false)
+                .build();
+    }
+
+    public static GameParticipant EVENT_POLICE_ALIVE(Game game, User user) {
+        return GameParticipant.builder()
+                .game(game)
+                .user(user)
+                .team(Team.POLICE)
+                .status(ParticipantStatus.ALIVE)
+                .isReady(true)
+                .isHost(false)
+                .build();
+    }
 }

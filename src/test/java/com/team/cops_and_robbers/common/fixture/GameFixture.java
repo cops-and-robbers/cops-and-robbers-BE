@@ -92,4 +92,36 @@ public class GameFixture {
         ReflectionTestUtils.setField(game, "createdAt", LocalDateTime.now());
         return game;
     }
+
+    public static Game EVENT_GAME() {
+        Game game = Game.builder()
+                .inviteCode(UUID.randomUUID().toString().substring(0, 6))
+                .status(GameStatus.IN_PROGRESS)
+                .roundDurationMinutes(30)
+                .locationRevealIntervalMinutes(5)
+                .policeWaitMinutes(3)
+                .maxParticipants(10)
+                .isEventGame(true)
+                .startedAt(LocalDateTime.now())
+                .roundNumber(1)
+                .build();
+        ReflectionTestUtils.setField(game, "createdAt", LocalDateTime.now());
+        return game;
+    }
+
+    public static Game EVENT_GAME(String inviteCode) {
+        Game game = Game.builder()
+                .inviteCode(inviteCode)
+                .status(GameStatus.IN_PROGRESS)
+                .roundDurationMinutes(30)
+                .locationRevealIntervalMinutes(5)
+                .policeWaitMinutes(3)
+                .maxParticipants(10)
+                .isEventGame(true)
+                .startedAt(LocalDateTime.now())
+                .roundNumber(1)
+                .build();
+        ReflectionTestUtils.setField(game, "createdAt", LocalDateTime.now());
+        return game;
+    }
 }
