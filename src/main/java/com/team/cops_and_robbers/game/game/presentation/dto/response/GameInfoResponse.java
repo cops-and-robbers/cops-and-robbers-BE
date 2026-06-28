@@ -18,7 +18,9 @@ public record GameInfoResponse(
         boolean isStarted,
         @JsonInclude(JsonInclude.Include.NON_NULL)
         @Schema(description = "게임 시작 시간 (진행 중일 때만 포함)", example = "2026-03-21T15:30:00+09:00")
-        String gameStartTime
+        String gameStartTime,
+        @Schema(description = "이벤트 게임 여부", example = "false")
+        boolean isEventGame
 ) {
     public static GameInfoResponse from(GameInfoResult result) {
         return new GameInfoResponse(
@@ -27,7 +29,8 @@ public record GameInfoResponse(
                 result.policeWaitMinutes(),
                 result.maxParticipants(),
                 result.isStarted(),
-                result.gameStartTime() != null ? TimestampUtil.toIsoString(result.gameStartTime()) : null
+                result.gameStartTime() != null ? TimestampUtil.toIsoString(result.gameStartTime()) : null,
+                result.isEventGame()
         );
     }
 }

@@ -10,7 +10,8 @@ public record GameInfoResult(
         Integer policeWaitMinutes,
         Integer maxParticipants,
         boolean isStarted,
-        LocalDateTime gameStartTime
+        LocalDateTime gameStartTime,
+        boolean isEventGame
 ) {
     public static GameInfoResult from(Game game) {
         return new GameInfoResult(
@@ -19,7 +20,8 @@ public record GameInfoResult(
                 game.getPoliceWaitMinutes(),
                 game.getMaxParticipants(),
                 game.isInProgress(),
-                game.getStartedAt()
+                game.getStartedAt(),
+                game.isEventGame()
         );
     }
 }

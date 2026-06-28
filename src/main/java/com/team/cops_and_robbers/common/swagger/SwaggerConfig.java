@@ -30,8 +30,14 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.11.0")
+                .version("2.12.0")
                 .description("""
+                        ## v2.12.0 업데이트 내역
+
+                        ### ✨ 신규
+                        - GET /api/games/{gameId} 응답에 isEventGame 필드 추가
+                          - 이벤트 게임 여부를 클라이언트에서 구분할 수 있도록 지원
+
                         ## v2.11.0 업데이트 내역
 
                         ### ✨ 신규
