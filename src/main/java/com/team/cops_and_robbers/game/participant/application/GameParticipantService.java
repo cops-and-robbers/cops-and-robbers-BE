@@ -53,6 +53,20 @@ public class GameParticipantService {
     @Transactional
     public GameJoinResult joinGame(GameJoinCommand command) {
         Game game = gameRepository.getByInviteCode(command.inviteCode());
+
+        if (game.isEventGame()) {
+            if (gameParticipantRepository.existsActiveGameByUserId(command.userId())) {
+                throw new ApplicationException(GameParticipantException.ALREADY_PARTICIPATING);
+            }
+            if (!game.isInProgress()) {
+                throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
+            }
+            User eventUser = getUser(command.userId());
+            GameParticipant eventParticipant = GameParticipant.createEventModeParticipant(game, eventUser);
+            gameParticipantRepository.save(eventParticipant);
+            return GameJoinResult.from(eventParticipant);
+        }
+
         validateJoinable(command.userId(), game);
 
         User user = getUser(command.userId());
@@ -103,7 +117,7 @@ public class GameParticipantService {
         Game game = participant.getGame();
 
         if (game.isInProgress()) {
-            return leaveFromInGame(participant, command.gameId(), command.userId());
+            return leaveFromInGame(participant, game, command.gameId(), command.userId());
         }
         return leaveFromLobby(participant, command.gameId(), command.userId());
     }
@@ -144,7 +158,7 @@ public class GameParticipantService {
      *      - ALIVE 상태이고 마지막 생존 도둑이면 경찰 팀 승리로 게임 종료 (ROBBER_FORFEITED)
      *      - JAILED 상태이거나 생존 도둑이 남아있으면 PLAYER_LEFT 이벤트 발행
      */
-    private GameLeaveResult leaveFromInGame(GameParticipant participant, Long gameId, Long userId) {
+    private GameLeaveResult leaveFromInGame(GameParticipant participant, Game game, Long gameId, Long userId) {
         Team team = participant.getTeam();
         ParticipantStatus status = participant.getStatus();
         boolean wasHost = participant.isHost();
@@ -158,7 +172,7 @@ public class GameParticipantService {
 
         eventPublisher.publishEvent(playerLeftEvent);
 
-        tryEndGameByForfeit(gameId, team, status);
+        tryEndGameByForfeit(game, gameId, team, status);
         return GameLeaveResult.from(userId, remainingCount);
     }
 
@@ -169,8 +183,8 @@ public class GameParticipantService {
         eventPublisher.publishEvent(lobbyEventFactory.createHostChangedEvent(gameId, newHost));
     }
 
-    private boolean tryEndGameByForfeit(Long gameId, Team team, ParticipantStatus status) {
-        if (team == Team.POLICE && isLastPolice(gameId)) {
+    private boolean tryEndGameByForfeit(Game game, Long gameId, Team team, ParticipantStatus status) {
+        if (team == Team.POLICE && !game.isEventGame() && isLastPolice(gameId)) {
             gameTerminationService.endGameByPoliceForfeited(gameId);
             return true;
         }

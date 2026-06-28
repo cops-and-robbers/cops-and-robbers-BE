@@ -30,8 +30,15 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.10.0")
+                .version("2.11.0")
                 .description("""
+                        ## v2.11.0 업데이트 내역
+
+                        ### ✨ 신규
+                        - POST /api/games/join 이벤트 게임 QR 입장 지원
+                          - 진행 중인 이벤트 게임에 초대 코드로 입장 시 경찰로 즉시 합류
+                          - 응답에 isEventGame 필드 추가 (클라이언트 인게임/로비 화면 분기용)
+
                         ## v2.10.0 업데이트 내역
 
                         ### 🛠 변경 및 수정

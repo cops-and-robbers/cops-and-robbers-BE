@@ -55,6 +55,10 @@ public class Game extends BaseTimeEntity {
 
     @Column(nullable = false)
     @Builder.Default
+    private boolean isEventGame = false;
+
+    @Column(nullable = false)
+    @Builder.Default
     private Integer totalArrestCount = 0;
 
     @Column(nullable = false)

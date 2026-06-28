@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.game.participant.presentation;
 import com.team.cops_and_robbers.common.ControllerTest;
 import com.team.cops_and_robbers.common.fixture.GameAreaFixture;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
+import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.common.fixture.UserFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
@@ -496,6 +497,89 @@ class GameParticipantControllerTest extends ControllerTest {
             GameParticipant newHost = gameParticipantRepository.findByGameIdAndUserId(inProgressGame.getId(), guest.getId())
                     .orElseThrow();
             assertThat(newHost.isHost()).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("이벤트 게임 참여 및 퇴장 API")
+    class EventGame {
+
+        private Game eventGame;
+
+        @BeforeEach
+        void setUp() {
+            eventGame = gameRepository.save(GameFixture.EVENT_GAME());
+        }
+
+        @Test
+        void 이벤트_게임_참여에_성공하면_isEventGame이_true인_응답을_반환한다() {
+            // given
+            User newUser = givenUser("eventUser");
+            String newUserToken = givenAccessToken(newUser);
+            GameJoinRequest request = new GameJoinRequest(eventGame.getInviteCode());
+
+            // when
+            ExtractableResponse<Response> response = authenticated(newUserToken)
+                    .body(request)
+                    .when()
+                    .post(JOIN_URL)
+                    .then()
+                    .extract();
+
+            // then
+            GameJoinResponse result = response.as(GameJoinResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                softly.assertThat(result.gameId()).isEqualTo(eventGame.getId());
+                softly.assertThat(result.isEventGame()).isTrue();
+            });
+        }
+
+        @Test
+        void 이미_참여_중인_게임이_있으면_이벤트_게임_참여_시_409_Conflict를_응답한다() {
+            // given
+            User user = givenUser("eventUser");
+            String userToken = givenAccessToken(user);
+            givenGuest(waitingGame, user);
+
+            GameJoinRequest request = new GameJoinRequest(eventGame.getInviteCode());
+
+            // when
+            ExtractableResponse<Response> response = authenticated(userToken)
+                    .body(request)
+                    .when()
+                    .post(JOIN_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.CONFLICT.value());
+        }
+
+        @Test
+        void 이벤트_게임은_마지막_경찰이_퇴장해도_게임이_종료되지_않는다() {
+            // given
+            gameAreaRepository.save(GameAreaFixture.GAME_AREA(eventGame));
+
+            User police = givenUser("eventPolice");
+            String policeToken = givenAccessToken(police);
+            gameParticipantRepository.save(GameParticipantFixture.EVENT_POLICE_ALIVE(eventGame, police));
+
+            User robber = givenUser("eventRobber");
+            givenRobber(eventGame, robber);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(policeToken)
+                    .pathParam(GAME_ID_PARAM, eventGame.getId())
+                    .when()
+                    .delete(LEAVE_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+            Game game = gameRepository.findById(eventGame.getId()).orElseThrow();
+            assertThat(game.isInProgress()).isTrue();
         }
     }
 

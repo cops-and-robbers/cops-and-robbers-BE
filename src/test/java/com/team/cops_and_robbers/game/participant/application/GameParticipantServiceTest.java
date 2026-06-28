@@ -4,6 +4,7 @@ package com.team.cops_and_robbers.game.participant.application;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.participant.application.dto.command.GameJoinCommand;
 import com.team.cops_and_robbers.game.participant.application.dto.command.GameLeaveCommand;
@@ -33,6 +34,7 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
 
+import static com.team.cops_and_robbers.common.fixture.GameFixture.EVENT_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.*;
@@ -186,6 +188,92 @@ class GameParticipantServiceTest extends ServiceUnitTest {
             assertThatThrownBy(() -> gameParticipantService.joinGame(command))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(GameParticipantException.GAME_FULL.getDetail());
+        }
+
+        @Nested
+        @DisplayName("이벤트 게임 참여")
+        class EventJoin {
+
+            @Test
+            void 이벤트_게임_참여에_성공하면_결과를_반환하고_로비_이벤트를_발행하지_않는다() {
+                // given
+                Game eventGame = EVENT_GAME(INVITE_CODE);
+                setId(eventGame, TEST_GAME_ID);
+                GameParticipant eventPolice = EVENT_POLICE_WAITING(eventGame, user);
+                GameJoinCommand command = createGameJoinCommand(user.getId(), INVITE_CODE);
+
+                given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(eventGame);
+                given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(false);
+                given(userRepository.getByUserId(user.getId())).willReturn(user);
+                given(gameParticipantRepository.save(any(GameParticipant.class))).willReturn(eventPolice);
+
+                // when
+                GameJoinResult result = gameParticipantService.joinGame(command);
+
+                // then
+                assertThat(result.isEventGame()).isTrue();
+                then(eventPublisher).should(never()).publishEvent(any());
+            }
+
+            @Test
+            void 이벤트_게임_참여_시_이미_참여_중인_게임이_있으면_예외가_발생한다() {
+                // given
+                Game eventGame = EVENT_GAME(INVITE_CODE);
+                setId(eventGame, TEST_GAME_ID);
+                GameJoinCommand command = createGameJoinCommand(user.getId(), INVITE_CODE);
+
+                given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(eventGame);
+                given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(true);
+
+                // when & then
+                assertThatThrownBy(() -> gameParticipantService.joinGame(command))
+                        .isInstanceOf(ApplicationException.class)
+                        .hasMessageContaining(GameParticipantException.ALREADY_PARTICIPATING.getDetail());
+            }
+
+            @Test
+            void 이벤트_게임이_IN_PROGRESS_상태가_아니면_예외가_발생한다() {
+                // given
+                Game waitingEventGame = Game.builder()
+                        .inviteCode(INVITE_CODE)
+                        .status(GameStatus.WAITING)
+                        .roundDurationMinutes(30)
+                        .locationRevealIntervalMinutes(5)
+                        .policeWaitMinutes(3)
+                        .maxParticipants(10)
+                        .isEventGame(true)
+                        .build();
+                setId(waitingEventGame, TEST_GAME_ID);
+                GameJoinCommand command = createGameJoinCommand(user.getId(), INVITE_CODE);
+
+                given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(waitingEventGame);
+                given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(false);
+
+                // when & then
+                assertThatThrownBy(() -> gameParticipantService.joinGame(command))
+                        .isInstanceOf(ApplicationException.class)
+                        .hasMessageContaining(GameException.GAME_NOT_IN_PROGRESS.getDetail());
+            }
+
+            @Test
+            void 이벤트_게임은_마지막_경찰이_퇴장해도_게임이_종료되지_않는다() {
+                // given
+                Game eventGame = EVENT_GAME(INVITE_CODE);
+                setId(eventGame, TEST_GAME_ID);
+                GameParticipant eventPolice = EVENT_POLICE_ALIVE(eventGame, user);
+                GameLeaveCommand command = createGameLeaveCommand(user.getId(), TEST_GAME_ID);
+
+                given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user.getId())).willReturn(eventPolice);
+                given(gameParticipantRepository.countByGameId(TEST_GAME_ID)).willReturn(0);
+                given(systemEventFactory.createPlayerLeftEvent(any(), any())).willReturn(mock(SystemEvent.class));
+
+                // when
+                gameParticipantService.leaveGame(command);
+
+                // then
+                then(gameTerminationService).should(never()).endGameByPoliceForfeited(any());
+                then(eventPublisher).should().publishEvent(any(SystemEvent.class));
+            }
         }
     }
 

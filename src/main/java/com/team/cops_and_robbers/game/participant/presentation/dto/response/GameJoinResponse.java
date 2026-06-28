@@ -7,12 +7,15 @@ public record GameJoinResponse(
         @Schema(description = "게임 ID", example = "1")
         Long gameId,
         @Schema(description = "참가자 ID", example = "2")
-        Long participantId
+        Long participantId,
+        @Schema(description = "이벤트 게임 여부 (true면 인게임 직접 입장)", example = "false")
+        boolean isEventGame
 ) {
     public static GameJoinResponse from(GameJoinResult result) {
         return new GameJoinResponse(
                 result.gameId(),
-                result.participantId()
+                result.participantId(),
+                result.isEventGame()
         );
     }
 }
