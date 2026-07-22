@@ -38,7 +38,7 @@ class LobbyE2ETest extends WebSocketE2ETest {
         User guestUser = givenUser("guest");
 
         Game game = gameRepository.save(GameFixture.WAITING_GAME());
-        gameAreaRepository.save(GameAreaFixture.GAME_AREA(game));
+        gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(game));
         gameParticipantRepository.save(GameParticipantFixture.HOST_PARTICIPANT(game, hostUser));
         gameParticipantRepository.save(GameParticipantFixture.GUEST_PARTICIPANT(game, guestUser));
 
@@ -50,7 +50,7 @@ class LobbyE2ETest extends WebSocketE2ETest {
         User guestUser = givenUser("guest");
 
         Game game = gameRepository.save(GameFixture.WAITING_GAME());
-        gameAreaRepository.save(GameAreaFixture.GAME_AREA(game));
+        gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(game));
         gameParticipantRepository.save(GameParticipantFixture.HOST_PARTICIPANT(game, hostUser));
         gameParticipantRepository.save(GameParticipantFixture.READY_PARTICIPANT(game, guestUser));
 

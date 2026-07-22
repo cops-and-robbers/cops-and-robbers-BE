@@ -228,7 +228,7 @@ class UserControllerTest extends ControllerTest {
             String accessToken = givenAccessToken(user);
             Game game = gameRepository.save(GameFixture.WAITING_GAME());
             gameParticipantRepository.save(GameParticipantFixture.HOST_PARTICIPANT(game, user));
-            gameAreaRepository.save(GameAreaFixture.GAME_AREA(game));
+            gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(game));
             jdbcTemplate.update(
                     "UPDATE games SET created_at = ? WHERE id = ?",
                     Timestamp.valueOf(LocalDateTime.now().minusHours(25)),
