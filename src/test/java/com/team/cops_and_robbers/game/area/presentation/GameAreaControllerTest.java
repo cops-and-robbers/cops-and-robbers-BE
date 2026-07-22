@@ -10,7 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.GAME_AREA;
+import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.CIRCLE_GAME_AREA;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.FINISHED_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,7 +37,7 @@ class GameAreaControllerTest extends ControllerTest {
         void WAITING_상태_게임의_맵_정보_조회_성공() {
             // given
             Game game = gameRepository.save(WAITING_GAME());
-            gameAreaRepository.save(GAME_AREA(game));
+            gameAreaRepository.save(CIRCLE_GAME_AREA(game));
             givenHost(game, user);
 
             // when
@@ -50,10 +50,10 @@ class GameAreaControllerTest extends ControllerTest {
             // then
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(200);
-                softly.assertThat(response.jsonPath().getDouble("playgroundCenter.latitude")).isEqualTo(37.4979);
-                softly.assertThat(response.jsonPath().getDouble("playgroundCenter.longitude")).isEqualTo(127.0276);
-                softly.assertThat(response.jsonPath().getInt("playgroundRadiusInMeters")).isEqualTo(500);
-                softly.assertThat(response.jsonPath().getInt("jailRadiusInMeters")).isEqualTo(50);
+                softly.assertThat(response.jsonPath().getDouble("circle.playgroundCenter.latitude")).isEqualTo(37.4979);
+                softly.assertThat(response.jsonPath().getDouble("circle.playgroundCenter.longitude")).isEqualTo(127.0276);
+                softly.assertThat(response.jsonPath().getInt("circle.playgroundRadiusInMeters")).isEqualTo(500);
+                softly.assertThat(response.jsonPath().getInt("circle.jailRadiusInMeters")).isEqualTo(50);
             });
         }
 
@@ -61,7 +61,7 @@ class GameAreaControllerTest extends ControllerTest {
         void 게임이_비활성_상태이면_400_BadRequest를_응답한다() {
             // given
             Game game = gameRepository.save(FINISHED_GAME());
-            gameAreaRepository.save(GAME_AREA(game));
+            gameAreaRepository.save(CIRCLE_GAME_AREA(game));
 
             // when
             ExtractableResponse<Response> response = authenticated(accessToken)
@@ -78,7 +78,7 @@ class GameAreaControllerTest extends ControllerTest {
         void 해당_게임의_참가자가_아니면_404_NotFound를_응답한다() {
             // given
             Game game = gameRepository.save(WAITING_GAME());
-            gameAreaRepository.save(GAME_AREA(game));
+            gameAreaRepository.save(CIRCLE_GAME_AREA(game));
 
             // when
             ExtractableResponse<Response> response = authenticated(accessToken)
@@ -95,7 +95,7 @@ class GameAreaControllerTest extends ControllerTest {
         void 인증_토큰_없이_요청하면_401_Unauthorized를_응답한다() {
             // given
             Game game = gameRepository.save(WAITING_GAME());
-            gameAreaRepository.save(GAME_AREA(game));
+            gameAreaRepository.save(CIRCLE_GAME_AREA(game));
             givenHost(game, user);
 
             // when

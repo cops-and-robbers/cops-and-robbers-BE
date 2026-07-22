@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.game.area.application;
 
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.game.area.application.dto.GameAreaData;
 import com.team.cops_and_robbers.game.area.application.dto.command.GameAreaCommand;
 import com.team.cops_and_robbers.game.area.application.dto.result.GameAreaResult;
 import com.team.cops_and_robbers.game.area.domain.GameArea;
@@ -16,7 +17,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 
-import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.GAME_AREA;
+import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.CIRCLE_GAME_AREA;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.FINISHED_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
@@ -52,7 +53,7 @@ class GameAreaServiceTest extends ServiceUnitTest {
         setId(inProgressGame, TEST_GAME_ID);
         setId(finishedGame, TEST_GAME_ID);
         participant = HOST_PARTICIPANT(waitingGame, user);
-        gameArea = GAME_AREA(waitingGame);
+        gameArea = CIRCLE_GAME_AREA(waitingGame);
     }
 
     @Nested
@@ -72,12 +73,14 @@ class GameAreaServiceTest extends ServiceUnitTest {
             GameAreaResult result = gameAreaService.getGameArea(command);
 
             // then
-            assertThat(result.playgroundCenter().latitude()).isEqualTo(gameArea.getPlaygroundCenter().getY());
-            assertThat(result.playgroundCenter().longitude()).isEqualTo(gameArea.getPlaygroundCenter().getX());
-            assertThat(result.playgroundRadiusInMeters()).isEqualTo(gameArea.getPlaygroundRadiusInMeters());
-            assertThat(result.jailCenter().latitude()).isEqualTo(gameArea.getJailCenter().getY());
-            assertThat(result.jailCenter().longitude()).isEqualTo(gameArea.getJailCenter().getX());
-            assertThat(result.jailRadiusInMeters()).isEqualTo(gameArea.getJailRadiusInMeters());
+            assertThat(result.areaData()).isInstanceOfSatisfying(GameAreaData.CircleAreaData.class, data -> {
+                assertThat(data.playgroundLatitude()).isEqualTo(gameArea.getPlaygroundCenter().getY());
+                assertThat(data.playgroundLongitude()).isEqualTo(gameArea.getPlaygroundCenter().getX());
+                assertThat(data.playgroundRadiusInMeters()).isEqualTo(gameArea.getPlaygroundRadiusInMeters());
+                assertThat(data.jailLatitude()).isEqualTo(gameArea.getJailCenter().getY());
+                assertThat(data.jailLongitude()).isEqualTo(gameArea.getJailCenter().getX());
+                assertThat(data.jailRadiusInMeters()).isEqualTo(gameArea.getJailRadiusInMeters());
+            });
         }
 
         @Test
@@ -93,8 +96,10 @@ class GameAreaServiceTest extends ServiceUnitTest {
             GameAreaResult result = gameAreaService.getGameArea(command);
 
             // then
-            assertThat(result.playgroundRadiusInMeters()).isEqualTo(gameArea.getPlaygroundRadiusInMeters());
-            assertThat(result.jailRadiusInMeters()).isEqualTo(gameArea.getJailRadiusInMeters());
+            assertThat(result.areaData()).isInstanceOfSatisfying(GameAreaData.CircleAreaData.class, data -> {
+                assertThat(data.playgroundRadiusInMeters()).isEqualTo(gameArea.getPlaygroundRadiusInMeters());
+                assertThat(data.jailRadiusInMeters()).isEqualTo(gameArea.getJailRadiusInMeters());
+            });
         }
 
         @Test

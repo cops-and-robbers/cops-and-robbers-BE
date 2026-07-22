@@ -4,6 +4,7 @@ import com.team.cops_and_robbers.common.ControllerTest;
 import com.team.cops_and_robbers.common.fixture.GameAreaFixture;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.common.fixture.UserFixture;
+import com.team.cops_and_robbers.game.area.domain.AreaType;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.CoordinatesRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameAreaRequest;
@@ -77,8 +78,9 @@ class GameControllerTest extends ControllerTest {
             CoordinatesRequest farAwayJailCenter = new CoordinatesRequest(35.1796, 129.0756);
 
             GameAreaRequest invalidArea = new GameAreaRequest(
-                    playgroundCenter, 1000,
-                    farAwayJailCenter, 100
+                    AreaType.CIRCLE,
+                    new GameAreaRequest.CircleAreaRequest(playgroundCenter, 1000, farAwayJailCenter, 100),
+                    null
             );
 
             GameCreateRequest request = new GameCreateRequest(invalidArea, createSettingsRequest());
@@ -270,7 +272,7 @@ class GameControllerTest extends ControllerTest {
         @BeforeEach
         void setUp() {
             waitingGame = gameRepository.save(GameFixture.WAITING_GAME());
-            gameAreaRepository.save(GameAreaFixture.GAME_AREA(waitingGame));
+            gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(waitingGame));
             givenHost(waitingGame, host);
         }
 
@@ -292,8 +294,8 @@ class GameControllerTest extends ControllerTest {
             GameAreaUpdateResponse result = response.as(GameAreaUpdateResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-                softly.assertThat(result.playgroundRadiusInMeters()).isEqualTo(request.playgroundRadiusInMeters());
-                softly.assertThat(result.jailRadiusInMeters()).isEqualTo(request.jailRadiusInMeters());
+                softly.assertThat(result.circle().playgroundRadiusInMeters()).isEqualTo(request.circle().playgroundRadiusInMeters());
+                softly.assertThat(result.circle().jailRadiusInMeters()).isEqualTo(request.circle().jailRadiusInMeters());
             });
         }
 
@@ -301,10 +303,14 @@ class GameControllerTest extends ControllerTest {
         void 감옥이_플레이그라운드_밖에_위치하면_400_BadRequest를_응답한다() {
             // given
             GameAreaRequest request = new GameAreaRequest(
-                    new CoordinatesRequest(37.5665, 126.978),   // 서울 시청
-                    1000,
-                    new CoordinatesRequest(35.1796, 129.0756),  // 부산 - 명백히 밖
-                    100
+                    AreaType.CIRCLE,
+                    new GameAreaRequest.CircleAreaRequest(
+                            new CoordinatesRequest(37.5665, 126.978),   // 서울 시청
+                            1000,
+                            new CoordinatesRequest(35.1796, 129.0756),  // 부산 - 명백히 밖
+                            100
+                    ),
+                    null
             );
 
             // when
@@ -344,7 +350,7 @@ class GameControllerTest extends ControllerTest {
         void 게임이_진행_중이면_400_BadRequest를_응답한다() {
             // given
             Game inProgressGame = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
-            gameAreaRepository.save(GameAreaFixture.GAME_AREA(inProgressGame));
+            gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(inProgressGame));
             User anotherHost = givenUser("anotherHost");
             String anotherHostToken = givenAccessToken(anotherHost);
             givenHost(inProgressGame, anotherHost);
@@ -406,7 +412,7 @@ class GameControllerTest extends ControllerTest {
         @BeforeEach
         void setUp() {
             waitingGame = gameRepository.save(GameFixture.WAITING_GAME());
-            gameAreaRepository.save(GameAreaFixture.GAME_AREA(waitingGame));
+            gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(waitingGame));
             givenHost(waitingGame, host);
         }
 
@@ -553,10 +559,14 @@ class GameControllerTest extends ControllerTest {
 
     private GameAreaRequest createAreaRequest() {
         return new GameAreaRequest(
-                new CoordinatesRequest(37.5665, 126.978),   // playgroundCenter
-                1000,   // playgroundRadius
-                new CoordinatesRequest(37.5665, 126.978),   // jailCenter
-                100 // jailRadius
+                AreaType.CIRCLE,
+                new GameAreaRequest.CircleAreaRequest(
+                        new CoordinatesRequest(37.5665, 126.978),   // playgroundCenter
+                        1000,   // playgroundRadius
+                        new CoordinatesRequest(37.5665, 126.978),   // jailCenter
+                        100     // jailRadius
+                ),
+                null
         );
     }
 
