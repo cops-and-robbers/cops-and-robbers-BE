@@ -59,4 +59,21 @@ public interface GameAreaRepository extends JpaRepository <GameArea, Long>{
             @Param("innerlat") double innerlat,
             @Param("innerradius") int innerradius
     );
+
+    /**
+     * postgis를 활용하여 내부 폴리곤이 외부 폴리곤에 완전히 포함되는지 검증합니다.
+     *
+     * @return 포함되면 true, 아니면 false
+     */
+    @Query(value = """
+    select
+        st_contains(
+            st_geomfromtext(:playground, 4326),
+            st_geomfromtext(:jail, 4326)
+        )
+    """, nativeQuery = true)
+    boolean isPolygonContained(
+            @Param("playground") String playground,
+            @Param("jail") String jail
+    );
 }
