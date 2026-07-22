@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
@@ -43,12 +44,14 @@ public record GameAreaRequest(
     ) {}
 
     public record PolygonAreaRequest(
-            @Schema(description = "플레이그라운드 꼭짓점 좌표 목록")
+            @Schema(description = "플레이그라운드 꼭짓점 좌표 목록 (최소 3개)")
             @Valid @NotNull(message = "플레이그라운드 꼭짓점 좌표를 입력해주세요.")
+            @Size(min = 3, message = "플레이그라운드 꼭짓점은 최소 3개 이상이어야 합니다.")
             List<CoordinatesRequest> playgroundPolygon,
 
-            @Schema(description = "감옥 꼭짓점 좌표 목록")
+            @Schema(description = "감옥 꼭짓점 좌표 목록 (최소 3개)")
             @Valid @NotNull(message = "감옥 꼭짓점 좌표를 입력해주세요.")
+            @Size(min = 3, message = "감옥 꼭짓점은 최소 3개 이상이어야 합니다.")
             List<CoordinatesRequest> jailPolygon
     ) {}
 }
