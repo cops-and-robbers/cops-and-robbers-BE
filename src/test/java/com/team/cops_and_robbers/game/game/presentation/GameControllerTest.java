@@ -22,6 +22,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
+import java.util.List;
+
 import static com.team.cops_and_robbers.common.fixture.GameFixture.FINISHED_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -81,6 +83,42 @@ class GameControllerTest extends ControllerTest {
                     AreaType.CIRCLE,
                     new GameAreaRequest.CircleAreaRequest(playgroundCenter, 1000, farAwayJailCenter, 100),
                     null
+            );
+
+            GameCreateRequest request = new GameCreateRequest(invalidArea, createSettingsRequest());
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(400);
+        }
+
+        @Test
+        void POLYGON_타입에서_감옥이_플레이그라운드_범위_밖에_위치하면_400_BadRequest를_응답한다() {
+            // given
+            List<CoordinatesRequest> playgroundPolygon = List.of(
+                    new CoordinatesRequest(37.4979, 127.0276),
+                    new CoordinatesRequest(37.4979, 127.0296),
+                    new CoordinatesRequest(37.4999, 127.0296),
+                    new CoordinatesRequest(37.4999, 127.0276)
+            );
+            List<CoordinatesRequest> farAwayJailPolygon = List.of(
+                    new CoordinatesRequest(35.1796, 129.0756),
+                    new CoordinatesRequest(35.1796, 129.0776),
+                    new CoordinatesRequest(35.1816, 129.0776),
+                    new CoordinatesRequest(35.1816, 129.0756)
+            );
+
+            GameAreaRequest invalidArea = new GameAreaRequest(
+                    AreaType.POLYGON,
+                    null,
+                    new GameAreaRequest.PolygonAreaRequest(playgroundPolygon, farAwayJailPolygon)
             );
 
             GameCreateRequest request = new GameCreateRequest(invalidArea, createSettingsRequest());
@@ -311,6 +349,41 @@ class GameControllerTest extends ControllerTest {
                             100
                     ),
                     null
+            );
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(request)
+                    .when()
+                    .put(AREA_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void POLYGON_타입에서_감옥이_플레이그라운드_밖에_위치하면_400_BadRequest를_응답한다() {
+            // given
+            List<CoordinatesRequest> playgroundPolygon = List.of(
+                    new CoordinatesRequest(37.4979, 127.0276),
+                    new CoordinatesRequest(37.4979, 127.0296),
+                    new CoordinatesRequest(37.4999, 127.0296),
+                    new CoordinatesRequest(37.4999, 127.0276)
+            );
+            List<CoordinatesRequest> farAwayJailPolygon = List.of(
+                    new CoordinatesRequest(35.1796, 129.0756),
+                    new CoordinatesRequest(35.1796, 129.0776),
+                    new CoordinatesRequest(35.1816, 129.0776),
+                    new CoordinatesRequest(35.1816, 129.0756)
+            );
+
+            GameAreaRequest request = new GameAreaRequest(
+                    AreaType.POLYGON,
+                    null,
+                    new GameAreaRequest.PolygonAreaRequest(playgroundPolygon, farAwayJailPolygon)
             );
 
             // when

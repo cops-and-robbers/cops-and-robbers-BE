@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.CIRCLE_GAME_AREA;
+import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.POLYGON_GAME_AREA;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.FINISHED_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,6 +55,29 @@ class GameAreaControllerTest extends ControllerTest {
                 softly.assertThat(response.jsonPath().getDouble("circle.playgroundCenter.longitude")).isEqualTo(127.0276);
                 softly.assertThat(response.jsonPath().getInt("circle.playgroundRadiusInMeters")).isEqualTo(500);
                 softly.assertThat(response.jsonPath().getInt("circle.jailRadiusInMeters")).isEqualTo(50);
+            });
+        }
+
+        @Test
+        void POLYGON_타입_게임의_맵_정보_조회_성공() {
+            // given
+            Game game = gameRepository.save(WAITING_GAME());
+            gameAreaRepository.save(POLYGON_GAME_AREA(game));
+            givenHost(game, user);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .when()
+                    .get(GAME_AREA_API_URL, game.getId())
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(200);
+                softly.assertThat(response.jsonPath().getString("areaType")).isEqualTo("POLYGON");
+                softly.assertThat(response.jsonPath().getList("polygon.playgroundPolygon")).hasSize(4);
+                softly.assertThat(response.jsonPath().getList("polygon.jailPolygon")).hasSize(4);
             });
         }
 

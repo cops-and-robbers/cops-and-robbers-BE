@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 
 import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.CIRCLE_GAME_AREA;
+import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.POLYGON_GAME_AREA;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.FINISHED_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
@@ -99,6 +100,26 @@ class GameAreaServiceTest extends ServiceUnitTest {
             assertThat(result.areaData()).isInstanceOfSatisfying(GameAreaData.CircleAreaData.class, data -> {
                 assertThat(data.playgroundRadiusInMeters()).isEqualTo(gameArea.getPlaygroundRadiusInMeters());
                 assertThat(data.jailRadiusInMeters()).isEqualTo(gameArea.getJailRadiusInMeters());
+            });
+        }
+
+        @Test
+        void POLYGON_타입_게임의_맵_정보_조회에_성공한다() {
+            // given
+            GameAreaCommand command = GameAreaCommand.of(TEST_USER_ID, TEST_GAME_ID);
+            GameArea polygonGameArea = POLYGON_GAME_AREA(waitingGame);
+
+            given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(waitingGame);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_USER_ID)).willReturn(participant);
+            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(polygonGameArea);
+
+            // when
+            GameAreaResult result = gameAreaService.getGameArea(command);
+
+            // then
+            assertThat(result.areaData()).isInstanceOfSatisfying(GameAreaData.PolygonAreaData.class, data -> {
+                assertThat(data.playgroundPolygon()).hasSize(4);
+                assertThat(data.jailPolygon()).hasSize(4);
             });
         }
 
