@@ -2,6 +2,7 @@ package com.team.cops_and_robbers;
 
 import com.team.cops_and_robbers.auth.infrastructure.jwt.JwtTokenProvider;
 import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
+import com.team.cops_and_robbers.game.area.application.dto.GameAreaData;
 import com.team.cops_and_robbers.game.area.domain.GameArea;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameCreateCommand;
@@ -112,23 +113,23 @@ public class DataLoader implements CommandLineRunner {
     private Game createGame(User host) {
         GameCreateCommand command = new GameCreateCommand(
                 host.getId(),
-                37.5665, 126.978, 1000,
-                37.5665, 126.978, 100,
+                new GameAreaData.CircleAreaData(37.5665, 126.978, 1000, 37.5665, 126.978, 100),
                 30, 5, 3, 10
         );
 
         Game game = Game.createGame("TEST12", command);
         gameRepository.save(game);
 
-        Point playgroundCenter = geometryFactory.createPoint(new Coordinate(command.playgroundLongitude(), command.playgroundLatitude()));
-        Point jailCenter = geometryFactory.createPoint(new Coordinate(command.jailLongitude(), command.jailLatitude()));
+        GameAreaData.CircleAreaData circleData = (GameAreaData.CircleAreaData) command.areaData();
+        Point playgroundCenter = geometryFactory.createPoint(new Coordinate(circleData.playgroundLongitude(), circleData.playgroundLatitude()));
+        Point jailCenter = geometryFactory.createPoint(new Coordinate(circleData.jailLongitude(), circleData.jailLatitude()));
 
-        GameArea gameArea = GameArea.createGameArea(
+        GameArea gameArea = GameArea.createCircleGameArea(
                 game,
                 playgroundCenter,
-                command.playgroundRadiusInMeters(),
+                circleData.playgroundRadiusInMeters(),
                 jailCenter,
-                command.jailRadiusInMeters()
+                circleData.jailRadiusInMeters()
         );
         gameAreaRepository.save(gameArea);
 

@@ -1,6 +1,8 @@
 package com.team.cops_and_robbers.game.game.application;
 
+import com.team.cops_and_robbers.common.dto.Coordinates;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.game.area.application.dto.GameAreaData;
 import com.team.cops_and_robbers.game.area.domain.GameArea;
 import com.team.cops_and_robbers.game.area.domain.GameAreaDomainService;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
@@ -26,11 +28,15 @@ import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LinearRing;
 import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -91,24 +97,23 @@ public class GameService {
     }
 
     private void saveGameArea(Game game, GameCreateCommand command) {
-
-        gameAreaDomainService.validateAreaContainment(
-                command.playgroundLongitude(), command.playgroundLatitude(), command.playgroundRadiusInMeters(),
-                command.jailLongitude(), command.jailLatitude(), command.jailRadiusInMeters()
-        );
-
-        Point playgroundCenter = geometryFactory.createPoint(
-                new Coordinate(command.playgroundLongitude(), command.playgroundLatitude()));
-        Point jailCenter = geometryFactory.createPoint(new Coordinate(command.jailLongitude(), command.jailLatitude()));
-
-        GameArea gameArea = GameArea.createGameArea(
-                game,
-                playgroundCenter,
-                command.playgroundRadiusInMeters(),
-                jailCenter,
-                command.jailRadiusInMeters()
-        );
-
+        GameArea gameArea = switch (command.areaData()) {
+            case GameAreaData.CircleAreaData c -> {
+                gameAreaDomainService.validateCircleAreaContainment(
+                        c.playgroundLongitude(), c.playgroundLatitude(), c.playgroundRadiusInMeters(),
+                        c.jailLongitude(), c.jailLatitude(), c.jailRadiusInMeters()
+                );
+                Point playgroundCenter = geometryFactory.createPoint(new Coordinate(c.playgroundLongitude(), c.playgroundLatitude()));
+                Point jailCenter = geometryFactory.createPoint(new Coordinate(c.jailLongitude(), c.jailLatitude()));
+                yield GameArea.createCircleGameArea(game, playgroundCenter, c.playgroundRadiusInMeters(), jailCenter, c.jailRadiusInMeters());
+            }
+            case GameAreaData.PolygonAreaData p -> {
+                Polygon playgroundPolygon = createPolygon(p.playgroundPolygon());
+                Polygon jailPolygon = createPolygon(p.jailPolygon());
+                gameAreaDomainService.validatePolygonAreaContainment(playgroundPolygon, jailPolygon);
+                yield GameArea.createPolygonGameArea(game, playgroundPolygon, jailPolygon);
+            }
+        };
         gameAreaRepository.save(gameArea);
     }
 
@@ -135,22 +140,24 @@ public class GameService {
         );
         validateGameEditable(participant);
 
-        gameAreaDomainService.validateAreaContainment(
-                command.playgroundLongitude(), command.playgroundLatitude(), command.playgroundRadiusInMeters(),
-                command.jailLongitude(), command.jailLatitude(), command.jailRadiusInMeters()
-        );
-
-        Point playgroundCenter = geometryFactory.createPoint(
-                new Coordinate(command.playgroundLongitude(), command.playgroundLatitude()));
-        Point jailCenter = geometryFactory.createPoint(new Coordinate(command.jailLongitude(), command.jailLatitude()));
-
         GameArea gameArea = gameAreaRepository.getByGameId(command.gameId());
-        gameArea.update(
-                playgroundCenter,
-                command.playgroundRadiusInMeters(),
-                jailCenter,
-                command.jailRadiusInMeters()
-        );
+        switch (command.areaData()) {
+            case GameAreaData.CircleAreaData c -> {
+                gameAreaDomainService.validateCircleAreaContainment(
+                        c.playgroundLongitude(), c.playgroundLatitude(), c.playgroundRadiusInMeters(),
+                        c.jailLongitude(), c.jailLatitude(), c.jailRadiusInMeters()
+                );
+                Point playgroundCenter = geometryFactory.createPoint(new Coordinate(c.playgroundLongitude(), c.playgroundLatitude()));
+                Point jailCenter = geometryFactory.createPoint(new Coordinate(c.jailLongitude(), c.jailLatitude()));
+                gameArea.updateCircle(playgroundCenter, c.playgroundRadiusInMeters(), jailCenter, c.jailRadiusInMeters());
+            }
+            case GameAreaData.PolygonAreaData p -> {
+                Polygon playgroundPolygon = createPolygon(p.playgroundPolygon());
+                Polygon jailPolygon = createPolygon(p.jailPolygon());
+                gameAreaDomainService.validatePolygonAreaContainment(playgroundPolygon, jailPolygon);
+                gameArea.updatePolygon(playgroundPolygon, jailPolygon);
+            }
+        };
 
         GameAreaUpdateResult result = GameAreaUpdateResult.from(gameArea);
 
@@ -182,6 +189,22 @@ public class GameService {
         eventPublisher.publishEvent(settingsEvent);
 
         return result;
+    }
+
+    private Polygon createPolygon(List<Coordinates> coordinatesList) {
+        Coordinate[] coordinates = coordinatesList.stream()
+                .map(c -> new Coordinate(c.longitude(), c.latitude()))
+                .toArray(Coordinate[]::new);
+
+        // 폴리곤은 (첫 번째 좌표 = 마지막 좌표)인 닫힌 링이어야 함
+        // 따라서 첫 번째 좌표를 마지막 좌표에 복사해줌
+        // 예: [A, B, C, D] → [A, B, C, D, A]
+        Coordinate[] closed = new Coordinate[coordinates.length + 1];
+        System.arraycopy(coordinates, 0, closed, 0, coordinates.length);
+        closed[closed.length - 1] = closed[0];
+
+        LinearRing ring = geometryFactory.createLinearRing(closed);
+        return geometryFactory.createPolygon(ring);
     }
 
     private void validateGameEditable(GameParticipant participant) {
