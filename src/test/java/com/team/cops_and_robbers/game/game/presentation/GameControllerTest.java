@@ -136,6 +136,24 @@ class GameControllerTest extends ControllerTest {
         }
 
         @Test
+        void areaType과_데이터가_불일치하면_400_BadRequest를_응답한다() {
+            // given: CIRCLE 타입인데 circle 데이터 없음
+            GameAreaRequest invalidArea = new GameAreaRequest(AreaType.CIRCLE, null, null);
+            GameCreateRequest request = new GameCreateRequest(invalidArea, createSettingsRequest());
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(400);
+        }
+
+        @Test
         void 위치_공개_주기가_라운드_시간보다_길면_400_BadRequest를_응답한다() {
             // given (10분 라운드 < 15분 주기)
             GameSettingsRequest invalidSettings = new GameSettingsRequest(10, 15, 3, 10);
@@ -350,6 +368,24 @@ class GameControllerTest extends ControllerTest {
                     ),
                     null
             );
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(request)
+                    .when()
+                    .put(AREA_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void areaType과_데이터가_불일치하면_400_BadRequest를_응답한다() {
+            // given: POLYGON 타입인데 polygon 데이터 없음
+            GameAreaRequest request = new GameAreaRequest(AreaType.POLYGON, null, null);
 
             // when
             ExtractableResponse<Response> response = authenticated(accessToken)
