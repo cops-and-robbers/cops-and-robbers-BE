@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.game.game.presentation.dto.request;
 import com.team.cops_and_robbers.game.area.domain.AreaType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -22,6 +23,16 @@ public record GameAreaRequest(
         @Valid
         PolygonAreaRequest polygon
 ) {
+
+    @AssertTrue(message = "구역 타입에 맞는 데이터를 입력해주세요.")
+    public boolean isAreaDataConsistent() {
+        if (areaType == null) return true;
+
+        return switch (areaType) {
+            case CIRCLE -> circle != null;
+            case POLYGON -> polygon != null;
+        };
+    }
 
     public record CircleAreaRequest(
             @Schema(description = "플레이그라운드 중심 좌표")
