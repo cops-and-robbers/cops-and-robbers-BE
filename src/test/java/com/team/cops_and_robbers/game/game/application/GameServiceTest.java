@@ -3,9 +3,9 @@ package com.team.cops_and_robbers.game.game.application;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.dto.Coordinates;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.game.area.application.GameAreaService;
 import com.team.cops_and_robbers.game.area.application.dto.GameAreaData;
 import com.team.cops_and_robbers.game.area.domain.GameArea;
-import com.team.cops_and_robbers.game.area.domain.GameAreaDomainService;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameAreaUpdateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameCreateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameInfoCommand;
@@ -24,7 +24,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.locationtech.jts.geom.Polygon;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.context.ApplicationEventPublisher;
@@ -43,8 +42,6 @@ import static com.team.cops_and_robbers.common.fixture.UserFixture.USER_WITHOUT_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyDouble;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -56,7 +53,7 @@ class GameServiceTest extends ServiceUnitTest {
     private GameService gameService;
 
     @Mock
-    private GameAreaDomainService gameAreaDomainService;
+    private GameAreaService gameAreaService;
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
@@ -100,12 +97,13 @@ class GameServiceTest extends ServiceUnitTest {
             given(gameParticipantRepository.existsActiveGameByUserId(host.getId())).willReturn(false);
             given(gameRepository.save(any(Game.class))).willReturn(game);
             given(gameRepository.existsByInviteCode(anyString())).willReturn(false);
+            given(gameAreaService.buildGameArea(any(Game.class), any(GameAreaData.class))).willReturn(CIRCLE_GAME_AREA(game));
 
             // when
             gameService.createGame(command);
 
             // then
-            then(gameAreaDomainService).should().validateCircleAreaContainment(anyDouble(), anyDouble(), anyInt(), anyDouble(), anyDouble(), anyInt());
+            then(gameAreaService).should().buildGameArea(any(Game.class), any(GameAreaData.class));
             then(gameRepository).should().save(any(Game.class));
             then(gameAreaRepository).should().save(any(GameArea.class));
             then(gameParticipantRepository).should().save(any(GameParticipant.class));
@@ -120,12 +118,13 @@ class GameServiceTest extends ServiceUnitTest {
             given(gameParticipantRepository.existsActiveGameByUserId(host.getId())).willReturn(false);
             given(gameRepository.save(any(Game.class))).willReturn(game);
             given(gameRepository.existsByInviteCode(anyString())).willReturn(false);
+            given(gameAreaService.buildGameArea(any(Game.class), any(GameAreaData.class))).willReturn(POLYGON_GAME_AREA(game));
 
             // when
             gameService.createGame(command);
 
             // then
-            then(gameAreaDomainService).should().validatePolygonAreaContainment(any(Polygon.class), any(Polygon.class));
+            then(gameAreaService).should().buildGameArea(any(Game.class), any(GameAreaData.class));
             then(gameRepository).should().save(any(Game.class));
             then(gameAreaRepository).should().save(any(GameArea.class));
             then(gameParticipantRepository).should().save(any(GameParticipant.class));
@@ -272,7 +271,7 @@ class GameServiceTest extends ServiceUnitTest {
             GameAreaUpdateResult result = gameService.updateGameArea(circleCommand);
 
             // then
-            then(gameAreaDomainService).should().validateCircleAreaContainment(anyDouble(), anyDouble(), anyInt(), anyDouble(), anyDouble(), anyInt());
+            then(gameAreaService).should().applyAreaUpdate(any(GameArea.class), any(GameAreaData.class));
             then(eventPublisher).should().publishEvent(lobbyEvent);
             assertThat(result).isNotNull();
         }
@@ -289,7 +288,7 @@ class GameServiceTest extends ServiceUnitTest {
             GameAreaUpdateResult result = gameService.updateGameArea(polygonCommand);
 
             // then
-            then(gameAreaDomainService).should().validatePolygonAreaContainment(any(Polygon.class), any(Polygon.class));
+            then(gameAreaService).should().applyAreaUpdate(any(GameArea.class), any(GameAreaData.class));
             then(eventPublisher).should().publishEvent(lobbyEvent);
             assertThat(result).isNotNull();
         }
