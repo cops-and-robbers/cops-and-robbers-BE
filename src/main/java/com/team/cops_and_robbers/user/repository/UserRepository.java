@@ -4,11 +4,14 @@ import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.user.domain.SocialType;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.exception.UserException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -20,6 +23,21 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByNickname(String nickname);
 
     Optional<User> findBySocialIdAndSocialType(String socialId, SocialType socialType);
+
+    @Query("""
+            select u from User u
+            where (:nickname is null or u.nickname like concat('%', :nickname, '%'))
+            and (:socialType is null or u.socialType = :socialType)
+            and (cast(:fromDate as timestamp) is null or u.createdAt >= :fromDate)
+            and (cast(:toDate as timestamp) is null or u.createdAt <= :toDate)
+            """)
+    Page<User> findAllForAdmin(
+            @Param("nickname") String nickname,
+            @Param("socialType") SocialType socialType,
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate,
+            Pageable pageable
+    );
 
     default User getByUserId(Long userId) {
         return findById(userId)
