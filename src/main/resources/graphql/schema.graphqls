@@ -1,0 +1,141 @@
+# ─── 쿼리 진입점 ────────────────────────────────────────────
+type Query {
+  # 유저 관리
+  adminUsers(
+    page: Int = 0
+    size: Int = 20
+    nickname: String
+    socialType: SocialType
+    fromDate: String
+    toDate: String
+    sortDirection: SortDirection = DESC
+  ): AdminUserPage!
+
+  adminUser(id: ID!): AdminUser!
+
+  # 게임 결과 조회
+  adminGames(
+    page: Int = 0
+    size: Int = 20
+    status: GameStatus
+    sortDirection: SortDirection = DESC
+  ): AdminGamePage!
+
+  adminGame(id: ID!): AdminGame!
+}
+
+# ─── 정렬/방향 공통 ──────────────────────────────────────────
+enum SortDirection { ASC DESC }
+
+# ─── 유저 ────────────────────────────────────────────────────
+type AdminUserPage {
+  content: [AdminUser!]!
+  totalElements: Int!
+  totalPages: Int!
+  page: Int!
+  size: Int!
+}
+
+type AdminUser {
+  id: ID!
+  nickname: String!
+  socialType: SocialType!
+  role: Role!
+  termsOfServiceAgreed: Boolean!
+  privacyPolicyAgreed: Boolean!
+  locationTermsAgreed: Boolean!
+  createdAt: String!
+  device: UserDevice
+  participations: [GameParticipation!]!
+}
+
+type UserDevice {
+  deviceType: DeviceType!
+  createdAt: String!
+}
+
+type GameParticipation {
+  gameId: ID!
+  inviteCode: String!
+  team: Team
+  status: ParticipantStatus!
+  isHost: Boolean!
+  createdAt: String!
+}
+
+# ─── 게임 ────────────────────────────────────────────────────
+type AdminGamePage {
+  content: [AdminGameSummary!]!
+  totalElements: Int!
+  totalPages: Int!
+  page: Int!
+  size: Int!
+}
+
+type AdminGameSummary {
+  id: ID!
+  inviteCode: String!
+  status: GameStatus!
+  roundDurationMinutes: Int!
+  locationRevealIntervalMinutes: Int!
+  maxParticipants: Int!
+  isEventGame: Boolean!
+  participantCount: Int!
+  createdAt: String!
+}
+
+type AdminGame {
+  id: ID!
+  inviteCode: String!
+  status: GameStatus!
+  roundDurationMinutes: Int!
+  locationRevealIntervalMinutes: Int!
+  policeWaitMinutes: Int!
+  maxParticipants: Int!
+  isEventGame: Boolean!
+  createdAt: String!
+  startedAt: String
+  participants: [AdminParticipant!]!
+  result: GameResult
+  area: GameArea
+}
+
+type AdminParticipant {
+  userId: ID!
+  nickname: String!
+  team: Team
+  status: ParticipantStatus!
+  isHost: Boolean!
+}
+
+type GameResult {
+  winnerTeam: Team!
+  endReason: GameEndReason!
+  totalPoliceCount: Int!
+  totalRobberCount: Int!
+  arrestedRobberCount: Int!
+  durationSeconds: Int!
+  playgroundCenterLat: Float!
+  playgroundCenterLng: Float!
+  playgroundRadiusInMeters: Int!
+}
+
+type GameArea {
+  playgroundCenterLat: Float!
+  playgroundCenterLng: Float!
+  playgroundRadiusInMeters: Int!
+  jailCenterLat: Float!
+  jailCenterLng: Float!
+  jailRadiusInMeters: Int!
+}
+
+# ─── Enums ──────────────────────────────────
+enum SocialType { KAKAO GOOGLE APPLE }
+enum Role { USER ADMIN }
+enum DeviceType { IOS ANDROID }
+enum Team { POLICE ROBBER }
+
+enum ParticipantStatus { WAITING ALIVE JAILED POLICE_WAITING }
+enum GameStatus { WAITING IN_PROGRESS FINISHED CANCELED }
+
+enum GameEndReason { ALL_ARRESTED TIME_OVER POLICE_FORFEITED ROBBER_FORFEITED }
