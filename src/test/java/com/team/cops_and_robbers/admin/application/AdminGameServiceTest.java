@@ -4,7 +4,7 @@ import com.team.cops_and_robbers.admin.application.dto.SortDirection;
 import com.team.cops_and_robbers.admin.application.dto.command.AdminGameListCommand;
 import com.team.cops_and_robbers.admin.application.dto.result.AdminGamePageResult;
 import com.team.cops_and_robbers.admin.application.dto.result.AdminGameResult;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminGameResultDetail;
+import com.team.cops_and_robbers.admin.application.dto.result.AdminGameDetailResult;
 import com.team.cops_and_robbers.admin.application.dto.result.AdminGameAreaResult;
 import com.team.cops_and_robbers.admin.application.dto.result.AdminParticipantResult;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
@@ -251,7 +251,7 @@ class AdminGameServiceTest extends ServiceUnitTest {
                     .willReturn(List.of(gameResult));
 
             // when
-            Map<AdminGameResult, AdminGameResultDetail> result =
+            Map<AdminGameResult, AdminGameDetailResult> result =
                     adminGameService.getResultsByGame(games);
 
             // then
@@ -269,7 +269,7 @@ class AdminGameServiceTest extends ServiceUnitTest {
             given(gameResultRepository.findByGameIdIn(anyList())).willReturn(List.of());
 
             // when
-            Map<AdminGameResult, AdminGameResultDetail> result =
+            Map<AdminGameResult, AdminGameDetailResult> result =
                     adminGameService.getResultsByGame(List.of(adminGame));
 
             // then

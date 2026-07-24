@@ -4,7 +4,7 @@ import com.team.cops_and_robbers.admin.application.dto.command.AdminGameListComm
 import com.team.cops_and_robbers.admin.application.dto.result.AdminGameAreaResult;
 import com.team.cops_and_robbers.admin.application.dto.result.AdminGamePageResult;
 import com.team.cops_and_robbers.admin.application.dto.result.AdminGameResult;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminGameResultDetail;
+import com.team.cops_and_robbers.admin.application.dto.result.AdminGameDetailResult;
 import com.team.cops_and_robbers.admin.application.dto.result.AdminGameSummaryResult;
 import com.team.cops_and_robbers.admin.application.dto.result.AdminParticipantResult;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
@@ -68,13 +68,13 @@ public class AdminGameService {
         ));
     }
 
-    public Map<AdminGameResult, AdminGameResultDetail> getResultsByGame(List<AdminGameResult> games) {
+    public Map<AdminGameResult, AdminGameDetailResult> getResultsByGame(List<AdminGameResult> games) {
         List<Long> gameIds = games.stream().map(AdminGameResult::id).toList();
-        Map<Long, AdminGameResultDetail> resultByGameId = gameResultRepository.findByGameIdIn(gameIds)
+        Map<Long, AdminGameDetailResult> resultByGameId = gameResultRepository.findByGameIdIn(gameIds)
                 .stream()
                 .collect(Collectors.toMap(
                         GameResult::getGameId,
-                        AdminGameResultDetail::from
+                        AdminGameDetailResult::from
                 ));
         return games.stream()
                 .filter(game -> resultByGameId.containsKey(game.id()))

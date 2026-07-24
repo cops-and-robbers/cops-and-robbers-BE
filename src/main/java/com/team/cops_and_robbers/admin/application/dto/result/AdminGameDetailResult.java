@@ -4,7 +4,7 @@ import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.history.domain.GameEndReason;
 import com.team.cops_and_robbers.history.domain.GameResult;
 
-public record AdminGameResultDetail(
+public record AdminGameDetailResult(
         Team winnerTeam,
         GameEndReason endReason,
         Integer totalPoliceCount,
@@ -15,8 +15,8 @@ public record AdminGameResultDetail(
         Double playgroundCenterLng,
         Integer playgroundRadiusInMeters
 ) {
-    public static AdminGameResultDetail from(GameResult gameResult) {
-        return new AdminGameResultDetail(
+    public static AdminGameDetailResult from(GameResult gameResult) {
+        return new AdminGameDetailResult(
                 gameResult.getWinnerTeam(),
                 gameResult.getEndReason(),
                 gameResult.getTotalPoliceCount(),

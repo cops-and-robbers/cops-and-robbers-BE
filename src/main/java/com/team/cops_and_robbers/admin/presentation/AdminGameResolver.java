@@ -5,7 +5,7 @@ import com.team.cops_and_robbers.admin.application.dto.command.AdminGameListComm
 import com.team.cops_and_robbers.admin.application.dto.result.AdminGameAreaResult;
 import com.team.cops_and_robbers.admin.application.dto.result.AdminGamePageResult;
 import com.team.cops_and_robbers.admin.application.dto.result.AdminGameResult;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminGameResultDetail;
+import com.team.cops_and_robbers.admin.application.dto.result.AdminGameDetailResult;
 import com.team.cops_and_robbers.admin.application.dto.result.AdminParticipantResult;
 import com.team.cops_and_robbers.admin.application.dto.SortDirection;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
@@ -48,7 +48,7 @@ public class AdminGameResolver {
     }
 
     @BatchMapping(typeName = "AdminGame", field = "result")
-    public Map<AdminGameResult, AdminGameResultDetail> result(
+    public Map<AdminGameResult, AdminGameDetailResult> result(
             List<AdminGameResult> games) {
         return adminGameService.getResultsByGame(games);
     }
