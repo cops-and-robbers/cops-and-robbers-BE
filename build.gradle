@@ -27,6 +27,7 @@ repositories {
 dependencies {
     // Spring Boot Starters
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-graphql'
     implementation('org.redisson:redisson-spring-boot-starter:3.45.0') {
         exclude group: 'io.lettuce', module: 'lettuce-core'
     }
