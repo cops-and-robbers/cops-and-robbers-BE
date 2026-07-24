@@ -10,10 +10,7 @@ public record AdminGameDetailResult(
         Integer totalPoliceCount,
         Integer totalRobberCount,
         Integer arrestedRobberCount,
-        Integer durationSeconds,
-        Double playgroundCenterLat,
-        Double playgroundCenterLng,
-        Integer playgroundRadiusInMeters
+        Integer durationSeconds
 ) {
     public static AdminGameDetailResult from(GameResult gameResult) {
         return new AdminGameDetailResult(
@@ -22,10 +19,7 @@ public record AdminGameDetailResult(
                 gameResult.getTotalPoliceCount(),
                 gameResult.getTotalRobberCount(),
                 gameResult.getArrestedRobberCount(),
-                gameResult.getDurationSeconds(),
-                gameResult.getPlaygroundCenter().getY(),
-                gameResult.getPlaygroundCenter().getX(),
-                gameResult.getPlaygroundRadiusInMeters()
+                gameResult.getDurationSeconds()
         );
     }
 }

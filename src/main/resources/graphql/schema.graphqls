@@ -115,9 +115,6 @@ type GameResult {
   totalRobberCount: Int!
   arrestedRobberCount: Int!
   durationSeconds: Int!
-  playgroundCenterLat: Float!
-  playgroundCenterLng: Float!
-  playgroundRadiusInMeters: Int!
 }
 
 type GameArea {
