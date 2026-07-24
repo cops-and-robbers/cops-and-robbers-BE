@@ -19,7 +19,6 @@ public class GameAreaDomainService {
      * 1. 감옥 반지름 < 플레이그라운드 반지름
      * 2. 감옥이 플레이그라운드 영역 내에 완전히 포함
      * 구현: postgis의 st_distance를 활용
-     *
      */
     public void validateCircleAreaContainment(
             double playgroundLongitude, double playgroundLatitude, int playgroundRadius,
@@ -45,7 +44,6 @@ public class GameAreaDomainService {
      * 1. 감옥 폴리곤 < 플레이그라운드 폴리곤
      * 2. 감옥이 플레이그라운드 영역 내에 완전히 포함
      * 구현: postgis의 st_contains를 활용
-     *
      */
     public void validatePolygonAreaContainment(
             Polygon playgroundPolygon,
@@ -56,5 +54,17 @@ public class GameAreaDomainService {
         if (!isContained) {
             throw new ApplicationException(GameAreaException.JAIL_OUTSIDE_PLAYGROUND);
         }
+    }
+
+    /**
+     * 주어진 좌표가 플레이그라운드 영역 안에 있는지 확인합니다.
+     * 구역 타입(CIRCLE/POLYGON)에 따라 내부적으로 분기합니다.
+     */
+    public boolean isPointInsidePlayground(Long gameId, double longitude, double latitude) {
+        GameArea gameArea = gameAreaRepository.getByGameId(gameId);
+        return switch (gameArea.getAreaType()) {
+            case CIRCLE -> gameAreaRepository.isPointInsideCircle(gameId, longitude, latitude);
+            case POLYGON -> gameAreaRepository.isPointInsidePolygon(gameId, longitude, latitude);
+        };
     }
 }
