@@ -26,17 +26,31 @@ public interface GameAreaRepository extends JpaRepository <GameArea, Long>{
 
     @Query(value = """
         SELECT ST_DWithin(
-            st_makepoint(:lon, :lat)::geography,
+            st_makepoint(:longitude, :latitude)::geography,
             ga.playground_center::geography,
             ga.playground_radius_in_meters
         )
         FROM game_areas ga
         WHERE ga.game_id = :gameId
         """, nativeQuery = true)
-    boolean isPointInsidePlayground(
+    boolean isPointInsideCircle(
             @Param("gameId") Long gameId,
-            @Param("lon") double longitude,
-            @Param("lat") double latitude
+            @Param("longitude") double longitude,
+            @Param("latitude") double latitude
+    );
+
+    @Query(value = """
+        SELECT ST_Contains(
+            ga.playground_polygon,
+            ST_SetSRID(ST_Point(:longitude, :latitude), 4326)
+        )
+        FROM game_areas ga
+        WHERE ga.game_id = :gameId
+        """, nativeQuery = true)
+    boolean isPointInsidePolygon(
+            @Param("gameId") Long gameId,
+            @Param("longitude") double longitude,
+            @Param("latitude") double latitude
     );
 
     /**
