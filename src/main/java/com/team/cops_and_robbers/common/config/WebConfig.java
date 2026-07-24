@@ -1,5 +1,6 @@
 package com.team.cops_and_robbers.common.config;
 
+import com.team.cops_and_robbers.admin.presentation.interceptor.AdminInterceptor;
 import com.team.cops_and_robbers.auth.presentation.interceptor.AuthInterceptor;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUserArgumentResolver;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import java.util.List;
 public class WebConfig implements WebMvcConfigurer {
 
     private final AuthInterceptor authInterceptor;
+    private final AdminInterceptor adminInterceptor;
     private final LoginUserArgumentResolver loginUserArgumentResolver;
 
     @Override
@@ -27,6 +29,9 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/user/check-nickname",
                         "/actuator/health"
                 );
+
+        registry.addInterceptor(adminInterceptor)
+                .addPathPatterns("/graphql");
     }
 
     @Override
