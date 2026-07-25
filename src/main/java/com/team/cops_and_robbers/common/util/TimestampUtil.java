@@ -28,4 +28,12 @@ public class TimestampUtil {
                 .atZoneSameInstant(KST)
                 .toLocalDateTime();
     }
+
+    // GraphQL DateTime 스칼라용: OffsetDateTime -> KST 기준 LocalDateTime 변환
+    public static LocalDateTime toKstLocalDateTime(OffsetDateTime offsetDateTime) {
+        if (offsetDateTime == null) {
+            return null;
+        }
+        return offsetDateTime.atZoneSameInstant(KST).toLocalDateTime();
+    }
 }

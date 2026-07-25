@@ -1,3 +1,5 @@
+scalar DateTime
+
 # ─── 쿼리 진입점 ────────────────────────────────────────────
 type Query {
   # 유저 관리
@@ -6,8 +8,8 @@ type Query {
     size: Int = 20
     nickname: String
     socialType: SocialType
-    fromDate: String
-    toDate: String
+    fromDate: DateTime
+    toDate: DateTime
     sortDirection: SortDirection = DESC
   ): AdminUserPage!
 
