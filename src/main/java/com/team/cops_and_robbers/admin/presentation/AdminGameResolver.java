@@ -9,15 +9,19 @@ import com.team.cops_and_robbers.admin.application.dto.result.AdminGameDetailRes
 import com.team.cops_and_robbers.admin.application.dto.result.AdminParticipantResult;
 import com.team.cops_and_robbers.admin.application.dto.SortDirection;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.BatchMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 import java.util.Map;
 
+@Validated
 @Controller
 @RequiredArgsConstructor
 public class AdminGameResolver {
@@ -26,8 +30,8 @@ public class AdminGameResolver {
 
     @QueryMapping
     public AdminGamePageResult adminGames(
-            @Argument int page,
-            @Argument int size,
+            @Argument @Min(0) int page,
+            @Argument @Min(1) @Max(100) int size,
             @Argument GameStatus status,
             @Argument SortDirection sortDirection
     ) {
