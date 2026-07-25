@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.admin.presentation.interceptor;
 
 import com.team.cops_and_robbers.admin.exception.AdminException;
 import com.team.cops_and_robbers.auth.infrastructure.jwt.JwtTokenProvider;
+import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.util.AuthorizationExtractor;
 import com.team.cops_and_robbers.user.domain.Role;
@@ -27,6 +28,9 @@ public class AdminInterceptor implements HandlerInterceptor {
         if (!Role.ADMIN.name().equals(role)) {
             throw new ApplicationException(AdminException.FORBIDDEN_ADMIN_ONLY);
         }
+
+        Long userId = jwtTokenProvider.getUserIdFromAccessToken(accessToken);
+        request.setAttribute("loginUser", new LoginUser(userId));
 
         return true;
     }
