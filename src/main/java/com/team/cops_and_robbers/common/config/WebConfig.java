@@ -6,6 +6,7 @@ import com.team.cops_and_robbers.auth.presentation.resolver.LoginUserArgumentRes
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -32,6 +33,19 @@ public class WebConfig implements WebMvcConfigurer {
 
         registry.addInterceptor(adminInterceptor)
                 .addPathPatterns("/graphql");
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/graphql")
+                .allowedOrigins(
+                        "http://localhost:3000",
+                        "https://copsnro66ers.site",
+                        "https://admin.copsnro66ers.site"
+                )
+                .allowedMethods("POST", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 
     @Override
