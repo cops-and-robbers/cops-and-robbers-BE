@@ -198,12 +198,12 @@ class AdminGameResolverTest extends ControllerTest {
         void 게임_구역을_포함하여_조회한다() {
             // given
             Game game = gameRepository.save(GameFixture.FINISHED_GAME());
-            gameAreaRepository.save(GameAreaFixture.GAME_AREA(game));
+            gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(game));
 
             // when
             ExtractableResponse<Response> response = executeQuery(
                     adminToken,
-                    "{ adminGame(id: " + game.getId() + ") { id area { playgroundCenterLat playgroundCenterLng playgroundRadiusInMeters jailCenterLat jailCenterLng jailRadiusInMeters } } }");
+                    "{ adminGame(id: " + game.getId() + ") { id area { areaType playgroundCenterLat playgroundCenterLng playgroundRadiusInMeters jailCenterLat jailCenterLng jailRadiusInMeters } } }");
 
             // then
             assertSoftly(softly -> {

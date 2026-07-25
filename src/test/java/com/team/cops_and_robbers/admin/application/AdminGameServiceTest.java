@@ -284,7 +284,7 @@ class AdminGameServiceTest extends ServiceUnitTest {
         @Test
         void 구역이_있는_게임만_구역_맵에_포함된다() {
             // given
-            GameArea gameArea = GameAreaFixture.GAME_AREA(game1);
+            GameArea gameArea = GameAreaFixture.CIRCLE_GAME_AREA(game1);
 
             AdminGameResult adminGame1 = AdminGameResult.from(game1);
             AdminGameResult adminGame2 = AdminGameResult.from(game2);

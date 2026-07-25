@@ -118,15 +118,26 @@ type GameResult {
 }
 
 type GameArea {
-  playgroundCenterLat: Float!
-  playgroundCenterLng: Float!
-  playgroundRadiusInMeters: Int!
-  jailCenterLat: Float!
-  jailCenterLng: Float!
-  jailRadiusInMeters: Int!
+  areaType: AreaType!
+  # 원형 구역 (CIRCLE 전용, POLYGON일 때 null)
+  playgroundCenterLat: Float
+  playgroundCenterLng: Float
+  playgroundRadiusInMeters: Int
+  jailCenterLat: Float
+  jailCenterLng: Float
+  jailRadiusInMeters: Int
+  # 다각형 구역 (POLYGON 전용, CIRCLE일 때 null)
+  playgroundPolygon: [Coordinate!]
+  jailPolygon: [Coordinate!]
+}
+
+type Coordinate {
+  latitude: Float!
+  longitude: Float!
 }
 
 # ─── Enums ──────────────────────────────────
+enum AreaType { CIRCLE POLYGON }
 enum SocialType { KAKAO GOOGLE APPLE }
 enum Role { USER ADMIN }
 enum DeviceType { IOS ANDROID }
