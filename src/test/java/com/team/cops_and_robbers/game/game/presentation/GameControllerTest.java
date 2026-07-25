@@ -4,6 +4,7 @@ import com.team.cops_and_robbers.common.ControllerTest;
 import com.team.cops_and_robbers.common.fixture.GameAreaFixture;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.common.fixture.UserFixture;
+import com.team.cops_and_robbers.game.area.domain.AreaType;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.CoordinatesRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameAreaRequest;
@@ -20,6 +21,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+
+import java.util.List;
 
 import static com.team.cops_and_robbers.common.fixture.GameFixture.FINISHED_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
@@ -77,10 +80,65 @@ class GameControllerTest extends ControllerTest {
             CoordinatesRequest farAwayJailCenter = new CoordinatesRequest(35.1796, 129.0756);
 
             GameAreaRequest invalidArea = new GameAreaRequest(
-                    playgroundCenter, 1000,
-                    farAwayJailCenter, 100
+                    AreaType.CIRCLE,
+                    new GameAreaRequest.CircleAreaRequest(playgroundCenter, 1000, farAwayJailCenter, 100),
+                    null
             );
 
+            GameCreateRequest request = new GameCreateRequest(invalidArea, createSettingsRequest());
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(400);
+        }
+
+        @Test
+        void POLYGON_타입에서_감옥이_플레이그라운드_범위_밖에_위치하면_400_BadRequest를_응답한다() {
+            // given
+            List<CoordinatesRequest> playgroundPolygon = List.of(
+                    new CoordinatesRequest(37.4979, 127.0276),
+                    new CoordinatesRequest(37.4979, 127.0296),
+                    new CoordinatesRequest(37.4999, 127.0296),
+                    new CoordinatesRequest(37.4999, 127.0276)
+            );
+            List<CoordinatesRequest> farAwayJailPolygon = List.of(
+                    new CoordinatesRequest(35.1796, 129.0756),
+                    new CoordinatesRequest(35.1796, 129.0776),
+                    new CoordinatesRequest(35.1816, 129.0776),
+                    new CoordinatesRequest(35.1816, 129.0756)
+            );
+
+            GameAreaRequest invalidArea = new GameAreaRequest(
+                    AreaType.POLYGON,
+                    null,
+                    new GameAreaRequest.PolygonAreaRequest(playgroundPolygon, farAwayJailPolygon)
+            );
+
+            GameCreateRequest request = new GameCreateRequest(invalidArea, createSettingsRequest());
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(400);
+        }
+
+        @Test
+        void areaType과_데이터가_불일치하면_400_BadRequest를_응답한다() {
+            // given: CIRCLE 타입인데 circle 데이터 없음
+            GameAreaRequest invalidArea = new GameAreaRequest(AreaType.CIRCLE, null, null);
             GameCreateRequest request = new GameCreateRequest(invalidArea, createSettingsRequest());
 
             // when
@@ -270,7 +328,7 @@ class GameControllerTest extends ControllerTest {
         @BeforeEach
         void setUp() {
             waitingGame = gameRepository.save(GameFixture.WAITING_GAME());
-            gameAreaRepository.save(GameAreaFixture.GAME_AREA(waitingGame));
+            gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(waitingGame));
             givenHost(waitingGame, host);
         }
 
@@ -292,8 +350,8 @@ class GameControllerTest extends ControllerTest {
             GameAreaUpdateResponse result = response.as(GameAreaUpdateResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-                softly.assertThat(result.playgroundRadiusInMeters()).isEqualTo(request.playgroundRadiusInMeters());
-                softly.assertThat(result.jailRadiusInMeters()).isEqualTo(request.jailRadiusInMeters());
+                softly.assertThat(result.circle().playgroundRadiusInMeters()).isEqualTo(request.circle().playgroundRadiusInMeters());
+                softly.assertThat(result.circle().jailRadiusInMeters()).isEqualTo(request.circle().jailRadiusInMeters());
             });
         }
 
@@ -301,10 +359,67 @@ class GameControllerTest extends ControllerTest {
         void 감옥이_플레이그라운드_밖에_위치하면_400_BadRequest를_응답한다() {
             // given
             GameAreaRequest request = new GameAreaRequest(
-                    new CoordinatesRequest(37.5665, 126.978),   // 서울 시청
-                    1000,
-                    new CoordinatesRequest(35.1796, 129.0756),  // 부산 - 명백히 밖
-                    100
+                    AreaType.CIRCLE,
+                    new GameAreaRequest.CircleAreaRequest(
+                            new CoordinatesRequest(37.5665, 126.978),   // 서울 시청
+                            1000,
+                            new CoordinatesRequest(35.1796, 129.0756),  // 부산 - 명백히 밖
+                            100
+                    ),
+                    null
+            );
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(request)
+                    .when()
+                    .put(AREA_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void areaType과_데이터가_불일치하면_400_BadRequest를_응답한다() {
+            // given: POLYGON 타입인데 polygon 데이터 없음
+            GameAreaRequest request = new GameAreaRequest(AreaType.POLYGON, null, null);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(request)
+                    .when()
+                    .put(AREA_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void POLYGON_타입에서_감옥이_플레이그라운드_밖에_위치하면_400_BadRequest를_응답한다() {
+            // given
+            List<CoordinatesRequest> playgroundPolygon = List.of(
+                    new CoordinatesRequest(37.4979, 127.0276),
+                    new CoordinatesRequest(37.4979, 127.0296),
+                    new CoordinatesRequest(37.4999, 127.0296),
+                    new CoordinatesRequest(37.4999, 127.0276)
+            );
+            List<CoordinatesRequest> farAwayJailPolygon = List.of(
+                    new CoordinatesRequest(35.1796, 129.0756),
+                    new CoordinatesRequest(35.1796, 129.0776),
+                    new CoordinatesRequest(35.1816, 129.0776),
+                    new CoordinatesRequest(35.1816, 129.0756)
+            );
+
+            GameAreaRequest request = new GameAreaRequest(
+                    AreaType.POLYGON,
+                    null,
+                    new GameAreaRequest.PolygonAreaRequest(playgroundPolygon, farAwayJailPolygon)
             );
 
             // when
@@ -344,7 +459,7 @@ class GameControllerTest extends ControllerTest {
         void 게임이_진행_중이면_400_BadRequest를_응답한다() {
             // given
             Game inProgressGame = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
-            gameAreaRepository.save(GameAreaFixture.GAME_AREA(inProgressGame));
+            gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(inProgressGame));
             User anotherHost = givenUser("anotherHost");
             String anotherHostToken = givenAccessToken(anotherHost);
             givenHost(inProgressGame, anotherHost);
@@ -406,7 +521,7 @@ class GameControllerTest extends ControllerTest {
         @BeforeEach
         void setUp() {
             waitingGame = gameRepository.save(GameFixture.WAITING_GAME());
-            gameAreaRepository.save(GameAreaFixture.GAME_AREA(waitingGame));
+            gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(waitingGame));
             givenHost(waitingGame, host);
         }
 
@@ -553,10 +668,14 @@ class GameControllerTest extends ControllerTest {
 
     private GameAreaRequest createAreaRequest() {
         return new GameAreaRequest(
-                new CoordinatesRequest(37.5665, 126.978),   // playgroundCenter
-                1000,   // playgroundRadius
-                new CoordinatesRequest(37.5665, 126.978),   // jailCenter
-                100 // jailRadius
+                AreaType.CIRCLE,
+                new GameAreaRequest.CircleAreaRequest(
+                        new CoordinatesRequest(37.5665, 126.978),   // playgroundCenter
+                        1000,   // playgroundRadius
+                        new CoordinatesRequest(37.5665, 126.978),   // jailCenter
+                        100     // jailRadius
+                ),
+                null
         );
     }
 

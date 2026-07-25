@@ -332,7 +332,7 @@ class GameParticipantControllerTest extends ControllerTest {
         @BeforeEach
         void setUp() {
             inProgressGame = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
-            gameAreaRepository.save(GameAreaFixture.GAME_AREA(inProgressGame));
+            gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(inProgressGame));
         }
 
         @Test
@@ -559,7 +559,7 @@ class GameParticipantControllerTest extends ControllerTest {
         @Test
         void 이벤트_게임은_마지막_경찰이_퇴장해도_게임이_종료되지_않는다() {
             // given
-            gameAreaRepository.save(GameAreaFixture.GAME_AREA(eventGame));
+            gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(eventGame));
 
             User police = givenUser("eventPolice");
             String policeToken = givenAccessToken(police);

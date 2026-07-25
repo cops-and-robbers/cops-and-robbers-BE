@@ -1,9 +1,11 @@
 package com.team.cops_and_robbers.game.game.application;
 
 import com.team.cops_and_robbers.common.ServiceUnitTest;
+import com.team.cops_and_robbers.common.dto.Coordinates;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.game.area.application.GameAreaService;
+import com.team.cops_and_robbers.game.area.application.dto.GameAreaData;
 import com.team.cops_and_robbers.game.area.domain.GameArea;
-import com.team.cops_and_robbers.game.area.domain.GameAreaDomainService;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameAreaUpdateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameCreateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameInfoCommand;
@@ -17,6 +19,7 @@ import com.team.cops_and_robbers.game.participant.exception.GameParticipantExcep
 import com.team.cops_and_robbers.play.lobby.application.LobbyEventFactory;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
 import com.team.cops_and_robbers.user.domain.User;
+import com.team.cops_and_robbers.user.exception.UserException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -25,7 +28,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.context.ApplicationEventPublisher;
 
-import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.GAME_AREA;
+import java.util.List;
+
+import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.CIRCLE_GAME_AREA;
+import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.POLYGON_GAME_AREA;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.FINISHED_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
@@ -33,12 +39,9 @@ import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.GU
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.HOST_PARTICIPANT;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER_WITHOUT_TERMS;
-import com.team.cops_and_robbers.user.exception.UserException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyDouble;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -50,7 +53,7 @@ class GameServiceTest extends ServiceUnitTest {
     private GameService gameService;
 
     @Mock
-    private GameAreaDomainService gameAreaDomainService;
+    private GameAreaService gameAreaService;
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
@@ -86,20 +89,42 @@ class GameServiceTest extends ServiceUnitTest {
     class CreateGame {
 
         @Test
-        void 게임_생성에_성공하면_결과를_반환한다() {
+        void CIRCLE_타입으로_게임_생성에_성공하면_결과를_반환한다() {
             // given
-            GameCreateCommand command = createGameCommand(host.getId());
+            GameCreateCommand command = createCircleGameCommand(host.getId());
 
             given(userRepository.getByUserId(host.getId())).willReturn(host);
             given(gameParticipantRepository.existsActiveGameByUserId(host.getId())).willReturn(false);
             given(gameRepository.save(any(Game.class))).willReturn(game);
             given(gameRepository.existsByInviteCode(anyString())).willReturn(false);
+            given(gameAreaService.buildGameArea(any(Game.class), any(GameAreaData.class))).willReturn(CIRCLE_GAME_AREA(game));
 
             // when
             gameService.createGame(command);
 
             // then
-            then(gameAreaDomainService).should().validateAreaContainment(anyDouble(), anyDouble(), anyInt(), anyDouble(), anyDouble(), anyInt());
+            then(gameAreaService).should().buildGameArea(any(Game.class), any(GameAreaData.class));
+            then(gameRepository).should().save(any(Game.class));
+            then(gameAreaRepository).should().save(any(GameArea.class));
+            then(gameParticipantRepository).should().save(any(GameParticipant.class));
+        }
+
+        @Test
+        void POLYGON_타입으로_게임_생성에_성공하면_결과를_반환한다() {
+            // given
+            GameCreateCommand command = createPolygonGameCommand(host.getId());
+
+            given(userRepository.getByUserId(host.getId())).willReturn(host);
+            given(gameParticipantRepository.existsActiveGameByUserId(host.getId())).willReturn(false);
+            given(gameRepository.save(any(Game.class))).willReturn(game);
+            given(gameRepository.existsByInviteCode(anyString())).willReturn(false);
+            given(gameAreaService.buildGameArea(any(Game.class), any(GameAreaData.class))).willReturn(POLYGON_GAME_AREA(game));
+
+            // when
+            gameService.createGame(command);
+
+            // then
+            then(gameAreaService).should().buildGameArea(any(Game.class), any(GameAreaData.class));
             then(gameRepository).should().save(any(Game.class));
             then(gameAreaRepository).should().save(any(GameArea.class));
             then(gameParticipantRepository).should().save(any(GameParticipant.class));
@@ -108,7 +133,7 @@ class GameServiceTest extends ServiceUnitTest {
         @Test
         void 이미_참여_중인_활성_게임이_있는_유저라면_예외가_발생한다() {
             // given
-            GameCreateCommand command = createGameCommand(host.getId());
+            GameCreateCommand command = createCircleGameCommand(host.getId());
 
             given(userRepository.getByUserId(host.getId())).willReturn(host);
             given(gameParticipantRepository.existsActiveGameByUserId(host.getId())).willReturn(true);
@@ -128,7 +153,7 @@ class GameServiceTest extends ServiceUnitTest {
             // given
             User unagreedHost = USER_WITHOUT_TERMS("unagreedHost");
             setId(unagreedHost, TEST_HOST_ID);
-            GameCreateCommand command = createGameCommand(unagreedHost.getId());
+            GameCreateCommand command = createCircleGameCommand(unagreedHost.getId());
 
             given(userRepository.getByUserId(unagreedHost.getId())).willReturn(unagreedHost);
 
@@ -213,37 +238,57 @@ class GameServiceTest extends ServiceUnitTest {
     @DisplayName("게임 영역 수정")
     class UpdateGameArea {
 
-        private GameAreaUpdateCommand command;
-        private GameArea gameArea;
+        private GameAreaUpdateCommand circleCommand;
+        private GameAreaUpdateCommand polygonCommand;
+        private GameArea circleGameArea;
+        private GameArea polygonGameArea;
 
         @BeforeEach
         void setUp() {
-            command = new GameAreaUpdateCommand(
+            circleCommand = new GameAreaUpdateCommand(
                     TEST_GAME_ID,
                     TEST_HOST_ID,
-                    37.4979,
-                    127.0276,
-                    1000,
-                    37.4979,
-                    127.0276,
-                    100
+                    new GameAreaData.CircleAreaData(37.4979, 127.0276, 1000, 37.4979, 127.0276, 100)
             );
-            gameArea = GAME_AREA(game);
+            polygonCommand = new GameAreaUpdateCommand(
+                    TEST_GAME_ID,
+                    TEST_HOST_ID,
+                    createPolygonAreaData()
+            );
+            circleGameArea = CIRCLE_GAME_AREA(game);
+            polygonGameArea = POLYGON_GAME_AREA(game);
         }
 
         @Test
-        void 영역_수정에_성공하면_결과를_반환한다() {
+        void CIRCLE_타입으로_영역_수정에_성공하면_결과를_반환한다() {
             // given
             GameParticipant hostParticipant = HOST_PARTICIPANT(game, host);
             given(gameParticipantRepository.getByGameIdAndUserIdWithGame(TEST_GAME_ID, TEST_HOST_ID)).willReturn(hostParticipant);
-            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(gameArea);
+            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(circleGameArea);
             given(lobbyEventFactory.createAreaUpdatedEvent(any(), any())).willReturn(lobbyEvent);
 
             // when
-            GameAreaUpdateResult result = gameService.updateGameArea(command);
+            GameAreaUpdateResult result = gameService.updateGameArea(circleCommand);
 
             // then
-            then(gameAreaDomainService).should().validateAreaContainment(anyDouble(), anyDouble(), anyInt(), anyDouble(), anyDouble(), anyInt());
+            then(gameAreaService).should().applyAreaUpdate(any(GameArea.class), any(GameAreaData.class));
+            then(eventPublisher).should().publishEvent(lobbyEvent);
+            assertThat(result).isNotNull();
+        }
+
+        @Test
+        void POLYGON_타입으로_영역_수정에_성공하면_결과를_반환한다() {
+            // given
+            GameParticipant hostParticipant = HOST_PARTICIPANT(game, host);
+            given(gameParticipantRepository.getByGameIdAndUserIdWithGame(TEST_GAME_ID, TEST_HOST_ID)).willReturn(hostParticipant);
+            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(polygonGameArea);
+            given(lobbyEventFactory.createAreaUpdatedEvent(any(), any())).willReturn(lobbyEvent);
+
+            // when
+            GameAreaUpdateResult result = gameService.updateGameArea(polygonCommand);
+
+            // then
+            then(gameAreaService).should().applyAreaUpdate(any(GameArea.class), any(GameAreaData.class));
             then(eventPublisher).should().publishEvent(lobbyEvent);
             assertThat(result).isNotNull();
         }
@@ -255,7 +300,7 @@ class GameServiceTest extends ServiceUnitTest {
             given(gameParticipantRepository.getByGameIdAndUserIdWithGame(TEST_GAME_ID, TEST_HOST_ID)).willReturn(guest);
 
             // when & then
-            assertThatThrownBy(() -> gameService.updateGameArea(command))
+            assertThatThrownBy(() -> gameService.updateGameArea(circleCommand))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessage(GameParticipantException.NOT_HOST.getDetail());
 
@@ -270,7 +315,7 @@ class GameServiceTest extends ServiceUnitTest {
             given(gameParticipantRepository.getByGameIdAndUserIdWithGame(TEST_GAME_ID, TEST_HOST_ID)).willReturn(hostParticipant);
 
             // when & then
-            assertThatThrownBy(() -> gameService.updateGameArea(command))
+            assertThatThrownBy(() -> gameService.updateGameArea(circleCommand))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessage(GameException.GAME_NOT_WAITING.getDetail());
 
@@ -340,15 +385,35 @@ class GameServiceTest extends ServiceUnitTest {
         }
     }
 
-    private GameCreateCommand createGameCommand(Long hostId) {
+    private GameCreateCommand createCircleGameCommand(Long hostId) {
         return new GameCreateCommand(
                 hostId,
-                37.5665, 126.978, 1000, // playgroundLat, playgroundLon, playgroundRadius
-                37.5665, 126.978, 100,  // jailLat, jailLon, jailRadius
-                30, // roundDurationMinutes
-                5,  // locationRevealIntervalMinutes
-                3,  // policeWaitMinutes
-                10  // maxParticipants
+                new GameAreaData.CircleAreaData(37.5665, 126.978, 1000, 37.5665, 126.978, 100),
+                30, 5, 3, 10
         );
+    }
+
+    private GameCreateCommand createPolygonGameCommand(Long hostId) {
+        return new GameCreateCommand(
+                hostId,
+                createPolygonAreaData(),
+                30, 5, 3, 10
+        );
+    }
+
+    private GameAreaData.PolygonAreaData createPolygonAreaData() {
+        List<Coordinates> playgroundPolygon = List.of(
+                new Coordinates(37.4979, 127.0276),
+                new Coordinates(37.4979, 127.0296),
+                new Coordinates(37.4999, 127.0296),
+                new Coordinates(37.4999, 127.0276)
+        );
+        List<Coordinates> jailPolygon = List.of(
+                new Coordinates(37.4983, 127.0280),
+                new Coordinates(37.4983, 127.0285),
+                new Coordinates(37.4988, 127.0285),
+                new Coordinates(37.4988, 127.0280)
+        );
+        return new GameAreaData.PolygonAreaData(playgroundPolygon, jailPolygon);
     }
 }

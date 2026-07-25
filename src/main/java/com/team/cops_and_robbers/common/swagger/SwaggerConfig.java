@@ -30,8 +30,18 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.12.0")
+                .version("2.13.0")
                 .description("""
+                        ## v2.13.0 업데이트 내역
+
+                        ### ✨ 신규
+                        - PUT /api/games/{gameId}/area 폴리곤 구역 타입 지원
+                          - areaType 필드 추가 (CIRCLE | POLYGON)
+                          - CIRCLE: 기존 원형 구역 (circle 객체 사용)
+                          - POLYGON: 다각형 구역 (polygon 객체 사용)
+                        - GET /api/games/{gameId}/area 응답 구조 변경
+                          - 기존 플랫 구조 → areaType + circle/polygon 중첩 구조
+
                         ## v2.12.0 업데이트 내역
 
                         ### ✨ 신규
