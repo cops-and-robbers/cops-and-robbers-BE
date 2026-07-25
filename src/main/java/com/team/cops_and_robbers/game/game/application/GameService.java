@@ -1,8 +1,8 @@
 package com.team.cops_and_robbers.game.game.application;
 
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.game.area.application.GameAreaService;
 import com.team.cops_and_robbers.game.area.domain.GameArea;
-import com.team.cops_and_robbers.game.area.domain.GameAreaDomainService;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameAreaUpdateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameCreateCommand;
@@ -24,10 +24,6 @@ import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.Point;
-import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,12 +39,9 @@ public class GameService {
     private final GameAreaRepository gameAreaRepository;
     private final GameParticipantRepository gameParticipantRepository;
     private final UserRepository userRepository;
-    private final GameAreaDomainService gameAreaDomainService;
+    private final GameAreaService gameAreaService;
     private final ApplicationEventPublisher eventPublisher;
     private final LobbyEventFactory lobbyEventFactory;
-
-    private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
-
 
     public GameInfoResult getGameInfo(GameInfoCommand command) {
         Game game = gameRepository.getByGameId(command.gameId());
@@ -63,7 +56,6 @@ public class GameService {
 
     @Transactional
     public GameCreateResult createGame(GameCreateCommand command) {
-
         User host = getUser(command.hostUserId());
         if (gameParticipantRepository.existsActiveGameByUserId(host.getId())) {
             throw new ApplicationException(GameParticipantException.ALREADY_PARTICIPATING);
@@ -80,7 +72,7 @@ public class GameService {
     private User getUser(Long userId) {
         User user = userRepository.getByUserId(userId);
         if (!user.hasAgreedRequiredTerms()) {
-            throw  new ApplicationException(UserException.REQUIRED_TERMS_NOT_AGREED);
+            throw new ApplicationException(UserException.REQUIRED_TERMS_NOT_AGREED);
         }
         return user;
     }
@@ -91,24 +83,7 @@ public class GameService {
     }
 
     private void saveGameArea(Game game, GameCreateCommand command) {
-
-        gameAreaDomainService.validateAreaContainment(
-                command.playgroundLongitude(), command.playgroundLatitude(), command.playgroundRadiusInMeters(),
-                command.jailLongitude(), command.jailLatitude(), command.jailRadiusInMeters()
-        );
-
-        Point playgroundCenter = geometryFactory.createPoint(
-                new Coordinate(command.playgroundLongitude(), command.playgroundLatitude()));
-        Point jailCenter = geometryFactory.createPoint(new Coordinate(command.jailLongitude(), command.jailLatitude()));
-
-        GameArea gameArea = GameArea.createGameArea(
-                game,
-                playgroundCenter,
-                command.playgroundRadiusInMeters(),
-                jailCenter,
-                command.jailRadiusInMeters()
-        );
-
+        GameArea gameArea = gameAreaService.buildGameArea(game, command.areaData());
         gameAreaRepository.save(gameArea);
     }
 
@@ -135,22 +110,8 @@ public class GameService {
         );
         validateGameEditable(participant);
 
-        gameAreaDomainService.validateAreaContainment(
-                command.playgroundLongitude(), command.playgroundLatitude(), command.playgroundRadiusInMeters(),
-                command.jailLongitude(), command.jailLatitude(), command.jailRadiusInMeters()
-        );
-
-        Point playgroundCenter = geometryFactory.createPoint(
-                new Coordinate(command.playgroundLongitude(), command.playgroundLatitude()));
-        Point jailCenter = geometryFactory.createPoint(new Coordinate(command.jailLongitude(), command.jailLatitude()));
-
         GameArea gameArea = gameAreaRepository.getByGameId(command.gameId());
-        gameArea.update(
-                playgroundCenter,
-                command.playgroundRadiusInMeters(),
-                jailCenter,
-                command.jailRadiusInMeters()
-        );
+        gameAreaService.applyAreaUpdate(gameArea, command.areaData());
 
         GameAreaUpdateResult result = GameAreaUpdateResult.from(gameArea);
 
@@ -166,7 +127,7 @@ public class GameService {
                 command.gameId(),
                 command.userId()
         );
-       validateGameEditable(participant);
+        validateGameEditable(participant);
 
         Game game = participant.getGame();
         game.updateSettings(

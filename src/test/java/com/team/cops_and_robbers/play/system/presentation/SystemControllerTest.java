@@ -44,7 +44,7 @@ class SystemControllerTest extends ControllerTest {
         robberToken = givenAccessToken(robber);
 
         game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
-        gameAreaRepository.save(GameAreaFixture.GAME_AREA(game));
+        gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(game));
         policeParticipant = givenPolice(game, police);
         robberParticipant = givenRobber(game, robber);
     }

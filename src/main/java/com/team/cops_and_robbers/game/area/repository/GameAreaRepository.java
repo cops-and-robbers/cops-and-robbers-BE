@@ -29,17 +29,31 @@ public interface GameAreaRepository extends JpaRepository <GameArea, Long>{
 
     @Query(value = """
         SELECT ST_DWithin(
-            st_makepoint(:lon, :lat)::geography,
+            st_makepoint(:longitude, :latitude)::geography,
             ga.playground_center::geography,
             ga.playground_radius_in_meters
         )
         FROM game_areas ga
         WHERE ga.game_id = :gameId
         """, nativeQuery = true)
-    boolean isPointInsidePlayground(
+    boolean isPointInsideCircle(
             @Param("gameId") Long gameId,
-            @Param("lon") double longitude,
-            @Param("lat") double latitude
+            @Param("longitude") double longitude,
+            @Param("latitude") double latitude
+    );
+
+    @Query(value = """
+        SELECT ST_Contains(
+            ga.playground_polygon,
+            ST_SetSRID(ST_Point(:longitude, :latitude), 4326)
+        )
+        FROM game_areas ga
+        WHERE ga.game_id = :gameId
+        """, nativeQuery = true)
+    boolean isPointInsidePolygon(
+            @Param("gameId") Long gameId,
+            @Param("longitude") double longitude,
+            @Param("latitude") double latitude
     );
 
     /**
@@ -61,5 +75,22 @@ public interface GameAreaRepository extends JpaRepository <GameArea, Long>{
             @Param("innerlon") double innerlon,
             @Param("innerlat") double innerlat,
             @Param("innerradius") int innerradius
+    );
+
+    /**
+     * postgis를 활용하여 내부 폴리곤이 외부 폴리곤에 완전히 포함되는지 검증합니다.
+     *
+     * @return 포함되면 true, 아니면 false
+     */
+    @Query(value = """
+    select
+        st_contains(
+            st_geomfromtext(:playground, 4326),
+            st_geomfromtext(:jail, 4326)
+        )
+    """, nativeQuery = true)
+    boolean isPolygonContained(
+            @Param("playground") String playground,
+            @Param("jail") String jail
     );
 }

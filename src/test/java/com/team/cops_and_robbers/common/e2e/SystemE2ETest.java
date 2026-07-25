@@ -56,7 +56,7 @@ class SystemE2ETest extends WebSocketE2ETest {
         User robberUser = givenUser("robber");
 
         Game game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
-        gameAreaRepository.save(GameAreaFixture.GAME_AREA(game));
+        gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(game));
         GameParticipant policeParticipant = givenPolice(game, policeUser);
         GameParticipant robberParticipant = givenRobber(game, robberUser);
 
