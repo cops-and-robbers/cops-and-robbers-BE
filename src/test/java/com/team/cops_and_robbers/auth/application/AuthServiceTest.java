@@ -1,6 +1,8 @@
 package com.team.cops_and_robbers.auth.application;
 
+import com.team.cops_and_robbers.auth.application.dto.command.AdminLoginCommand;
 import com.team.cops_and_robbers.auth.application.dto.command.LoginCommand;
+import com.team.cops_and_robbers.auth.application.dto.result.AdminLoginResult;
 import com.team.cops_and_robbers.auth.application.dto.result.LoginResult;
 import com.team.cops_and_robbers.auth.application.event.UserFcmTokenUpdatedEvent;
 import com.team.cops_and_robbers.auth.domain.Tokens;
@@ -10,6 +12,7 @@ import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.user.domain.DeviceType;
+import com.team.cops_and_robbers.user.domain.Role;
 import com.team.cops_and_robbers.user.domain.SocialType;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.domain.UserDevice;
@@ -251,6 +254,112 @@ class AuthServiceTest extends ServiceUnitTest {
             // then
             then(refreshTokenRepository).should(never()).delete(anyLong());
             then(userDeviceRepository).should(never()).deleteByUserId(anyLong());
+        }
+    }
+
+    @Nested
+    @DisplayName("어드민 웹 로그인")
+    class AdminLogin {
+
+        @Test
+        void ADMIN_권한_유저라면_디바이스_동기화_없이_토큰을_발급한다() {
+            // given
+            AdminLoginCommand command = new AdminLoginCommand(SocialType.KAKAO, "admin_token");
+            String socialId = "admin_social_123";
+
+            User adminUser = User.signUp(socialId, SocialType.KAKAO, "admin_nick");
+            setId(adminUser, 1L);
+            ReflectionTestUtils.setField(adminUser, "role", Role.ADMIN);
+
+            when(socialLoginStrategy.validateAndGetSocialId(anyString())).thenReturn(socialId);
+            when(userRepository.findBySocialIdAndSocialType(socialId, SocialType.KAKAO))
+                    .thenReturn(Optional.of(adminUser));
+            when(jwtTokenProvider.createAccessToken(any())).thenReturn("access");
+            when(jwtTokenProvider.createRefreshToken(any())).thenReturn("refresh");
+
+            // when
+            AdminLoginResult result = authService.adminLogin(command);
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(result.userId()).isEqualTo(1L);
+                softly.assertThat(result.nickname()).isEqualTo("admin_nick");
+                softly.assertThat(result.role()).isEqualTo(Role.ADMIN);
+                softly.assertThat(result.tokens().accessToken()).isEqualTo("access");
+                softly.assertThat(result.tokens().refreshToken()).isEqualTo("refresh");
+            });
+            then(userDeviceRepository).should(never()).findByUser(any());
+            then(userDeviceRepository).should(never()).save(any());
+        }
+
+        @Test
+        void ADMIN_권한이_아닌_유저라면_예외가_발생한다() {
+            // given
+            AdminLoginCommand command = new AdminLoginCommand(SocialType.KAKAO, "user_token");
+            String socialId = "user_social_123";
+
+            User normalUser = User.signUp(socialId, SocialType.KAKAO, "normal_nick");
+            setId(normalUser, 2L);
+
+            when(socialLoginStrategy.validateAndGetSocialId(anyString())).thenReturn(socialId);
+            when(userRepository.findBySocialIdAndSocialType(socialId, SocialType.KAKAO))
+                    .thenReturn(Optional.of(normalUser));
+
+            // when & then
+            assertThatThrownBy(() -> authService.adminLogin(command))
+                    .isInstanceOf(ApplicationException.class);
+
+            then(jwtTokenProvider).should(never()).createAccessToken(any());
+        }
+
+        @Test
+        void 미가입_유저라면_예외가_발생한다() {
+            // given
+            AdminLoginCommand command = new AdminLoginCommand(SocialType.KAKAO, "unknown_token");
+            String socialId = "unknown_social_123";
+
+            when(socialLoginStrategy.validateAndGetSocialId(anyString())).thenReturn(socialId);
+            when(userRepository.findBySocialIdAndSocialType(socialId, SocialType.KAKAO))
+                    .thenReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> authService.adminLogin(command))
+                    .isInstanceOf(ApplicationException.class);
+
+            then(jwtTokenProvider).should(never()).createAccessToken(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("어드민 웹 로그아웃")
+    class AdminLogout {
+
+        @Test
+        void 유효한_토큰으로_로그아웃_시_리프레시_토큰만_삭제하고_기기_정보는_유지한다() {
+            // given
+            String validToken = "valid_refresh_token";
+            Long userId = 1L;
+            when(jwtTokenProvider.getUserIdFromRefreshTokenLogout(validToken)).thenReturn(Optional.of(userId));
+
+            // when
+            authService.adminLogout(validToken);
+
+            // then
+            then(refreshTokenRepository).should().delete(userId);
+            then(userDeviceRepository).should(never()).deleteByUserId(anyLong());
+        }
+
+        @Test
+        void 유효하지_않은_토큰으로_로그아웃_시_아무_일도_일어나지_않는다() {
+            // given
+            String invalidToken = "invalid_token";
+            when(jwtTokenProvider.getUserIdFromRefreshTokenLogout(invalidToken)).thenReturn(Optional.empty());
+
+            // when
+            authService.adminLogout(invalidToken);
+
+            // then
+            then(refreshTokenRepository).should(never()).delete(anyLong());
         }
     }
 
