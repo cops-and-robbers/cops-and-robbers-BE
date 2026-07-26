@@ -46,6 +46,16 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedMethods("POST", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
+
+        registry.addMapping("/api/auth/**")
+                .allowedOrigins(
+                        "http://localhost:3000",
+                        "https://copsnro66ers.site",
+                        "https://admin.copsnro66ers.site"
+                )
+                .allowedMethods("POST", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 
     @Override

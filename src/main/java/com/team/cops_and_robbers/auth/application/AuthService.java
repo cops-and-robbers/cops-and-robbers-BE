@@ -1,7 +1,9 @@
 package com.team.cops_and_robbers.auth.application;
 
 
+import com.team.cops_and_robbers.auth.application.dto.command.AdminLoginCommand;
 import com.team.cops_and_robbers.auth.application.dto.command.LoginCommand;
+import com.team.cops_and_robbers.auth.application.dto.result.AdminLoginResult;
 import com.team.cops_and_robbers.auth.application.dto.result.LoginResult;
 import com.team.cops_and_robbers.auth.application.event.UserFcmTokenUpdatedEvent;
 import com.team.cops_and_robbers.auth.domain.Tokens;
@@ -159,6 +161,32 @@ public class AuthService {
                     refreshTokenRepository.delete(userId);
                     userDeviceRepository.deleteByUserId(userId);
                 });
+    }
+
+    /**
+     * 5. 어드민 웹 로그인
+     * - device sync 없이 토큰만 발급
+     * - ADMIN 권한이 아닌 유저 또는 미가입 유저는 403
+     */
+    @Transactional(readOnly = true)
+    public AdminLoginResult adminLogin(AdminLoginCommand command) {
+        String socialId = getSocialId(command.socialType(), command.idToken());
+
+        User user = userRepository.findBySocialIdAndSocialType(socialId, command.socialType())
+                .filter(User::isAdmin)
+                .orElseThrow(() -> new ApplicationException(AuthException.FORBIDDEN_ADMIN_ONLY));
+
+        Tokens tokens = issueTokens(user);
+        return AdminLoginResult.of(user, tokens);
+    }
+
+    /**
+     * 6. 어드민 웹 로그아웃
+     * - refreshToken만 삭제 (device 레코드는 유지하여 앱 푸시에 영향 없음)
+     */
+    public void adminLogout(String refreshToken) {
+        jwtTokenProvider.getUserIdFromRefreshTokenLogout(refreshToken)
+                .ifPresent(refreshTokenRepository::delete);
     }
 
     private record AuthUserData(
