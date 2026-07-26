@@ -12,7 +12,6 @@ import java.util.List;
 
 public record GameAreaRequest(
         @Schema(description = "구역 타입 (CIRCLE | POLYGON)")
-        @NotNull(message = "구역 타입을 입력해주세요.")
         AreaType areaType,
 
         @Schema(description = "원형 구역 데이터 (CIRCLE 전용)")
@@ -21,8 +20,18 @@ public record GameAreaRequest(
 
         @Schema(description = "다각형 구역 데이터 (POLYGON 전용)")
         @Valid
-        PolygonAreaRequest polygon
+        PolygonAreaRequest polygon,
+
+        // Deprecated: 구버전 앱(v2.12.0) 하위호환용 / areaType == null 일 때만 유효
+        @Valid CoordinatesRequest playgroundCenter,
+        Integer playgroundRadiusInMeters,
+        @Valid CoordinatesRequest jailCenter,
+        Integer jailRadiusInMeters
 ) {
+
+    public GameAreaRequest(AreaType areaType, CircleAreaRequest circle, PolygonAreaRequest polygon) {
+        this(areaType, circle, polygon, null, null, null, null);
+    }
 
     @AssertTrue(message = "구역 타입에 맞는 데이터를 입력해주세요.")
     public boolean isAreaDataConsistent() {
@@ -32,6 +41,16 @@ public record GameAreaRequest(
             case CIRCLE -> circle != null;
             case POLYGON -> polygon != null;
         };
+    }
+
+    @AssertTrue(message = "구버전 요청의 구역 데이터가 올바르지 않습니다.")
+    public boolean isLegacyAreaDataValid() {
+        if (areaType != null) return true;
+        if (playgroundCenter == null) return false;
+        if (playgroundRadiusInMeters == null || playgroundRadiusInMeters < 10) return false;
+        if (jailCenter == null) return false;
+        if (jailRadiusInMeters == null || jailRadiusInMeters < 5) return false;
+        return true;
     }
 
     public record CircleAreaRequest(

@@ -13,7 +13,21 @@ public record GameAreaUpdateCommand(
         GameAreaData areaData
 ) {
     public static GameAreaUpdateCommand of(Long gameId, Long userId, GameAreaRequest area) {
-        GameAreaData areaData = switch (area.areaType()) {
+        return new GameAreaUpdateCommand(gameId, userId, resolveAreaData(area));
+    }
+
+    private static GameAreaData resolveAreaData(GameAreaRequest area) {
+        if (area.areaType() == null) {
+            return new GameAreaData.CircleAreaData(
+                    area.playgroundCenter().latitude(),
+                    area.playgroundCenter().longitude(),
+                    area.playgroundRadiusInMeters(),
+                    area.jailCenter().latitude(),
+                    area.jailCenter().longitude(),
+                    area.jailRadiusInMeters()
+            );
+        }
+        return switch (area.areaType()) {
             case CIRCLE -> new GameAreaData.CircleAreaData(
                     area.circle().playgroundCenter().latitude(),
                     area.circle().playgroundCenter().longitude(),
@@ -27,7 +41,6 @@ public record GameAreaUpdateCommand(
                     toCoordinatesList(area.polygon().jailPolygon())
             );
         };
-        return new GameAreaUpdateCommand(gameId, userId, areaData);
     }
 
     private static List<Coordinates> toCoordinatesList(List<CoordinatesRequest> requests) {
