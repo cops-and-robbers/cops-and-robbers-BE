@@ -29,7 +29,28 @@ public record GameCreateCommand(
     }
 
     public static GameCreateCommand of(Long hostUserId, GameAreaRequest area, GameSettingsRequest settings) {
-        GameAreaData areaData = switch (area.areaType()) {
+        return new GameCreateCommand(
+                hostUserId,
+                resolveAreaData(area),
+                settings.roundDurationMinutes(),
+                settings.locationRevealIntervalMinutes(),
+                settings.policeWaitMinutes(),
+                settings.maxParticipants()
+        );
+    }
+
+    private static GameAreaData resolveAreaData(GameAreaRequest area) {
+        if (area.areaType() == null) {
+            return new GameAreaData.CircleAreaData(
+                    area.playgroundCenter().latitude(),
+                    area.playgroundCenter().longitude(),
+                    area.playgroundRadiusInMeters(),
+                    area.jailCenter().latitude(),
+                    area.jailCenter().longitude(),
+                    area.jailRadiusInMeters()
+            );
+        }
+        return switch (area.areaType()) {
             case CIRCLE -> new GameAreaData.CircleAreaData(
                     area.circle().playgroundCenter().latitude(),
                     area.circle().playgroundCenter().longitude(),
@@ -43,14 +64,6 @@ public record GameCreateCommand(
                     toCoordinatesList(area.polygon().jailPolygon())
             );
         };
-        return new GameCreateCommand(
-                hostUserId,
-                areaData,
-                settings.roundDurationMinutes(),
-                settings.locationRevealIntervalMinutes(),
-                settings.policeWaitMinutes(),
-                settings.maxParticipants()
-        );
     }
 
     private static List<Coordinates> toCoordinatesList(List<CoordinatesRequest> requests) {
