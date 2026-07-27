@@ -2,7 +2,7 @@ name: ✅ CI
 
 on:
   pull_request:
-    branches: [ "main" ] # main으로 향하는 PR일 경우 실행
+    branches: [ "main", "dev" ]
 
 jobs:
   test:
