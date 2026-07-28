@@ -55,7 +55,7 @@ log "INFO" "CONTAINER_START_SUCCESS"
 
 
 # 5. 헬스체크
-MAX_RETRY=20
+MAX_RETRY=36
 RETRY_INTERVAL=5
 
 for i in $(seq 1 $MAX_RETRY); do
