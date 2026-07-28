@@ -41,7 +41,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                         "http://localhost:3000",
                         "https://copsnro66ers.site",
-                        "https://admin.copsnro66ers.site"
+                        "https://admin.copsnro66ers.site",
+                        "https://dev-api.copsnro66ers.site"
                 )
                 .allowedMethods("POST", "OPTIONS")
                 .allowedHeaders("*")
@@ -51,7 +52,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                         "http://localhost:3000",
                         "https://copsnro66ers.site",
-                        "https://admin.copsnro66ers.site"
+                        "https://admin.copsnro66ers.site",
+                        "https://dev-api.copsnro66ers.site"
                 )
                 .allowedMethods("POST", "OPTIONS")
                 .allowedHeaders("*")
