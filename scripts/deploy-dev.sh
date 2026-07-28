@@ -31,14 +31,9 @@ chmod 600 .env
 log "INFO" "ENV_CREATE_SUCCESS"
 
 
-# 2. cops-network 상태 확인
-# -> 수동 생성된 네트워크가 있으면 제거 후 compose가 재생성하도록 위임
-NETWORK_LABEL=$(sudo docker network inspect cops-network --format '{{index .Labels "com.docker.compose.network"}}' 2>/dev/null || echo "NOT_FOUND")
-if [ "$NETWORK_LABEL" = "" ]; then
-    log "INFO" "NETWORK_RECREATE_START"
-    sudo docker network rm cops-network
-    log "INFO" "NETWORK_RECREATE_SUCCESS"
-fi
+# 2. cops-network 확인 및 생성
+sudo docker network create cops-network 2>/dev/null || true
+log "INFO" "NETWORK_READY"
 
 
 # 3. Infra 상태 확인
