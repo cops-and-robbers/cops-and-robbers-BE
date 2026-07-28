@@ -32,36 +32,36 @@ jobs:
       - name: 🐳 Docker Hub 로그인
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DEV_DOCKER_USERNAME }}
-          password: ${{ secrets.DEV_DOCKER_PASSWORD }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: 📦 Docker 이미지 빌드 및 업로드
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
-          tags: ${{ secrets.DEV_DOCKER_USERNAME }}/cops-and-robbers:dev
+          tags: ${{ secrets.DOCKER_USERNAME }}/cops-and-robbers:dev
 
       - name: 🚚 배포 파일 전송 (Compose & Script)
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.DEV_EC2_HOST }}
-          username: ${{ secrets.DEV_EC2_USER }}
-          key: ${{ secrets.DEV_EC2_KEY }}
+          host: ${{ secrets.DEV_HOST }}
+          username: ${{ secrets.DEV_USER }}
+          key: ${{ secrets.DEV_KEY }}
           source: "docker-compose-dev-server.yml,docker-compose-infra.yml,scripts/deploy-dev.sh,scripts/logging.sh"
-          target: "/home/${{ secrets.DEV_EC2_USER }}/cops-and-robbers/"
+          target: "/home/${{ secrets.DEV_USER }}/cops-and-robbers/"
 
       - name: 🚀 EC2 배포 및 실행
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.DEV_EC2_HOST }}
-          username: ${{ secrets.DEV_EC2_USER }}
-          key: ${{ secrets.DEV_EC2_KEY }}
+          host: ${{ secrets.DEV_HOST }}
+          username: ${{ secrets.DEV_USER }}
+          key: ${{ secrets.DEV_KEY }}
           envs: DB_URL,DB_USERNAME,DB_PASSWORD,REDIS_PASSWORD,ACCESS_SECRET_KEY,REFRESH_SECRET_KEY,ACCESS_EXPIRATION,REFRESH_EXPIRATION,ENCRYPTION_KEY,DISCORD_WEBHOOK_BUG
           script: |
-            chmod +x /home/${{ secrets.DEV_EC2_USER }}/cops-and-robbers/scripts/deploy-dev.sh
+            chmod +x /home/${{ secrets.DEV_USER }}/cops-and-robbers/scripts/deploy-dev.sh
 
-            /home/${{ secrets.DEV_EC2_USER }}/cops-and-robbers/scripts/deploy-dev.sh
+            /home/${{ secrets.DEV_USER }}/cops-and-robbers/scripts/deploy-dev.sh
         env:
           DB_URL: ${{ secrets.DEV_DB_URL }}
           DB_USERNAME: ${{ secrets.DEV_DB_USERNAME }}
@@ -69,7 +69,7 @@ jobs:
           REDIS_PASSWORD: ${{ secrets.DEV_REDIS_PASSWORD }}
           ACCESS_SECRET_KEY: ${{ secrets.DEV_ACCESS_SECRET_KEY }}
           REFRESH_SECRET_KEY: ${{ secrets.DEV_REFRESH_SECRET_KEY }}
-          ACCESS_EXPIRATION: ${{ secrets.DEV_ACCESS_EXPIRATION }}
-          REFRESH_EXPIRATION: ${{ secrets.DEV_REFRESH_EXPIRATION }}
+          ACCESS_EXPIRATION: ${{ secrets.ACCESS_EXPIRATION }}
+          REFRESH_EXPIRATION: ${{ secrets.REFRESH_EXPIRATION }}
           ENCRYPTION_KEY: ${{ secrets.DEV_ENCRYPTION_KEY }}
-          DISCORD_WEBHOOK_BUG: ${{ secrets.DEV_DISCORD_WEBHOOK_BUG }}
+          DISCORD_WEBHOOK_BUG: ${{ secrets.DISCORD_WEBHOOK_BUG }}
