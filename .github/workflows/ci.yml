@@ -40,6 +40,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: 🚫 main PR 소스 브랜치 검증
+        if: github.base_ref == 'main'
+        run: |
+          SOURCE="${{ github.head_ref }}"
+          if [[ "$SOURCE" == "dev" || "$SOURCE" == */hotfix-* ]]; then
+            echo "✅ 허용된 브랜치: $SOURCE"
+          else
+            echo "❌ main으로는 dev 또는 {name}/hotfix-{이슈번호} 브랜치만 허용합니다."
+            echo "개인 브랜치는 dev로 먼저 PR 올려주세요."
+            exit 1
+          fi
+
       - name: 📋 Swagger 버전 업데이트 검증
         run: |
           git fetch origin ${{ github.base_ref }}
