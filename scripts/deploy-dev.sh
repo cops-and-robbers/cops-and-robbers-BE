@@ -31,16 +31,21 @@ chmod 600 .env
 log "INFO" "ENV_CREATE_SUCCESS"
 
 
-# 2. Infra 상태 확인
+# 2. cops-network 확인 및 생성
+sudo docker network create cops-network 2>/dev/null || true
+log "INFO" "NETWORK_READY"
+
+
+# 3. Infra 상태 확인
 # -> Redis 내려가 있을 때만 재가동
-if ! sudo docker ps --format '{{.Names}}' | grep -q '^cops-and-robbers-redis$'; then
+if ! sudo docker ps --format '{{.Names}}' | grep -q '^cops-dev-redis$'; then
     log "INFO" "REDIS_NOT_RUNNING starting infra"
-    sudo docker compose -f docker-compose-infra.yml up -d
+    sudo docker compose -f docker-compose-infra-dev.yml up -d
     log "INFO" "INFRA_START_SUCCESS"
 fi
 
 
-# 3. 이미지 Pull 및 컨테이너 재시작
+# 4. 이미지 Pull 및 컨테이너 재시작
 sudo docker compose -f docker-compose-dev-server.yml pull
 log "INFO" "DOCKER_PULL_SUCCESS"
 
@@ -49,8 +54,8 @@ sudo docker compose -f docker-compose-dev-server.yml up -d
 log "INFO" "CONTAINER_START_SUCCESS"
 
 
-# 4. 헬스체크
-MAX_RETRY=20
+# 5. 헬스체크
+MAX_RETRY=36
 RETRY_INTERVAL=5
 
 for i in $(seq 1 $MAX_RETRY); do
@@ -73,7 +78,7 @@ for i in $(seq 1 $MAX_RETRY); do
 done
 
 
-# 5. 정리
+# 6. 정리
 sudo docker image prune -f
 rm -f .env
 finish_logging "INFO"

@@ -23,7 +23,7 @@ trap 'log "ERROR" "FAILED cmd=$BASH_COMMAND line=$LINENO"' ERR
 
 
 # 1. .env 작성
-# -> CI 환경변수로 재생성. 보안상 배포 완료 후 8번에서 삭제
+# -> CI 환경변수로 재생성. 보안상 배포 완료 후 9번에서 삭제
 if [ -f .env ]; then
     cp .env .env.backup
     log "INFO" "ENV_BACKUP_SUCCESS"
@@ -44,8 +44,13 @@ chmod 600 .env
 log "INFO" "ENV_CREATE_SUCCESS"
 
 
-# 2. Infra 상태 확인
-# ->  Redis 내려가 있을 때만 재가동
+# 2. cops-network 확인 및 생성
+sudo docker network create cops-network 2>/dev/null || true
+log "INFO" "NETWORK_READY"
+
+
+# 3. Infra 상태 확인
+# -> Redis 내려가 있을 때만 재가동
 if ! sudo docker ps --format '{{.Names}}' | grep -q '^cops-and-robbers-redis$'; then
     log "INFO" "REDIS_NOT_RUNNING starting infra"
     sudo docker compose -f docker-compose-infra.yml up -d
@@ -53,7 +58,7 @@ if ! sudo docker ps --format '{{.Names}}' | grep -q '^cops-and-robbers-redis$'; 
 fi
 
 
-# 3. Active 감지
+# 4. Active 감지
 # -> 현재 가동중인 색상 판단 및 변수 세팅 (target: 새로 배포할 색상 / current: 기존 배포 색상)
 ACTIVE_LINK=$(readlink "$UPSTREAM_ACTIVE" 2>/dev/null || echo "")
 
@@ -85,7 +90,7 @@ fi
 log "INFO" "DEPLOY_START current=$CURRENT target=$TARGET"
 
 
-# 4. Target 컨테이너 시작
+# 5. Target 컨테이너 시작
 # -> target 포트를 점유한 잔여 컨테이너가 있다면 정리 후 기동 (현재 실행중인 current는 내리지 않음)
 sudo docker compose -f "docker-compose-${TARGET}.yml" pull
 log "INFO" "DOCKER_PULL_SUCCESS target=$TARGET"
@@ -96,7 +101,7 @@ sudo docker compose -f "docker-compose-${TARGET}.yml" up -d
 log "INFO" "TARGET_START_SUCCESS target=$TARGET"
 
 
-# 5. 헬스체크
+# 6. 헬스체크
 # -> Actuator health로 target 가동 확인
 MAX_RETRY=20
 RETRY_INTERVAL=5
@@ -120,7 +125,7 @@ for i in $(seq 1 $MAX_RETRY); do
 done
 
 
-# 6. Nginx 전환
+# 7. Nginx 전환
 # -> 심볼릭 링크를 target으로 교체 후 reload
 sudo ln -sfn "$NGINX_DIR/upstream.${TARGET}.conf" "$UPSTREAM_ACTIVE"
 
@@ -137,7 +142,7 @@ sudo nginx -s reload
 log "INFO" "NGINX_RELOAD_SUCCESS target=$TARGET port=$TARGET_PORT"
 
 
-# 7. Active Graceful 종료
+# 8. Active Graceful 종료
 # -> SIGTERM 후 40초 대기 (Spring shutdown 30s + 여유 10s)
 if [ "$CURRENT" = "blue" ] || [ "$CURRENT" = "green" ]; then
     sudo docker compose -f "docker-compose-${CURRENT}.yml" stop -t 40 || true
@@ -150,7 +155,7 @@ elif [ "$CURRENT" = "legacy" ]; then
 fi
 
 
-# 8. 불필요한 것들 정리
+# 9. 불필요한 것들 정리
 sudo docker image prune -f
 rm -f .env .env.backup
 finish_logging "INFO"
