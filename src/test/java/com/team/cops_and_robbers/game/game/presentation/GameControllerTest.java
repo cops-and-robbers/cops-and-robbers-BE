@@ -662,6 +662,77 @@ class GameControllerTest extends ControllerTest {
         }
     }
 
+    // Deprecated: v2.13.0 강제 업데이트 적용 후 이 클래스 전체 제거
+    @Nested
+    @DisplayName("[하위호환] 레거시 구버전 요청")
+    class LegacyAreaCompatibility {
+
+        @Test
+        void areaType_없는_평면_요청으로_게임_방_생성_성공() {
+            // given
+            GameAreaRequest legacyArea = new GameAreaRequest(
+                    null, null, null,
+                    new CoordinatesRequest(37.5665, 126.978),
+                    1000,
+                    new CoordinatesRequest(37.5665, 126.978),
+                    100
+            );
+            GameCreateRequest request = new GameCreateRequest(legacyArea, createSettingsRequest());
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(201);
+        }
+
+        @Nested
+        class UpdateGameArea {
+
+            private Game waitingGame;
+
+            @BeforeEach
+            void setUp() {
+                waitingGame = gameRepository.save(GameFixture.WAITING_GAME());
+                gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(waitingGame));
+                givenHost(waitingGame, host);
+            }
+
+            @Test
+            void areaType_없는_평면_요청으로_구역_수정_성공() {
+                // given
+                GameAreaRequest legacyArea = new GameAreaRequest(
+                        null, null, null,
+                        new CoordinatesRequest(37.5665, 126.978),
+                        500,
+                        new CoordinatesRequest(37.5665, 126.978),
+                        50
+                );
+
+                // when
+                ExtractableResponse<Response> response = authenticated(accessToken)
+                        .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                        .body(legacyArea)
+                        .when()
+                        .put(AREA_URL)
+                        .then()
+                        .extract();
+
+                // then
+                assertSoftly(softly -> {
+                    softly.assertThat(response.statusCode()).isEqualTo(200);
+                    softly.assertThat(response.jsonPath().getInt("circle.playgroundRadiusInMeters")).isEqualTo(500);
+                    softly.assertThat(response.jsonPath().getInt("playgroundRadiusInMeters")).isEqualTo(500);
+                });
+            }
+        }
+    }
+
     private GameCreateRequest createGameCreateRequest() {
         return new GameCreateRequest(createAreaRequest(), createSettingsRequest());
     }

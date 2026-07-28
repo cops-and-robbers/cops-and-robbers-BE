@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  cops-and-robbers-dev:
+    image: copsnro66ers/cops-and-robbers:dev
+    container_name: cops-and-robbers-dev
+    ports:
+      - "8080:8080"
+      - "9091:9091"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      TZ: Asia/Seoul
+
+      FIREBASE_KEY_PATH: /app/firebase-key.json
+
+      DB_URL: ${DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      REDIS_HOST: cops-and-robbers-redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      ACCESS_SECRET_KEY: ${ACCESS_SECRET_KEY}
+      REFRESH_SECRET_KEY: ${REFRESH_SECRET_KEY}
+      ACCESS_EXPIRATION: ${ACCESS_EXPIRATION}
+      REFRESH_EXPIRATION: ${REFRESH_EXPIRATION}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      DISCORD_WEBHOOK_BUG: ${DISCORD_WEBHOOK_BUG}
+
+    volumes:
+      - ./firebase-key.json:/app/firebase-key.json
+      - /home/ubuntu/log:/log
+
+    networks:
+      - cops-network
+    restart: unless-stopped
+
+networks:
+  cops-network:
+    external: true
