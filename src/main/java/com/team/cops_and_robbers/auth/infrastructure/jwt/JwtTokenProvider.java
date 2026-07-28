@@ -44,6 +44,7 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .setSubject(user.getId().toString())
+                .claim("role", user.getRole().name())
                 .setIssuedAt(now)
                 .setExpiration(expirationTime)
                 .signWith(accessKey)
@@ -55,6 +56,10 @@ public class JwtTokenProvider {
                 getAccessClaims(accessToken)
                         .getSubject()
         );
+    }
+
+    public String getRoleFromAccessToken(String accessToken) {
+        return getAccessClaims(accessToken).get("role", String.class);
     }
 
     private Claims getAccessClaims(String accessToken) {

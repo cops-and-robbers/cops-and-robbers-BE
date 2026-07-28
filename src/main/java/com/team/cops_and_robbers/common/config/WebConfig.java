@@ -1,10 +1,12 @@
 package com.team.cops_and_robbers.common.config;
 
+import com.team.cops_and_robbers.admin.presentation.interceptor.AdminInterceptor;
 import com.team.cops_and_robbers.auth.presentation.interceptor.AuthInterceptor;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUserArgumentResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -15,6 +17,7 @@ import java.util.List;
 public class WebConfig implements WebMvcConfigurer {
 
     private final AuthInterceptor authInterceptor;
+    private final AdminInterceptor adminInterceptor;
     private final LoginUserArgumentResolver loginUserArgumentResolver;
 
     @Override
@@ -27,6 +30,32 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/user/check-nickname",
                         "/actuator/health"
                 );
+
+        registry.addInterceptor(adminInterceptor)
+                .addPathPatterns("/graphql");
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/graphql")
+                .allowedOrigins(
+                        "http://localhost:3000",
+                        "https://copsnro66ers.site",
+                        "https://admin.copsnro66ers.site"
+                )
+                .allowedMethods("POST", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
+
+        registry.addMapping("/api/auth/**")
+                .allowedOrigins(
+                        "http://localhost:3000",
+                        "https://copsnro66ers.site",
+                        "https://admin.copsnro66ers.site"
+                )
+                .allowedMethods("POST", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 
     @Override

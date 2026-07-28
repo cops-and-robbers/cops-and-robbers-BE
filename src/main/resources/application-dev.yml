@@ -13,6 +13,10 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
 
+  graphql:
+    graphiql:
+      enabled: true
+
   flyway:
     enabled: true
     out-of-order: true
