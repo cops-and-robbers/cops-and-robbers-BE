@@ -34,6 +34,9 @@ decorator:
       multiline: true
       log-format: "\n\t[%(category)] %(executionTime)ms\n\t%(sqlSingleLine)"
 
+server:
+  forward-headers-strategy: framework
+
 logging:
   level:
     org.hibernate.SQL: off
