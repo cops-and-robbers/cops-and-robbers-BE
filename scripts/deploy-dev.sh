@@ -31,7 +31,17 @@ chmod 600 .env
 log "INFO" "ENV_CREATE_SUCCESS"
 
 
-# 2. Infra 상태 확인
+# 2. cops-network 상태 확인
+# -> 수동 생성된 네트워크가 있으면 제거 후 compose가 재생성하도록 위임
+NETWORK_LABEL=$(sudo docker network inspect cops-network --format '{{index .Labels "com.docker.compose.network"}}' 2>/dev/null || echo "NOT_FOUND")
+if [ "$NETWORK_LABEL" = "" ]; then
+    log "INFO" "NETWORK_RECREATE_START"
+    sudo docker network rm cops-network
+    log "INFO" "NETWORK_RECREATE_SUCCESS"
+fi
+
+
+# 3. Infra 상태 확인
 # -> Redis 내려가 있을 때만 재가동
 if ! sudo docker ps --format '{{.Names}}' | grep -q '^cops-and-robbers-redis$'; then
     log "INFO" "REDIS_NOT_RUNNING starting infra"
@@ -40,7 +50,7 @@ if ! sudo docker ps --format '{{.Names}}' | grep -q '^cops-and-robbers-redis$'; 
 fi
 
 
-# 3. 이미지 Pull 및 컨테이너 재시작
+# 4. 이미지 Pull 및 컨테이너 재시작
 sudo docker compose -f docker-compose-dev-server.yml pull
 log "INFO" "DOCKER_PULL_SUCCESS"
 
@@ -49,7 +59,7 @@ sudo docker compose -f docker-compose-dev-server.yml up -d
 log "INFO" "CONTAINER_START_SUCCESS"
 
 
-# 4. 헬스체크
+# 5. 헬스체크
 MAX_RETRY=20
 RETRY_INTERVAL=5
 
@@ -73,7 +83,7 @@ for i in $(seq 1 $MAX_RETRY); do
 done
 
 
-# 5. 정리
+# 6. 정리
 sudo docker image prune -f
 rm -f .env
 finish_logging "INFO"
