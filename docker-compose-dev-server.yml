@@ -17,7 +17,7 @@ services:
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
 
-      REDIS_HOST: cops-and-robbers-redis
+      REDIS_HOST: cops-dev-redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
 

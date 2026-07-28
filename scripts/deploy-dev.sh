@@ -38,9 +38,9 @@ log "INFO" "NETWORK_READY"
 
 # 3. Infra 상태 확인
 # -> Redis 내려가 있을 때만 재가동
-if ! sudo docker ps --format '{{.Names}}' | grep -q '^cops-and-robbers-redis$'; then
+if ! sudo docker ps --format '{{.Names}}' | grep -q '^cops-dev-redis$'; then
     log "INFO" "REDIS_NOT_RUNNING starting infra"
-    sudo docker compose -f docker-compose-infra.yml up -d
+    sudo docker compose -f docker-compose-infra-dev.yml up -d
     log "INFO" "INFRA_START_SUCCESS"
 fi
 
