@@ -10,6 +10,7 @@ source "$(dirname "$0")/logging.sh"
 cd "$DEPLOY_DIR"
 init_logging
 
+trap 'rm -f .env' EXIT
 trap 'log "ERROR" "FAILED cmd=$BASH_COMMAND line=$LINENO"' ERR
 
 
