@@ -2,7 +2,7 @@ name: 👮🏻 Dev CI/CD 파이프라인 🥷
 
 on:
   push:
-    branches: [ "dev" ]
+    branches: [ "dev", "sanghee/feat-121-dev-deploy-pipeline" ] # TODO: 배포 검증 후 삭제
 
 jobs:
   deploy:
