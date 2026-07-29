@@ -272,6 +272,100 @@ class SystemControllerTest extends ControllerTest {
     }
 
     @Nested
+    @DisplayName("폴리곤 영역 게임에서의 체포/탈옥 API")
+    class WithPolygonGameArea {
+
+        private User polygonPolice;
+        private User polygonRobber;
+        private Game polygonGame;
+        private GameParticipant polygonPoliceParticipant;
+        private GameParticipant polygonRobberParticipant;
+        private String polygonPoliceToken;
+        private String polygonRobberToken;
+
+        @BeforeEach
+        void setUp() {
+            polygonPolice = givenUser("polygonPolice");
+            polygonRobber = givenUser("polygonRobber");
+            polygonPoliceToken = givenAccessToken(polygonPolice);
+            polygonRobberToken = givenAccessToken(polygonRobber);
+
+            polygonGame = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
+            gameAreaRepository.save(GameAreaFixture.POLYGON_GAME_AREA(polygonGame));
+            polygonPoliceParticipant = givenPolice(polygonGame, polygonPolice);
+            polygonRobberParticipant = givenRobber(polygonGame, polygonRobber);
+        }
+
+        @Test
+        void 폴리곤_영역에서_도둑_체포_성공() {
+            // given
+            User secondRobber = givenUser("polygonRobber2");
+            givenRobber(polygonGame, secondRobber);
+            ArrestRequest request = new ArrestRequest(polygonRobberParticipant.getId());
+
+            // when
+            ExtractableResponse<Response> response = authenticated(polygonPoliceToken)
+                    .body(request)
+                    .pathParam(GAME_ID_PARAM, polygonGame.getId())
+                    .when()
+                    .post(ARREST_URL)
+                    .then()
+                    .extract();
+
+            // then
+            ArrestResponse result = response.as(ArrestResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                softly.assertThat(result.robberNickname()).isEqualTo(polygonRobber.getNickname());
+                softly.assertThat(result.remainingThieves()).isEqualTo(1);
+            });
+        }
+
+        @Test
+        void 폴리곤_영역에서_마지막_도둑이_체포되면_게임이_종료된다() {
+            // given
+            ArrestRequest request = new ArrestRequest(polygonRobberParticipant.getId());
+
+            // when
+            ExtractableResponse<Response> response = authenticated(polygonPoliceToken)
+                    .body(request)
+                    .pathParam(GAME_ID_PARAM, polygonGame.getId())
+                    .when()
+                    .post(ARREST_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                Game endedGame = gameRepository.findById(polygonGame.getId()).orElseThrow();
+                softly.assertThat(endedGame.isInProgress()).isFalse();
+                softly.assertThat(gameResultRepository.existsById(1L)).isTrue();
+            });
+        }
+
+        @Test
+        void 폴리곤_영역에서_도둑_탈옥_성공() {
+            // given
+            polygonRobberParticipant.updateStatus(ParticipantStatus.JAILED);
+            gameParticipantRepository.save(polygonRobberParticipant);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(polygonRobberToken)
+                    .pathParam(GAME_ID_PARAM, polygonGame.getId())
+                    .when()
+                    .post(ESCAPE_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
+            GameParticipant escapedRobber = gameParticipantRepository.findById(polygonRobberParticipant.getId()).orElseThrow();
+            assertThat(escapedRobber.isJailed()).isFalse();
+        }
+    }
+
+    @Nested
     @DisplayName("도둑 탈옥 API")
     class EscapeFromPrison {
 
