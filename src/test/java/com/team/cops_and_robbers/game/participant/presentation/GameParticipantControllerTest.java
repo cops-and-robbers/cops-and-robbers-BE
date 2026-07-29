@@ -474,6 +474,67 @@ class GameParticipantControllerTest extends ControllerTest {
             assertThat(game.isInProgress()).isTrue();
         }
 
+        @Nested
+        @DisplayName("폴리곤 영역 게임에서의 인게임 퇴장")
+        class WithPolygonArea {
+
+            private Game polygonGame;
+
+            @BeforeEach
+            void setUp() {
+                polygonGame = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
+                gameAreaRepository.save(GameAreaFixture.POLYGON_GAME_AREA(polygonGame));
+            }
+
+            @Test
+            void 폴리곤_영역에서_마지막_경찰이_퇴장하면_게임이_종료된다() {
+                // given
+                User police = givenUser("polygonPolice");
+                String policeToken = givenAccessToken(police);
+                givenPolice(polygonGame, police);
+
+                User robber = givenUser("polygonRobber");
+                givenRobber(polygonGame, robber);
+
+                // when
+                ExtractableResponse<Response> response = authenticated(policeToken)
+                        .pathParam(GAME_ID_PARAM, polygonGame.getId())
+                        .when()
+                        .delete(LEAVE_URL)
+                        .then()
+                        .extract();
+
+                // then
+                assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                Game game = gameRepository.findById(polygonGame.getId()).orElseThrow();
+                assertThat(game.isInProgress()).isFalse();
+            }
+
+            @Test
+            void 폴리곤_영역에서_마지막_ALIVE_도둑이_퇴장하면_게임이_종료된다() {
+                // given
+                User police = givenUser("polygonPolice");
+                givenPolice(polygonGame, police);
+
+                User aliveRobber = givenUser("polygonAliveRobber");
+                String aliveRobberToken = givenAccessToken(aliveRobber);
+                givenRobber(polygonGame, aliveRobber);
+
+                // when
+                ExtractableResponse<Response> response = authenticated(aliveRobberToken)
+                        .pathParam(GAME_ID_PARAM, polygonGame.getId())
+                        .when()
+                        .delete(LEAVE_URL)
+                        .then()
+                        .extract();
+
+                // then
+                assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                Game game = gameRepository.findById(polygonGame.getId()).orElseThrow();
+                assertThat(game.isInProgress()).isFalse();
+            }
+        }
+
         @Test
         void 방장이_인게임에서_퇴장하면_다음_참가자에게_방장이_위임된다() {
             // given

@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  cops-dev-redis:
+    image: redis:7
+    container_name: cops-dev-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-dev-data:/data
+    networks:
+      - cops-network
+    restart: always
+
+volumes:
+  redis-dev-data:
+
+networks:
+  cops-network:
+    external: true

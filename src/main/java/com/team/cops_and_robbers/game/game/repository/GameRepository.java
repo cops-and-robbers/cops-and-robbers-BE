@@ -5,6 +5,8 @@ import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -24,6 +26,15 @@ public interface GameRepository extends JpaRepository<Game, Long> {
     List<Game> findByStatus(GameStatus status);
 
     Optional<Game> findByInviteCode(String inviteCode);
+
+    @Query("""
+            select g from Game g
+            where (:status is null or g.status = :status)
+            """)
+    Page<Game> findAllForAdmin(
+            @Param("status") GameStatus status,
+            Pageable pageable
+    );
 
     default Game getByGameId(Long gameId) {
         return findById(gameId)

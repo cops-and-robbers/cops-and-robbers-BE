@@ -21,4 +21,19 @@ public class TimestampUtil {
     public static String toIsoString(LocalDateTime localDateTime) {
         return localDateTime.atZone(KST).toOffsetDateTime().toString();
     }
+
+    // 외부 입력용: ISO 8601 문자열 -> KST 기준 LocalDateTime 변환
+    public static LocalDateTime parseToKstLocalDateTime(String isoString) {
+        return OffsetDateTime.parse(isoString)
+                .atZoneSameInstant(KST)
+                .toLocalDateTime();
+    }
+
+    // GraphQL DateTime 스칼라용: OffsetDateTime -> KST 기준 LocalDateTime 변환
+    public static LocalDateTime toKstLocalDateTime(OffsetDateTime offsetDateTime) {
+        if (offsetDateTime == null) {
+            return null;
+        }
+        return offsetDateTime.atZoneSameInstant(KST).toLocalDateTime();
+    }
 }

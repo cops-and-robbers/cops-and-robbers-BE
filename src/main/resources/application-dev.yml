@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: ${DB_HOST}
+    url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -13,15 +13,19 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
 
+  graphql:
+    graphiql:
+      enabled: true
+
   flyway:
     enabled: true
     out-of-order: true
 
   data:
     redis:
-      host: localhost
-      port: 6379
-      password: ${REDIS_PASSWORD}
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
 
 decorator:
   datasource:
@@ -29,6 +33,9 @@ decorator:
       enable-logging: true
       multiline: true
       log-format: "\n\t[%(category)] %(executionTime)ms\n\t%(sqlSingleLine)"
+
+server:
+  forward-headers-strategy: framework
 
 logging:
   level:

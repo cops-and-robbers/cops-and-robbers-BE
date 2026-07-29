@@ -29,5 +29,4 @@ services:
 
 networks:
   cops-network:
-    name: cops-network
-    driver: bridge
+    external: true

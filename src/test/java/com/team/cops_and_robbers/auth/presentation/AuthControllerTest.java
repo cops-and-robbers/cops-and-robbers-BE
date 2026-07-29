@@ -2,15 +2,18 @@ package com.team.cops_and_robbers.auth.presentation;
 
 import com.team.cops_and_robbers.auth.domain.Tokens;
 import com.team.cops_and_robbers.auth.exception.AuthException;
+import com.team.cops_and_robbers.auth.presentation.dto.request.AdminLoginRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.request.LoginRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.request.LogoutRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.request.ReissueRequest;
+import com.team.cops_and_robbers.auth.presentation.dto.response.AdminLoginResponse;
 import com.team.cops_and_robbers.auth.presentation.dto.response.LoginResponse;
 import com.team.cops_and_robbers.auth.presentation.dto.response.ReissueResponse;
 import com.team.cops_and_robbers.common.ControllerTest;
 import com.team.cops_and_robbers.common.exception.CommonException;
 import com.team.cops_and_robbers.common.exception.ErrorResponse;
 import com.team.cops_and_robbers.user.domain.DeviceType;
+import com.team.cops_and_robbers.user.domain.Role;
 import com.team.cops_and_robbers.user.domain.SocialType;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.domain.UserDevice;
@@ -189,6 +192,142 @@ class AuthControllerTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(204);
                 String storedToken = refreshTokenRepository.findByUserId(user.getId());
+                softly.assertThat(storedToken).isNull();
+            });
+        }
+    }
+
+    @Nested
+    @DisplayName("어드민 웹 로그인 API")
+    class AdminLogin {
+
+        @Test
+        void ADMIN_유저라면_로그인_성공하고_200_OK를_응답해야_한다() {
+            // given
+            User adminUser = givenAdminUser();
+            doReturn(adminUser.getSocialId())
+                    .when(googleLoginStrategy)
+                    .validateAndGetSocialId(anyString());
+
+            AdminLoginRequest request = new AdminLoginRequest(SocialType.GOOGLE, "valid_token");
+
+            // when
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .body(request)
+                    .when()
+                    .post("/api/auth/admin/login")
+                    .then()
+                    .extract();
+
+            // then
+            AdminLoginResponse response = extract.as(AdminLoginResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(response.userId()).isEqualTo(adminUser.getId());
+                softly.assertThat(response.nickname()).isEqualTo(adminUser.getNickname());
+                softly.assertThat(response.role()).isEqualTo(Role.ADMIN);
+                softly.assertThat(response.tokens().accessToken()).isNotNull();
+                softly.assertThat(response.tokens().refreshToken()).isNotNull();
+            });
+        }
+
+        @Test
+        void 일반_유저라면_403_FORBIDDEN을_응답해야_한다() {
+            // given
+            User normalUser = givenUser();
+            doReturn(normalUser.getSocialId())
+                    .when(googleLoginStrategy)
+                    .validateAndGetSocialId(anyString());
+
+            AdminLoginRequest request = new AdminLoginRequest(SocialType.GOOGLE, "valid_token");
+
+            // when
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .body(request)
+                    .when()
+                    .post("/api/auth/admin/login")
+                    .then()
+                    .extract();
+
+            // then
+            ErrorResponse response = extract.as(ErrorResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(403);
+                softly.assertThat(response.title()).isEqualTo(AuthException.FORBIDDEN_ADMIN_ONLY.getTitle());
+            });
+        }
+
+        @Test
+        void 미가입_유저라면_404_NOT_FOUND를_응답해야_한다() {
+            // given
+            doReturn("unknown_social_id")
+                    .when(googleLoginStrategy)
+                    .validateAndGetSocialId(anyString());
+
+            AdminLoginRequest request = new AdminLoginRequest(SocialType.GOOGLE, "valid_token");
+
+            // when
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .body(request)
+                    .when()
+                    .post("/api/auth/admin/login")
+                    .then()
+                    .extract();
+
+            // then
+            ErrorResponse response = extract.as(ErrorResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(404);
+                softly.assertThat(response.title()).isEqualTo(AuthException.ADMIN_USER_NOT_FOUND.getTitle());
+            });
+        }
+
+        @Test
+        void 필수_파라미터인_idToken이_누락되면_400_BAD_REQUEST를_응답해야_한다() {
+            // given
+            AdminLoginRequest request = new AdminLoginRequest(SocialType.GOOGLE, null);
+
+            // when
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .body(request)
+                    .when()
+                    .post("/api/auth/admin/login")
+                    .then()
+                    .extract();
+
+            // then
+            ErrorResponse response = extract.as(ErrorResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+                softly.assertThat(response.title()).isEqualTo(CommonException.INVALID_INPUT_VALUE.getTitle());
+                softly.assertThat(response.detail()).contains("idToken");
+            });
+        }
+    }
+
+    @Nested
+    @DisplayName("어드민 웹 로그아웃 API")
+    class AdminLogout {
+
+        @Test
+        void 로그아웃_요청이_성공하면_리프레시_토큰만_삭제하고_204_NO_CONTENT를_응답해야_한다() {
+            // given
+            User adminUser = givenAdminUser();
+            Tokens tokens = givenTokens(adminUser);
+            LogoutRequest request = new LogoutRequest(tokens.refreshToken());
+
+            // when
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .body(request)
+                    .when()
+                    .post("/api/auth/admin/logout")
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(204);
+                String storedToken = refreshTokenRepository.findByUserId(adminUser.getId());
                 softly.assertThat(storedToken).isNull();
             });
         }

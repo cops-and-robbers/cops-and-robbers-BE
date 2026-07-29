@@ -1,0 +1,75 @@
+name: 👮🏻 Dev CI/CD 파이프라인 🥷
+
+on:
+  push:
+    branches: [ "dev" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🔄 소스 코드 가져오기
+        uses: actions/checkout@v3
+
+      - name: 📝 테스트용 Firebase 더미 키 생성
+        run: |
+          mkdir -p src/test/resources
+          echo '{"type": "service_account", "project_id": "test"}' > src/test/resources/dummy-firebase-key.json
+
+      - name: ☕ JDK 21 설치
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'gradle'
+
+      - name: 🐘 Gradle 빌드
+        run: |
+          chmod +x gradlew
+          ./gradlew build -x test
+
+      - name: 🐳 Docker Hub 로그인
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 📦 Docker 이미지 빌드 및 업로드
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/cops-and-robbers:dev
+
+      - name: 🚚 배포 파일 전송 (Compose & Script)
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.DEV_HOST }}
+          username: ${{ secrets.DEV_USER }}
+          key: ${{ secrets.DEV_KEY }}
+          source: "docker-compose-dev-server.yml,docker-compose-infra-dev.yml,scripts/deploy-dev.sh,scripts/logging.sh"
+          target: "/home/${{ secrets.DEV_USER }}/cops-and-robbers/"
+
+      - name: 🚀 EC2 배포 및 실행
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DEV_HOST }}
+          username: ${{ secrets.DEV_USER }}
+          key: ${{ secrets.DEV_KEY }}
+          envs: DB_URL,DB_USERNAME,DB_PASSWORD,REDIS_PASSWORD,ACCESS_SECRET_KEY,REFRESH_SECRET_KEY,ACCESS_EXPIRATION,REFRESH_EXPIRATION,ENCRYPTION_KEY,DISCORD_WEBHOOK_BUG
+          script: |
+            chmod +x /home/${{ secrets.DEV_USER }}/cops-and-robbers/scripts/deploy-dev.sh
+
+            /home/${{ secrets.DEV_USER }}/cops-and-robbers/scripts/deploy-dev.sh
+        env:
+          DB_URL: ${{ secrets.DEV_DB_URL }}
+          DB_USERNAME: ${{ secrets.DEV_DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DEV_DB_PASSWORD }}
+          REDIS_PASSWORD: ${{ secrets.DEV_REDIS_PASSWORD }}
+          ACCESS_SECRET_KEY: ${{ secrets.DEV_ACCESS_SECRET_KEY }}
+          REFRESH_SECRET_KEY: ${{ secrets.DEV_REFRESH_SECRET_KEY }}
+          ACCESS_EXPIRATION: ${{ secrets.ACCESS_EXPIRATION }}
+          REFRESH_EXPIRATION: ${{ secrets.REFRESH_EXPIRATION }}
+          ENCRYPTION_KEY: ${{ secrets.DEV_ENCRYPTION_KEY }}
+          DISCORD_WEBHOOK_BUG: ${{ secrets.DISCORD_WEBHOOK_BUG }}

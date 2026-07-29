@@ -16,6 +16,7 @@ public enum AuthException implements ExceptionCode {
     UNAUTHENTICATED_REQUEST(HttpStatus.UNAUTHORIZED, "인증되지 않은 요청", "로그인이 필요합니다."),
     UNSUPPORTED_SOCIAL_TYPE(HttpStatus.BAD_REQUEST, "지원하지 않는 로그인 방식", "지원하지 않는 소셜 로그인 방식입니다."),
     FORBIDDEN_ADMIN_ONLY(HttpStatus.FORBIDDEN, "권한 없음", "관리자 권한이 필요합니다."),
+    ADMIN_USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자 없음", "가입되지 않은 사용자입니다. 먼저 앱에서 회원가입 후 이용해주세요."),
     NICKNAME_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "회원가입 실패", "랜덤 닉네임 생성에 실패했습니다. 잠시 후 다시 시도해주세요."),
     EXPIRED_FIREBASE_TOKEN(HttpStatus.UNAUTHORIZED, "Firebase 인증 만료", "Firebase 토큰이 만료되었습니다. 다시 인증해주세요."),
     INVALID_FIREBASE_TOKEN(HttpStatus.UNAUTHORIZED, "Firebase 인증 실패", "유효하지 않은 Firebase 토큰입니다."),

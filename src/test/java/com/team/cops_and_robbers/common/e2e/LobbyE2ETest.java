@@ -13,8 +13,11 @@ import com.team.cops_and_robbers.play.lobby.presentation.dto.request.ReadyUpdate
 import com.team.cops_and_robbers.play.lobby.presentation.dto.request.TeamChangeRequest;
 import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -157,10 +160,62 @@ class LobbyE2ETest extends WebSocketE2ETest {
                 .then()
                 .statusCode(200);
 
-        // then
-        TestEventResponse guestEvent = setup.guestClient().waitForMessage(setup.lobbyChannel(), 5);
+        // then: 방장 퇴장 시 HOST_CHANGED + EXIT 두 이벤트가 발행됨
+        TestEventResponse event1 = setup.guestClient().waitForMessage(setup.lobbyChannel(), 5);
+        TestEventResponse event2 = setup.guestClient().waitForMessage(setup.lobbyChannel(), 5);
 
-        assertThat(guestEvent.type()).isEqualTo("HOST_CHANGED");
+        assertThat(List.of(event1.type(), event2.type())).contains("HOST_CHANGED");
+    }
+
+    @Nested
+    @DisplayName("폴리곤 영역 로비 이벤트 E2E")
+    class WithPolygonArea {
+
+        private LobbySetup givenLobbySetupPolygon() throws Exception {
+            User hostUser = givenUser("polyHost");
+            User guestUser = givenUser("polyGuest");
+
+            Game game = gameRepository.save(GameFixture.WAITING_GAME());
+            gameAreaRepository.save(GameAreaFixture.POLYGON_GAME_AREA(game));
+            gameParticipantRepository.save(GameParticipantFixture.HOST_PARTICIPANT(game, hostUser));
+            gameParticipantRepository.save(GameParticipantFixture.GUEST_PARTICIPANT(game, guestUser));
+
+            return connectAndSubscribeLobby(game, hostUser, guestUser);
+        }
+
+        @Test
+        void 폴리곤_영역에서_유저가_퇴장하면_EXIT_이벤트를_수신한다() throws Exception {
+            // given
+            LobbySetup setup = givenLobbySetupPolygon();
+
+            // when
+            authenticated(setup.guestToken())
+                    .delete("/api/games/{gameId}/leave", setup.game().getId())
+                    .then()
+                    .statusCode(200);
+
+            // then
+            TestEventResponse hostEvent = setup.hostClient().waitForMessage(setup.lobbyChannel(), 5);
+            assertThat(hostEvent.type()).isEqualTo("EXIT");
+        }
+
+        @Test
+        void 폴리곤_영역에서_방장이_퇴장하면_HOST_CHANGED_이벤트를_수신한다() throws Exception {
+            // given
+            LobbySetup setup = givenLobbySetupPolygon();
+
+            // when
+            authenticated(setup.hostToken())
+                    .delete("/api/games/{gameId}/leave", setup.game().getId())
+                    .then()
+                    .statusCode(200);
+
+            // then
+            TestEventResponse event1 = setup.guestClient().waitForMessage(setup.lobbyChannel(), 5);
+            TestEventResponse event2 = setup.guestClient().waitForMessage(setup.lobbyChannel(), 5);
+
+            assertThat(List.of(event1.type(), event2.type())).contains("HOST_CHANGED");
+        }
     }
 
     @Test
