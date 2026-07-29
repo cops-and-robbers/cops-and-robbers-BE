@@ -17,6 +17,7 @@ import com.team.cops_and_robbers.play.system.domain.SystemEventData;
 import com.team.cops_and_robbers.play.system.presentation.dto.request.ArrestRequest;
 import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -169,5 +170,69 @@ class SystemE2ETest extends WebSocketE2ETest {
 
         assertThat(arrestEvent.type()).isEqualTo("ARREST");
         assertThat(gameOverEvent.type()).isEqualTo("GAME_OVER");
+    }
+
+    @Nested
+    @DisplayName("폴리곤 영역 시스템 이벤트 E2E")
+    class WithPolygonArea {
+
+        private SystemSetup givenSystemSetupPolygon() throws Exception {
+            User policeUser = givenUser("polyPolice");
+            User robberUser = givenUser("polyRobber");
+
+            Game game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
+            gameAreaRepository.save(GameAreaFixture.POLYGON_GAME_AREA(game));
+            GameParticipant policeParticipant = givenPolice(game, policeUser);
+            GameParticipant robberParticipant = givenRobber(game, robberUser);
+
+            String policeToken = givenAccessToken(policeUser);
+            String robberToken = givenAccessToken(robberUser);
+            String systemChannel = SYSTEM_CHANNEL.formatted(game.getId());
+
+            StompTestClient policeClient = connect(policeToken);
+            StompTestClient robberClient = connect(robberToken);
+            policeClient.subscribe(systemChannel, TestEventResponse.class);
+            robberClient.subscribe(systemChannel, TestEventResponse.class);
+
+            return new SystemSetup(game, policeParticipant, robberParticipant, policeToken, robberToken, systemChannel, policeClient, robberClient);
+        }
+
+        @Test
+        void 폴리곤_영역에서_경찰이_도둑을_체포하면_ARREST_이벤트를_수신한다() throws Exception {
+            // given: 도둑 2명 (체포 후에도 게임 종료 안 됨)
+            SystemSetup setup = givenSystemSetupPolygon();
+            givenRobber(setup.game(), givenUser("polyRobber2"));
+
+            // when
+            authenticated(setup.policeToken())
+                    .body(new ArrestRequest(setup.robberParticipant().getId()))
+                    .post("/api/games/{gameId}/system/arrest", setup.game().getId())
+                    .then()
+                    .statusCode(200);
+
+            // then
+            TestEventResponse policeEvent = setup.policeClient().waitForMessage(setup.systemChannel(), 5);
+            assertThat(policeEvent.type()).isEqualTo("ARREST");
+        }
+
+        @Test
+        void 폴리곤_영역에서_모든_도둑이_체포되면_GAME_OVER_이벤트를_수신한다() throws Exception {
+            // given: 마지막 도둑 한 명 남음
+            SystemSetup setup = givenSystemSetupPolygon();
+
+            // when
+            authenticated(setup.policeToken())
+                    .body(new ArrestRequest(setup.robberParticipant().getId()))
+                    .post("/api/games/{gameId}/system/arrest", setup.game().getId())
+                    .then()
+                    .statusCode(200);
+
+            // then
+            TestEventResponse arrestEvent = setup.policeClient().waitForMessage(setup.systemChannel(), 5);
+            TestEventResponse gameOverEvent = setup.policeClient().waitForMessage(setup.systemChannel(), 5);
+
+            assertThat(arrestEvent.type()).isEqualTo("ARREST");
+            assertThat(gameOverEvent.type()).isEqualTo("GAME_OVER");
+        }
     }
 }

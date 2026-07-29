@@ -14,6 +14,7 @@ import com.team.cops_and_robbers.play.system.application.SystemPublisher;
 import com.team.cops_and_robbers.play.system.domain.SystemEventData;
 import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,6 +86,48 @@ class LocationE2ETest extends WebSocketE2ETest {
         assertThat(locations.get(0).participantId()).isEqualTo(setup.robberParticipant().getId());
         assertThat(locations.get(0).latitude()).isEqualTo(37.5);
         assertThat(locations.get(0).longitude()).isEqualTo(127.0);
+    }
+
+    @Nested
+    @DisplayName("폴리곤 영역 위치 이벤트 E2E")
+    class WithPolygonArea {
+
+        private LocationSetup givenLocationSetupPolygon() throws Exception {
+            User policeUser = givenUser("polyPolice");
+            User robberUser = givenUser("polyRobber");
+
+            Game game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
+            gameAreaRepository.save(GameAreaFixture.POLYGON_GAME_AREA(game));
+            givenPolice(game, policeUser);
+            GameParticipant robberParticipant = givenRobber(game, robberUser);
+
+            String policeToken = givenAccessToken(policeUser);
+            String robberToken = givenAccessToken(robberUser);
+            String systemChannel = SYSTEM_CHANNEL.formatted(game.getId());
+
+            StompTestClient policeClient = connect(policeToken);
+            StompTestClient robberClient = connect(robberToken);
+            policeClient.subscribe(systemChannel, TestEventResponse.class);
+            robberClient.subscribe(systemChannel, TestEventResponse.class);
+
+            return new LocationSetup(game, robberParticipant, policeToken, robberToken, systemChannel, policeClient, robberClient);
+        }
+
+        @Test
+        void 폴리곤_영역에서_도둑이_위치를_전송하면_서버에_위치가_저장된다() throws Exception {
+            // given
+            LocationSetup setup = givenLocationSetupPolygon();
+
+            // when
+            setup.robberClient().send("/publish/game/" + setup.game().getId() + "/location",
+                    new LocationUpdateRequest(37.5, 127.0));
+
+            Thread.sleep(500);
+
+            // then
+            List<SystemEventData.RobberLocation> locations = robberLocationService.revealRobberLocations(setup.game().getId());
+            assertThat(locations.get(0).participantId()).isEqualTo(setup.robberParticipant().getId());
+        }
     }
 
     @Test

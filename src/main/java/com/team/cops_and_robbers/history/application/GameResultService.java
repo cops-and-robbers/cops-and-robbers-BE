@@ -50,8 +50,7 @@ public class GameResultService {
                 totalRobber,
                 jailedCountAtEnd,
                 game.getTotalArrestCount(),
-                gameArea.getPlaygroundCenter(),
-                gameArea.getPlaygroundRadiusInMeters()
+                gameArea
         );
 
         return gameResultRepository.save(result);
