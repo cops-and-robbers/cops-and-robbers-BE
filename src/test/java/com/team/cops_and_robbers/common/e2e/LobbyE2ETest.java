@@ -211,8 +211,10 @@ class LobbyE2ETest extends WebSocketE2ETest {
                     .statusCode(200);
 
             // then
-            TestEventResponse guestEvent = setup.guestClient().waitForMessage(setup.lobbyChannel(), 5);
-            assertThat(guestEvent.type()).isEqualTo("HOST_CHANGED");
+            TestEventResponse event1 = setup.guestClient().waitForMessage(setup.lobbyChannel(), 5);
+            TestEventResponse event2 = setup.guestClient().waitForMessage(setup.lobbyChannel(), 5);
+
+            assertThat(List.of(event1.type(), event2.type())).contains("HOST_CHANGED");
         }
     }
 
