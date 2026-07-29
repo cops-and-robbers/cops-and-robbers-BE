@@ -258,6 +258,31 @@ class AuthControllerTest extends ControllerTest {
         }
 
         @Test
+        void 미가입_유저라면_404_NOT_FOUND를_응답해야_한다() {
+            // given
+            doReturn("unknown_social_id")
+                    .when(googleLoginStrategy)
+                    .validateAndGetSocialId(anyString());
+
+            AdminLoginRequest request = new AdminLoginRequest(SocialType.GOOGLE, "valid_token");
+
+            // when
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .body(request)
+                    .when()
+                    .post("/api/auth/admin/login")
+                    .then()
+                    .extract();
+
+            // then
+            ErrorResponse response = extract.as(ErrorResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(404);
+                softly.assertThat(response.title()).isEqualTo(AuthException.ADMIN_USER_NOT_FOUND.getTitle());
+            });
+        }
+
+        @Test
         void 필수_파라미터인_idToken이_누락되면_400_BAD_REQUEST를_응답해야_한다() {
             // given
             AdminLoginRequest request = new AdminLoginRequest(SocialType.GOOGLE, null);
