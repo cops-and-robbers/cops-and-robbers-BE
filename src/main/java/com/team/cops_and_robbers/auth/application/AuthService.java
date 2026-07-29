@@ -173,8 +173,11 @@ public class AuthService {
         String socialId = getSocialId(command.socialType(), command.idToken());
 
         User user = userRepository.findBySocialIdAndSocialType(socialId, command.socialType())
-                .filter(User::isAdmin)
-                .orElseThrow(() -> new ApplicationException(AuthException.FORBIDDEN_ADMIN_ONLY));
+                .orElseThrow(() -> new ApplicationException(AuthException.ADMIN_USER_NOT_FOUND));
+
+        if (!user.isAdmin()) {
+            throw new ApplicationException(AuthException.FORBIDDEN_ADMIN_ONLY);
+        }
 
         Tokens tokens = issueTokens(user);
         return AdminLoginResult.of(user, tokens);
