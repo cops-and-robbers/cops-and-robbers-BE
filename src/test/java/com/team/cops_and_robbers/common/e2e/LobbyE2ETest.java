@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag("e2e")
@@ -158,10 +160,11 @@ class LobbyE2ETest extends WebSocketE2ETest {
                 .then()
                 .statusCode(200);
 
-        // then
-        TestEventResponse guestEvent = setup.guestClient().waitForMessage(setup.lobbyChannel(), 5);
+        // then: 방장 퇴장 시 HOST_CHANGED + EXIT 두 이벤트가 발행됨
+        TestEventResponse event1 = setup.guestClient().waitForMessage(setup.lobbyChannel(), 5);
+        TestEventResponse event2 = setup.guestClient().waitForMessage(setup.lobbyChannel(), 5);
 
-        assertThat(guestEvent.type()).isEqualTo("HOST_CHANGED");
+        assertThat(List.of(event1.type(), event2.type())).contains("HOST_CHANGED");
     }
 
     @Nested
