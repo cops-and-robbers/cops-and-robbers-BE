@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.notice.presentation;
 
 import com.team.cops_and_robbers.common.ControllerTest;
+import com.team.cops_and_robbers.notice.domain.NoticeCategory;
 import com.team.cops_and_robbers.notice.presentation.dto.request.NoticeCreateRequest;
 import com.team.cops_and_robbers.notice.presentation.dto.request.NoticeUpdateRequest;
 import com.team.cops_and_robbers.user.domain.User;
@@ -10,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import java.util.Map;
 
 import static com.team.cops_and_robbers.common.fixture.NoticeFixture.NOTICE;
 import static com.team.cops_and_robbers.common.fixture.NoticeFixture.PINNED_NOTICE;
@@ -36,7 +39,7 @@ class NoticeControllerTest extends ControllerTest {
 
         @Test
         void 관리자가_공지사항_생성에_성공하면_201을_응답한다() {
-            NoticeCreateRequest request = new NoticeCreateRequest("공지사항 제목", "공지사항 내용", false);
+            NoticeCreateRequest request = new NoticeCreateRequest("공지사항 제목", "공지사항 내용", false, NoticeCategory.NOTICE);
 
             ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .body(request)
@@ -51,12 +54,13 @@ class NoticeControllerTest extends ControllerTest {
                 softly.assertThat(extract.jsonPath().getString("title")).isEqualTo("공지사항 제목");
                 softly.assertThat(extract.jsonPath().getString("content")).isEqualTo("공지사항 내용");
                 softly.assertThat(extract.jsonPath().getBoolean("pinned")).isFalse();
+                softly.assertThat(extract.jsonPath().getString("category")).isEqualTo("NOTICE");
             });
         }
 
         @Test
         void 일반_사용자가_요청하면_403을_응답한다() {
-            NoticeCreateRequest request = new NoticeCreateRequest("공지사항 제목", "공지사항 내용", false);
+            NoticeCreateRequest request = new NoticeCreateRequest("공지사항 제목", "공지사항 내용", false, NoticeCategory.NOTICE);
 
             ExtractableResponse<Response> extract = authenticated(userAccessToken)
                     .body(request)
@@ -72,7 +76,7 @@ class NoticeControllerTest extends ControllerTest {
 
         @Test
         void 토큰_없이_요청하면_401을_응답한다() {
-            NoticeCreateRequest request = new NoticeCreateRequest("공지사항 제목", "공지사항 내용", false);
+            NoticeCreateRequest request = new NoticeCreateRequest("공지사항 제목", "공지사항 내용", false, NoticeCategory.NOTICE);
 
             ExtractableResponse<Response> extract = unauthenticated()
                     .body(request)
@@ -173,6 +177,7 @@ class NoticeControllerTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
                 softly.assertThat(extract.jsonPath().getLong("id")).isEqualTo(noticeId);
+                softly.assertThat(extract.jsonPath().getString("category")).isEqualTo("NOTICE");
             });
         }
 
@@ -210,7 +215,7 @@ class NoticeControllerTest extends ControllerTest {
         @Test
         void 관리자가_공지사항_수정에_성공하면_200을_응답한다() {
             Long noticeId = noticeRepository.save(NOTICE()).getId();
-            NoticeUpdateRequest request = new NoticeUpdateRequest("수정된 제목", "수정된 내용", true);
+            NoticeUpdateRequest request = new NoticeUpdateRequest("수정된 제목", "수정된 내용", true, NoticeCategory.MAINTENANCE);
 
             ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .body(request)
@@ -224,13 +229,14 @@ class NoticeControllerTest extends ControllerTest {
                 softly.assertThat(extract.jsonPath().getString("title")).isEqualTo("수정된 제목");
                 softly.assertThat(extract.jsonPath().getString("content")).isEqualTo("수정된 내용");
                 softly.assertThat(extract.jsonPath().getBoolean("pinned")).isTrue();
+                softly.assertThat(extract.jsonPath().getString("category")).isEqualTo("MAINTENANCE");
             });
         }
 
         @Test
         void 일반_사용자가_요청하면_403을_응답한다() {
             Long noticeId = noticeRepository.save(NOTICE()).getId();
-            NoticeUpdateRequest request = new NoticeUpdateRequest("수정된 제목", "수정된 내용", true);
+            NoticeUpdateRequest request = new NoticeUpdateRequest("수정된 제목", "수정된 내용", true, NoticeCategory.NOTICE);
 
             ExtractableResponse<Response> extract = authenticated(userAccessToken)
                     .body(request)
@@ -246,7 +252,7 @@ class NoticeControllerTest extends ControllerTest {
 
         @Test
         void 존재하지_않는_공지사항_수정시_404를_응답한다() {
-            NoticeUpdateRequest request = new NoticeUpdateRequest("수정된 제목", "수정된 내용", true);
+            NoticeUpdateRequest request = new NoticeUpdateRequest("수정된 제목", "수정된 내용", true, NoticeCategory.NOTICE);
 
             ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .body(request)
@@ -262,7 +268,7 @@ class NoticeControllerTest extends ControllerTest {
 
         @Test
         void 토큰_없이_요청하면_401을_응답한다() {
-            NoticeUpdateRequest request = new NoticeUpdateRequest("수정된 제목", "수정된 내용", true);
+            NoticeUpdateRequest request = new NoticeUpdateRequest("수정된 제목", "수정된 내용", true, NoticeCategory.NOTICE);
 
             ExtractableResponse<Response> extract = unauthenticated()
                     .body(request)
@@ -273,6 +279,89 @@ class NoticeControllerTest extends ControllerTest {
 
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(401);
+            });
+        }
+    }
+
+    @Nested
+    @DisplayName("카테고리 하위 호환성")
+    class CategoryBackwardCompatibility {
+
+        @Test
+        void 생성_요청에_category가_null이면_NOTICE로_기본_설정된다() {
+            NoticeCreateRequest request = new NoticeCreateRequest("공지사항 제목", "공지사항 내용", false, null);
+
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
+                    .body(request)
+                    .when()
+                    .post(NOTICE_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(201);
+                softly.assertThat(extract.jsonPath().getString("category")).isEqualTo("NOTICE");
+            });
+        }
+
+        @Test
+        void 생성_요청에_category_필드_자체가_없으면_NOTICE로_기본_설정된다() {
+            Map<String, Object> body = Map.of(
+                    "title", "공지사항 제목",
+                    "content", "공지사항 내용",
+                    "pinned", false
+            );
+
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
+                    .body(body)
+                    .when()
+                    .post(NOTICE_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(201);
+                softly.assertThat(extract.jsonPath().getString("category")).isEqualTo("NOTICE");
+            });
+        }
+
+        @Test
+        void 수정_요청에_category가_null이면_NOTICE로_기본_설정된다() {
+            Long noticeId = noticeRepository.save(NOTICE()).getId();
+            NoticeUpdateRequest request = new NoticeUpdateRequest("수정된 제목", "수정된 내용", true, null);
+
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
+                    .body(request)
+                    .when()
+                    .put(NOTICE_API_URL + "/" + noticeId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getString("category")).isEqualTo("NOTICE");
+            });
+        }
+
+        @Test
+        void 수정_요청에_category_필드_자체가_없으면_NOTICE로_기본_설정된다() {
+            Long noticeId = noticeRepository.save(NOTICE()).getId();
+            Map<String, Object> body = Map.of(
+                    "title", "수정된 제목",
+                    "content", "수정된 내용",
+                    "pinned", true
+            );
+
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
+                    .body(body)
+                    .when()
+                    .put(NOTICE_API_URL + "/" + noticeId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getString("category")).isEqualTo("NOTICE");
             });
         }
     }

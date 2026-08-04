@@ -8,6 +8,7 @@ import com.team.cops_and_robbers.notice.application.dto.command.NoticeListComman
 import com.team.cops_and_robbers.notice.application.dto.command.NoticeUpdateCommand;
 import com.team.cops_and_robbers.notice.application.dto.result.NoticeResult;
 import com.team.cops_and_robbers.notice.domain.Notice;
+import com.team.cops_and_robbers.notice.domain.NoticeCategory;
 import com.team.cops_and_robbers.notice.exception.NoticeException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -44,19 +45,22 @@ class NoticeServiceTest extends ServiceUnitTest {
             given(userRepository.getByUserId(1L)).willReturn(ADMIN());
             given(noticeRepository.save(any())).willReturn(notice);
 
-            NoticeResult result = noticeService.createNotice(new NoticeCreateCommand(1L, "공지사항 제목", "공지사항 내용", false));
+            NoticeResult result = noticeService.createNotice(
+                    new NoticeCreateCommand(1L, "공지사항 제목", "공지사항 내용", false, NoticeCategory.NOTICE));
 
             assertThat(result.id()).isEqualTo(1L);
             assertThat(result.title()).isEqualTo("공지사항 제목");
             assertThat(result.content()).isEqualTo("공지사항 내용");
             assertThat(result.pinned()).isFalse();
+            assertThat(result.category()).isEqualTo(NoticeCategory.NOTICE);
         }
 
         @Test
         void 일반_사용자가_생성하면_FORBIDDEN_ADMIN_ONLY_예외가_발생한다() {
             given(userRepository.getByUserId(1L)).willReturn(USER());
 
-            assertThatThrownBy(() -> noticeService.createNotice(new NoticeCreateCommand(1L, "공지사항 제목", "공지사항 내용", false)))
+            assertThatThrownBy(() -> noticeService.createNotice(
+                    new NoticeCreateCommand(1L, "공지사항 제목", "공지사항 내용", false, NoticeCategory.NOTICE)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(NoticeException.FORBIDDEN_ADMIN_ONLY.getDetail());
         }
@@ -120,18 +124,21 @@ class NoticeServiceTest extends ServiceUnitTest {
             given(userRepository.getByUserId(1L)).willReturn(ADMIN());
             given(noticeRepository.getByNoticeId(1L)).willReturn(notice);
 
-            NoticeResult result = noticeService.updateNotice(new NoticeUpdateCommand(1L, 1L, "수정된 제목", "수정된 내용", true));
+            NoticeResult result = noticeService.updateNotice(
+                    new NoticeUpdateCommand(1L, 1L, "수정된 제목", "수정된 내용", true, NoticeCategory.MAINTENANCE));
 
             assertThat(result.title()).isEqualTo("수정된 제목");
             assertThat(result.content()).isEqualTo("수정된 내용");
             assertThat(result.pinned()).isTrue();
+            assertThat(result.category()).isEqualTo(NoticeCategory.MAINTENANCE);
         }
 
         @Test
         void 일반_사용자가_수정하면_FORBIDDEN_ADMIN_ONLY_예외가_발생한다() {
             given(userRepository.getByUserId(1L)).willReturn(USER());
 
-            assertThatThrownBy(() -> noticeService.updateNotice(new NoticeUpdateCommand(1L, 1L, "수정된 제목", "수정된 내용", true)))
+            assertThatThrownBy(() -> noticeService.updateNotice(
+                    new NoticeUpdateCommand(1L, 1L, "수정된 제목", "수정된 내용", true, NoticeCategory.NOTICE)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(NoticeException.FORBIDDEN_ADMIN_ONLY.getDetail());
         }
