@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.notice.presentation.dto.request;
 
 import com.team.cops_and_robbers.notice.application.dto.command.NoticeCreateCommand;
+import com.team.cops_and_robbers.notice.domain.NoticeCategory;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -18,9 +19,18 @@ public record NoticeCreateRequest(
 
         @Schema(description = "상단 고정 여부", example = "false")
         @NotNull(message = "고정 여부는 필수 입력 항목입니다.")
-        Boolean pinned
+        Boolean pinned,
+
+        @Schema(description = "카테고리 (생략 시 NOTICE)", example = "NOTICE")
+        NoticeCategory category
 ) {
     public NoticeCreateCommand toCommand(Long userId) {
-        return new NoticeCreateCommand(userId, title, content, pinned);
+        return new NoticeCreateCommand(
+                userId,
+                title,
+                content,
+                pinned,
+                category != null ? category : NoticeCategory.NOTICE
+        );
     }
 }
