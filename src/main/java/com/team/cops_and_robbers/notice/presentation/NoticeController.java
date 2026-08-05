@@ -6,6 +6,7 @@ import com.team.cops_and_robbers.notice.application.NoticeService;
 import com.team.cops_and_robbers.notice.application.dto.command.NoticeDeleteCommand;
 import com.team.cops_and_robbers.notice.application.dto.command.NoticeListCommand;
 import com.team.cops_and_robbers.notice.application.dto.result.NoticeResult;
+import com.team.cops_and_robbers.notice.domain.NoticeCategory;
 import com.team.cops_and_robbers.notice.presentation.dto.request.NoticeCreateRequest;
 import com.team.cops_and_robbers.notice.presentation.dto.request.NoticeUpdateRequest;
 import com.team.cops_and_robbers.notice.presentation.dto.response.NoticeListResponse;
@@ -46,9 +47,10 @@ public class NoticeController implements NoticeControllerDocs {
     public ResponseEntity<NoticeListResponse> getNoticeList(
             @AuthUser LoginUser loginUser,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) NoticeCategory category
     ) {
-        NoticeListCommand command = NoticeListCommand.of(page, size);
+        NoticeListCommand command = NoticeListCommand.of(page, size, category);
         Page<NoticeResult> result = noticeService.getNoticeList(command);
         NoticeListResponse response = NoticeListResponse.from(result);
         return ResponseEntity.ok(response);
