@@ -30,8 +30,17 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.13.0")
+                .version("2.14.0")
                 .description("""
+                        ## v2.14.0 업데이트 내역
+
+                        ### ✨ 신규
+                        - GET /api/notices category 필터 파라미터 추가
+                          - NOTICE | MAINTENANCE | EVENT | UPDATE
+                          - 생략 시 전체 조회 (기존 동작 유지)
+                        - POST /api/notices, PUT /api/notices/{id} category 필드 추가
+                          - 생략 또는 null 시 NOTICE로 자동 설정 (하위 호환)
+
                         ## v2.13.0 업데이트 내역
 
                         ### ✨ 신규

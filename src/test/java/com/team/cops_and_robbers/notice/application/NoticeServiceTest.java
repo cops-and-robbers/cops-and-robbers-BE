@@ -8,6 +8,7 @@ import com.team.cops_and_robbers.notice.application.dto.command.NoticeListComman
 import com.team.cops_and_robbers.notice.application.dto.command.NoticeUpdateCommand;
 import com.team.cops_and_robbers.notice.application.dto.result.NoticeResult;
 import com.team.cops_and_robbers.notice.domain.Notice;
+import com.team.cops_and_robbers.notice.domain.NoticeCategory;
 import com.team.cops_and_robbers.notice.exception.NoticeException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -25,6 +26,7 @@ import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -44,19 +46,22 @@ class NoticeServiceTest extends ServiceUnitTest {
             given(userRepository.getByUserId(1L)).willReturn(ADMIN());
             given(noticeRepository.save(any())).willReturn(notice);
 
-            NoticeResult result = noticeService.createNotice(new NoticeCreateCommand(1L, "공지사항 제목", "공지사항 내용", false));
+            NoticeResult result = noticeService.createNotice(
+                    new NoticeCreateCommand(1L, "공지사항 제목", "공지사항 내용", false, NoticeCategory.NOTICE));
 
             assertThat(result.id()).isEqualTo(1L);
             assertThat(result.title()).isEqualTo("공지사항 제목");
             assertThat(result.content()).isEqualTo("공지사항 내용");
             assertThat(result.pinned()).isFalse();
+            assertThat(result.category()).isEqualTo(NoticeCategory.NOTICE);
         }
 
         @Test
         void 일반_사용자가_생성하면_FORBIDDEN_ADMIN_ONLY_예외가_발생한다() {
             given(userRepository.getByUserId(1L)).willReturn(USER());
 
-            assertThatThrownBy(() -> noticeService.createNotice(new NoticeCreateCommand(1L, "공지사항 제목", "공지사항 내용", false)))
+            assertThatThrownBy(() -> noticeService.createNotice(
+                    new NoticeCreateCommand(1L, "공지사항 제목", "공지사항 내용", false, NoticeCategory.NOTICE)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(NoticeException.FORBIDDEN_ADMIN_ONLY.getDetail());
         }
@@ -80,6 +85,35 @@ class NoticeServiceTest extends ServiceUnitTest {
             assertThat(result.getContent()).hasSize(2);
             assertThat(result.getContent().get(0).pinned()).isTrue();
             assertThat(result.getContent().get(1).pinned()).isFalse();
+        }
+
+        @Test
+        void category_필터를_지정하면_해당_카테고리만_반환된다() {
+            Notice notice = NOTICE();
+            setId(notice, 1L);
+            given(noticeRepository.findAllByCategoryOrderByPinnedDescCreatedAtDesc(
+                    eq(NoticeCategory.NOTICE), any()))
+                    .willReturn(new PageImpl<>(List.of(notice)));
+
+            Page<NoticeResult> result = noticeService.getNoticeList(
+                    NoticeListCommand.of(0, 10, NoticeCategory.NOTICE));
+
+            assertThat(result.getContent()).hasSize(1);
+            assertThat(result.getContent().get(0).category()).isEqualTo(NoticeCategory.NOTICE);
+        }
+
+        @Test
+        void category가_null이면_전체_조회한다() {
+            Notice normal = NOTICE();
+            Notice pinned = PINNED_NOTICE();
+            setId(normal, 2L);
+            setId(pinned, 1L);
+            given(noticeRepository.findAllByOrderByPinnedDescCreatedAtDesc(any()))
+                    .willReturn(new PageImpl<>(List.of(pinned, normal)));
+
+            Page<NoticeResult> result = noticeService.getNoticeList(NoticeListCommand.of(0, 10, null));
+
+            assertThat(result.getContent()).hasSize(2);
         }
     }
 
@@ -120,18 +154,34 @@ class NoticeServiceTest extends ServiceUnitTest {
             given(userRepository.getByUserId(1L)).willReturn(ADMIN());
             given(noticeRepository.getByNoticeId(1L)).willReturn(notice);
 
-            NoticeResult result = noticeService.updateNotice(new NoticeUpdateCommand(1L, 1L, "수정된 제목", "수정된 내용", true));
+            NoticeResult result = noticeService.updateNotice(
+                    new NoticeUpdateCommand(1L, 1L, "수정된 제목", "수정된 내용", true, NoticeCategory.MAINTENANCE));
 
             assertThat(result.title()).isEqualTo("수정된 제목");
             assertThat(result.content()).isEqualTo("수정된 내용");
             assertThat(result.pinned()).isTrue();
+            assertThat(result.category()).isEqualTo(NoticeCategory.MAINTENANCE);
+        }
+
+        @Test
+        void category가_null이면_기존_카테고리가_유지된다() {
+            Notice notice = NOTICE(); // category = NOTICE
+            setId(notice, 1L);
+            given(userRepository.getByUserId(1L)).willReturn(ADMIN());
+            given(noticeRepository.getByNoticeId(1L)).willReturn(notice);
+
+            NoticeResult result = noticeService.updateNotice(
+                    new NoticeUpdateCommand(1L, 1L, "수정된 제목", "수정된 내용", true, null));
+
+            assertThat(result.category()).isEqualTo(NoticeCategory.NOTICE);
         }
 
         @Test
         void 일반_사용자가_수정하면_FORBIDDEN_ADMIN_ONLY_예외가_발생한다() {
             given(userRepository.getByUserId(1L)).willReturn(USER());
 
-            assertThatThrownBy(() -> noticeService.updateNotice(new NoticeUpdateCommand(1L, 1L, "수정된 제목", "수정된 내용", true)))
+            assertThatThrownBy(() -> noticeService.updateNotice(
+                    new NoticeUpdateCommand(1L, 1L, "수정된 제목", "수정된 내용", true, NoticeCategory.NOTICE)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(NoticeException.FORBIDDEN_ADMIN_ONLY.getDetail());
         }

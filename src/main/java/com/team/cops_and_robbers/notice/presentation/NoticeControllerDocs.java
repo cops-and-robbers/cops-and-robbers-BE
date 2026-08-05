@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.notice.presentation;
 
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.common.swagger.ApiErrorCode;
+import com.team.cops_and_robbers.notice.domain.NoticeCategory;
 import com.team.cops_and_robbers.notice.exception.NoticeException;
 import com.team.cops_and_robbers.notice.presentation.dto.request.NoticeCreateRequest;
 import com.team.cops_and_robbers.notice.presentation.dto.request.NoticeUpdateRequest;
@@ -37,7 +38,8 @@ public interface NoticeControllerDocs {
     ResponseEntity<NoticeListResponse> getNoticeList(
             @Parameter(hidden = true) LoginUser loginUser,
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "페이지 크기 (1부터~)", example = "10") @RequestParam(defaultValue = "10") int size
+            @Parameter(description = "페이지 크기 (1부터~)", example = "10") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "카테고리 필터 (생략 시 전체 조회)") @RequestParam(required = false) NoticeCategory category
     );
 
     @Operation(summary = "공지사항 단건 조회", description = "특정 공지사항을 조회합니다.")
