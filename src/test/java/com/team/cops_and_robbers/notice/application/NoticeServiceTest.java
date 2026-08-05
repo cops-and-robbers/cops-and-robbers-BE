@@ -164,6 +164,19 @@ class NoticeServiceTest extends ServiceUnitTest {
         }
 
         @Test
+        void category가_null이면_기존_카테고리가_유지된다() {
+            Notice notice = NOTICE(); // category = NOTICE
+            setId(notice, 1L);
+            given(userRepository.getByUserId(1L)).willReturn(ADMIN());
+            given(noticeRepository.getByNoticeId(1L)).willReturn(notice);
+
+            NoticeResult result = noticeService.updateNotice(
+                    new NoticeUpdateCommand(1L, 1L, "수정된 제목", "수정된 내용", true, null));
+
+            assertThat(result.category()).isEqualTo(NoticeCategory.NOTICE);
+        }
+
+        @Test
         void 일반_사용자가_수정하면_FORBIDDEN_ADMIN_ONLY_예외가_발생한다() {
             given(userRepository.getByUserId(1L)).willReturn(USER());
 

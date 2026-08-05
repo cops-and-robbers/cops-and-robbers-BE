@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
+import static com.team.cops_and_robbers.common.fixture.NoticeFixture.MAINTENANCE_NOTICE;
 import static com.team.cops_and_robbers.common.fixture.NoticeFixture.NOTICE;
 import static com.team.cops_and_robbers.common.fixture.NoticeFixture.PINNED_NOTICE;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
@@ -367,8 +368,8 @@ class NoticeControllerTest extends ControllerTest {
         }
 
         @Test
-        void 수정_요청에_category가_null이면_NOTICE로_기본_설정된다() {
-            Long noticeId = noticeRepository.save(NOTICE()).getId();
+        void 수정_요청에_category가_null이면_기존_카테고리가_유지된다() {
+            Long noticeId = noticeRepository.save(MAINTENANCE_NOTICE()).getId();
             NoticeUpdateRequest request = new NoticeUpdateRequest("수정된 제목", "수정된 내용", true, null);
 
             ExtractableResponse<Response> extract = authenticated(adminAccessToken)
@@ -380,13 +381,13 @@ class NoticeControllerTest extends ControllerTest {
 
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
-                softly.assertThat(extract.jsonPath().getString("category")).isEqualTo("NOTICE");
+                softly.assertThat(extract.jsonPath().getString("category")).isEqualTo("MAINTENANCE");
             });
         }
 
         @Test
-        void 수정_요청에_category_필드_자체가_없으면_NOTICE로_기본_설정된다() {
-            Long noticeId = noticeRepository.save(NOTICE()).getId();
+        void 수정_요청에_category_필드_자체가_없으면_기존_카테고리가_유지된다() {
+            Long noticeId = noticeRepository.save(MAINTENANCE_NOTICE()).getId();
             Map<String, Object> body = Map.of(
                     "title", "수정된 제목",
                     "content", "수정된 내용",
@@ -402,7 +403,7 @@ class NoticeControllerTest extends ControllerTest {
 
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
-                softly.assertThat(extract.jsonPath().getString("category")).isEqualTo("NOTICE");
+                softly.assertThat(extract.jsonPath().getString("category")).isEqualTo("MAINTENANCE");
             });
         }
     }

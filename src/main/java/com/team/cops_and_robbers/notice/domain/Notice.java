@@ -55,6 +55,8 @@ public class Notice extends BaseTimeEntity {
         this.title = command.title();
         this.content = command.content();
         this.pinned = command.pinned();
-        this.category = command.category();
+        if (command.category() != null) {
+            this.category = command.category();
+        }
     }
 }

@@ -21,11 +21,10 @@ public record NoticeUpdateRequest(
         @NotNull(message = "고정 여부는 필수 입력 항목입니다.")
         Boolean pinned,
 
-        @Schema(description = "카테고리 (생략 시 NOTICE)", example = "MAINTENANCE")
+        @Schema(description = "카테고리 (생략 시 기존 값 유지)", example = "MAINTENANCE")
         NoticeCategory category
 ) {
     public NoticeUpdateCommand toCommand(Long userId, Long noticeId) {
-        return new NoticeUpdateCommand(userId, noticeId, title, content, pinned,
-                category != null ? category : NoticeCategory.NOTICE);
+        return new NoticeUpdateCommand(userId, noticeId, title, content, pinned, category);
     }
 }

@@ -31,4 +31,16 @@ public class NoticeFixture {
         ReflectionTestUtils.setField(notice, "updatedAt", LocalDateTime.now());
         return notice;
     }
+
+    public static Notice MAINTENANCE_NOTICE() {
+        Notice notice = Notice.builder()
+                .title("점검 공지사항")
+                .content("서버 점검 내용")
+                .pinned(false)
+                .category(NoticeCategory.MAINTENANCE)
+                .build();
+        ReflectionTestUtils.setField(notice, "createdAt", LocalDateTime.now());
+        ReflectionTestUtils.setField(notice, "updatedAt", LocalDateTime.now());
+        return notice;
+    }
 }
