@@ -119,6 +119,47 @@ class NoticeControllerTest extends ControllerTest {
         }
 
         @Test
+        void category_필터로_조회하면_해당_카테고리만_반환된다() {
+            noticeRepository.save(NOTICE());        // NOTICE 카테고리
+            noticeRepository.save(PINNED_NOTICE());
+
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
+                    .queryParam("page", 0)
+                    .queryParam("size", 10)
+                    .queryParam("category", "NOTICE")
+                    .when()
+                    .get(NOTICE_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getList("content")).hasSize(2);
+                softly.assertThat(extract.jsonPath().getString("content[0].category")).isEqualTo("NOTICE");
+                softly.assertThat(extract.jsonPath().getString("content[1].category")).isEqualTo("NOTICE");
+            });
+        }
+
+        @Test
+        void 존재하지_않는_category로_조회하면_빈_목록을_반환한다() {
+            noticeRepository.save(NOTICE());
+
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
+                    .queryParam("page", 0)
+                    .queryParam("size", 10)
+                    .queryParam("category", "EVENT")
+                    .when()
+                    .get(NOTICE_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getList("content")).isEmpty();
+            });
+        }
+
+        @Test
         void 음수_페이지를_요청하면_400을_응답한다() {
             ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .queryParam("page", -1)

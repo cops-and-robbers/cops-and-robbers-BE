@@ -26,6 +26,7 @@ import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -84,6 +85,35 @@ class NoticeServiceTest extends ServiceUnitTest {
             assertThat(result.getContent()).hasSize(2);
             assertThat(result.getContent().get(0).pinned()).isTrue();
             assertThat(result.getContent().get(1).pinned()).isFalse();
+        }
+
+        @Test
+        void category_필터를_지정하면_해당_카테고리만_반환된다() {
+            Notice notice = NOTICE();
+            setId(notice, 1L);
+            given(noticeRepository.findAllByCategoryOrderByPinnedDescCreatedAtDesc(
+                    eq(NoticeCategory.NOTICE), any()))
+                    .willReturn(new PageImpl<>(List.of(notice)));
+
+            Page<NoticeResult> result = noticeService.getNoticeList(
+                    NoticeListCommand.of(0, 10, NoticeCategory.NOTICE));
+
+            assertThat(result.getContent()).hasSize(1);
+            assertThat(result.getContent().get(0).category()).isEqualTo(NoticeCategory.NOTICE);
+        }
+
+        @Test
+        void category가_null이면_전체_조회한다() {
+            Notice normal = NOTICE();
+            Notice pinned = PINNED_NOTICE();
+            setId(normal, 2L);
+            setId(pinned, 1L);
+            given(noticeRepository.findAllByOrderByPinnedDescCreatedAtDesc(any()))
+                    .willReturn(new PageImpl<>(List.of(pinned, normal)));
+
+            Page<NoticeResult> result = noticeService.getNoticeList(NoticeListCommand.of(0, 10, null));
+
+            assertThat(result.getContent()).hasSize(2);
         }
     }
 
