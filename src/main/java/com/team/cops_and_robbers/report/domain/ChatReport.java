@@ -1,8 +1,20 @@
 package com.team.cops_and_robbers.report.domain;
 
 import com.team.cops_and_robbers.common.BaseTimeEntity;
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "reports", uniqueConstraints = {
@@ -39,6 +51,22 @@ public class ChatReport extends BaseTimeEntity {
 
     @Column(columnDefinition = "TEXT")
     private String etcReason;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private ReportStatus status = ReportStatus.PENDING;
+
+    private Long resolvedBy;
+
+    @Column(columnDefinition = "TEXT")
+    private String adminMemo;
+
+    public void updateStatus(ReportStatus status, Long resolvedBy, String adminMemo) {
+        this.status = status;
+        this.resolvedBy = resolvedBy;
+        this.adminMemo = adminMemo;
+    }
 
     public static ChatReport create(Long gameId, Long reporterUserId, Long reportedUserId, String messageContent, ReportType reportType, String etcReason) {
         return ChatReport.builder()
