@@ -1,0 +1,50 @@
+# ─── 유저 쿼리 ───────────────────────────────────────────────
+type Query {
+  adminUsers(
+    page: Int = 0
+    size: Int = 20
+    nickname: String
+    socialType: SocialType
+    fromDate: DateTime
+    toDate: DateTime
+    sortDirection: SortDirection = DESC
+  ): AdminUserPage!
+
+  adminUser(id: ID!): AdminUser!
+}
+
+# ─── 유저 타입 ───────────────────────────────────────────────
+type AdminUserPage {
+  content: [AdminUser!]!
+  totalElements: Int!
+  totalPages: Int!
+  page: Int!
+  size: Int!
+}
+
+type AdminUser {
+  id: ID!
+  nickname: String!
+  socialType: SocialType!
+  role: Role!
+  termsOfServiceAgreed: Boolean!
+  privacyPolicyAgreed: Boolean!
+  locationTermsAgreed: Boolean!
+  createdAt: String!
+  device: UserDevice
+  participations: [GameParticipation!]!
+}
+
+type UserDevice {
+  deviceType: DeviceType!
+  createdAt: String!
+}
+
+type GameParticipation {
+  gameId: ID!
+  inviteCode: String!
+  team: Team
+  status: ParticipantStatus!
+  isHost: Boolean!
+  createdAt: String!
+}

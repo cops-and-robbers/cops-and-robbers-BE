@@ -1,0 +1,82 @@
+# ─── 게임 쿼리 ───────────────────────────────────────────────
+extend type Query {
+  adminGames(
+    page: Int = 0
+    size: Int = 20
+    status: GameStatus
+    sortDirection: SortDirection = DESC
+  ): AdminGamePage!
+
+  adminGame(id: ID!): AdminGame!
+}
+
+# ─── 게임 타입 ───────────────────────────────────────────────
+type AdminGamePage {
+  content: [AdminGameSummary!]!
+  totalElements: Int!
+  totalPages: Int!
+  page: Int!
+  size: Int!
+}
+
+type AdminGameSummary {
+  id: ID!
+  inviteCode: String!
+  status: GameStatus!
+  roundDurationMinutes: Int!
+  locationRevealIntervalMinutes: Int!
+  maxParticipants: Int!
+  isEventGame: Boolean!
+  participantCount: Int!
+  createdAt: String!
+}
+
+type AdminGame {
+  id: ID!
+  inviteCode: String!
+  status: GameStatus!
+  roundDurationMinutes: Int!
+  locationRevealIntervalMinutes: Int!
+  policeWaitMinutes: Int!
+  maxParticipants: Int!
+  isEventGame: Boolean!
+  createdAt: String!
+  startedAt: String
+  participants: [AdminParticipant!]!
+  result: GameResult
+  area: GameArea
+}
+
+type AdminParticipant {
+  userId: ID!
+  nickname: String!
+  team: Team
+  status: ParticipantStatus!
+  isHost: Boolean!
+}
+
+type GameResult {
+  winnerTeam: Team!
+  endReason: GameEndReason!
+  totalPoliceCount: Int!
+  totalRobberCount: Int!
+  arrestedRobberCount: Int!
+  durationSeconds: Int!
+}
+
+type GameArea {
+  areaType: AreaType!
+  playgroundCenterLat: Float
+  playgroundCenterLng: Float
+  playgroundRadiusInMeters: Int
+  jailCenterLat: Float
+  jailCenterLng: Float
+  jailRadiusInMeters: Int
+  playgroundPolygon: [Coordinate!]
+  jailPolygon: [Coordinate!]
+}
+
+type Coordinate {
+  latitude: Float!
+  longitude: Float!
+}
