@@ -1,0 +1,45 @@
+# ─── 신고 쿼리/뮤테이션 ──────────────────────────────────────
+extend type Query {
+  adminReports(
+    page: Int = 0
+    size: Int = 20
+    status: ReportStatus
+    sortDirection: SortDirection = DESC
+  ): AdminReportPage!
+}
+
+type Mutation {
+  updateReportStatus(
+    reportId: ID!
+    status: ReportStatus!
+    adminMemo: String
+  ): AdminReport!
+}
+
+# ─── 신고 타입 ───────────────────────────────────────────────
+type AdminReportPage {
+  content: [AdminReport!]!
+  totalElements: Int!
+  totalPages: Int!
+  page: Int!
+  size: Int!
+}
+
+type AdminReport {
+  id: ID!
+  gameId: ID!
+  reporterUserId: ID!
+  reporterNickname: String!
+  reportedUserId: ID!
+  reportedNickname: String!
+  messageContent: String!
+  reportType: ReportType!
+  etcReason: String
+  status: ReportStatus!
+  resolvedBy: ID
+  adminMemo: String
+  createdAt: String!
+}
+
+enum ReportStatus { PENDING RESOLVED DISMISSED }
+enum ReportType { FISHING VERBAL_ABUSE IMPERSONATION SPAM CHEATING DEMORALIZATION ETC }
