@@ -9,11 +9,13 @@ public record CommunityPostListCommand(
         int page,
         int size
 ) {
+    private static final int MAX_SIZE = 100;
+
     public CommunityPostListCommand {
         if (page < 0) {
             throw new ApplicationException(CommonException.INVALID_QUERY_PARAMETER);
         }
-        if (size < 1) {
+        if (size < 1 || size > MAX_SIZE) {
             throw new ApplicationException(CommonException.INVALID_QUERY_PARAMETER);
         }
     }
