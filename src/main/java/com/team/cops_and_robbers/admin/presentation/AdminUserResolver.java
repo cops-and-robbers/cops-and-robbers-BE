@@ -2,11 +2,11 @@ package com.team.cops_and_robbers.admin.presentation;
 
 import com.team.cops_and_robbers.admin.application.AdminUserService;
 import com.team.cops_and_robbers.admin.application.dto.SortDirection;
-import com.team.cops_and_robbers.admin.application.dto.command.AdminUserListCommand;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminUserPageResult;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminUserResult;
-import com.team.cops_and_robbers.admin.application.dto.result.GameParticipationResult;
-import com.team.cops_and_robbers.admin.application.dto.result.UserDeviceResult;
+import com.team.cops_and_robbers.admin.application.dto.command.user.AdminUserListCommand;
+import com.team.cops_and_robbers.admin.application.dto.result.user.AdminUserPageResult;
+import com.team.cops_and_robbers.admin.application.dto.result.user.AdminUserResult;
+import com.team.cops_and_robbers.admin.application.dto.result.user.GameParticipationResult;
+import com.team.cops_and_robbers.admin.application.dto.result.user.UserDeviceResult;
 import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.user.domain.SocialType;
 import jakarta.validation.constraints.Max;

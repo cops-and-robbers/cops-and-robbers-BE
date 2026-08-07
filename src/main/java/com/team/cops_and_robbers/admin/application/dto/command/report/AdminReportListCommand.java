@@ -1,15 +1,15 @@
-package com.team.cops_and_robbers.admin.application.dto.command;
+package com.team.cops_and_robbers.admin.application.dto.command.report;
 
 import com.team.cops_and_robbers.admin.application.dto.SortDirection;
-import com.team.cops_and_robbers.game.game.domain.GameStatus;
+import com.team.cops_and_robbers.report.domain.ReportStatus;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
-public record AdminGameListCommand(
+public record AdminReportListCommand(
         int page,
         int size,
-        GameStatus status,
+        ReportStatus status,
         SortDirection sortDirection
 ) {
 

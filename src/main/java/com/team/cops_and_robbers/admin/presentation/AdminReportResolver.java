@@ -2,10 +2,10 @@ package com.team.cops_and_robbers.admin.presentation;
 
 import com.team.cops_and_robbers.admin.application.AdminReportService;
 import com.team.cops_and_robbers.admin.application.dto.SortDirection;
-import com.team.cops_and_robbers.admin.application.dto.command.AdminReportListCommand;
-import com.team.cops_and_robbers.admin.application.dto.command.AdminUpdateReportStatusCommand;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminReportPageResult;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminReportResult;
+import com.team.cops_and_robbers.admin.application.dto.command.report.AdminReportListCommand;
+import com.team.cops_and_robbers.admin.application.dto.command.report.AdminUpdateReportStatusCommand;
+import com.team.cops_and_robbers.admin.application.dto.result.report.AdminReportPageResult;
+import com.team.cops_and_robbers.admin.application.dto.result.report.AdminReportResult;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.report.domain.ReportStatus;
 import jakarta.servlet.http.HttpServletRequest;

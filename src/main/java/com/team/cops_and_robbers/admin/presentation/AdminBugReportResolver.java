@@ -2,10 +2,10 @@ package com.team.cops_and_robbers.admin.presentation;
 
 import com.team.cops_and_robbers.admin.application.AdminBugReportService;
 import com.team.cops_and_robbers.admin.application.dto.SortDirection;
-import com.team.cops_and_robbers.admin.application.dto.command.AdminBugReportListCommand;
-import com.team.cops_and_robbers.admin.application.dto.command.AdminUpdateBugReportStatusCommand;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminBugReportPageResult;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminBugReportResult;
+import com.team.cops_and_robbers.admin.application.dto.command.bug.AdminBugReportListCommand;
+import com.team.cops_and_robbers.admin.application.dto.command.bug.AdminUpdateBugReportStatusCommand;
+import com.team.cops_and_robbers.admin.application.dto.result.bug.AdminBugReportPageResult;
+import com.team.cops_and_robbers.admin.application.dto.result.bug.AdminBugReportResult;
 import com.team.cops_and_robbers.bug.domain.BugReportStatus;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

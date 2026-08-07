@@ -1,4 +1,4 @@
-package com.team.cops_and_robbers.admin.application.dto.result;
+package com.team.cops_and_robbers.admin.application.dto.result.user;
 
 import com.team.cops_and_robbers.user.domain.User;
 import org.springframework.data.domain.Page;

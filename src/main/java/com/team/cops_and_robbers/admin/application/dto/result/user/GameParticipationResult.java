@@ -1,4 +1,4 @@
-package com.team.cops_and_robbers.admin.application.dto.result;
+package com.team.cops_and_robbers.admin.application.dto.result.user;
 
 import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;

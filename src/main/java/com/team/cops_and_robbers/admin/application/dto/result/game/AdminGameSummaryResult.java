@@ -1,36 +1,31 @@
-package com.team.cops_and_robbers.admin.application.dto.result;
+package com.team.cops_and_robbers.admin.application.dto.result.game;
 
 import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 
-public record AdminGameResult(
+public record AdminGameSummaryResult(
         Long id,
         String inviteCode,
         GameStatus status,
         Integer roundDurationMinutes,
         Integer locationRevealIntervalMinutes,
-        Integer policeWaitMinutes,
         Integer maxParticipants,
         Boolean isEventGame,
-        String createdAt,
-        String startedAt
+        Integer participantCount,
+        String createdAt
 ) {
-    public static AdminGameResult from(Game game) {
-        String startedAt = game.getStartedAt() != null
-                ? TimestampUtil.toIsoString(game.getStartedAt())
-                : null;
-        return new AdminGameResult(
+    public static AdminGameSummaryResult from(Game game, int participantCount) {
+        return new AdminGameSummaryResult(
                 game.getId(),
                 game.getInviteCode(),
                 game.getStatus(),
                 game.getRoundDurationMinutes(),
                 game.getLocationRevealIntervalMinutes(),
-                game.getPoliceWaitMinutes(),
                 game.getMaxParticipants(),
                 game.isEventGame(),
-                TimestampUtil.toIsoString(game.getCreatedAt()),
-                startedAt
+                participantCount,
+                TimestampUtil.toIsoString(game.getCreatedAt())
         );
     }
 }

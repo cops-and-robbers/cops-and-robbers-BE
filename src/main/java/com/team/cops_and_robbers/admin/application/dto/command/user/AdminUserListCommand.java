@@ -1,15 +1,20 @@
-package com.team.cops_and_robbers.admin.application.dto.command;
+package com.team.cops_and_robbers.admin.application.dto.command.user;
 
 import com.team.cops_and_robbers.admin.application.dto.SortDirection;
-import com.team.cops_and_robbers.report.domain.ReportStatus;
+import com.team.cops_and_robbers.user.domain.SocialType;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
-public record AdminReportListCommand(
+import java.time.LocalDateTime;
+
+public record AdminUserListCommand(
         int page,
         int size,
-        ReportStatus status,
+        String nickname,
+        SocialType socialType,
+        LocalDateTime fromDate,
+        LocalDateTime toDate,
         SortDirection sortDirection
 ) {
 

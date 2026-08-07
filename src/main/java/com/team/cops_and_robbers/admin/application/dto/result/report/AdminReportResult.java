@@ -1,4 +1,4 @@
-package com.team.cops_and_robbers.admin.application.dto.result;
+package com.team.cops_and_robbers.admin.application.dto.result.report;
 
 import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.report.domain.ChatReport;

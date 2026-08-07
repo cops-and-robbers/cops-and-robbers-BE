@@ -1,9 +1,9 @@
 package com.team.cops_and_robbers.admin.application;
 
-import com.team.cops_and_robbers.admin.application.dto.command.AdminReportListCommand;
-import com.team.cops_and_robbers.admin.application.dto.command.AdminUpdateReportStatusCommand;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminReportPageResult;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminReportResult;
+import com.team.cops_and_robbers.admin.application.dto.command.report.AdminReportListCommand;
+import com.team.cops_and_robbers.admin.application.dto.command.report.AdminUpdateReportStatusCommand;
+import com.team.cops_and_robbers.admin.application.dto.result.report.AdminReportPageResult;
+import com.team.cops_and_robbers.admin.application.dto.result.report.AdminReportResult;
 import com.team.cops_and_robbers.report.domain.ChatReport;
 import com.team.cops_and_robbers.report.repository.ReportRepository;
 import com.team.cops_and_robbers.user.domain.User;

@@ -1,19 +1,19 @@
-package com.team.cops_and_robbers.admin.application.dto.result;
+package com.team.cops_and_robbers.admin.application.dto.result.bug;
 
 import org.springframework.data.domain.Page;
 
 import java.util.List;
 
-public record AdminReportPageResult(
-        List<AdminReportResult> content,
+public record AdminBugReportPageResult(
+        List<AdminBugReportResult> content,
         Long totalElements,
         Integer totalPages,
         Integer page,
         Integer size
 ) {
 
-    public static AdminReportPageResult from(Page<AdminReportResult> page) {
-        return new AdminReportPageResult(
+    public static AdminBugReportPageResult from(Page<AdminBugReportResult> page) {
+        return new AdminBugReportPageResult(
                 page.getContent(),
                 page.getTotalElements(),
                 page.getTotalPages(),

@@ -1,4 +1,4 @@
-package com.team.cops_and_robbers.admin.application.dto.result;
+package com.team.cops_and_robbers.admin.application.dto.result.game;
 
 import com.team.cops_and_robbers.game.area.domain.AreaType;
 import com.team.cops_and_robbers.game.area.domain.GameArea;

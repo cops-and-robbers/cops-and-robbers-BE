@@ -1,8 +1,8 @@
 package com.team.cops_and_robbers.admin.application;
 
-import com.team.cops_and_robbers.admin.application.dto.result.AdminDashboardResult;
-import com.team.cops_and_robbers.admin.application.dto.result.EndReasonDistributionResult;
-import com.team.cops_and_robbers.admin.application.dto.result.WinRateByTeamResult;
+import com.team.cops_and_robbers.admin.application.dto.result.dashboard.AdminDashboardResult;
+import com.team.cops_and_robbers.admin.application.dto.result.dashboard.EndReasonDistributionResult;
+import com.team.cops_and_robbers.admin.application.dto.result.dashboard.WinRateByTeamResult;
 import com.team.cops_and_robbers.bug.domain.BugReportStatus;
 import com.team.cops_and_robbers.bug.repository.BugReportRepository;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;

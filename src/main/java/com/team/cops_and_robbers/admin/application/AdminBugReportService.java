@@ -1,9 +1,9 @@
 package com.team.cops_and_robbers.admin.application;
 
-import com.team.cops_and_robbers.admin.application.dto.command.AdminBugReportListCommand;
-import com.team.cops_and_robbers.admin.application.dto.command.AdminUpdateBugReportStatusCommand;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminBugReportPageResult;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminBugReportResult;
+import com.team.cops_and_robbers.admin.application.dto.command.bug.AdminBugReportListCommand;
+import com.team.cops_and_robbers.admin.application.dto.command.bug.AdminUpdateBugReportStatusCommand;
+import com.team.cops_and_robbers.admin.application.dto.result.bug.AdminBugReportPageResult;
+import com.team.cops_and_robbers.admin.application.dto.result.bug.AdminBugReportResult;
 import com.team.cops_and_robbers.bug.domain.BugReport;
 import com.team.cops_and_robbers.bug.repository.BugReportRepository;
 import com.team.cops_and_robbers.user.domain.User;

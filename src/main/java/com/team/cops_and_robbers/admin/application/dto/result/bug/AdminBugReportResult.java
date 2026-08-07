@@ -1,4 +1,4 @@
-package com.team.cops_and_robbers.admin.application.dto.result;
+package com.team.cops_and_robbers.admin.application.dto.result.bug;
 
 import com.team.cops_and_robbers.bug.domain.BugReport;
 import com.team.cops_and_robbers.bug.domain.BugReportStatus;
