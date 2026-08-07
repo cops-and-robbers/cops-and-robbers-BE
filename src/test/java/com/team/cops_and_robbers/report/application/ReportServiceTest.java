@@ -9,14 +9,12 @@ import com.team.cops_and_robbers.game.participant.exception.GameParticipantExcep
 import com.team.cops_and_robbers.report.application.dto.command.ReportCommand;
 import com.team.cops_and_robbers.report.domain.ReportType;
 import com.team.cops_and_robbers.report.exception.ReportException;
-import com.team.cops_and_robbers.report.repository.ReportRepository;
 import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.Optional;
@@ -34,9 +32,6 @@ class ReportServiceTest extends ServiceUnitTest {
 
     @InjectMocks
     private ReportService reportService;
-
-    @Mock
-    private ReportRepository reportRepository;
 
     private User reporter;
     private User reported;
