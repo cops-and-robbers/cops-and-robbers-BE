@@ -13,7 +13,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -52,7 +51,7 @@ public class AdminReportService {
         report.updateStatus(command.status(), command.adminId(), command.adminMemo());
 
         Map<Long, String> nicknameByUserId = userRepository
-                .findAllById(List.of(report.getReporterUserId(), report.getReportedUserId()))
+                .findAllById(Set.of(report.getReporterUserId(), report.getReportedUserId()))
                 .stream()
                 .collect(Collectors.toMap(User::getId, User::getNickname));
 

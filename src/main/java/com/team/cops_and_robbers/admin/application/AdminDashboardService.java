@@ -25,7 +25,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class AdminDashboardService {
 
-    private static final int WEEKLY_DAYS = 6;
+    private static final int DAYS_BEFORE_TODAY = 6;
 
     private final GameRepository gameRepository;
     private final UserRepository userRepository;
@@ -35,7 +35,7 @@ public class AdminDashboardService {
 
     public AdminDashboardResult getDashboard() {
         LocalDateTime todayStart = LocalDate.now().atStartOfDay();
-        LocalDateTime weekStart = LocalDate.now().minusDays(WEEKLY_DAYS).atStartOfDay();
+        LocalDateTime weekStart = LocalDate.now().minusDays(DAYS_BEFORE_TODAY).atStartOfDay();
 
         List<EndReasonDistributionResult> endReasonDistribution = gameResultRepository
                 .countGroupByEndReason().stream()

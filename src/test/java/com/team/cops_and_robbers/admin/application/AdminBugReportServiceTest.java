@@ -23,11 +23,13 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.isNull;
 
 class AdminBugReportServiceTest extends ServiceUnitTest {
@@ -133,7 +135,7 @@ class AdminBugReportServiceTest extends ServiceUnitTest {
             AdminUpdateBugReportStatusCommand command = new AdminUpdateBugReportStatusCommand(
                     100L, BugReportStatus.RESOLVED, "처리 완료");
             given(bugReportRepository.getById(100L)).willReturn(bugReport);
-            given(userRepository.findAllById(any())).willReturn(List.of(user));
+            given(userRepository.findById(anyLong())).willReturn(Optional.of(user));
 
             // when
             AdminBugReportResult result = adminBugReportService.updateBugReportStatus(command);
@@ -152,7 +154,7 @@ class AdminBugReportServiceTest extends ServiceUnitTest {
             AdminUpdateBugReportStatusCommand command = new AdminUpdateBugReportStatusCommand(
                     100L, BugReportStatus.RESOLVED, null);
             given(bugReportRepository.getById(100L)).willReturn(bugReport);
-            given(userRepository.findAllById(any())).willReturn(List.of()); // 탈퇴
+            given(userRepository.findById(anyLong())).willReturn(Optional.empty()); // 탈퇴
 
             // when
             AdminBugReportResult result = adminBugReportService.updateBugReportStatus(command);
