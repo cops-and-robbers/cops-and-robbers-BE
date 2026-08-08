@@ -1,5 +1,5 @@
 # ─── 유저 쿼리 ───────────────────────────────────────────────
-type Query {
+extend type Query {
   adminUsers(
     page: Int = 0
     size: Int = 20

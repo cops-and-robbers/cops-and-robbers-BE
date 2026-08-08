@@ -8,7 +8,7 @@ extend type Query {
   ): AdminReportPage!
 }
 
-type Mutation {
+extend type Mutation {
   updateReportStatus(
     reportId: ID!
     status: ReportStatus!
