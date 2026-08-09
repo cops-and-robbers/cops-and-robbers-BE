@@ -61,6 +61,7 @@ class CorsConfigurationTest extends ControllerTest {
                     .extract();
 
             assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(403);
                 softly.assertThat(extract.header("Access-Control-Allow-Origin")).isNull();
             });
         }
