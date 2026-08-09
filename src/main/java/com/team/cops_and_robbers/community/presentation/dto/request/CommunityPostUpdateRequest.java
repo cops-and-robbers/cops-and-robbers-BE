@@ -46,9 +46,9 @@ public record CommunityPostUpdateRequest(
     ) {
     }
 
-    public CommunityPostUpdateCommand toCommand(Long userId, Long postId) {
+    public CommunityPostUpdateCommand toCommand(Long writerId, Long postId) {
         return new CommunityPostUpdateCommand(
-                userId,
+                writerId,
                 postId,
                 title,
                 content,

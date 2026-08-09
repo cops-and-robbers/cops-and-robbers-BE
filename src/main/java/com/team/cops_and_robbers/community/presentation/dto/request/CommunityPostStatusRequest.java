@@ -10,7 +10,7 @@ public record CommunityPostStatusRequest(
         @NotNull(message = "모집 상태는 필수 입력 항목입니다.")
         RecruitmentStatus status
 ) {
-    public CommunityPostStatusCommand toCommand(Long userId, Long postId) {
-        return new CommunityPostStatusCommand(userId, postId, status);
+    public CommunityPostStatusCommand toCommand(Long writerId, Long postId) {
+        return new CommunityPostStatusCommand(writerId, postId, status);
     }
 }

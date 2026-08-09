@@ -30,8 +30,8 @@ public class CommunityPost extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long userId;
+    @Column(name = "user_id", nullable = false)
+    private Long writerId;
 
     @Column(nullable = false, length = 100)
     private String title;
@@ -58,7 +58,7 @@ public class CommunityPost extends BaseTimeEntity {
 
     public static CommunityPost createPost(CommunityPostCreateCommand command) {
         return CommunityPost.builder()
-                .userId(command.userId())
+                .writerId(command.writerId())
                 .title(command.title())
                 .content(command.content())
                 .meetingAt(command.meetingAt())

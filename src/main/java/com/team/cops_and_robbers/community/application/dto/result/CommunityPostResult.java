@@ -6,7 +6,7 @@ import com.team.cops_and_robbers.community.domain.RecruitmentStatus;
 
 public record CommunityPostResult(
         Long id,
-        Long userId,
+        Long writerId,
         String title,
         String content,
         String meetingAt,
@@ -25,7 +25,7 @@ public record CommunityPostResult(
     public static CommunityPostResult from(CommunityPost post) {
         return new CommunityPostResult(
                 post.getId(),
-                post.getUserId(),
+                post.getWriterId(),
                 post.getTitle(),
                 post.getContent(),
                 TimestampUtil.toIsoString(post.getMeetingAt()),

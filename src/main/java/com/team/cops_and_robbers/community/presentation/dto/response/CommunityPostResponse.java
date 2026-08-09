@@ -8,7 +8,7 @@ public record CommunityPostResponse(
         @Schema(description = "게시글 ID", example = "1")
         Long id,
         @Schema(description = "작성자 ID", example = "1")
-        Long userId,
+        Long writerId,
         @Schema(description = "제목", example = "같이 경찰과 도둑 하실 분!")
         String title,
         @Schema(description = "내용", example = "강남역 근처에서 5명 모집합니다.")
@@ -37,7 +37,7 @@ public record CommunityPostResponse(
     public static CommunityPostResponse from(CommunityPostResult result) {
         return new CommunityPostResponse(
                 result.id(),
-                result.userId(),
+                result.writerId(),
                 result.title(),
                 result.content(),
                 result.meetingAt(),

@@ -10,7 +10,7 @@ public class CommunityPostFixture {
 
     public static CommunityPost POST(Long userId) {
         CommunityPost post = CommunityPost.builder()
-                .userId(userId)
+                .writerId(userId)
                 .title("같이 경찰과 도둑 하실 분!")
                 .content("강남역 근처에서 5명 모집합니다.")
                 .meetingAt(LocalDateTime.now().plusDays(3))
@@ -25,7 +25,7 @@ public class CommunityPostFixture {
 
     public static CommunityPost COMPLETED_POST(Long userId) {
         CommunityPost post = CommunityPost.builder()
-                .userId(userId)
+                .writerId(userId)
                 .title("모집 완료된 게시글")
                 .content("모집이 완료되었습니다.")
                 .meetingAt(LocalDateTime.now().plusDays(1))

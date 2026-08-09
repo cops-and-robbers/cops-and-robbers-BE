@@ -27,7 +27,7 @@ public class CommunityPostService {
 
     @Transactional
     public CommunityPostResult createPost(CommunityPostCreateCommand command) {
-        userRepository.getByUserId(command.userId());
+        userRepository.getByUserId(command.writerId());
         validateMeetingDate(command.meetingAt());
         CommunityPost post = communityPostRepository.save(CommunityPost.createPost(command));
         return CommunityPostResult.from(post);
@@ -45,7 +45,7 @@ public class CommunityPostService {
     @Transactional
     public CommunityPostResult updatePost(CommunityPostUpdateCommand command) {
         CommunityPost post = communityPostRepository.getByPostId(command.postId());
-        validateAuthor(post, command.userId());
+        validateAuthor(post, command.writerId());
         validateMeetingDate(command.meetingAt());
         post.updatePost(command);
         return CommunityPostResult.from(post);
@@ -54,20 +54,20 @@ public class CommunityPostService {
     @Transactional
     public void deletePost(CommunityPostDeleteCommand command) {
         CommunityPost post = communityPostRepository.getByPostId(command.postId());
-        validateAuthor(post, command.userId());
+        validateAuthor(post, command.writerId());
         communityPostRepository.deleteByPostId(command.postId());
     }
 
     @Transactional
     public CommunityPostResult updateStatus(CommunityPostStatusCommand command) {
         CommunityPost post = communityPostRepository.getByPostId(command.postId());
-        validateAuthor(post, command.userId());
+        validateAuthor(post, command.writerId());
         post.updateStatus(command.status());
         return CommunityPostResult.from(post);
     }
 
-    private void validateAuthor(CommunityPost post, Long userId) {
-        if (!post.getUserId().equals(userId)) {
+    private void validateAuthor(CommunityPost post, Long writerId) {
+        if (!post.getWriterId().equals(writerId)) {
             throw new ApplicationException(CommunityPostException.FORBIDDEN_NOT_AUTHOR);
         }
     }

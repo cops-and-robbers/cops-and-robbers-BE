@@ -46,9 +46,9 @@ public record CommunityPostCreateRequest(
     ) {
     }
 
-    public CommunityPostCreateCommand toCommand(Long userId) {
+    public CommunityPostCreateCommand toCommand(Long writerId) {
         return new CommunityPostCreateCommand(
-                userId,
+                writerId,
                 title,
                 content,
                 meetingAt,
