@@ -1,0 +1,38 @@
+# ─── 버그 제보 쿼리/뮤테이션 ─────────────────────────────────
+extend type Query {
+  adminBugReports(
+    page: Int = 0
+    size: Int = 20
+    status: BugReportStatus
+    sortDirection: SortDirection = DESC
+  ): AdminBugReportPage!
+}
+
+extend type Mutation {
+  updateBugReportStatus(
+    bugReportId: ID!
+    status: BugReportStatus!
+    adminMemo: String
+  ): AdminBugReport!
+}
+
+# ─── 버그 제보 타입 ──────────────────────────────────────────
+type AdminBugReportPage {
+  content: [AdminBugReport!]!
+  totalElements: Int!
+  totalPages: Int!
+  page: Int!
+  size: Int!
+}
+
+type AdminBugReport {
+  id: ID!
+  content: String!
+  userId: ID!
+  userNickname: String!
+  status: BugReportStatus!
+  adminMemo: String
+  createdAt: String!
+}
+
+enum BugReportStatus { PENDING RESOLVED }

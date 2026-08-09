@@ -30,8 +30,28 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.13.0")
+                .version("2.15.0")
                 .description("""
+                        ## v2.15.0 업데이트 내역
+
+                        ### ✨ 신규
+                        - 커뮤니티 게시판(같이 하기) CRUD API 추가
+                          - POST /api/community-posts 게시글 생성
+                          - GET /api/community-posts 게시글 목록 조회 (페이지네이션)
+                          - GET /api/community-posts/{postId} 게시글 단건 조회
+                          - PUT /api/community-posts/{postId} 게시글 수정
+                          - DELETE /api/community-posts/{postId} 게시글 삭제
+                          - PATCH /api/community-posts/{postId}/status 모집 상태 변경
+
+                        ## v2.14.0 업데이트 내역
+
+                        ### ✨ 신규
+                        - GET /api/notices category 필터 파라미터 추가
+                          - NOTICE | MAINTENANCE | EVENT | UPDATE
+                          - 생략 시 전체 조회 (기존 동작 유지)
+                        - POST /api/notices, PUT /api/notices/{id} category 필드 추가
+                          - 생략 또는 null 시 NOTICE로 자동 설정 (하위 호환)
+
                         ## v2.13.0 업데이트 내역
 
                         ### ✨ 신규

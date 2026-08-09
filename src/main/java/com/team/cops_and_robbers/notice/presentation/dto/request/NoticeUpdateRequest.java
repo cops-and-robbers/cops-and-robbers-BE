@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.notice.presentation.dto.request;
 
 import com.team.cops_and_robbers.notice.application.dto.command.NoticeUpdateCommand;
+import com.team.cops_and_robbers.notice.domain.NoticeCategory;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -18,9 +19,12 @@ public record NoticeUpdateRequest(
 
         @Schema(description = "상단 고정 여부", example = "true")
         @NotNull(message = "고정 여부는 필수 입력 항목입니다.")
-        Boolean pinned
+        Boolean pinned,
+
+        @Schema(description = "카테고리 (생략 시 기존 값 유지)", example = "MAINTENANCE")
+        NoticeCategory category
 ) {
     public NoticeUpdateCommand toCommand(Long userId, Long noticeId) {
-        return new NoticeUpdateCommand(userId, noticeId, title, content, pinned);
+        return new NoticeUpdateCommand(userId, noticeId, title, content, pinned, category);
     }
 }

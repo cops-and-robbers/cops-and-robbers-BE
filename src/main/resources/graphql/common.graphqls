@@ -1,0 +1,10 @@
+# ─── 공통 enum ───────────────────────────────────────────────
+enum SortDirection { ASC DESC }
+enum AreaType { CIRCLE POLYGON }
+enum SocialType { KAKAO GOOGLE APPLE }
+enum Role { USER ADMIN }
+enum DeviceType { IOS ANDROID }
+enum Team { POLICE ROBBER }
+enum ParticipantStatus { WAITING ALIVE JAILED POLICE_WAITING }
+enum GameStatus { WAITING IN_PROGRESS FINISHED CANCELED }
+enum GameEndReason { ALL_ARRESTED TIME_OVER POLICE_FORFEITED ROBBER_FORFEITED }

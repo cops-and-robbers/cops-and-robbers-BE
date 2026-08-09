@@ -12,10 +12,15 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 public interface GameRepository extends JpaRepository<Game, Long> {
+
+    long countByCreatedAtGreaterThanEqual(LocalDateTime since);
+
+    long countByStatus(GameStatus status);
 
     @Modifying(clearAutomatically = true)
     @Query("delete from Game g where g.id = :gameId")

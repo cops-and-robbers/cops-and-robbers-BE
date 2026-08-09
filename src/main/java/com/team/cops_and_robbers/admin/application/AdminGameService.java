@@ -1,12 +1,12 @@
 package com.team.cops_and_robbers.admin.application;
 
-import com.team.cops_and_robbers.admin.application.dto.command.AdminGameListCommand;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminGameAreaResult;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminGamePageResult;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminGameResult;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminGameDetailResult;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminGameSummaryResult;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminParticipantResult;
+import com.team.cops_and_robbers.admin.application.dto.command.game.AdminGameListCommand;
+import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameAreaResult;
+import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameDetailResult;
+import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGamePageResult;
+import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameResult;
+import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameSummaryResult;
+import com.team.cops_and_robbers.admin.application.dto.result.game.AdminParticipantResult;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;

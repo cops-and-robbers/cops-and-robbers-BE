@@ -2,12 +2,14 @@ package com.team.cops_and_robbers.notice.application.dto.result;
 
 import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.notice.domain.Notice;
+import com.team.cops_and_robbers.notice.domain.NoticeCategory;
 
 public record NoticeResult(
         Long id,
         String title,
         String content,
         boolean pinned,
+        NoticeCategory category,
         String createdAt,
         String updatedAt
 ) {
@@ -17,6 +19,7 @@ public record NoticeResult(
                 notice.getTitle(),
                 notice.getContent(),
                 notice.isPinned(),
+                notice.getCategory(),
                 TimestampUtil.toIsoString(notice.getCreatedAt()),
                 TimestampUtil.toIsoString(notice.getUpdatedAt())
         );

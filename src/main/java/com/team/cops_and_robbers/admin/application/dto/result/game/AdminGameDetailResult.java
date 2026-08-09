@@ -1,0 +1,25 @@
+package com.team.cops_and_robbers.admin.application.dto.result.game;
+
+import com.team.cops_and_robbers.game.participant.domain.Team;
+import com.team.cops_and_robbers.history.domain.GameEndReason;
+import com.team.cops_and_robbers.history.domain.GameResult;
+
+public record AdminGameDetailResult(
+        Team winnerTeam,
+        GameEndReason endReason,
+        Integer totalPoliceCount,
+        Integer totalRobberCount,
+        Integer arrestedRobberCount,
+        Integer durationSeconds
+) {
+    public static AdminGameDetailResult from(GameResult gameResult) {
+        return new AdminGameDetailResult(
+                gameResult.getWinnerTeam(),
+                gameResult.getEndReason(),
+                gameResult.getTotalPoliceCount(),
+                gameResult.getTotalRobberCount(),
+                gameResult.getArrestedRobberCount(),
+                gameResult.getDurationSeconds()
+        );
+    }
+}

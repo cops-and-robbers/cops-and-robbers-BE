@@ -32,7 +32,13 @@ public class NoticeService {
     }
 
     public Page<NoticeResult> getNoticeList(NoticeListCommand command) {
-        return noticeRepository.findAllByOrderByPinnedDescCreatedAtDesc(command.toPageable())
+        if (command.category() == null) {
+            return noticeRepository.findAllByOrderByPinnedDescCreatedAtDesc(command.toPageable())
+                    .map(NoticeResult::from);
+        }
+        return noticeRepository.findAllByCategoryOrderByPinnedDescCreatedAtDesc(
+                command.category(),
+                command.toPageable())
                 .map(NoticeResult::from);
     }
 

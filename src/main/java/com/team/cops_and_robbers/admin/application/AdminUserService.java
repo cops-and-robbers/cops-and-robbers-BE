@@ -1,10 +1,10 @@
 package com.team.cops_and_robbers.admin.application;
 
-import com.team.cops_and_robbers.admin.application.dto.command.AdminUserListCommand;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminUserPageResult;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminUserResult;
-import com.team.cops_and_robbers.admin.application.dto.result.GameParticipationResult;
-import com.team.cops_and_robbers.admin.application.dto.result.UserDeviceResult;
+import com.team.cops_and_robbers.admin.application.dto.command.user.AdminUserListCommand;
+import com.team.cops_and_robbers.admin.application.dto.result.user.AdminUserPageResult;
+import com.team.cops_and_robbers.admin.application.dto.result.user.AdminUserResult;
+import com.team.cops_and_robbers.admin.application.dto.result.user.GameParticipationResult;
+import com.team.cops_and_robbers.admin.application.dto.result.user.UserDeviceResult;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.repository.UserDeviceRepository;

@@ -9,6 +9,7 @@ import com.team.cops_and_robbers.auth.infrastructure.social.strategy.KakaoLoginS
 import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
 import com.team.cops_and_robbers.bug.repository.BugReportRepository;
 import com.team.cops_and_robbers.common.fcm.FcmService;
+import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.common.fixture.UserDeviceFixture;
 import com.team.cops_and_robbers.common.fixture.UserFixture;
@@ -21,6 +22,7 @@ import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepo
 import com.team.cops_and_robbers.history.repository.GameResultRepository;
 import com.team.cops_and_robbers.notice.repository.NoticeRepository;
 import com.team.cops_and_robbers.play.notification.application.GameFcmNotifier;
+import com.team.cops_and_robbers.report.repository.ReportRepository;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.domain.UserDevice;
 import com.team.cops_and_robbers.user.repository.UserDeviceRepository;
@@ -88,6 +90,12 @@ public abstract class ControllerTest {
 
     @Autowired
     protected NoticeRepository noticeRepository;
+
+    @Autowired
+    protected ReportRepository reportRepository;
+
+    @Autowired
+    protected CommunityPostRepository communityPostRepository;
 
     @Autowired
     protected JwtTokenProvider jwtTokenProvider;

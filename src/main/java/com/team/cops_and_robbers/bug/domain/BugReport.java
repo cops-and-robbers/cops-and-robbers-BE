@@ -4,6 +4,8 @@ import com.team.cops_and_robbers.bug.application.dto.command.BugReportCommand;
 import com.team.cops_and_robbers.common.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -31,6 +33,19 @@ public class BugReport extends BaseTimeEntity {
 
     @Column(nullable = false)
     private Long userId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private BugReportStatus status = BugReportStatus.PENDING;
+
+    @Column(columnDefinition = "TEXT")
+    private String adminMemo;
+
+    public void updateStatus(BugReportStatus status, String adminMemo) {
+        this.status = status;
+        this.adminMemo = adminMemo;
+    }
 
     public static BugReport createBugReport(BugReportCommand command) {
         return BugReport.builder()

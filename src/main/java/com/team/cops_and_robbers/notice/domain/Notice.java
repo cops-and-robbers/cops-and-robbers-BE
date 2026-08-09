@@ -5,6 +5,8 @@ import com.team.cops_and_robbers.notice.application.dto.command.NoticeCreateComm
 import com.team.cops_and_robbers.notice.application.dto.command.NoticeUpdateCommand;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -36,11 +38,16 @@ public class Notice extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean pinned;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private NoticeCategory category;
+
     public static Notice createNotice(NoticeCreateCommand command) {
         return Notice.builder()
                 .title(command.title())
                 .content(command.content())
                 .pinned(command.pinned())
+                .category(command.category())
                 .build();
     }
 
@@ -48,5 +55,8 @@ public class Notice extends BaseTimeEntity {
         this.title = command.title();
         this.content = command.content();
         this.pinned = command.pinned();
+        if (command.category() != null) {
+            this.category = command.category();
+        }
     }
 }

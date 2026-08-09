@@ -26,7 +26,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("""
             select u from User u
-            where (:nickname is null or u.nickname like concat('%', :nickname, '%'))
+            where (cast(:nickname as string) is null or u.nickname like concat('%', cast(:nickname as string), '%'))
             and (:socialType is null or u.socialType = :socialType)
             and (cast(:fromDate as timestamp) is null or u.createdAt >= :fromDate)
             and (cast(:toDate as timestamp) is null or u.createdAt <= :toDate)
@@ -38,6 +38,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
             @Param("toDate") LocalDateTime toDate,
             Pageable pageable
     );
+
+    long countByCreatedAtGreaterThanEqual(LocalDateTime since);
 
     default User getByUserId(Long userId) {
         return findById(userId)
