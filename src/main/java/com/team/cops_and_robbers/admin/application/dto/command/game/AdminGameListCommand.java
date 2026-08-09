@@ -1,4 +1,4 @@
-package com.team.cops_and_robbers.admin.application.dto.command;
+package com.team.cops_and_robbers.admin.application.dto.command.game;
 
 import com.team.cops_and_robbers.admin.application.dto.SortDirection;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;

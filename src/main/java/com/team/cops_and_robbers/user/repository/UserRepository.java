@@ -39,6 +39,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
             Pageable pageable
     );
 
+    long countByCreatedAtGreaterThanEqual(LocalDateTime since);
+
     default User getByUserId(Long userId) {
         return findById(userId)
                 .orElseThrow(() -> new ApplicationException(UserException.USER_NOT_FOUND));

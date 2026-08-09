@@ -1,6 +1,7 @@
 TRUNCATE TABLE
     notices,
     reports,
+    bug_reports,
     game_areas,
     participants,
     user_devices,

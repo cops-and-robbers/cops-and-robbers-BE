@@ -1,0 +1,2 @@
+ALTER TABLE bug_reports ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'PENDING';
+ALTER TABLE bug_reports ADD COLUMN admin_memo TEXT;

@@ -1,12 +1,12 @@
 package com.team.cops_and_robbers.admin.application;
 
 import com.team.cops_and_robbers.admin.application.dto.SortDirection;
-import com.team.cops_and_robbers.admin.application.dto.command.AdminGameListCommand;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminGamePageResult;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminGameResult;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminGameDetailResult;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminGameAreaResult;
-import com.team.cops_and_robbers.admin.application.dto.result.AdminParticipantResult;
+import com.team.cops_and_robbers.admin.application.dto.command.game.AdminGameListCommand;
+import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameAreaResult;
+import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameDetailResult;
+import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGamePageResult;
+import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameResult;
+import com.team.cops_and_robbers.admin.application.dto.result.game.AdminParticipantResult;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.fixture.GameAreaFixture;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
@@ -29,8 +29,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
-
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 

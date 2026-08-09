@@ -6,7 +6,6 @@ import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.report.domain.ReportType;
 import com.team.cops_and_robbers.report.presentation.dto.request.ReportRequest;
-import com.team.cops_and_robbers.report.repository.ReportRepository;
 import com.team.cops_and_robbers.user.domain.User;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
@@ -14,16 +13,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 class ReportControllerTest extends ControllerTest {
 
     private static final String REPORT_API_URL = "/api/report/chat";
-
-    @Autowired
-    private ReportRepository reportRepository;
 
     private User reporter;
     private User reported;

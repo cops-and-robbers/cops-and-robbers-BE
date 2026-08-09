@@ -1,0 +1,28 @@
+# ─── 대시보드 쿼리 ──────────────────────────────────────────
+extend type Query {
+  adminDashboard: AdminDashboard!
+}
+
+# ─── 대시보드 타입 ──────────────────────────────────────────
+type AdminDashboard {
+  todayGameCount: Int!
+  weeklyGameCount: Int!
+  inProgressGameCount: Int!
+  totalUserCount: Int!
+  todayNewUserCount: Int!
+  pendingReportCount: Int!
+  pendingBugReportCount: Int!
+  endReasonDistribution: [EndReasonDistribution!]!
+  averageGameDurationSeconds: Float!
+  winRateByTeam: WinRateByTeam!
+}
+
+type EndReasonDistribution {
+  endReason: GameEndReason!
+  count: Int!
+}
+
+type WinRateByTeam {
+  policeWinRate: Float!
+  robberWinRate: Float!
+}
