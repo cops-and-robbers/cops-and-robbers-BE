@@ -31,10 +31,10 @@ class AdminDashboardServiceTest extends ServiceUnitTest {
         @Test
         void 대시보드_데이터를_정상적으로_반환한다() {
             // given
-            given(gameRepository.countByCreatedAtAfter(any())).willReturn(5L, 20L);
+            given(gameRepository.countByCreatedAtGreaterThanEqual(any())).willReturn(5L, 20L);
             given(gameRepository.countByStatus(GameStatus.IN_PROGRESS)).willReturn(2L);
             given(userRepository.count()).willReturn(100L);
-            given(userRepository.countByCreatedAtAfter(any())).willReturn(3L);
+            given(userRepository.countByCreatedAtGreaterThanEqual(any())).willReturn(3L);
             given(reportRepository.countByStatus(ReportStatus.PENDING)).willReturn(7L);
             given(bugReportRepository.countByStatus(BugReportStatus.PENDING)).willReturn(4L);
             given(gameResultRepository.countByWinnerTeam(Team.POLICE)).willReturn(60L);
@@ -67,10 +67,10 @@ class AdminDashboardServiceTest extends ServiceUnitTest {
         @Test
         void 게임_결과가_없으면_평균_게임_시간은_0이고_승률은_모두_0이다() {
             // given
-            given(gameRepository.countByCreatedAtAfter(any())).willReturn(0L);
+            given(gameRepository.countByCreatedAtGreaterThanEqual(any())).willReturn(0L);
             given(gameRepository.countByStatus(any())).willReturn(0L);
             given(userRepository.count()).willReturn(0L);
-            given(userRepository.countByCreatedAtAfter(any())).willReturn(0L);
+            given(userRepository.countByCreatedAtGreaterThanEqual(any())).willReturn(0L);
             given(reportRepository.countByStatus(any())).willReturn(0L);
             given(bugReportRepository.countByStatus(any())).willReturn(0L);
             given(gameResultRepository.countByWinnerTeam(any())).willReturn(0L);
@@ -92,10 +92,10 @@ class AdminDashboardServiceTest extends ServiceUnitTest {
         @Test
         void 경찰만_이긴_경우_경찰_승률은_100이고_강도_승률은_0이다() {
             // given
-            given(gameRepository.countByCreatedAtAfter(any())).willReturn(0L);
+            given(gameRepository.countByCreatedAtGreaterThanEqual(any())).willReturn(0L);
             given(gameRepository.countByStatus(any())).willReturn(0L);
             given(userRepository.count()).willReturn(0L);
-            given(userRepository.countByCreatedAtAfter(any())).willReturn(0L);
+            given(userRepository.countByCreatedAtGreaterThanEqual(any())).willReturn(0L);
             given(reportRepository.countByStatus(any())).willReturn(0L);
             given(bugReportRepository.countByStatus(any())).willReturn(0L);
             given(gameResultRepository.countByWinnerTeam(Team.POLICE)).willReturn(10L);

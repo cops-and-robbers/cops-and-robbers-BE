@@ -50,11 +50,11 @@ public class AdminDashboardService {
         );
 
         return new AdminDashboardResult(
-                gameRepository.countByCreatedAtAfter(todayStart),
-                gameRepository.countByCreatedAtAfter(weekStart),
+                gameRepository.countByCreatedAtGreaterThanEqual(todayStart),
+                gameRepository.countByCreatedAtGreaterThanEqual(weekStart),
                 gameRepository.countByStatus(GameStatus.IN_PROGRESS),
                 userRepository.count(),
-                userRepository.countByCreatedAtAfter(todayStart),
+                userRepository.countByCreatedAtGreaterThanEqual(todayStart),
                 reportRepository.countByStatus(ReportStatus.PENDING),
                 bugReportRepository.countByStatus(BugReportStatus.PENDING),
                 endReasonDistribution,

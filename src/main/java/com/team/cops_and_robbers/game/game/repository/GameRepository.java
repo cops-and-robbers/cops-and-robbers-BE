@@ -18,7 +18,7 @@ import java.util.Optional;
 
 public interface GameRepository extends JpaRepository<Game, Long> {
 
-    long countByCreatedAtAfter(LocalDateTime since);
+    long countByCreatedAtGreaterThanEqual(LocalDateTime since);
 
     long countByStatus(GameStatus status);
 

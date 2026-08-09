@@ -39,7 +39,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             Pageable pageable
     );
 
-    long countByCreatedAtAfter(LocalDateTime since);
+    long countByCreatedAtGreaterThanEqual(LocalDateTime since);
 
     default User getByUserId(Long userId) {
         return findById(userId)
