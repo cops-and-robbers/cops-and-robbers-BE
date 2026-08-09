@@ -1,4 +1,5 @@
 TRUNCATE TABLE
+    community_posts,
     notices,
     reports,
     bug_reports,
