@@ -6,9 +6,7 @@ import com.team.cops_and_robbers.admin.application.dto.command.report.AdminRepor
 import com.team.cops_and_robbers.admin.application.dto.command.report.AdminUpdateReportStatusCommand;
 import com.team.cops_and_robbers.admin.application.dto.result.report.AdminReportPageResult;
 import com.team.cops_and_robbers.admin.application.dto.result.report.AdminReportResult;
-import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.report.domain.ReportStatus;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -41,12 +39,10 @@ public class AdminReportResolver {
     public AdminReportResult updateReportStatus(
             @Argument Long reportId,
             @Argument ReportStatus status,
-            @Argument String adminMemo,
-            HttpServletRequest request
+            @Argument String adminMemo
     ) {
-        LoginUser loginUser = (LoginUser) request.getAttribute("loginUser");
         AdminUpdateReportStatusCommand command = new AdminUpdateReportStatusCommand(
-                reportId, status, adminMemo, loginUser.userId());
+                reportId, status, adminMemo);
         return adminReportService.updateReportStatus(command);
     }
 }

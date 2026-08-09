@@ -48,7 +48,7 @@ public class AdminReportService {
     @Transactional
     public AdminReportResult updateReportStatus(AdminUpdateReportStatusCommand command) {
         ChatReport report = reportRepository.getById(command.reportId());
-        report.updateStatus(command.status(), command.adminId(), command.adminMemo());
+        report.updateStatus(command.status(), command.adminMemo());
 
         Map<Long, String> nicknameByUserId = userRepository
                 .findAllById(Set.of(report.getReporterUserId(), report.getReportedUserId()))

@@ -5,7 +5,6 @@ import com.team.cops_and_robbers.report.domain.ReportStatus;
 public record AdminUpdateReportStatusCommand(
         Long reportId,
         ReportStatus status,
-        String adminMemo,
-        Long adminId
+        String adminMemo
 ) {
 }

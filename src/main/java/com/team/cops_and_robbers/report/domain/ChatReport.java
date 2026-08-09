@@ -57,14 +57,11 @@ public class ChatReport extends BaseTimeEntity {
     @Builder.Default
     private ReportStatus status = ReportStatus.PENDING;
 
-    private Long resolvedBy;
-
     @Column(columnDefinition = "TEXT")
     private String adminMemo;
 
-    public void updateStatus(ReportStatus status, Long resolvedBy, String adminMemo) {
+    public void updateStatus(ReportStatus status, String adminMemo) {
         this.status = status;
-        this.resolvedBy = resolvedBy;
         this.adminMemo = adminMemo;
     }
 

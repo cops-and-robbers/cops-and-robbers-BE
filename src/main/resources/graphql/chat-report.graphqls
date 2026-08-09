@@ -36,7 +36,6 @@ type AdminReport {
   reportType: ReportType!
   etcReason: String
   status: ReportStatus!
-  resolvedBy: ID
   adminMemo: String
   createdAt: String!
 }

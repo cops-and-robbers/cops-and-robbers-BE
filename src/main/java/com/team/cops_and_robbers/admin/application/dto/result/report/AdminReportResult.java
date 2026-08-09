@@ -16,7 +16,6 @@ public record AdminReportResult(
         ReportType reportType,
         String etcReason,
         ReportStatus status,
-        Long resolvedBy,
         String adminMemo,
         String createdAt
 ) {
@@ -35,7 +34,6 @@ public record AdminReportResult(
                 report.getReportType(),
                 report.getEtcReason(),
                 report.getStatus(),
-                report.getResolvedBy(),
                 report.getAdminMemo(),
                 TimestampUtil.toIsoString(report.getCreatedAt())
         );

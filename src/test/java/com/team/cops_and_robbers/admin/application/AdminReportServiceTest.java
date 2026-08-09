@@ -137,7 +137,7 @@ class AdminReportServiceTest extends ServiceUnitTest {
         void 신고_상태를_변경하면_변경된_신고_정보를_반환한다() {
             // given
             AdminUpdateReportStatusCommand command = new AdminUpdateReportStatusCommand(
-                    100L, ReportStatus.RESOLVED, "확인 완료", 99L);
+                    100L, ReportStatus.RESOLVED, "확인 완료");
             given(reportRepository.getById(100L)).willReturn(report);
             given(userRepository.findAllById(any())).willReturn(List.of(reporter, reported));
 
@@ -156,7 +156,7 @@ class AdminReportServiceTest extends ServiceUnitTest {
         void 상태_변경_시_탈퇴한_유저의_닉네임은_탈퇴한_사용자로_반환된다() {
             // given
             AdminUpdateReportStatusCommand command = new AdminUpdateReportStatusCommand(
-                    100L, ReportStatus.DISMISSED, null, 99L);
+                    100L, ReportStatus.DISMISSED, null);
             given(reportRepository.getById(100L)).willReturn(report);
             given(userRepository.findAllById(any())).willReturn(List.of()); // 탈퇴
 
