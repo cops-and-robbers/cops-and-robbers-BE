@@ -1,0 +1,119 @@
+name: 📦 릴리즈 PR 자동 작성
+
+on:
+  pull_request:
+    types: [opened]
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  fill-release-pr:
+    if: github.head_ref == 'dev'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🔄 소스 코드 가져오기
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🏷️ 버전 결정
+        id: version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LAST_RELEASE_PR=$(gh pr list \
+            --base main \
+            --state merged \
+            --json title,mergedAt \
+            --jq '[.[] | select(.title | startswith("release:"))] | sort_by(.mergedAt) | last')
+
+          if [ -z "$LAST_RELEASE_PR" ] || [ "$LAST_RELEASE_PR" = "null" ]; then
+            LAST_VERSION="v0.0.0"
+            SINCE_DATE="2000-01-01T00:00:00Z"
+          else
+            LAST_VERSION=$(echo "$LAST_RELEASE_PR" | jq -r '.title' | sed 's/release: *//')
+            SINCE_DATE=$(echo "$LAST_RELEASE_PR" | jq -r '.mergedAt')
+          fi
+
+          echo "last_version=$LAST_VERSION" >> "$GITHUB_OUTPUT"
+          echo "since_date=$SINCE_DATE" >> "$GITHUB_OUTPUT"
+
+          MAJOR=$(echo "$LAST_VERSION" | sed 's/v//' | cut -d. -f1)
+          MINOR=$(echo "$LAST_VERSION" | sed 's/v//' | cut -d. -f2)
+          PATCH=$(echo "$LAST_VERSION" | sed 's/v//' | cut -d. -f3)
+
+          PR_TITLES=$(gh pr list \
+            --base dev \
+            --state merged \
+            --json title,mergedAt \
+            --jq "[.[] | select(.mergedAt > \"$SINCE_DATE\")] | .[].title")
+
+          HAS_FEAT=false
+          HAS_FIX=false
+
+          while IFS= read -r title; do
+            case "$title" in
+              feat:*|feat\(*) HAS_FEAT=true ;;
+              fix:*|fix\(*) HAS_FIX=true ;;
+            esac
+          done <<< "$PR_TITLES"
+
+          if [ "$HAS_FEAT" = true ]; then
+            MINOR=$((MINOR + 1)); PATCH=0
+          elif [ "$HAS_FIX" = true ]; then
+            PATCH=$((PATCH + 1))
+          else
+            MINOR=$((MINOR + 1)); PATCH=0
+          fi
+
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: 📋 반영 PR 목록 수집
+        id: collect
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SINCE_DATE=${{ steps.version.outputs.since_date }}
+
+          PR_LIST=$(gh pr list \
+            --base dev \
+            --state merged \
+            --json number,title,mergedAt \
+            --jq "[.[] | select(.mergedAt > \"$SINCE_DATE\")] | sort_by(.number) | .[] | \"- #\\(.number) \\(.title)\"")
+
+          if [ -z "$PR_LIST" ]; then
+            PR_LIST="- 반영된 PR 없음"
+          fi
+
+          {
+            echo "pr_list<<EOF"
+            echo "$PR_LIST"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: 📝 PR 제목 및 본문 작성
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+          PR_LIST: ${{ steps.collect.outputs.pr_list }}
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+
+          gh pr edit "$PR_NUMBER" \
+            --title "release: ${NEW_VERSION}" \
+            --body "## 📦 릴리즈 버전
+
+          - **릴리즈 버전**: \`${NEW_VERSION}\`
+
+          ## 📝 반영 PR
+
+          ${PR_LIST}
+
+          ## ✅ 확인 사항
+
+          - [ ] 릴리즈 버전 확인 완료"
