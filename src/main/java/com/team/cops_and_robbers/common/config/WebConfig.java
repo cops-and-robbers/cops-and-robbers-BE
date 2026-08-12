@@ -28,6 +28,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns(
                         "/api/auth/**",
                         "/api/user/check-nickname",
+                        "/api/community-posts",
+                        "/api/community-posts/{postId}",
                         "/actuator/health"
                 );
 
@@ -75,6 +77,11 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
+
+        registry.addMapping("/api/community-posts/**")
+                .allowedOrigins("*")
+                .allowedMethods("GET", "OPTIONS")
+                .allowedHeaders("*");
     }
 
     @Override
