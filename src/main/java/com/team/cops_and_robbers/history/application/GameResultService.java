@@ -11,18 +11,23 @@ import com.team.cops_and_robbers.history.application.dto.command.GameResultComma
 import com.team.cops_and_robbers.history.application.dto.result.GameResultResult;
 import com.team.cops_and_robbers.history.domain.GameEndReason;
 import com.team.cops_and_robbers.history.domain.GameResult;
+import com.team.cops_and_robbers.history.domain.GameResultParticipant;
 import com.team.cops_and_robbers.history.exception.GameResultException;
+import com.team.cops_and_robbers.history.repository.GameResultParticipantRepository;
 import com.team.cops_and_robbers.history.repository.GameResultRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class GameResultService {
 
     private final GameResultRepository gameResultRepository;
+    private final GameResultParticipantRepository gameResultParticipantRepository;
     private final GameAreaRepository gameAreaRepository;
     private final GameParticipantRepository gameParticipantRepository;
 
@@ -53,7 +58,19 @@ public class GameResultService {
                 gameArea
         );
 
-        return gameResultRepository.save(result);
+        GameResult savedResult = gameResultRepository.save(result);
+        saveParticipantSnapshots(savedResult, game.getId());
+
+        return savedResult;
+    }
+
+    private void saveParticipantSnapshots(GameResult gameResult, Long gameId) {
+        List<GameResultParticipant> snapshots =
+                gameParticipantRepository.findAllByGameIdWithUser(gameId)
+                        .stream()
+                        .map(gp -> GameResultParticipant.createSnapshot(gameResult, gp))
+                        .toList();
+        gameResultParticipantRepository.saveAll(snapshots);
     }
 
     @Transactional(readOnly = true)
