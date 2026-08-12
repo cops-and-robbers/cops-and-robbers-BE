@@ -79,9 +79,15 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowCredentials(true);
 
         registry.addMapping("/api/community-posts/**")
-                .allowedOrigins("*")
+                .allowedOrigins(
+                        "http://localhost:3000",
+                        "https://copsandrobbers.app",
+                        "https://admin.copsandrobbers.app",
+                        "https://copsnro66ers.site"
+                )
                 .allowedMethods("GET", "OPTIONS")
-                .allowedHeaders("*");
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 
     @Override
