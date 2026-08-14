@@ -1,14 +1,20 @@
 package com.team.cops_and_robbers.admin.presentation;
 
+import com.team.cops_and_robbers.admin.application.AdminGameHistoryService;
 import com.team.cops_and_robbers.admin.application.AdminGameService;
 import com.team.cops_and_robbers.admin.application.dto.SortDirection;
+import com.team.cops_and_robbers.admin.application.dto.command.game.AdminGameHistoryListCommand;
 import com.team.cops_and_robbers.admin.application.dto.command.game.AdminGameListCommand;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameAreaResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameDetailResult;
+import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameHistoryPageResult;
+import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameHistoryParticipantResult;
+import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameHistoryResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGamePageResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminParticipantResult;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
+import com.team.cops_and_robbers.history.domain.GameEndReason;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +33,7 @@ import java.util.Map;
 public class AdminGameResolver {
 
     private final AdminGameService adminGameService;
+    private final AdminGameHistoryService adminGameHistoryService;
 
     @QueryMapping
     public AdminGamePageResult adminGames(
@@ -61,5 +68,23 @@ public class AdminGameResolver {
     public Map<AdminGameResult, AdminGameAreaResult> area(
             List<AdminGameResult> games) {
         return adminGameService.getAreasByGame(games);
+    }
+
+    @QueryMapping
+    public AdminGameHistoryPageResult adminGameHistories(
+            @Argument @Min(0) int page,
+            @Argument @Min(1) @Max(100) int size,
+            @Argument GameEndReason endReason,
+            @Argument SortDirection sortDirection
+    ) {
+        AdminGameHistoryListCommand command = new AdminGameHistoryListCommand(
+                page, size, endReason, sortDirection != null ? sortDirection : SortDirection.DESC);
+        return adminGameHistoryService.getGameHistoryList(command);
+    }
+
+    @BatchMapping(typeName = "AdminGameHistory", field = "participants")
+    public Map<AdminGameHistoryResult, List<AdminGameHistoryParticipantResult>> historyParticipants(
+            List<AdminGameHistoryResult> histories) {
+        return adminGameHistoryService.getHistoryParticipantsByGame(histories);
     }
 }

@@ -8,6 +8,13 @@ extend type Query {
   ): AdminGamePage!
 
   adminGame(id: ID!): AdminGame!
+
+  adminGameHistories(
+    page: Int = 0
+    size: Int = 20
+    endReason: GameEndReason
+    sortDirection: SortDirection = DESC
+  ): AdminGameHistoryPage!
 }
 
 # ─── 게임 타입 ───────────────────────────────────────────────
@@ -79,4 +86,35 @@ type GameArea {
 type Coordinate {
   latitude: Float!
   longitude: Float!
+}
+
+# ─── 게임 기록 타입 ──────────────────────────────────────────
+type AdminGameHistoryPage {
+  content: [AdminGameHistory!]!
+  totalElements: Int!
+  totalPages: Int!
+  page: Int!
+  size: Int!
+}
+
+type AdminGameHistory {
+  id: ID!
+  gameId: ID!
+  winnerTeam: Team!
+  endReason: GameEndReason!
+  totalPoliceCount: Int!
+  totalRobberCount: Int!
+  arrestedRobberCount: Int!
+  totalArrestCount: Int!
+  durationSeconds: Int!
+  areaType: AreaType!
+  createdAt: String!
+  participants: [AdminGameHistoryParticipant!]!
+}
+
+type AdminGameHistoryParticipant {
+  userId: ID!
+  nickname: String!
+  team: Team!
+  status: ParticipantStatus!
 }

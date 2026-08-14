@@ -46,7 +46,6 @@ public class CommunityPostController implements CommunityPostControllerDocs {
 
     @GetMapping
     public ResponseEntity<CommunityPostListResponse> getPostList(
-            @AuthUser LoginUser loginUser,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
@@ -58,7 +57,6 @@ public class CommunityPostController implements CommunityPostControllerDocs {
 
     @GetMapping("/{postId}")
     public ResponseEntity<CommunityPostResponse> getPost(
-            @AuthUser LoginUser loginUser,
             @PathVariable Long postId
     ) {
         CommunityPostResult result = communityPostService.getPost(postId);
