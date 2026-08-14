@@ -2,12 +2,14 @@ package com.team.cops_and_robbers.admin.application;
 
 import com.team.cops_and_robbers.admin.application.dto.SortDirection;
 import com.team.cops_and_robbers.admin.application.dto.command.game.AdminGameHistoryListCommand;
+import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameAreaResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameHistoryPageResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameHistoryParticipantResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameHistoryResult;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.fixture.GameResultFixture;
 import com.team.cops_and_robbers.common.fixture.GameResultParticipantFixture;
+import com.team.cops_and_robbers.game.area.domain.AreaType;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.history.domain.GameEndReason;
 import com.team.cops_and_robbers.history.domain.GameResult;
@@ -39,7 +41,10 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
     private AdminGameHistoryService adminGameHistoryService;
 
     private GameResult createGameResult(Long gameId, Long id) {
-        GameResult gameResult = GameResultFixture.POLICE_WIN_RESULT(gameId);
+        return prepare(GameResultFixture.POLICE_WIN_RESULT(gameId), id);
+    }
+
+    private GameResult prepare(GameResult gameResult, Long id) {
         setId(gameResult, id);
         org.springframework.test.util.ReflectionTestUtils.setField(gameResult, "createdAt", FIXED_TIME);
         return gameResult;
@@ -94,6 +99,76 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
                 softly.assertThat(result.content().get(0).endReason())
                         .isEqualTo(GameEndReason.ALL_ARRESTED);
             });
+        }
+
+        @Test
+        void 원형_구역_기록이면_area에_중심_좌표와_반경이_매핑된다() {
+            // given
+            AdminGameHistoryListCommand command = new AdminGameHistoryListCommand(
+                    0, 10, null, SortDirection.DESC);
+
+            GameResult circleResult = createGameResult(1L, 10L);
+            Page<GameResult> resultPage = new PageImpl<>(
+                    List.of(circleResult), PageRequest.of(0, 10), 1);
+            given(gameResultRepository.findAllForAdmin(isNull(), any())).willReturn(resultPage);
+
+            // when
+            AdminGameHistoryPageResult result = adminGameHistoryService.getGameHistoryList(command);
+
+            // then
+            AdminGameAreaResult area = result.content().get(0).area();
+            assertSoftly(softly -> {
+                softly.assertThat(area.areaType()).isEqualTo(AreaType.CIRCLE);
+                softly.assertThat(area.playgroundCenterLat()).isEqualTo(37.4979);
+                softly.assertThat(area.playgroundCenterLng()).isEqualTo(127.0276);
+                softly.assertThat(area.playgroundRadiusInMeters()).isEqualTo(500);
+                softly.assertThat(area.jailCenterLat()).isNull();
+                softly.assertThat(area.playgroundPolygon()).isNull();
+            });
+        }
+
+        @Test
+        void 다각형_구역_기록이면_area에_폴리곤_좌표가_매핑된다() {
+            // given
+            AdminGameHistoryListCommand command = new AdminGameHistoryListCommand(
+                    0, 10, null, SortDirection.DESC);
+
+            GameResult polygonResult = prepare(GameResultFixture.POLICE_WIN_RESULT_POLYGON(1L), 10L);
+            Page<GameResult> resultPage = new PageImpl<>(
+                    List.of(polygonResult), PageRequest.of(0, 10), 1);
+            given(gameResultRepository.findAllForAdmin(isNull(), any())).willReturn(resultPage);
+
+            // when
+            AdminGameHistoryPageResult result = adminGameHistoryService.getGameHistoryList(command);
+
+            // then
+            AdminGameAreaResult area = result.content().get(0).area();
+            assertSoftly(softly -> {
+                softly.assertThat(area.areaType()).isEqualTo(AreaType.POLYGON);
+                softly.assertThat(area.playgroundPolygon()).hasSize(4);
+                softly.assertThat(area.playgroundPolygon().get(0).latitude()).isEqualTo(37.4979);
+                softly.assertThat(area.playgroundPolygon().get(0).longitude()).isEqualTo(127.0276);
+                softly.assertThat(area.playgroundCenterLat()).isNull();
+                softly.assertThat(area.jailPolygon()).isNull();
+            });
+        }
+
+        @Test
+        void 좌표가_없는_과거_기록이면_area가_null이다() {
+            // given
+            AdminGameHistoryListCommand command = new AdminGameHistoryListCommand(
+                    0, 10, null, SortDirection.DESC);
+
+            GameResult legacyResult = prepare(GameResultFixture.LEGACY_RESULT_WITHOUT_AREA(1L), 10L);
+            Page<GameResult> resultPage = new PageImpl<>(
+                    List.of(legacyResult), PageRequest.of(0, 10), 1);
+            given(gameResultRepository.findAllForAdmin(isNull(), any())).willReturn(resultPage);
+
+            // when
+            AdminGameHistoryPageResult result = adminGameHistoryService.getGameHistoryList(command);
+
+            // then
+            assertThat(result.content().get(0).area()).isNull();
         }
 
         @Test

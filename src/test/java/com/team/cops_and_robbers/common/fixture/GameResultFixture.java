@@ -51,6 +51,20 @@ public class GameResultFixture {
                 .build();
     }
 
+    public static GameResult LEGACY_RESULT_WITHOUT_AREA(Long gameId) {
+        return GameResult.builder()
+                .gameId(gameId)
+                .winnerTeam(Team.POLICE)
+                .endReason(GameEndReason.ALL_ARRESTED)
+                .totalPoliceCount(2)
+                .totalRobberCount(3)
+                .arrestedRobberCount(3)
+                .totalArrestCount(5)
+                .durationSeconds(300)
+                .areaType(AreaType.CIRCLE)
+                .build();
+    }
+
     private static Polygon createPolygon(double[][] coords) {
         Coordinate[] coordinates = new Coordinate[coords.length + 1];
         for (int i = 0; i < coords.length; i++) {
