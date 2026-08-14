@@ -108,6 +108,7 @@ type AdminGameHistory {
   totalArrestCount: Int!
   durationSeconds: Int!
   areaType: AreaType!
+  area: GameArea
   createdAt: String!
   participants: [AdminGameHistoryParticipant!]!
 }
