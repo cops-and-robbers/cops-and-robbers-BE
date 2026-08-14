@@ -70,7 +70,10 @@ public class WebConfig implements WebMvcConfigurer {
                         "http://localhost:3000",
                         "https://copsnro66ers.site",
                         "https://admin.copsnro66ers.site",
-                        "https://dev-api.copsnro66ers.site"
+                        "https://dev-api.copsnro66ers.site",
+                        "https://copsandrobbers.app",
+                        "https://admin.copsandrobbers.app",
+                        "https://dev-api.copsandrobbers.app"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
