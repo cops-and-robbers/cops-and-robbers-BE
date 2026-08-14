@@ -99,7 +99,7 @@ type AdminGameHistoryPage {
 
 type AdminGameHistory {
   id: ID!
-  gameId: Int!
+  gameId: ID!
   winnerTeam: Team!
   endReason: GameEndReason!
   totalPoliceCount: Int!
