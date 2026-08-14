@@ -28,6 +28,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns(
                         "/api/auth/**",
                         "/api/user/check-nickname",
+                        "/api/community-posts",
+                        "/api/community-posts/{postId}",
                         "/actuator/health"
                 );
 
@@ -76,6 +78,17 @@ public class WebConfig implements WebMvcConfigurer {
                         "https://dev-api.copsandrobbers.app"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
+
+        registry.addMapping("/api/community-posts/**")
+                .allowedOrigins(
+                        "http://localhost:3000",
+                        "https://copsandrobbers.app",
+                        "https://admin.copsandrobbers.app",
+                        "https://copsnro66ers.site"
+                )
+                .allowedMethods("GET", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
     }

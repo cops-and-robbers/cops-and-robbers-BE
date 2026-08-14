@@ -6,6 +6,7 @@ import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
+import com.team.cops_and_robbers.history.repository.GameResultParticipantRepository;
 import com.team.cops_and_robbers.history.repository.GameResultRepository;
 import com.team.cops_and_robbers.notice.repository.NoticeRepository;
 import com.team.cops_and_robbers.report.repository.ReportRepository;
@@ -30,6 +31,9 @@ public abstract class ServiceUnitTest {
 
     @Mock
     protected GameResultRepository gameResultRepository;
+
+    @Mock
+    protected GameResultParticipantRepository gameResultParticipantRepository;
 
     @Mock
     protected UserRepository userRepository;

@@ -142,7 +142,7 @@ class CommunityPostControllerTest extends ControllerTest {
         }
 
         @Test
-        void 토큰_없이_요청하면_401을_응답한다() {
+        void 토큰_없이_요청해도_200을_응답한다() {
             ExtractableResponse<Response> extract = unauthenticated()
                     .when()
                     .get(POST_API_URL)
@@ -150,7 +150,7 @@ class CommunityPostControllerTest extends ControllerTest {
                     .extract();
 
             assertSoftly(softly -> {
-                softly.assertThat(extract.statusCode()).isEqualTo(401);
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
             });
         }
     }
@@ -190,15 +190,17 @@ class CommunityPostControllerTest extends ControllerTest {
         }
 
         @Test
-        void 토큰_없이_요청하면_401을_응답한다() {
+        void 토큰_없이_요청해도_200을_응답한다() {
+            Long postId = communityPostRepository.save(POST(user.getId())).getId();
+
             ExtractableResponse<Response> extract = unauthenticated()
                     .when()
-                    .get(POST_API_URL + "/1")
+                    .get(POST_API_URL + "/" + postId)
                     .then()
                     .extract();
 
             assertSoftly(softly -> {
-                softly.assertThat(extract.statusCode()).isEqualTo(401);
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
             });
         }
     }

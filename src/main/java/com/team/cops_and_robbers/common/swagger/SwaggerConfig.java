@@ -30,8 +30,14 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.15.0")
+                .version("2.16.0")
                 .description("""
+                        ## v2.16.0 업데이트 내역
+
+                        ### 🛠 변경
+                        - GET /api/community-posts, GET /api/community-posts/{postId} 비로그인 조회 허용
+                          - 웹뷰 지원을 위해 @AuthUser 제거
+
                         ## v2.15.0 업데이트 내역
 
                         ### ✨ 신규

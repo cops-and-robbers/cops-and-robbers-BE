@@ -37,7 +37,6 @@ public interface CommunityPostControllerDocs {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     ResponseEntity<CommunityPostListResponse> getPostList(
-            @Parameter(hidden = true) LoginUser loginUser,
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기 (1부터~)", example = "10") @RequestParam(defaultValue = "10") int size
     );
@@ -48,7 +47,6 @@ public interface CommunityPostControllerDocs {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     ResponseEntity<CommunityPostResponse> getPost(
-            @Parameter(hidden = true) LoginUser loginUser,
             @PathVariable Long postId
     );
 
