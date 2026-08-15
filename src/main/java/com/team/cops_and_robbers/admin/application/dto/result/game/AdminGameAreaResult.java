@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.admin.application.dto.result.game;
 
 import com.team.cops_and_robbers.game.area.domain.AreaType;
 import com.team.cops_and_robbers.game.area.domain.GameArea;
+import com.team.cops_and_robbers.history.domain.GameResult;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Polygon;
 
@@ -45,6 +46,33 @@ public record AdminGameAreaResult(
                     null,
                     toCoordinatesList(gameArea.getPlaygroundPolygon()),
                     toCoordinatesList(gameArea.getJailPolygon())
+            );
+        };
+    }
+
+    public static AdminGameAreaResult from(GameResult gameResult) {
+        return switch (gameResult.getAreaType()) {
+            case CIRCLE -> new AdminGameAreaResult(
+                    AreaType.CIRCLE,
+                    gameResult.getPlaygroundCenter().getY(),
+                    gameResult.getPlaygroundCenter().getX(),
+                    gameResult.getPlaygroundRadiusInMeters(),
+                    gameResult.getJailCenter() == null ? null : gameResult.getJailCenter().getY(),
+                    gameResult.getJailCenter() == null ? null : gameResult.getJailCenter().getX(),
+                    gameResult.getJailRadiusInMeters(),
+                    null,
+                    null
+            );
+            case POLYGON -> new AdminGameAreaResult(
+                    AreaType.POLYGON,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    toCoordinatesList(gameResult.getPlaygroundPolygon()),
+                    gameResult.getJailPolygon() == null ? null : toCoordinatesList(gameResult.getJailPolygon())
             );
         };
     }

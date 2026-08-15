@@ -17,6 +17,7 @@ public record AdminGameHistoryResult(
         Integer totalArrestCount,
         Integer durationSeconds,
         AreaType areaType,
+        AdminGameAreaResult area,
         String createdAt
 ) {
 
@@ -32,7 +33,15 @@ public record AdminGameHistoryResult(
                 gameResult.getTotalArrestCount(),
                 gameResult.getDurationSeconds(),
                 gameResult.getAreaType(),
+                toAreaResult(gameResult),
                 TimestampUtil.toIsoString(gameResult.getCreatedAt())
         );
+    }
+
+    private static AdminGameAreaResult toAreaResult(GameResult gameResult) {
+        if (gameResult.getPlaygroundCenter() == null && gameResult.getPlaygroundPolygon() == null) {
+            return null;
+        }
+        return AdminGameAreaResult.from(gameResult);
     }
 }

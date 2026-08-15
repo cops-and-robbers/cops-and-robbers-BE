@@ -31,6 +31,10 @@ public class AdminGameHistoryService {
         return AdminGameHistoryPageResult.from(historyPage);
     }
 
+    public AdminGameHistoryResult getGameHistory(Long gameResultId) {
+        return AdminGameHistoryResult.from(gameResultRepository.getByGameResultId(gameResultId));
+    }
+
     public Map<AdminGameHistoryResult, List<AdminGameHistoryParticipantResult>> getHistoryParticipantsByGame(
             List<AdminGameHistoryResult> histories) {
         List<Long> gameResultIds = histories.stream().map(AdminGameHistoryResult::id).toList();

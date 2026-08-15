@@ -17,6 +17,26 @@ public class GameResultFixture {
 
     public static GameResult POLICE_WIN_RESULT(Long gameId) {
         Point center = GEOMETRY_FACTORY.createPoint(new Coordinate(127.0276, 37.4979));
+        Point jailCenter = GEOMETRY_FACTORY.createPoint(new Coordinate(127.0286, 37.4989));
+        return GameResult.builder()
+                .gameId(gameId)
+                .winnerTeam(Team.POLICE)
+                .endReason(GameEndReason.ALL_ARRESTED)
+                .totalPoliceCount(2)
+                .totalRobberCount(3)
+                .arrestedRobberCount(3)
+                .totalArrestCount(5)
+                .durationSeconds(300)
+                .areaType(AreaType.CIRCLE)
+                .playgroundCenter(center)
+                .playgroundRadiusInMeters(500)
+                .jailCenter(jailCenter)
+                .jailRadiusInMeters(50)
+                .build();
+    }
+
+    public static GameResult POLICE_WIN_RESULT_WITHOUT_JAIL(Long gameId) {
+        Point center = GEOMETRY_FACTORY.createPoint(new Coordinate(127.0276, 37.4979));
         return GameResult.builder()
                 .gameId(gameId)
                 .winnerTeam(Team.POLICE)
@@ -37,6 +57,10 @@ public class GameResultFixture {
                 {127.0276, 37.4979}, {127.0296, 37.4979},
                 {127.0296, 37.4999}, {127.0276, 37.4999}
         });
+        Polygon jailPolygon = createPolygon(new double[][]{
+                {127.0280, 37.4983}, {127.0285, 37.4983},
+                {127.0285, 37.4988}, {127.0280, 37.4988}
+        });
         return GameResult.builder()
                 .gameId(gameId)
                 .winnerTeam(Team.POLICE)
@@ -48,6 +72,21 @@ public class GameResultFixture {
                 .durationSeconds(300)
                 .areaType(AreaType.POLYGON)
                 .playgroundPolygon(polygon)
+                .jailPolygon(jailPolygon)
+                .build();
+    }
+
+    public static GameResult LEGACY_RESULT_WITHOUT_AREA(Long gameId) {
+        return GameResult.builder()
+                .gameId(gameId)
+                .winnerTeam(Team.POLICE)
+                .endReason(GameEndReason.ALL_ARRESTED)
+                .totalPoliceCount(2)
+                .totalRobberCount(3)
+                .arrestedRobberCount(3)
+                .totalArrestCount(5)
+                .durationSeconds(300)
+                .areaType(AreaType.CIRCLE)
                 .build();
     }
 
