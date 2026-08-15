@@ -71,6 +71,50 @@ class GameResultServiceTest extends ServiceUnitTest {
         }
 
         @Test
+        void CIRCLE_영역_게임이_종료되면_감옥_중심과_반경도_저장된다() {
+            // given
+            Game game = IN_PROGRESS_GAME();
+            setId(game, TEST_GAME_ID);
+            GameArea circleArea = CIRCLE_GAME_AREA(game);
+
+            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(circleArea);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.POLICE)).willReturn(2);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.ROBBER)).willReturn(3);
+            given(gameParticipantRepository.countByGameIdAndRobberStatus(TEST_GAME_ID, ParticipantStatus.JAILED)).willReturn(3);
+            given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
+
+            // when
+            GameResult result = gameResultService.recordGameResult(game, Team.POLICE, GameEndReason.ALL_ARRESTED);
+
+            // then
+            assertThat(result.getJailCenter()).isEqualTo(circleArea.getJailCenter());
+            assertThat(result.getJailRadiusInMeters()).isEqualTo(circleArea.getJailRadiusInMeters());
+            assertThat(result.getJailPolygon()).isNull();
+        }
+
+        @Test
+        void POLYGON_영역_게임이_종료되면_감옥_폴리곤도_저장된다() {
+            // given
+            Game game = IN_PROGRESS_GAME();
+            setId(game, TEST_GAME_ID);
+            GameArea polygonArea = POLYGON_GAME_AREA(game);
+
+            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(polygonArea);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.POLICE)).willReturn(2);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.ROBBER)).willReturn(3);
+            given(gameParticipantRepository.countByGameIdAndRobberStatus(TEST_GAME_ID, ParticipantStatus.JAILED)).willReturn(3);
+            given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
+
+            // when
+            GameResult result = gameResultService.recordGameResult(game, Team.POLICE, GameEndReason.ALL_ARRESTED);
+
+            // then
+            assertThat(result.getJailPolygon()).isEqualTo(polygonArea.getJailPolygon());
+            assertThat(result.getJailCenter()).isNull();
+            assertThat(result.getJailRadiusInMeters()).isNull();
+        }
+
+        @Test
         void POLYGON_영역_게임이_종료되면_polygon_필드가_채워진_결과가_저장된다() {
             // given
             Game game = IN_PROGRESS_GAME();

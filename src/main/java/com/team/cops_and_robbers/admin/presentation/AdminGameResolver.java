@@ -82,6 +82,11 @@ public class AdminGameResolver {
         return adminGameHistoryService.getGameHistoryList(command);
     }
 
+    @QueryMapping
+    public AdminGameHistoryResult adminGameHistory(@Argument Long id) {
+        return adminGameHistoryService.getGameHistory(id);
+    }
+
     @BatchMapping(typeName = "AdminGameHistory", field = "participants")
     public Map<AdminGameHistoryResult, List<AdminGameHistoryParticipantResult>> historyParticipants(
             List<AdminGameHistoryResult> histories) {

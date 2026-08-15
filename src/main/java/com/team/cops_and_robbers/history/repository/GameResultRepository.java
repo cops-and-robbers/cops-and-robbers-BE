@@ -1,8 +1,10 @@
 package com.team.cops_and_robbers.history.repository;
 
+import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.history.domain.GameEndReason;
 import com.team.cops_and_robbers.history.domain.GameResult;
+import com.team.cops_and_robbers.history.exception.GameResultException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -34,4 +36,9 @@ public interface GameResultRepository extends JpaRepository<GameResult, Long> {
             @Param("endReason") GameEndReason endReason,
             Pageable pageable
     );
+
+    default GameResult getByGameResultId(Long gameResultId) {
+        return findById(gameResultId)
+                .orElseThrow(() -> new ApplicationException(GameResultException.GAME_RESULT_NOT_FOUND));
+    }
 }
