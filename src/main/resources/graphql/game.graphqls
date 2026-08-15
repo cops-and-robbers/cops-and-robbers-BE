@@ -15,6 +15,8 @@ extend type Query {
     endReason: GameEndReason
     sortDirection: SortDirection = DESC
   ): AdminGameHistoryPage!
+
+  adminGameHistory(id: ID!): AdminGameHistory!
 }
 
 # ─── 게임 타입 ───────────────────────────────────────────────

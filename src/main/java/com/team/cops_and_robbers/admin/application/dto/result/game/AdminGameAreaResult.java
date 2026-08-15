@@ -57,9 +57,9 @@ public record AdminGameAreaResult(
                     gameResult.getPlaygroundCenter().getY(),
                     gameResult.getPlaygroundCenter().getX(),
                     gameResult.getPlaygroundRadiusInMeters(),
-                    null,
-                    null,
-                    null,
+                    gameResult.getJailCenter() == null ? null : gameResult.getJailCenter().getY(),
+                    gameResult.getJailCenter() == null ? null : gameResult.getJailCenter().getX(),
+                    gameResult.getJailRadiusInMeters(),
                     null,
                     null
             );
@@ -72,7 +72,7 @@ public record AdminGameAreaResult(
                     null,
                     null,
                     toCoordinatesList(gameResult.getPlaygroundPolygon()),
-                    null
+                    gameResult.getJailPolygon() == null ? null : toCoordinatesList(gameResult.getJailPolygon())
             );
         };
     }

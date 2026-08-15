@@ -74,6 +74,14 @@ public class GameResult extends BaseTimeEntity {
     @Column(columnDefinition = "GEOMETRY(POLYGON, 4326)")
     private Polygon playgroundPolygon;
 
+    @Column(columnDefinition = "GEOMETRY(POINT, 4326)")
+    private Point jailCenter;
+
+    private Integer jailRadiusInMeters;
+
+    @Column(columnDefinition = "GEOMETRY(POLYGON, 4326)")
+    private Polygon jailPolygon;
+
     public static GameResult createSnapshot(
             Game game,
             Team winningTeam,
@@ -101,10 +109,13 @@ public class GameResult extends BaseTimeEntity {
 
         if (gameArea.getAreaType() == AreaType.CIRCLE) {
             builder.playgroundCenter(gameArea.getPlaygroundCenter())
-                   .playgroundRadiusInMeters(gameArea.getPlaygroundRadiusInMeters());
+                   .playgroundRadiusInMeters(gameArea.getPlaygroundRadiusInMeters())
+                   .jailCenter(gameArea.getJailCenter())
+                   .jailRadiusInMeters(gameArea.getJailRadiusInMeters());
         }
         else {
-            builder.playgroundPolygon(gameArea.getPlaygroundPolygon());
+            builder.playgroundPolygon(gameArea.getPlaygroundPolygon())
+                   .jailPolygon(gameArea.getJailPolygon());
         }
 
         return builder.build();
