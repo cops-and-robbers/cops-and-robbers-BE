@@ -7,15 +7,19 @@ import com.team.cops_and_robbers.community.application.dto.command.CommunityPost
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostStatusCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostUpdateCommand;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityPostResult;
+import com.team.cops_and_robbers.community.domain.CommunityChatMember;
 import com.team.cops_and_robbers.community.domain.CommunityPost;
 import com.team.cops_and_robbers.community.exception.CommunityPostException;
+import com.team.cops_and_robbers.community.repository.CommunityChatMemberRepository;
+import com.team.cops_and_robbers.community.repository.CommunityChatMessageRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.user.repository.UserRepository;
-import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommunityPostService {
 
     private final CommunityPostRepository communityPostRepository;
+    private final CommunityChatMemberRepository communityChatMemberRepository;
+    private final CommunityChatMessageRepository communityChatMessageRepository;
     private final UserRepository userRepository;
 
     @Transactional
@@ -30,6 +36,7 @@ public class CommunityPostService {
         userRepository.getByUserId(command.writerId());
         validateMeetingDate(command.meetingAt());
         CommunityPost post = communityPostRepository.save(CommunityPost.createPost(command));
+        communityChatMemberRepository.save(CommunityChatMember.createMember(post.getId(), command.writerId()));
         return CommunityPostResult.from(post);
     }
 
@@ -55,6 +62,8 @@ public class CommunityPostService {
     public void deletePost(CommunityPostDeleteCommand command) {
         CommunityPost post = communityPostRepository.getByPostId(command.postId());
         validateAuthor(post, command.writerId());
+        communityChatMessageRepository.deleteAllByCommunityPostId(command.postId());
+        communityChatMemberRepository.deleteAllByCommunityPostId(command.postId());
         communityPostRepository.deleteByPostId(command.postId());
     }
 

@@ -57,6 +57,20 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         }
 
         @Test
+        void 게시글을_생성하면_작성자가_채팅방_멤버로_자동_등록된다() {
+            CommunityPost post = POST(1L);
+            setId(post, 1L);
+            given(userRepository.getByUserId(1L)).willReturn(USER());
+            given(communityPostRepository.save(any())).willReturn(post);
+
+            communityPostService.createPost(
+                    new CommunityPostCreateCommand(1L, "같이 경찰과 도둑 하실 분!", "강남역 근처에서 5명 모집합니다.",
+                            LocalDateTime.now().plusDays(3), 37.4979, 127.0276, 6));
+
+            then(communityChatMemberRepository).should().save(any());
+        }
+
+        @Test
         void 과거_모임_날짜로_생성하면_INVALID_MEETING_DATE_예외가_발생한다() {
             given(userRepository.getByUserId(1L)).willReturn(USER());
 
@@ -185,6 +199,18 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             communityPostService.deletePost(new CommunityPostDeleteCommand(1L, 1L));
 
             then(communityPostRepository).should().deleteByPostId(1L);
+        }
+
+        @Test
+        void 게시글을_삭제하면_채팅_메시지와_멤버도_함께_정리된다() {
+            CommunityPost post = POST(1L);
+            setId(post, 1L);
+            given(communityPostRepository.getByPostId(1L)).willReturn(post);
+
+            communityPostService.deletePost(new CommunityPostDeleteCommand(1L, 1L));
+
+            then(communityChatMessageRepository).should().deleteAllByCommunityPostId(1L);
+            then(communityChatMemberRepository).should().deleteAllByCommunityPostId(1L);
         }
 
         @Test
