@@ -47,6 +47,6 @@ kakao:
 
 discord:
   webhook:
-    bug: "https://discord.com/api/webhooks/dummy"
-    alert: "https://discord.com/api/webhooks/dummy"
+    bug: ""
+    alert: ""
 

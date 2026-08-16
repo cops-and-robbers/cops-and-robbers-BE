@@ -22,9 +22,9 @@ public class DiscordNotifier {
     private final RestClient restClient;
     private final DiscordProperties discordProperties;
 
-    public DiscordNotifier(DiscordProperties discordProperties) {
+    public DiscordNotifier(DiscordProperties discordProperties, RestClient.Builder builder) {
         this.discordProperties = discordProperties;
-        this.restClient = RestClient.create();
+        this.restClient = builder.build();
     }
 
     @Async
@@ -64,7 +64,7 @@ public class DiscordNotifier {
                     .retrieve()
                     .toBodilessEntity();
         } catch (Exception e) {
-            log.error("Discord 알림 전송 실패 | url={}", webhookUrl, e);
+            log.error("Discord 알림 전송 실패 | type={}", payload.username(), e);
         }
     }
 }

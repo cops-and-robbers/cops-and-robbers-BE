@@ -49,7 +49,7 @@ public class KakaoGeocodingClient implements GeocodingClient {
             return new GeocodingResult.Resolved(postAddress);
         } catch (Exception e) {
             log.warn("카카오 역지오코딩 호출 실패 | lat={}, lng={}", latitude, longitude, e);
-            discordNotifier.sendGeocodingFailure(latitude, longitude, e.getMessage());
+            discordNotifier.sendGeocodingFailure(latitude, longitude, e.toString());
             return new GeocodingResult.Failed();
         }
     }
