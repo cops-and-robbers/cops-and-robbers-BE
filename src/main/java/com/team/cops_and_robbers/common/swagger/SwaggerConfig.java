@@ -30,8 +30,33 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.16.0")
+                .version("2.17.0")
                 .description("""
+                        ## v2.17.0 업데이트 내역
+
+                        ### ⚠️ 주의 (클라이언트 동시 배포 필요)
+                        - GET /api/community-posts 페이지네이션을 커서 방식으로 전환
+                          - page 파라미터 제거, cursor 파라미터 추가
+                          - 응답의 page 객체가 cursor 객체(nextCursor, hasNext)로 변경
+                          - 허용 파라미터는 cursor, size, scope, sort 뿐
+                          - 지원하지 않는 쿼리 파라미터를 보내면 400(INVALID_QUERY_PARAMETER)
+
+                        ### ✨ 신규
+                        - GET /api/community-posts scope, sort 파라미터 추가
+                          - scope: ALL | NEARBY | MINE (기본 ALL)
+                          - sort: LATEST | POPULAR | DISTANCE | DEADLINE (기본 LATEST)
+                          - 현재 구현은 ALL + LATEST 뿐이며 그 외 값은 400
+                            (UNSUPPORTED_LIST_SCOPE / UNSUPPORTED_LIST_SORT)
+                          - NEARBY 반경 기준, MINE 정의, 인기·거리·마감임박 정렬은 정책 확정 후 지원 예정
+                        - 게시글 응답에 작성자 닉네임 writerNickname 추가 (탈퇴한 작성자면 null)
+                        - 게시글 응답에 주소 3종 추가 — location.address(지번),
+                          location.roadAddress(도로명), location.buildingName(건물명)
+                          - 작성/수정 시 좌표를 서버에서 1회 역지오코딩하여 3개를 함께 저장
+                          - 표기는 클라이언트가 선택 (예: buildingName → roadAddress → address 순 fallback)
+                          - roadAddress·buildingName은 해당 정보가 없는 좌표에서 null
+                            (도로명이 없는 지역, 건물이 없는 공터·공원 등)
+                          - 역지오코딩 실패 시 3개 모두 null
+
                         ## v2.16.0 업데이트 내역
 
                         ### 🛠 변경
