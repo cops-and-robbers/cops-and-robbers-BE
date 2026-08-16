@@ -1,19 +1,29 @@
 package com.team.cops_and_robbers.community.application;
 
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.community.application.dto.CommunityPostCursor;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostCreateCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostDeleteCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostListCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostStatusCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostUpdateCommand;
+import com.team.cops_and_robbers.community.application.dto.result.CommunityPostCursorResult;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityPostResult;
 import com.team.cops_and_robbers.community.domain.CommunityPost;
+import com.team.cops_and_robbers.community.domain.PostAddress;
 import com.team.cops_and_robbers.community.exception.CommunityPostException;
+import com.team.cops_and_robbers.community.infrastructure.GeocodingClient;
+import com.team.cops_and_robbers.community.infrastructure.GeocodingResult;
 import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
+import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,22 +34,32 @@ public class CommunityPostService {
 
     private final CommunityPostRepository communityPostRepository;
     private final UserRepository userRepository;
+    private final GeocodingClient geocodingClient;
 
     @Transactional
     public CommunityPostResult createPost(CommunityPostCreateCommand command) {
-        userRepository.getByUserId(command.writerId());
+        User writer = userRepository.getByUserId(command.writerId());
         validateMeetingDate(command.meetingAt());
-        CommunityPost post = communityPostRepository.save(CommunityPost.createPost(command));
-        return CommunityPostResult.from(post);
+        PostAddress postAddress = resolveAddress(command.latitude(), command.longitude());
+        CommunityPost post = communityPostRepository.save(CommunityPost.createPost(command, postAddress));
+        return CommunityPostResult.from(post, writer.getNickname());
     }
 
-    public Page<CommunityPostResult> getPostList(CommunityPostListCommand command) {
-        return communityPostRepository.findAllByOrderByCreatedAtDesc(command.toPageable())
-                .map(CommunityPostResult::from);
+    public CommunityPostCursorResult getPostList(CommunityPostListCommand command) {
+        Pageable pageable = PageRequest.of(0, command.size() + 1);
+        List<CommunityPost> fetched = CommunityPostCursor.decode(command.cursor())
+                .map(cursor -> communityPostRepository.findPageByCursor(cursor.createdAt(), cursor.id(), pageable))
+                .orElseGet(() -> communityPostRepository.findAllByOrderByCreatedAtDescIdDesc(pageable));
+
+        boolean hasNext = fetched.size() > command.size();
+        List<CommunityPost> posts = hasNext ? fetched.subList(0, command.size()) : fetched;
+
+        return new CommunityPostCursorResult(toResults(posts), resolveNextCursor(posts, hasNext), hasNext);
     }
 
     public CommunityPostResult getPost(Long postId) {
-        return CommunityPostResult.from(communityPostRepository.getByPostId(postId));
+        CommunityPost post = communityPostRepository.getByPostId(postId);
+        return CommunityPostResult.from(post, findWriterNickname(post.getWriterId()));
     }
 
     @Transactional
@@ -47,8 +67,9 @@ public class CommunityPostService {
         CommunityPost post = communityPostRepository.getByPostId(command.postId());
         validateAuthor(post, command.writerId());
         validateMeetingDate(command.meetingAt());
-        post.updatePost(command);
-        return CommunityPostResult.from(post);
+        PostAddress postAddress = resolveUpdatedAddress(post, command);
+        post.updatePost(command, postAddress);
+        return CommunityPostResult.from(post, findWriterNickname(post.getWriterId()));
     }
 
     @Transactional
@@ -63,7 +84,7 @@ public class CommunityPostService {
         CommunityPost post = communityPostRepository.getByPostId(command.postId());
         validateAuthor(post, command.writerId());
         post.updateStatus(command.status());
-        return CommunityPostResult.from(post);
+        return CommunityPostResult.from(post, findWriterNickname(post.getWriterId()));
     }
 
     private void validateAuthor(CommunityPost post, Long writerId) {
@@ -77,4 +98,54 @@ public class CommunityPostService {
             throw new ApplicationException(CommunityPostException.INVALID_MEETING_DATE);
         }
     }
+
+    private PostAddress resolveUpdatedAddress(CommunityPost post, CommunityPostUpdateCommand command) {
+        boolean coordinatesChanged = !post.getLatitude().equals(command.latitude())
+                || !post.getLongitude().equals(command.longitude());
+        PostAddress savedAddress = post.getPostAddress();
+        if (!coordinatesChanged && !savedAddress.isEmpty()) {
+            return savedAddress;
+        }
+        return resolveAddress(command.latitude(), command.longitude());
+    }
+
+    private PostAddress resolveAddress(Double latitude, Double longitude) {
+        return switch (geocodingClient.reverseGeocode(latitude, longitude)) {
+            case GeocodingResult.Resolved resolved -> resolved.postAddress();
+            case GeocodingResult.NotFound ignored ->
+                    throw new ApplicationException(CommunityPostException.ADDRESS_NOT_FOUND);
+            case GeocodingResult.Failed ignored -> PostAddress.empty();
+        };
+    }
+
+    private String findWriterNickname(Long writerId) {
+        return userRepository.findById(writerId)
+                .map(User::getNickname)
+                .orElse(null);
+    }
+
+    private List<CommunityPostResult> toResults(List<CommunityPost> posts) {
+        Map<Long, String> nicknames = findWriterNicknames(posts);
+        return posts.stream()
+                .map(post -> CommunityPostResult.from(post, nicknames.get(post.getWriterId())))
+                .toList();
+    }
+
+    private String resolveNextCursor(List<CommunityPost> posts, boolean hasNext) {
+        if (!hasNext) {
+            return null;
+        }
+        CommunityPost last = posts.getLast();
+        return CommunityPostCursor.encode(last.getCreatedAt(), last.getId());
+    }
+
+    private Map<Long, String> findWriterNicknames(List<CommunityPost> posts) {
+        List<Long> writerIds = posts.stream()
+                .map(CommunityPost::getWriterId)
+                .distinct()
+                .toList();
+        return userRepository.findAllById(writerIds).stream()
+                .collect(Collectors.toMap(User::getId, User::getNickname));
+    }
 }
+

@@ -56,7 +56,16 @@ public class CommunityPost extends BaseTimeEntity {
     @Builder.Default
     private RecruitmentStatus status = RecruitmentStatus.RECRUITING;
 
-    public static CommunityPost createPost(CommunityPostCreateCommand command) {
+    @Column(length = 255)
+    private String address;
+
+    @Column(length = 255)
+    private String roadAddress;
+
+    @Column(length = 255)
+    private String buildingName;
+
+    public static CommunityPost createPost(CommunityPostCreateCommand command, PostAddress postAddress) {
         return CommunityPost.builder()
                 .writerId(command.writerId())
                 .title(command.title())
@@ -65,16 +74,26 @@ public class CommunityPost extends BaseTimeEntity {
                 .latitude(command.latitude())
                 .longitude(command.longitude())
                 .maxParticipants(command.maxParticipants())
+                .address(postAddress.address())
+                .roadAddress(postAddress.roadAddress())
+                .buildingName(postAddress.buildingName())
                 .build();
     }
 
-    public void updatePost(CommunityPostUpdateCommand command) {
+    public void updatePost(CommunityPostUpdateCommand command, PostAddress postAddress) {
         this.title = command.title();
         this.content = command.content();
         this.meetingAt = command.meetingAt();
         this.latitude = command.latitude();
         this.longitude = command.longitude();
         this.maxParticipants = command.maxParticipants();
+        this.address = postAddress.address();
+        this.roadAddress = postAddress.roadAddress();
+        this.buildingName = postAddress.buildingName();
+    }
+
+    public PostAddress getPostAddress() {
+        return new PostAddress(address, roadAddress, buildingName);
     }
 
     public void updateStatus(RecruitmentStatus status) {

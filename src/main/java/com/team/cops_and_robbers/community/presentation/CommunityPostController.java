@@ -2,10 +2,14 @@ package com.team.cops_and_robbers.community.presentation;
 
 import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
+import com.team.cops_and_robbers.common.presentation.annotation.AllowedQueryParams;
 import com.team.cops_and_robbers.community.application.CommunityPostService;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostDeleteCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostListCommand;
+import com.team.cops_and_robbers.community.application.dto.result.CommunityPostCursorResult;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityPostResult;
+import com.team.cops_and_robbers.community.domain.CommunityPostScope;
+import com.team.cops_and_robbers.community.domain.CommunityPostSort;
 import com.team.cops_and_robbers.community.presentation.dto.request.CommunityPostCreateRequest;
 import com.team.cops_and_robbers.community.presentation.dto.request.CommunityPostStatusRequest;
 import com.team.cops_and_robbers.community.presentation.dto.request.CommunityPostUpdateRequest;
@@ -13,7 +17,6 @@ import com.team.cops_and_robbers.community.presentation.dto.response.CommunityPo
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityPostResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -44,13 +47,16 @@ public class CommunityPostController implements CommunityPostControllerDocs {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @AllowedQueryParams({"cursor", "size", "scope", "sort"})
     @GetMapping
     public ResponseEntity<CommunityPostListResponse> getPostList(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "ALL") CommunityPostScope scope,
+            @RequestParam(defaultValue = "LATEST") CommunityPostSort sort
     ) {
-        CommunityPostListCommand command = new CommunityPostListCommand(page, size);
-        Page<CommunityPostResult> result = communityPostService.getPostList(command);
+        CommunityPostListCommand command = new CommunityPostListCommand(cursor, size, scope, sort);
+        CommunityPostCursorResult result = communityPostService.getPostList(command);
         CommunityPostListResponse response = CommunityPostListResponse.from(result);
         return ResponseEntity.ok(response);
     }

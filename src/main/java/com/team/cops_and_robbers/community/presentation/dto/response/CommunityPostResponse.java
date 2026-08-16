@@ -9,13 +9,15 @@ public record CommunityPostResponse(
         Long id,
         @Schema(description = "작성자 ID", example = "1")
         Long writerId,
+        @Schema(description = "작성자 닉네임 (탈퇴한 유저면 null)", example = "무서운경찰관", nullable = true)
+        String writerNickname,
         @Schema(description = "제목", example = "같이 경찰과 도둑 하실 분!")
         String title,
         @Schema(description = "내용", example = "강남역 근처에서 5명 모집합니다.")
         String content,
         @Schema(description = "모임 날짜/시간", example = "2026-08-10T14:00:00+09:00")
         String meetingAt,
-        @Schema(description = "모임 장소 좌표")
+        @Schema(description = "모임 장소")
         LocationResponse location,
         @Schema(description = "모집 인원", example = "6")
         Integer maxParticipants,
@@ -30,7 +32,15 @@ public record CommunityPostResponse(
             @Schema(description = "위도", example = "37.4979")
             Double latitude,
             @Schema(description = "경도", example = "127.0276")
-            Double longitude
+            Double longitude,
+            @Schema(description = "지번 주소 (역지오코딩 실패 시 null)", example = "서울 광진구 군자동 98", nullable = true)
+            String address,
+            @Schema(description = "도로명 주소 (도로명이 없는 좌표이거나 역지오코딩 실패 시 null)",
+                    example = "서울특별시 광진구 능동로 209", nullable = true)
+            String roadAddress,
+            @Schema(description = "건물명 (건물이 없는 좌표이거나 역지오코딩 실패 시 null)",
+                    example = "세종대학교", nullable = true)
+            String buildingName
     ) {
     }
 
@@ -38,10 +48,16 @@ public record CommunityPostResponse(
         return new CommunityPostResponse(
                 result.id(),
                 result.writerId(),
+                result.writerNickname(),
                 result.title(),
                 result.content(),
                 result.meetingAt(),
-                new LocationResponse(result.location().latitude(), result.location().longitude()),
+                new LocationResponse(
+                        result.location().latitude(),
+                        result.location().longitude(),
+                        result.location().address(),
+                        result.location().roadAddress(),
+                        result.location().buildingName()),
                 result.maxParticipants(),
                 result.status(),
                 result.createdAt(),
