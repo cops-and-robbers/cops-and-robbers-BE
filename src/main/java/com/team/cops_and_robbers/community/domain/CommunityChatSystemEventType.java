@@ -1,6 +1,6 @@
 package com.team.cops_and_robbers.community.domain;
 
-public enum CommunityChatSystemEvent {
+public enum CommunityChatSystemEventType {
     JOIN,
     LEAVE
 }
