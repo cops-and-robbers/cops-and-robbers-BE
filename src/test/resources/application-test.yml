@@ -42,7 +42,11 @@ firebase:
 encryption:
   secret-key: "ZYmgBIo7U4s58oc+qDmA+MTg04gBlkOMNmjgl1wlw9A="
 
+kakao:
+  rest-api-key: "dummy-kakao-key"
+
 discord:
   webhook:
     bug: "https://discord.com/api/webhooks/dummy"
+    alert: "https://discord.com/api/webhooks/dummy"
 
