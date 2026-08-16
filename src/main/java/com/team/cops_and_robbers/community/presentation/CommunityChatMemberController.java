@@ -1,0 +1,41 @@
+package com.team.cops_and_robbers.community.presentation;
+
+import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
+import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
+import com.team.cops_and_robbers.community.application.CommunityChatMemberService;
+import com.team.cops_and_robbers.community.application.dto.command.CommunityChatJoinCommand;
+import com.team.cops_and_robbers.community.application.dto.command.CommunityChatLeaveCommand;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/community-posts/{postId}/chat")
+@RequiredArgsConstructor
+public class CommunityChatMemberController implements CommunityChatMemberControllerDocs {
+
+    private final CommunityChatMemberService communityChatMemberService;
+
+    @PostMapping("/join")
+    public ResponseEntity<Void> join(
+            @AuthUser LoginUser loginUser,
+            @PathVariable Long postId
+    ) {
+        communityChatMemberService.join(CommunityChatJoinCommand.of(loginUser.userId(), postId));
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @DeleteMapping("/leave")
+    public ResponseEntity<Void> leave(
+            @AuthUser LoginUser loginUser,
+            @PathVariable Long postId
+    ) {
+        communityChatMemberService.leave(CommunityChatLeaveCommand.of(loginUser.userId(), postId));
+        return ResponseEntity.noContent().build();
+    }
+}
