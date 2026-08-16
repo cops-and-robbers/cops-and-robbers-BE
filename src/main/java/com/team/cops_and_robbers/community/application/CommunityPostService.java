@@ -38,9 +38,10 @@ public class CommunityPostService {
 
     @Transactional
     public CommunityPostResult createPost(CommunityPostCreateCommand command) {
-        User writer = userRepository.getByUserId(command.writerId());
         validateMeetingDate(command.meetingAt());
         PostAddress postAddress = resolveAddress(command.latitude(), command.longitude());
+
+        User writer = userRepository.getByUserId(command.writerId());
         CommunityPost post = communityPostRepository.save(CommunityPost.createPost(command, postAddress));
         return CommunityPostResult.from(post, writer.getNickname());
     }

@@ -107,7 +107,6 @@ class CommunityPostServiceTest extends ServiceUnitTest {
 
         @Test
         void 주소를_찾을_수_없는_위치면_ADDRESS_NOT_FOUND_예외가_발생한다() {
-            given(userRepository.getByUserId(1L)).willReturn(USER());
             given(geocodingClient.reverseGeocode(37.4979, 127.0276)).willReturn(new GeocodingResult.NotFound());
 
             assertThatThrownBy(() -> communityPostService.createPost(
@@ -115,6 +114,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
                             LocalDateTime.now().plusDays(3), 37.4979, 127.0276, 6)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.ADDRESS_NOT_FOUND.getDetail());
+            then(userRepository).shouldHaveNoInteractions();
         }
 
         @Test
@@ -134,13 +134,13 @@ class CommunityPostServiceTest extends ServiceUnitTest {
 
         @Test
         void 과거_모임_날짜로_생성하면_INVALID_MEETING_DATE_예외가_발생한다() {
-            given(userRepository.getByUserId(1L)).willReturn(USER());
-
             assertThatThrownBy(() -> communityPostService.createPost(
                     new CommunityPostCreateCommand(1L, "제목", "내용",
                             LocalDateTime.now().minusDays(1), 37.4979, 127.0276, 6)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.INVALID_MEETING_DATE.getDetail());
+            then(geocodingClient).shouldHaveNoInteractions();
+            then(userRepository).shouldHaveNoInteractions();
         }
     }
 
