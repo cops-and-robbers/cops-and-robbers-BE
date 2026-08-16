@@ -23,6 +23,18 @@ public class CommunityPostFixture {
         return post;
     }
 
+    public static CommunityPost POST(Long userId, String address) {
+        CommunityPost post = POST(userId);
+        ReflectionTestUtils.setField(post, "address", address);
+        return post;
+    }
+
+    public static CommunityPost POST(Long userId, LocalDateTime createdAt) {
+        CommunityPost post = POST(userId);
+        ReflectionTestUtils.setField(post, "createdAt", createdAt);
+        return post;
+    }
+
     public static CommunityPost COMPLETED_POST(Long userId) {
         CommunityPost post = CommunityPost.builder()
                 .writerId(userId)

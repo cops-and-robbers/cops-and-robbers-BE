@@ -1,7 +1,10 @@
 package com.team.cops_and_robbers.community.presentation;
 
 import com.team.cops_and_robbers.common.ControllerTest;
+import com.team.cops_and_robbers.community.domain.PostAddress;
 import com.team.cops_and_robbers.community.domain.RecruitmentStatus;
+import com.team.cops_and_robbers.community.exception.CommunityPostException;
+import com.team.cops_and_robbers.community.infrastructure.GeocodingResult;
 import com.team.cops_and_robbers.community.presentation.dto.request.CommunityPostStatusRequest;
 import com.team.cops_and_robbers.user.domain.User;
 import io.restassured.response.ExtractableResponse;
@@ -12,10 +15,13 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 
 class CommunityPostControllerTest extends ControllerTest {
 
@@ -65,6 +71,39 @@ class CommunityPostControllerTest extends ControllerTest {
         }
 
         @Test
+        void 역지오코딩에_성공하면_지번과_도로명과_건물명을_함께_응답한다() {
+            doReturn(new GeocodingResult.Resolved(
+                    new PostAddress("서울 광진구 군자동 98", "서울특별시 광진구 능동로 209", "세종대학교")))
+                    .when(geocodingClient)
+                    .reverseGeocode(any(), any());
+            Map<String, Object> location = Map.of("latitude", 37.5502, "longitude", 127.0736);
+            Map<String, Object> request = Map.of(
+                    "title", "세종대에서 하실 분!",
+                    "content", "세종대 정문에서 모입니다.",
+                    "meetingAt", LocalDateTime.now().plusDays(3).toString(),
+                    "location", location,
+                    "maxParticipants", 6
+            );
+
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(201);
+                softly.assertThat(extract.jsonPath().getString("location.address"))
+                        .isEqualTo("서울 광진구 군자동 98");
+                softly.assertThat(extract.jsonPath().getString("location.roadAddress"))
+                        .isEqualTo("서울특별시 광진구 능동로 209");
+                softly.assertThat(extract.jsonPath().getString("location.buildingName"))
+                        .isEqualTo("세종대학교");
+            });
+        }
+
+        @Test
         void 토큰_없이_요청하면_401을_응답한다() {
             Map<String, Object> location = Map.of("latitude", 37.4979, "longitude", 127.0276);
             Map<String, Object> request = Map.of(
@@ -93,12 +132,13 @@ class CommunityPostControllerTest extends ControllerTest {
     class GetAllPosts {
 
         @Test
-        void 게시글_목록_조회에_성공하면_200을_응답한다() {
-            communityPostRepository.save(POST(user.getId()));
-            communityPostRepository.save(POST(user.getId()));
+        void 커서_없이_조회하면_첫_페이지와_다음_커서로_200을_응답한다() {
+            User writer = givenUser("무서운경찰관");
+            for (int i = 0; i < 15; i++) {
+                communityPostRepository.save(POST(writer.getId()));
+            }
 
-            ExtractableResponse<Response> extract = authenticated(accessToken)
-                    .queryParam("page", 0)
+            ExtractableResponse<Response> extract = unauthenticated()
                     .queryParam("size", 10)
                     .when()
                     .get(POST_API_URL)
@@ -107,37 +147,60 @@ class CommunityPostControllerTest extends ControllerTest {
 
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
-                softly.assertThat(extract.jsonPath().getList("content")).hasSize(2);
-                softly.assertThat(extract.jsonPath().getLong("page.totalElements")).isEqualTo(2);
-                softly.assertThat(extract.jsonPath().getInt("page.totalPages")).isEqualTo(1);
+                softly.assertThat(extract.jsonPath().getList("content")).hasSize(10);
+                softly.assertThat(extract.jsonPath().getBoolean("cursor.hasNext")).isTrue();
+                softly.assertThat(extract.jsonPath().getString("cursor.nextCursor")).isNotBlank();
+                softly.assertThat(extract.jsonPath().getString("content[0].writerNickname")).isEqualTo("무서운경찰관");
+                softly.assertThat(extract.jsonPath().getString("content[0].location.address")).isNull();
+                softly.assertThat(extract.jsonPath().getString("content[0].location.roadAddress")).isNull();
+                softly.assertThat(extract.jsonPath().getString("content[0].location.buildingName")).isNull();
             });
         }
 
         @Test
-        void 음수_페이지를_요청하면_400을_응답한다() {
-            ExtractableResponse<Response> extract = authenticated(accessToken)
-                    .queryParam("page", -1)
+        void 커서로_다음_페이지를_중복과_누락_없이_조회하면_200을_응답한다() {
+            for (int i = 0; i < 15; i++) {
+                communityPostRepository.save(POST(user.getId()));
+            }
+            ExtractableResponse<Response> firstExtract = unauthenticated()
+                    .queryParam("size", 10)
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+            String nextCursor = firstExtract.jsonPath().getString("cursor.nextCursor");
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("cursor", nextCursor)
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            List<Long> firstIds = firstExtract.jsonPath().getList("content.id", Long.class);
+            List<Long> secondIds = extract.jsonPath().getList("content.id", Long.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(secondIds).hasSize(5);
+                softly.assertThat(extract.jsonPath().getBoolean("cursor.hasNext")).isFalse();
+                softly.assertThat(extract.jsonPath().getString("cursor.nextCursor")).isNull();
+                softly.assertThat(firstIds).doesNotContainAnyElementsOf(secondIds);
+            });
+        }
+
+        @Test
+        void 게시글이_없으면_빈_목록으로_200을_응답한다() {
+            ExtractableResponse<Response> extract = unauthenticated()
                     .when()
                     .get(POST_API_URL)
                     .then()
                     .extract();
 
             assertSoftly(softly -> {
-                softly.assertThat(extract.statusCode()).isEqualTo(400);
-            });
-        }
-
-        @Test
-        void size가_0이면_400을_응답한다() {
-            ExtractableResponse<Response> extract = authenticated(accessToken)
-                    .queryParam("size", 0)
-                    .when()
-                    .get(POST_API_URL)
-                    .then()
-                    .extract();
-
-            assertSoftly(softly -> {
-                softly.assertThat(extract.statusCode()).isEqualTo(400);
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getList("content")).isEmpty();
+                softly.assertThat(extract.jsonPath().getBoolean("cursor.hasNext")).isFalse();
             });
         }
 
@@ -151,6 +214,157 @@ class CommunityPostControllerTest extends ControllerTest {
 
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
+            });
+        }
+
+        @Test
+        void 잘못된_커서로_요청하면_400을_응답한다() {
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("cursor", "broken-cursor!!")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
+        void 지원하지_않는_쿼리_파라미터로_요청하면_400을_응답한다() {
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("keyword", "강남")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
+        void scope와_sort를_기본값으로_요청하면_200을_응답한다() {
+            communityPostRepository.save(POST(user.getId()));
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("scope", "ALL")
+                    .queryParam("sort", "LATEST")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getList("content")).hasSize(1);
+            });
+        }
+
+        @Test
+        void 아직_지원하지_않는_scope로_요청하면_400을_응답한다() {
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("scope", "NEARBY")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+                softly.assertThat(extract.jsonPath().getString("detail"))
+                        .isEqualTo(CommunityPostException.UNSUPPORTED_LIST_SCOPE.getDetail());
+            });
+        }
+
+        @Test
+        void 아직_지원하지_않는_sort로_요청하면_400을_응답한다() {
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("sort", "POPULAR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+                softly.assertThat(extract.jsonPath().getString("detail"))
+                        .isEqualTo(CommunityPostException.UNSUPPORTED_LIST_SORT.getDetail());
+            });
+        }
+
+        @Test
+        void 정의되지_않은_scope_값으로_요청하면_400을_응답한다() {
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("scope", "EVERYTHING")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
+        void NEARBY용_lat_lng_파라미터로_요청하면_400을_응답한다() {
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("scope", "NEARBY")
+                    .queryParam("lat", 37.4979)
+                    .queryParam("lng", 127.0276)
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
+        void 제거된_page_파라미터로_요청하면_400을_응답한다() {
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("page", 0)
+                    .queryParam("size", 10)
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
+        void size가_0이면_400을_응답한다() {
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 0)
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
+        void size가_100을_초과하면_400을_응답한다() {
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 101)
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
             });
         }
     }
