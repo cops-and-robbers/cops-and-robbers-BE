@@ -26,6 +26,7 @@ import static org.mockito.Mockito.doReturn;
 class CommunityPostControllerTest extends ControllerTest {
 
     private static final String POST_API_URL = "/api/community-posts";
+    private static final String ADDRESS_API_URL = POST_API_URL + "/address";
 
     private User user;
     private String accessToken;
@@ -39,12 +40,103 @@ class CommunityPostControllerTest extends ControllerTest {
     }
 
     @Nested
+    @DisplayName("좌표 주소 조회 API")
+    class GetAddress {
+
+        @Test
+        void 좌표_주소_조회에_성공하면_지역과_지번을_함께_200으로_응답한다() {
+            doReturn(GeocodingResult.resolved(PostAddress.of(
+                    "서울특별시 광진구 화양동 1-20", "서울특별시 광진구 능동로 216", "세종대학교",
+                    "서울특별시 광진구 화양동")))
+                    .when(geocodingClient)
+                    .reverseGeocode(any(), any());
+
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .queryParam("latitude", 37.5502)
+                    .queryParam("longitude", 127.0736)
+                    .when()
+                    .get(ADDRESS_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getString("region")).isEqualTo("서울특별시 광진구 화양동");
+                softly.assertThat(extract.jsonPath().getString("address")).isEqualTo("서울특별시 광진구 화양동 1-20");
+            });
+        }
+
+        @Test
+        void 주소가_없는_좌표로_조회하면_400을_응답한다() {
+            doReturn(GeocodingResult.notFound()).when(geocodingClient).reverseGeocode(any(), any());
+
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .queryParam("latitude", 0.0)
+                    .queryParam("longitude", 0.0)
+                    .when()
+                    .get(ADDRESS_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
+        void 지오코딩_호출이_실패하면_500을_응답한다() {
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .queryParam("latitude", 37.5502)
+                    .queryParam("longitude", 127.0736)
+                    .when()
+                    .get(ADDRESS_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(500);
+            });
+        }
+
+        @Test
+        void 토큰_없이_요청하면_401을_응답한다() {
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("latitude", 37.5502)
+                    .queryParam("longitude", 127.0736)
+                    .when()
+                    .get(ADDRESS_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(401);
+            });
+        }
+
+        @Test
+        void 지원하지_않는_쿼리_파라미터로_요청하면_400을_응답한다() {
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .queryParam("latitude", 37.5502)
+                    .queryParam("longitude", 127.0736)
+                    .queryParam("keyword", "세종대")
+                    .when()
+                    .get(ADDRESS_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+    }
+
+    @Nested
     @DisplayName("게시글 생성 API")
     class CreatePost {
 
         @Test
         void 사용자가_게시글_생성에_성공하면_201을_응답한다() {
-            Map<String, Object> location = Map.of("latitude", 37.4979, "longitude", 127.0276);
+            Map<String, Object> location = Map.of("latitude", 37.4979, "longitude", 127.0276, "placeName", "강남역 11번 출구");
             Map<String, Object> request = Map.of(
                     "title", "같이 경찰과 도둑 하실 분!",
                     "content", "강남역 근처에서 5명 모집합니다.",
@@ -71,12 +163,12 @@ class CommunityPostControllerTest extends ControllerTest {
         }
 
         @Test
-        void 역지오코딩에_성공하면_지번과_도로명과_건물명을_함께_응답한다() {
-            doReturn(new GeocodingResult.Resolved(
-                    new PostAddress("서울 광진구 군자동 98", "서울특별시 광진구 능동로 209", "세종대학교")))
+        void 역지오코딩에_성공하면_지역과_사용자_입력_장소를_함께_응답한다() {
+            doReturn(GeocodingResult.resolved(
+                    PostAddress.of("서울특별시 광진구 군자동 98", null, null, "서울특별시 광진구 군자동")))
                     .when(geocodingClient)
                     .reverseGeocode(any(), any());
-            Map<String, Object> location = Map.of("latitude", 37.5502, "longitude", 127.0736);
+            Map<String, Object> location = Map.of("latitude", 37.5502, "longitude", 127.0736, "placeName", "세종대 정문");
             Map<String, Object> request = Map.of(
                     "title", "세종대에서 하실 분!",
                     "content", "세종대 정문에서 모입니다.",
@@ -94,18 +186,16 @@ class CommunityPostControllerTest extends ControllerTest {
 
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(201);
-                softly.assertThat(extract.jsonPath().getString("location.address"))
-                        .isEqualTo("서울 광진구 군자동 98");
-                softly.assertThat(extract.jsonPath().getString("location.roadAddress"))
-                        .isEqualTo("서울특별시 광진구 능동로 209");
-                softly.assertThat(extract.jsonPath().getString("location.buildingName"))
-                        .isEqualTo("세종대학교");
+                softly.assertThat(extract.jsonPath().getString("location.region"))
+                        .isEqualTo("서울특별시 광진구 군자동");
+                softly.assertThat(extract.jsonPath().getString("location.placeName"))
+                        .isEqualTo("세종대 정문");
             });
         }
 
         @Test
         void 토큰_없이_요청하면_401을_응답한다() {
-            Map<String, Object> location = Map.of("latitude", 37.4979, "longitude", 127.0276);
+            Map<String, Object> location = Map.of("latitude", 37.4979, "longitude", 127.0276, "placeName", "강남역 11번 출구");
             Map<String, Object> request = Map.of(
                     "title", "제목",
                     "content", "내용",
@@ -151,9 +241,9 @@ class CommunityPostControllerTest extends ControllerTest {
                 softly.assertThat(extract.jsonPath().getBoolean("cursor.hasNext")).isTrue();
                 softly.assertThat(extract.jsonPath().getString("cursor.nextCursor")).isNotBlank();
                 softly.assertThat(extract.jsonPath().getString("content[0].writerNickname")).isEqualTo("무서운경찰관");
-                softly.assertThat(extract.jsonPath().getString("content[0].location.address")).isNull();
-                softly.assertThat(extract.jsonPath().getString("content[0].location.roadAddress")).isNull();
-                softly.assertThat(extract.jsonPath().getString("content[0].location.buildingName")).isNull();
+                softly.assertThat(extract.jsonPath().getString("content[0].location.region")).isNull();
+                softly.assertThat(extract.jsonPath().getString("content[0].location.placeName"))
+                        .isEqualTo("어린이대공원 정문");
             });
         }
 
@@ -426,7 +516,7 @@ class CommunityPostControllerTest extends ControllerTest {
         @Test
         void 작성자가_게시글_수정에_성공하면_200을_응답한다() {
             Long postId = communityPostRepository.save(POST(user.getId())).getId();
-            Map<String, Object> location = Map.of("latitude", 37.5665, "longitude", 126.9780);
+            Map<String, Object> location = Map.of("latitude", 37.5665, "longitude", 126.9780, "placeName", "서울시청 광장");
             Map<String, Object> request = Map.of(
                     "title", "수정된 제목",
                     "content", "수정된 내용",
@@ -453,7 +543,7 @@ class CommunityPostControllerTest extends ControllerTest {
         @Test
         void 작성자가_아닌_사용자가_요청하면_403을_응답한다() {
             Long postId = communityPostRepository.save(POST(user.getId())).getId();
-            Map<String, Object> location = Map.of("latitude", 37.5665, "longitude", 126.9780);
+            Map<String, Object> location = Map.of("latitude", 37.5665, "longitude", 126.9780, "placeName", "서울시청 광장");
             Map<String, Object> request = Map.of(
                     "title", "수정된 제목",
                     "content", "수정된 내용",
@@ -476,7 +566,7 @@ class CommunityPostControllerTest extends ControllerTest {
 
         @Test
         void 존재하지_않는_게시글_수정시_404를_응답한다() {
-            Map<String, Object> location = Map.of("latitude", 37.5665, "longitude", 126.9780);
+            Map<String, Object> location = Map.of("latitude", 37.5665, "longitude", 126.9780, "placeName", "서울시청 광장");
             Map<String, Object> request = Map.of(
                     "title", "수정된 제목",
                     "content", "수정된 내용",
@@ -499,7 +589,7 @@ class CommunityPostControllerTest extends ControllerTest {
 
         @Test
         void 토큰_없이_요청하면_401을_응답한다() {
-            Map<String, Object> location = Map.of("latitude", 37.5665, "longitude", 126.9780);
+            Map<String, Object> location = Map.of("latitude", 37.5665, "longitude", 126.9780, "placeName", "서울시청 광장");
             Map<String, Object> request = Map.of(
                     "title", "수정된 제목",
                     "content", "수정된 내용",
