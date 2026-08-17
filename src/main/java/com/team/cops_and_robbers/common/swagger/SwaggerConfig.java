@@ -42,6 +42,11 @@ public class SwaggerConfig {
                           - 지원하지 않는 쿼리 파라미터를 보내면 400(INVALID_QUERY_PARAMETER)
 
                         ### ✨ 신규
+                        - GET /api/community-posts/address 좌표 주소 조회 API 추가 (로그인 필요)
+                          - 파라미터: latitude, longitude
+                          - 응답: region(동 단위, 게시글에 저장될 값), address(번지 포함, 작성자 확인용)
+                          - 작성 화면에서 핀을 찍은 직후 호출해 위치를 확인시키는 용도이며 저장하지 않는다
+                          - 주소 없는 좌표는 400(ADDRESS_NOT_FOUND), 조회 실패는 500(ADDRESS_LOOKUP_FAILED)
                         - GET /api/community-posts scope, sort 파라미터 추가
                           - scope: ALL | NEARBY | MINE (기본 ALL)
                           - sort: LATEST | POPULAR | DISTANCE | DEADLINE (기본 LATEST)
@@ -49,13 +54,18 @@ public class SwaggerConfig {
                             (UNSUPPORTED_LIST_SCOPE / UNSUPPORTED_LIST_SORT)
                           - NEARBY 반경 기준, MINE 정의, 인기·거리·마감임박 정렬은 정책 확정 후 지원 예정
                         - 게시글 응답에 작성자 닉네임 writerNickname 추가 (탈퇴한 작성자면 null)
-                        - 게시글 응답에 주소 3종 추가 — location.address(지번),
-                          location.roadAddress(도로명), location.buildingName(건물명)
-                          - 작성/수정 시 좌표를 서버에서 1회 역지오코딩하여 3개를 함께 저장
-                          - 표기는 클라이언트가 선택 (예: buildingName → roadAddress → address 순 fallback)
-                          - roadAddress·buildingName은 해당 정보가 없는 좌표에서 null
-                            (도로명이 없는 지역, 건물이 없는 공터·공원 등)
-                          - 역지오코딩 실패 시 3개 모두 null
+                        - 게시글 응답에 location.region 추가 (동 단위 지역)
+                          - 작성/수정 시 좌표를 서버에서 1회 역지오코딩하여 저장
+                          - 예: 서울특별시 광진구 군자동 (번지 제외)
+                          - 역지오코딩 실패 시 null
+                        - 게시글 요청/응답에 location.placeName 추가 (작성자가 입력하는 만나는 곳)
+                          - 필수 입력, 최대 50자. 예: 어린이대공원 정문
+                          - 좌표로는 건물명·장소명을 신뢰할 수준으로 얻을 수 없어 작성자에게 받는다
+
+                        ### 🛠 변경
+                        - 역지오코딩 제공자를 카카오에서 VWorld(국내), Geoapify(해외)로 교체
+                          - 카카오는 운영정책상 변환 결과를 DB에 저장할 수 없고 해외 좌표를 지원하지 않음
+                          - 국내를 먼저 조회하고 주소를 얻지 못하면 해외로 넘어가므로 해외 게시글도 주소가 채워짐
 
                         ## v2.16.0 업데이트 내역
 
