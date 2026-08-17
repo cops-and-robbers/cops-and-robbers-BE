@@ -42,7 +42,7 @@ public class DiscordNotifier {
     @Async
     public void sendGeocodingFailure(Double latitude, Double longitude, String cause) {
         DiscordWebhookPayload payload = DiscordWebhookPayload.alert(
-                DiscordEmbed.alert("역지오코딩 호출에 실패해 게시글 주소가 저장되지 않았습니다.", List.of(
+                DiscordEmbed.alert("역지오코딩 호출에 실패했습니다.", List.of(
                         DiscordEmbedField.of("좌표", latitude + ", " + longitude),
                         DiscordEmbedField.of("원인", cause),
                         DiscordEmbedField.of("시각", LocalDateTime.now().format(FORMATTER))
