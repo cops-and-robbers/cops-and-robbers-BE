@@ -5,14 +5,20 @@ import org.springframework.util.StringUtils;
 public record PostAddress(
         String address,
         String roadAddress,
-        String buildingName
+        String buildingName,
+        String region
 ) {
-    private static final PostAddress EMPTY = new PostAddress(null, null, null);
+    private static final PostAddress EMPTY = new PostAddress(null, null, null, null);
 
     public PostAddress {
         address = textOrNull(address);
         roadAddress = textOrNull(roadAddress);
         buildingName = textOrNull(buildingName);
+        region = textOrNull(region);
+    }
+
+    public static PostAddress of(String address, String roadAddress, String buildingName, String region) {
+        return new PostAddress(address, roadAddress, buildingName, region);
     }
 
     public static PostAddress empty() {
@@ -20,7 +26,7 @@ public record PostAddress(
     }
 
     public boolean isEmpty() {
-        return address == null && roadAddress == null && buildingName == null;
+        return address == null && roadAddress == null && buildingName == null && region == null;
     }
 
     private static String textOrNull(String value) {

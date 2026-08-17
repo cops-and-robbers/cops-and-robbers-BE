@@ -17,6 +17,7 @@ public class CommunityPostFixture {
                 .latitude(37.4979)
                 .longitude(127.0276)
                 .maxParticipants(6)
+                .placeName("어린이대공원 정문")
                 .build();
         ReflectionTestUtils.setField(post, "createdAt", LocalDateTime.now());
         ReflectionTestUtils.setField(post, "updatedAt", LocalDateTime.now());

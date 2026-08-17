@@ -65,6 +65,12 @@ public class CommunityPost extends BaseTimeEntity {
     @Column(length = 255)
     private String buildingName;
 
+    @Column(length = 255)
+    private String region;
+
+    @Column(nullable = false, length = 50)
+    private String placeName;
+
     public static CommunityPost createPost(CommunityPostCreateCommand command, PostAddress postAddress) {
         return CommunityPost.builder()
                 .writerId(command.writerId())
@@ -74,9 +80,11 @@ public class CommunityPost extends BaseTimeEntity {
                 .latitude(command.latitude())
                 .longitude(command.longitude())
                 .maxParticipants(command.maxParticipants())
+                .placeName(command.placeName())
                 .address(postAddress.address())
                 .roadAddress(postAddress.roadAddress())
                 .buildingName(postAddress.buildingName())
+                .region(postAddress.region())
                 .build();
     }
 
@@ -87,13 +95,15 @@ public class CommunityPost extends BaseTimeEntity {
         this.latitude = command.latitude();
         this.longitude = command.longitude();
         this.maxParticipants = command.maxParticipants();
+        this.placeName = command.placeName();
         this.address = postAddress.address();
         this.roadAddress = postAddress.roadAddress();
         this.buildingName = postAddress.buildingName();
+        this.region = postAddress.region();
     }
 
     public PostAddress getPostAddress() {
-        return new PostAddress(address, roadAddress, buildingName);
+        return PostAddress.of(address, roadAddress, buildingName, region);
     }
 
     public void updateStatus(RecruitmentStatus status) {

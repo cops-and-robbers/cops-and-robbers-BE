@@ -33,14 +33,11 @@ public record CommunityPostResponse(
             Double latitude,
             @Schema(description = "경도", example = "127.0276")
             Double longitude,
-            @Schema(description = "지번 주소 (역지오코딩 실패 시 null)", example = "서울 광진구 군자동 98", nullable = true)
-            String address,
-            @Schema(description = "도로명 주소 (도로명이 없는 좌표이거나 역지오코딩 실패 시 null)",
-                    example = "서울특별시 광진구 능동로 209", nullable = true)
-            String roadAddress,
-            @Schema(description = "건물명 (건물이 없는 좌표이거나 역지오코딩 실패 시 null)",
-                    example = "세종대학교", nullable = true)
-            String buildingName
+            @Schema(description = "동 단위 지역 (역지오코딩 실패 시 null)",
+                    example = "서울특별시 광진구 군자동", nullable = true)
+            String region,
+            @Schema(description = "작성자가 입력한 만나는 곳", example = "어린이대공원 정문")
+            String placeName
     ) {
     }
 
@@ -55,9 +52,8 @@ public record CommunityPostResponse(
                 new LocationResponse(
                         result.location().latitude(),
                         result.location().longitude(),
-                        result.location().address(),
-                        result.location().roadAddress(),
-                        result.location().buildingName()),
+                        result.location().region(),
+                        result.location().placeName()),
                 result.maxParticipants(),
                 result.status(),
                 result.createdAt(),

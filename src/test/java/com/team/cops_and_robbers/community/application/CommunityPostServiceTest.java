@@ -28,7 +28,6 @@ import org.springframework.data.domain.PageRequest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
@@ -52,12 +51,12 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             CommunityPost post = POST(1L);
             setId(post, 1L);
             given(userRepository.getByUserId(1L)).willReturn(USER());
-            given(geocodingClient.reverseGeocode(37.4979, 127.0276)).willReturn(new GeocodingResult.Failed());
+            given(geocodingClient.reverseGeocode(37.4979, 127.0276)).willReturn(GeocodingResult.failed());
             given(communityPostRepository.save(any())).willReturn(post);
 
             CommunityPostResult result = communityPostService.createPost(
                     new CommunityPostCreateCommand(1L, "같이 경찰과 도둑 하실 분!", "강남역 근처에서 5명 모집합니다.",
-                            LocalDateTime.now().plusDays(3), 37.4979, 127.0276, 6));
+                            LocalDateTime.now().plusDays(3), 37.4979, 127.0276, "만나는곳", 6));
 
             assertThat(result.id()).isEqualTo(1L);
             assertThat(result.title()).isEqualTo("같이 경찰과 도둑 하실 분!");
@@ -72,13 +71,13 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             setId(post, 1L);
             given(userRepository.getByUserId(1L)).willReturn(USER());
             given(geocodingClient.reverseGeocode(37.4979, 127.0276))
-                    .willReturn(new GeocodingResult.Resolved(
-                            new PostAddress("서울 강남구 역삼동", "서울 강남구 테헤란로 152", "강남파이낸스센터")));
+                    .willReturn(GeocodingResult.resolved(
+                            PostAddress.of("서울 강남구 역삼동", "서울 강남구 테헤란로 152", "강남파이낸스센터", "서울 강남구 역삼동")));
             given(communityPostRepository.save(any())).willReturn(post);
 
             communityPostService.createPost(
                     new CommunityPostCreateCommand(1L, "제목", "내용",
-                            LocalDateTime.now().plusDays(3), 37.4979, 127.0276, 6));
+                            LocalDateTime.now().plusDays(3), 37.4979, 127.0276, "만나는곳", 6));
 
             ArgumentCaptor<CommunityPost> captor = ArgumentCaptor.forClass(CommunityPost.class);
             then(communityPostRepository).should().save(captor.capture());
@@ -92,12 +91,12 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             CommunityPost post = POST(1L);
             setId(post, 1L);
             given(userRepository.getByUserId(1L)).willReturn(USER());
-            given(geocodingClient.reverseGeocode(37.4979, 127.0276)).willReturn(new GeocodingResult.Failed());
+            given(geocodingClient.reverseGeocode(37.4979, 127.0276)).willReturn(GeocodingResult.failed());
             given(communityPostRepository.save(any())).willReturn(post);
 
             CommunityPostResult result = communityPostService.createPost(
                     new CommunityPostCreateCommand(1L, "제목", "내용",
-                            LocalDateTime.now().plusDays(3), 37.4979, 127.0276, 6));
+                            LocalDateTime.now().plusDays(3), 37.4979, 127.0276, "만나는곳", 6));
 
             ArgumentCaptor<CommunityPost> captor = ArgumentCaptor.forClass(CommunityPost.class);
             then(communityPostRepository).should().save(captor.capture());
@@ -107,11 +106,11 @@ class CommunityPostServiceTest extends ServiceUnitTest {
 
         @Test
         void 주소를_찾을_수_없는_위치면_ADDRESS_NOT_FOUND_예외가_발생한다() {
-            given(geocodingClient.reverseGeocode(37.4979, 127.0276)).willReturn(new GeocodingResult.NotFound());
+            given(geocodingClient.reverseGeocode(37.4979, 127.0276)).willReturn(GeocodingResult.notFound());
 
             assertThatThrownBy(() -> communityPostService.createPost(
                     new CommunityPostCreateCommand(1L, "제목", "내용",
-                            LocalDateTime.now().plusDays(3), 37.4979, 127.0276, 6)))
+                            LocalDateTime.now().plusDays(3), 37.4979, 127.0276, "만나는곳", 6)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.ADDRESS_NOT_FOUND.getDetail());
             then(userRepository).shouldHaveNoInteractions();
@@ -122,12 +121,12 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             CommunityPost post = POST(1L);
             setId(post, 1L);
             given(userRepository.getByUserId(1L)).willReturn(USER("무서운경찰관"));
-            given(geocodingClient.reverseGeocode(37.4979, 127.0276)).willReturn(new GeocodingResult.Failed());
+            given(geocodingClient.reverseGeocode(37.4979, 127.0276)).willReturn(GeocodingResult.failed());
             given(communityPostRepository.save(any())).willReturn(post);
 
             CommunityPostResult result = communityPostService.createPost(
                     new CommunityPostCreateCommand(1L, "제목", "내용",
-                            LocalDateTime.now().plusDays(3), 37.4979, 127.0276, 6));
+                            LocalDateTime.now().plusDays(3), 37.4979, 127.0276, "만나는곳", 6));
 
             assertThat(result.writerNickname()).isEqualTo("무서운경찰관");
         }
@@ -136,7 +135,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         void 과거_모임_날짜로_생성하면_INVALID_MEETING_DATE_예외가_발생한다() {
             assertThatThrownBy(() -> communityPostService.createPost(
                     new CommunityPostCreateCommand(1L, "제목", "내용",
-                            LocalDateTime.now().minusDays(1), 37.4979, 127.0276, 6)))
+                            LocalDateTime.now().minusDays(1), 37.4979, 127.0276, "만나는곳", 6)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.INVALID_MEETING_DATE.getDetail());
             then(geocodingClient).shouldHaveNoInteractions();
@@ -272,11 +271,11 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             CommunityPost post = POST(1L);
             setId(post, 1L);
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
-            given(geocodingClient.reverseGeocode(37.5665, 126.9780)).willReturn(new GeocodingResult.Failed());
+            given(geocodingClient.reverseGeocode(37.5665, 126.9780)).willReturn(GeocodingResult.failed());
 
             CommunityPostResult result = communityPostService.updatePost(
                     new CommunityPostUpdateCommand(1L, 1L, "수정된 제목", "수정된 내용",
-                            LocalDateTime.now().plusDays(5), 37.5665, 126.9780, 8));
+                            LocalDateTime.now().plusDays(5), 37.5665, 126.9780, "만나는곳", 8));
 
             assertThat(result.title()).isEqualTo("수정된 제목");
             assertThat(result.content()).isEqualTo("수정된 내용");
@@ -289,11 +288,11 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             setId(post, 1L);
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
             given(geocodingClient.reverseGeocode(37.5665, 126.9780))
-                    .willReturn(new GeocodingResult.Resolved(
-                            new PostAddress("서울 중구 태평로1가", "서울특별시 중구 세종대로 110", "서울시청")));
+                    .willReturn(GeocodingResult.resolved(
+                            PostAddress.of("서울 중구 태평로1가", "서울특별시 중구 세종대로 110", "서울시청", "서울 중구 태평로1가")));
 
             communityPostService.updatePost(new CommunityPostUpdateCommand(
-                    1L, 1L, "제목", "내용", LocalDateTime.now().plusDays(3), 37.5665, 126.9780, 6));
+                    1L, 1L, "제목", "내용", LocalDateTime.now().plusDays(3), 37.5665, 126.9780, "만나는곳", 6));
 
             assertThat(post.getAddress()).isEqualTo("서울 중구 태평로1가");
             assertThat(post.getRoadAddress()).isEqualTo("서울특별시 중구 세종대로 110");
@@ -305,10 +304,10 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             CommunityPost post = POST(1L);
             setId(post, 1L);
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
-            given(geocodingClient.reverseGeocode(37.5665, 126.9780)).willReturn(new GeocodingResult.Failed());
+            given(geocodingClient.reverseGeocode(37.5665, 126.9780)).willReturn(GeocodingResult.failed());
 
             communityPostService.updatePost(new CommunityPostUpdateCommand(
-                    1L, 1L, "제목", "내용", LocalDateTime.now().plusDays(3), 37.5665, 126.9780, 6));
+                    1L, 1L, "제목", "내용", LocalDateTime.now().plusDays(3), 37.5665, 126.9780, "만나는곳", 6));
 
             assertThat(post.getAddress()).isNull();
             assertThat(post.getRoadAddress()).isNull();
@@ -322,7 +321,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
 
             communityPostService.updatePost(new CommunityPostUpdateCommand(
-                    1L, 1L, "새 제목", "새 내용", LocalDateTime.now().plusDays(3), 37.4979, 127.0276, 6));
+                    1L, 1L, "새 제목", "새 내용", LocalDateTime.now().plusDays(3), 37.4979, 127.0276, "만나는곳", 6));
 
             then(geocodingClient).shouldHaveNoInteractions();
         }
@@ -333,11 +332,11 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             setId(post, 1L);
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
             given(geocodingClient.reverseGeocode(37.4979, 127.0276))
-                    .willReturn(new GeocodingResult.Resolved(
-                            new PostAddress("서울 강남구 역삼동", "서울 강남구 테헤란로 152", "강남파이낸스센터")));
+                    .willReturn(GeocodingResult.resolved(
+                            PostAddress.of("서울 강남구 역삼동", "서울 강남구 테헤란로 152", "강남파이낸스센터", "서울 강남구 역삼동")));
 
             communityPostService.updatePost(new CommunityPostUpdateCommand(
-                    1L, 1L, "새 제목", "새 내용", LocalDateTime.now().plusDays(3), 37.4979, 127.0276, 6));
+                    1L, 1L, "새 제목", "새 내용", LocalDateTime.now().plusDays(3), 37.4979, 127.0276, "만나는곳", 6));
 
             assertThat(post.getAddress()).isEqualTo("서울 강남구 역삼동");
         }
@@ -347,10 +346,10 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             CommunityPost post = POST(1L, "서울 강남구 역삼동");
             setId(post, 1L);
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
-            given(geocodingClient.reverseGeocode(37.5665, 126.9780)).willReturn(new GeocodingResult.NotFound());
+            given(geocodingClient.reverseGeocode(37.5665, 126.9780)).willReturn(GeocodingResult.notFound());
 
             assertThatThrownBy(() -> communityPostService.updatePost(new CommunityPostUpdateCommand(
-                    1L, 1L, "제목", "내용", LocalDateTime.now().plusDays(3), 37.5665, 126.9780, 6)))
+                    1L, 1L, "제목", "내용", LocalDateTime.now().plusDays(3), 37.5665, 126.9780, "만나는곳", 6)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.ADDRESS_NOT_FOUND.getDetail());
         }
@@ -363,7 +362,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
 
             assertThatThrownBy(() -> communityPostService.updatePost(
                     new CommunityPostUpdateCommand(999L, 1L, "수정된 제목", "수정된 내용",
-                            LocalDateTime.now().plusDays(5), 37.5665, 126.9780, 8)))
+                            LocalDateTime.now().plusDays(5), 37.5665, 126.9780, "만나는곳", 8)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.FORBIDDEN_NOT_AUTHOR.getDetail());
         }
@@ -376,7 +375,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
 
             assertThatThrownBy(() -> communityPostService.updatePost(
                     new CommunityPostUpdateCommand(1L, 1L, "수정된 제목", "수정된 내용",
-                            LocalDateTime.now().minusDays(1), 37.5665, 126.9780, 8)))
+                            LocalDateTime.now().minusDays(1), 37.5665, 126.9780, "만나는곳", 8)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.INVALID_MEETING_DATE.getDetail());
         }
@@ -388,7 +387,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
 
             assertThatThrownBy(() -> communityPostService.updatePost(
                     new CommunityPostUpdateCommand(1L, 999L, "수정된 제목", "수정된 내용",
-                            LocalDateTime.now().plusDays(5), 37.5665, 126.9780, 8)))
+                            LocalDateTime.now().plusDays(5), 37.5665, 126.9780, "만나는곳", 8)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.POST_NOT_FOUND.getDetail());
         }
