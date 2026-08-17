@@ -39,8 +39,11 @@ springdoc:
 encryption:
   secret-key: ${ENCRYPTION_KEY}
 
-kakao:
-  rest-api-key: ${KAKAO_REST_API_KEY:}
+geocoding:
+  vworld:
+    api-key: ${VWORLD_API_KEY:}
+  geoapify:
+    api-key: ${GEOAPIFY_API_KEY:}
 
 discord:
   webhook:

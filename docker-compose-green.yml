@@ -27,7 +27,8 @@ services:
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       DISCORD_WEBHOOK_BUG: ${DISCORD_WEBHOOK_BUG}
       DISCORD_WEBHOOK_ALERT: ${DISCORD_WEBHOOK_ALERT}
-      KAKAO_REST_API_KEY: ${KAKAO_REST_API_KEY}
+      VWORLD_API_KEY: ${VWORLD_API_KEY}
+      GEOAPIFY_API_KEY: ${GEOAPIFY_API_KEY}
 
     volumes:
       - ./firebase-key.json:/app/firebase-key.json

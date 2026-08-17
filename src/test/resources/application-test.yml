@@ -42,8 +42,11 @@ firebase:
 encryption:
   secret-key: "ZYmgBIo7U4s58oc+qDmA+MTg04gBlkOMNmjgl1wlw9A="
 
-kakao:
-  rest-api-key: "dummy-kakao-key"
+geocoding:
+  vworld:
+    api-key: "dummy-vworld-key"
+  geoapify:
+    api-key: "dummy-geoapify-key"
 
 discord:
   webhook:
