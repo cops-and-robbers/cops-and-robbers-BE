@@ -45,6 +45,7 @@ public class CommunityPostFixture {
                 .latitude(37.5665)
                 .longitude(126.9780)
                 .maxParticipants(4)
+                .placeName("광화문광장 세종대왕상")
                 .status(RecruitmentStatus.COMPLETED)
                 .build();
         ReflectionTestUtils.setField(post, "createdAt", LocalDateTime.now());
