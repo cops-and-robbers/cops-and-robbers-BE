@@ -3,9 +3,5 @@ package com.team.cops_and_robbers.community.domain;
 public enum CommunityChatMessageType {
     TEXT,
     SYSTEM,
-    GAME_INVITE;
-
-    public boolean isClientSendable() {
-        return this != SYSTEM;
-    }
+    GAME_INVITE
 }
