@@ -14,7 +14,9 @@ import java.util.concurrent.TimeUnit;
 
 public class StompTestClient {
 
-    private static final String WS_URL = "ws://localhost:%d/game-connection";
+    private static final String WS_URL = "ws://localhost:%d%s";
+    public static final String SOCKET_PATH = "/connection";
+    public static final String LEGACY_SOCKET_PATH = "/game-connection";
     private static final String AUTH_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final int CONNECT_TIMEOUT_SECONDS = 5;
@@ -22,8 +24,8 @@ public class StompTestClient {
     private final StompSession session;
     private final Map<String, BlockingQueue<?>> receivedMessages = new ConcurrentHashMap<>();
 
-    public StompTestClient(WebSocketStompClient stompClient, int port, String token) throws Exception {
-        String url = WS_URL.formatted(port);
+    public StompTestClient(WebSocketStompClient stompClient, int port, String token, String socketPath) throws Exception {
+        String url = WS_URL.formatted(port, socketPath);
 
         StompHeaders headers = new StompHeaders();
         headers.add(AUTH_HEADER, BEARER_PREFIX + token);
