@@ -53,7 +53,9 @@ public class StompTestClient {
     }
 
     public void disconnect() {
-        session.disconnect();
+        if (session.isConnected()) {
+            session.disconnect();
+        }
     }
 
     private static class EmptySessionHandler extends StompSessionHandlerAdapter {}
