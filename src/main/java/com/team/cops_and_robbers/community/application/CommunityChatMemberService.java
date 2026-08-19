@@ -3,7 +3,9 @@ package com.team.cops_and_robbers.community.application;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatJoinCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatLeaveCommand;
+import com.team.cops_and_robbers.community.application.event.CommunityChatMessageSavedEvent;
 import com.team.cops_and_robbers.community.domain.CommunityChatMember;
+import com.team.cops_and_robbers.community.domain.CommunityChatMessage;
 import com.team.cops_and_robbers.community.domain.CommunityPost;
 import com.team.cops_and_robbers.community.domain.RecruitmentStatus;
 import com.team.cops_and_robbers.community.exception.CommunityChatException;
@@ -13,6 +15,7 @@ import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +29,7 @@ public class CommunityChatMemberService {
     private final CommunityChatMessageRepository communityChatMessageRepository;
     private final CommunityChatSystemMessageFactory communityChatSystemMessageFactory;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void join(CommunityChatJoinCommand command) {
@@ -36,8 +40,10 @@ public class CommunityChatMemberService {
 
         User user = userRepository.getByUserId(command.userId());
         communityChatMemberRepository.save(CommunityChatMember.createMember(command.postId(), command.userId()));
-        communityChatMessageRepository.save(
+
+        CommunityChatMessage systemMessage = communityChatMessageRepository.save(
                 communityChatSystemMessageFactory.createJoinMessage(command.postId(), user));
+        eventPublisher.publishEvent(new CommunityChatMessageSavedEvent(systemMessage));
     }
 
     @Transactional
@@ -50,9 +56,11 @@ public class CommunityChatMemberService {
                 .orElseThrow(() -> new ApplicationException(CommunityChatException.NOT_A_CHAT_MEMBER));
 
         User user = userRepository.getByUserId(command.userId());
-        communityChatMessageRepository.save(
+        CommunityChatMessage systemMessage = communityChatMessageRepository.save(
                 communityChatSystemMessageFactory.createLeaveMessage(command.postId(), user));
         communityChatMemberRepository.delete(member);
+
+        eventPublisher.publishEvent(new CommunityChatMessageSavedEvent(systemMessage));
     }
 
     private void validateRecruiting(CommunityPost post) {

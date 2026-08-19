@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.common.config;
 
 import com.team.cops_and_robbers.common.constant.RedisChannel;
 import com.team.cops_and_robbers.common.constant.RedisProperties;
+import com.team.cops_and_robbers.community.application.CommunityChatSubscriber;
 import com.team.cops_and_robbers.play.chat.application.AllChatSubscriber;
 import com.team.cops_and_robbers.play.chat.application.PoliceChatSubscriber;
 import com.team.cops_and_robbers.play.chat.application.RobberChatSubscriber;
@@ -28,9 +29,9 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.util.StringUtils;
 
 import java.util.Map;
-import org.springframework.util.StringUtils;
 
 @Configuration
 @RequiredArgsConstructor
@@ -121,18 +122,20 @@ public class RedisConfig {
             MessageListenerAdapter policeLocationAdapter,
             MessageListenerAdapter robberLocationAdapter,
             MessageListenerAdapter policePingAdapter,
-            MessageListenerAdapter robberPingAdapter
+            MessageListenerAdapter robberPingAdapter,
+            MessageListenerAdapter communityChatAdapter
     ) {
-        return Map.of(
-                RedisChannel.LOBBY.getPattern(), lobbyListenerAdapter,
-                RedisChannel.SYSTEM.getPattern(), systemListenerAdapter,
-                RedisChannel.CHAT_ALL.getPattern(), allChatAdapter,
-                RedisChannel.CHAT_POLICE.getPattern(), policeChatAdapter,
-                RedisChannel.CHAT_ROBBER.getPattern(), robberChatAdapter,
-                RedisChannel.LOCATION_POLICE.getPattern(), policeLocationAdapter,
-                RedisChannel.LOCATION_ROBBER.getPattern(), robberLocationAdapter,
-                RedisChannel.PING_POLICE.getPattern(), policePingAdapter,
-                RedisChannel.PING_ROBBER.getPattern(), robberPingAdapter
+        return Map.ofEntries(
+                Map.entry(RedisChannel.LOBBY.getPattern(), lobbyListenerAdapter),
+                Map.entry(RedisChannel.SYSTEM.getPattern(), systemListenerAdapter),
+                Map.entry(RedisChannel.CHAT_ALL.getPattern(), allChatAdapter),
+                Map.entry(RedisChannel.CHAT_POLICE.getPattern(), policeChatAdapter),
+                Map.entry(RedisChannel.CHAT_ROBBER.getPattern(), robberChatAdapter),
+                Map.entry(RedisChannel.LOCATION_POLICE.getPattern(), policeLocationAdapter),
+                Map.entry(RedisChannel.LOCATION_ROBBER.getPattern(), robberLocationAdapter),
+                Map.entry(RedisChannel.PING_POLICE.getPattern(), policePingAdapter),
+                Map.entry(RedisChannel.PING_ROBBER.getPattern(), robberPingAdapter),
+                Map.entry(RedisChannel.COMMUNITY_CHAT.getPattern(), communityChatAdapter)
         );
     }
 
@@ -182,6 +185,11 @@ public class RedisConfig {
 
     @Bean
     public MessageListenerAdapter robberPingAdapter(RobberPingSubscriber subscriber) {
+        return new MessageListenerAdapter(subscriber, LISTENER_METHOD_NAME);
+    }
+
+    @Bean
+    public MessageListenerAdapter communityChatAdapter(CommunityChatSubscriber subscriber) {
         return new MessageListenerAdapter(subscriber, LISTENER_METHOD_NAME);
     }
 }
