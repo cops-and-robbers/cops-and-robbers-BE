@@ -61,7 +61,7 @@ public class DataLoader implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         if (userRepository.count() > 0) {
-            log.info("이미 데이터가 존재하여 초기화를 건너뜁니다.");
+            log.info("이미 데이터가 존재하여 초기화를 건너뜁니다. 커뮤니티 게시글이 없으면 그것만 생성합니다.");
             createCommunityPosts(userRepository.findAll());
             return;
         }
