@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -47,8 +48,12 @@ public interface CommunityPostControllerDocs {
             @RequestBody @Valid CommunityPostCreateRequest request
     );
 
-    @Operation(summary = "게시글 목록 조회",
+    @SecurityRequirements
+    @Operation(summary = "게시글 목록 조회 (로그인 불필요)",
             description = "모집 게시글 목록을 국가별로 나눠 최신순 커서 방식으로 조회합니다. "
+                    + "웹뷰 지원을 위해 인증 없이 호출할 수 있습니다. "
+                    + "**countryCode 또는 latitude+longitude 중 하나는 반드시 보내야 합니다.** "
+                    + "(스펙상 셋 다 optional로 보이지만 조건부 필수이며, 둘 다 없으면 400입니다.) "
                     + "국가를 아는 클라이언트는 countryCode를, 모르면 현재 좌표(latitude, longitude)를 보냅니다. "
                     + "좌표로 보내면 서버가 역지오코딩해 국가를 판별하므로, 응답의 countryCode를 다음 페이지부터 그대로 사용하세요. "
                     + "지원하지 않는 쿼리 파라미터가 포함되면 400을 반환합니다.")
@@ -65,15 +70,16 @@ public interface CommunityPostControllerDocs {
             @RequestParam(defaultValue = "ALL") CommunityPostScope scope,
             @Parameter(description = "정렬 기준. 현재는 LATEST만 지원하며 POPULAR, DISTANCE, DEADLINE은 400", example = "LATEST")
             @RequestParam(defaultValue = "LATEST") CommunityPostSort sort,
-            @Parameter(description = "조회할 국가 코드(ISO 3166-1 alpha-2). 좌표를 보내지 않으면 필수", example = "KR")
+            @Parameter(description = "조회할 국가 코드(ISO 3166-1 alpha-2). **좌표를 보내지 않으면 필수**", example = "KR")
             @RequestParam(required = false) String countryCode,
-            @Parameter(description = "현재 위치 위도. countryCode를 보내지 않으면 필수", example = "37.5502")
+            @Parameter(description = "현재 위치 위도. **countryCode를 보내지 않으면 필수** (longitude와 함께)", example = "37.5502")
             @RequestParam(required = false) Double latitude,
-            @Parameter(description = "현재 위치 경도. countryCode를 보내지 않으면 필수", example = "127.0736")
+            @Parameter(description = "현재 위치 경도. **countryCode를 보내지 않으면 필수** (latitude와 함께)", example = "127.0736")
             @RequestParam(required = false) Double longitude
     );
 
-    @Operation(summary = "게시글 단건 조회", description = "특정 모집 게시글을 조회합니다.")
+    @SecurityRequirements
+    @Operation(summary = "게시글 단건 조회 (로그인 불필요)", description = "특정 모집 게시글을 조회합니다.")
     @ApiErrorCode(value = CommunityPostException.class, codes = {"POST_NOT_FOUND"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공")
