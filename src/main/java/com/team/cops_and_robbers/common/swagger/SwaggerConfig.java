@@ -36,10 +36,8 @@ public class SwaggerConfig {
 
                         ### ⚠️ 주의 (클라이언트 동시 배포 필요)
                         - GET /api/community-posts 목록이 국가별로 분리됨
-                          - countryCode 또는 현재 위치(latitude, longitude) 중 하나는 필수
-                          - 둘 다 없으면 400(COUNTRY_NOT_SPECIFIED)
-                          - 좌표로 보내면 서버가 국가를 판별해 응답의 countryCode에 실어줌
-                          - 다음 페이지부터는 그 countryCode를 그대로 넣어 좌표 없이 요청
+                          - countryCode 필수. 없으면 400(COUNTRY_NOT_SPECIFIED)
+                          - GET /api/community-posts/country 로 먼저 국가를 조회한 뒤 넣는다
                           - 위치 권한을 거부한 사용자는 기기 국가 코드를 보내면 됨
                         - GET /api/community-posts 페이지네이션을 커서 방식으로 전환
                           - page 파라미터 제거, cursor 파라미터 추가
@@ -48,6 +46,9 @@ public class SwaggerConfig {
                           - 지원하지 않는 쿼리 파라미터를 보내면 400(INVALID_QUERY_PARAMETER)
 
                         ### ✨ 신규
+                        - GET /api/community-posts/country 좌표 국가 조회 API 추가 (로그인 불필요)
+                          - 파라미터: latitude, longitude / 응답: countryCode
+                          - 목록 조회 전에 한 번 호출해 국가를 얻는 용도. 주소는 만들지 않아 벤더 호출이 1회
                         - GET /api/community-posts/address 좌표 주소 조회 API 추가 (로그인 필요)
                           - 파라미터: latitude, longitude
                           - 응답: region(동 단위, 게시글에 저장될 값), address(번지 포함, 작성자 확인용),
