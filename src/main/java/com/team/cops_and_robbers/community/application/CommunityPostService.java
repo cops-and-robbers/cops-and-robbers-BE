@@ -135,12 +135,17 @@ public class CommunityPostService {
         return resolveAddress(command.latitude(), command.longitude());
     }
 
+    /**
+     * 실패하면 게시글을 만들지 않는다. 주소 없이 저장하면 countryCode가 비어 어느 국가 목록에도 걸리지 않아,
+     * 작성자 본인도 찾을 수 없는 글이 된다. 조용히 사라지는 것보다 작성 시점에 실패를 알리는 편이 낫다.
+     */
     private PostAddress resolveAddress(Double latitude, Double longitude) {
         return switch (geocodingClient.reverseGeocode(latitude, longitude)) {
             case GeocodingResult.Resolved resolved -> resolved.postAddress();
             case GeocodingResult.NotFound ignored ->
                     throw new ApplicationException(CommunityPostException.ADDRESS_NOT_FOUND);
-            case GeocodingResult.Failed ignored -> PostAddress.empty();
+            case GeocodingResult.Failed ignored ->
+                    throw new InfrastructureException(CommunityPostException.ADDRESS_LOOKUP_FAILED);
         };
     }
 
