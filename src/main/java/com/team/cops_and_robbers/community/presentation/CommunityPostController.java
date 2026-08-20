@@ -17,6 +17,7 @@ import com.team.cops_and_robbers.community.presentation.dto.request.CommunityPos
 import com.team.cops_and_robbers.community.presentation.dto.request.CommunityPostUpdateRequest;
 import com.team.cops_and_robbers.community.presentation.dto.response.AddressResponse;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityPostListResponse;
+import com.team.cops_and_robbers.community.presentation.dto.response.CountryResponse;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityPostResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +43,17 @@ public class CommunityPostController implements CommunityPostControllerDocs {
     private final AddressService addressService;
 
     @AllowedQueryParams({"latitude", "longitude"})
+    @GetMapping("/country")
+    public ResponseEntity<CountryResponse> getCountry(
+            @RequestParam Double latitude,
+            @RequestParam Double longitude
+    ) {
+        String countryCode = addressService.getCountryCode(latitude, longitude);
+        CountryResponse response = CountryResponse.from(countryCode);
+        return ResponseEntity.ok(response);
+    }
+
+    @AllowedQueryParams({"latitude", "longitude"})
     @GetMapping("/address")
     public ResponseEntity<AddressResponse> getAddress(
             @RequestParam Double latitude,
@@ -62,19 +74,16 @@ public class CommunityPostController implements CommunityPostControllerDocs {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @AllowedQueryParams({"cursor", "size", "scope", "sort", "countryCode", "latitude", "longitude"})
+    @AllowedQueryParams({"cursor", "size", "scope", "sort", "countryCode"})
     @GetMapping
     public ResponseEntity<CommunityPostListResponse> getPostList(
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "ALL") CommunityPostScope scope,
             @RequestParam(defaultValue = "LATEST") CommunityPostSort sort,
-            @RequestParam(required = false) String countryCode,
-            @RequestParam(required = false) Double latitude,
-            @RequestParam(required = false) Double longitude
+            @RequestParam String countryCode
     ) {
-        CommunityPostListCommand command =
-                new CommunityPostListCommand(cursor, size, scope, sort, countryCode, latitude, longitude);
+        CommunityPostListCommand command = new CommunityPostListCommand(cursor, size, scope, sort, countryCode);
         CommunityPostCursorResult result = communityPostService.getPostList(command);
         CommunityPostListResponse response = CommunityPostListResponse.from(result);
         return ResponseEntity.ok(response);

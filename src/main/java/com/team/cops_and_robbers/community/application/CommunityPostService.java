@@ -49,7 +49,7 @@ public class CommunityPostService {
     }
 
     public CommunityPostCursorResult getPostList(CommunityPostListCommand command) {
-        String countryCode = resolveCountryCode(command);
+        String countryCode = command.countryCode().toUpperCase(Locale.ROOT);
 
         Pageable pageable = PageRequest.of(0, command.size() + 1);
         List<CommunityPost> fetched = CommunityPostCursor.decode(command.cursor())
@@ -65,23 +65,6 @@ public class CommunityPostService {
                 toResults(posts), resolveNextCursor(posts, hasNext), hasNext, countryCode);
     }
 
-    /**
-     * 좌표로 들어오면 국가를 알아낸다. 목록은 주소를 저장하지 않으므로 표기 언어를 맞추는 호출은 하지 않는다.
-     * 응답에 국가 코드를 실어 보내므로 다음 페이지부터는 좌표 없이 요청할 수 있다.
-     */
-    private String resolveCountryCode(CommunityPostListCommand command) {
-        if (!command.needsCountryLookup()) {
-            return command.countryCode().toUpperCase(Locale.ROOT);
-        }
-
-        return switch (geocodingClient.findCountry(command.latitude(), command.longitude())) {
-            case GeocodingResult.Resolved resolved -> resolved.postAddress().countryCode();
-            case GeocodingResult.NotFound ignored ->
-                    throw new ApplicationException(CommunityPostException.COUNTRY_NOT_SPECIFIED);
-            case GeocodingResult.Failed ignored ->
-                    throw new InfrastructureException(CommunityPostException.ADDRESS_LOOKUP_FAILED);
-        };
-    }
 
     public CommunityPostResult getPost(Long postId) {
         CommunityPost post = communityPostRepository.getByPostId(postId);
