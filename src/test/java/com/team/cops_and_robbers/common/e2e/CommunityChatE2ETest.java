@@ -3,10 +3,12 @@ package com.team.cops_and_robbers.common.e2e;
 import com.team.cops_and_robbers.common.StompTestClient;
 import com.team.cops_and_robbers.common.WebSocketE2ETest;
 import com.team.cops_and_robbers.common.fixture.CommunityPostFixture;
+import com.team.cops_and_robbers.community.domain.CommunityChatGameInviteData;
 import com.team.cops_and_robbers.community.domain.CommunityChatMember;
 import com.team.cops_and_robbers.community.domain.CommunityChatMessageType;
 import com.team.cops_and_robbers.community.domain.CommunityChatPayload;
 import com.team.cops_and_robbers.community.domain.CommunityPost;
+import com.team.cops_and_robbers.community.presentation.dto.request.CommunityChatRequest;
 import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -78,6 +80,114 @@ class CommunityChatE2ETest extends WebSocketE2ETest {
         assertThat(received.messageType()).isEqualTo(CommunityChatMessageType.SYSTEM);
         assertThat(received.message()).isEqualTo("{\"event\":\"LEAVE\"}");
         assertThat(received.senderId()).isEqualTo(leaver.getId());
+    }
+
+    @Test
+    void 멤버가_보낸_메시지를_같은_방_구독자가_수신한다() throws Exception {
+        User author = givenUser("author");
+        ChatSetup setup = givenChatRoomWithSubscribedAuthor(author);
+
+        User sender = givenUser("sender");
+        communityChatMemberRepository.save(CommunityChatMember.createMember(setup.post().getId(), sender.getId()));
+        StompTestClient senderClient = connect(givenAccessToken(sender));
+        senderClient.subscribe(setup.chatChannel(), CommunityChatPayload.class);
+
+        senderClient.send(
+                "/publish/community/%d/chat".formatted(setup.post().getId()),
+                new CommunityChatRequest("key-1", "안녕하세요!", null, CommunityChatMessageType.TEXT)
+        );
+
+        CommunityChatPayload received = setup.authorClient().waitForMessage(setup.chatChannel(), 5);
+
+        assertThat(received.messageType()).isEqualTo(CommunityChatMessageType.TEXT);
+        assertThat(received.message()).isEqualTo("안녕하세요!");
+        assertThat(received.messageKey()).isEqualTo("key-1");
+        assertThat(received.senderId()).isEqualTo(sender.getId());
+        assertThat(received.senderNickname()).isEqualTo(sender.getNickname());
+        assertThat(received.id()).as("즉시 INSERT라 발행 시점에 id가 확정된다").isNotNull();
+    }
+
+    @Test
+    void 게임_초대는_서버가_JSON으로_직렬화해_저장한다() throws Exception {
+        User author = givenUser("author");
+        ChatSetup setup = givenChatRoomWithSubscribedAuthor(author);
+
+        setup.authorClient().send(
+                "/publish/community/%d/chat".formatted(setup.post().getId()),
+                new CommunityChatRequest(
+                        "key-1",
+                        null,
+                        new CommunityChatGameInviteData(author.getNickname(), "ABC123"),
+                        CommunityChatMessageType.GAME_INVITE)
+        );
+
+        CommunityChatPayload received = setup.authorClient().waitForMessage(setup.chatChannel(), 5);
+
+        assertThat(received.messageType()).isEqualTo(CommunityChatMessageType.GAME_INVITE);
+        assertThat(received.message())
+                .contains("\"inviteCode\":\"ABC123\"")
+                .contains("\"inviterNickname\":\"%s\"".formatted(author.getNickname()));
+    }
+
+    @Test
+    void 초대_코드가_없는_게임_초대는_저장되지_않는다() throws Exception {
+        User author = givenUser("author");
+        ChatSetup setup = givenChatRoomWithSubscribedAuthor(author);
+
+        setup.authorClient().send(
+                "/publish/community/%d/chat".formatted(setup.post().getId()),
+                new CommunityChatRequest(
+                        "key-1",
+                        null,
+                        new CommunityChatGameInviteData(author.getNickname(), null),
+                        CommunityChatMessageType.GAME_INVITE)
+        );
+
+        assertThat(setup.authorClient().<CommunityChatPayload>waitForMessage(setup.chatChannel(), 1)).isNull();
+        assertThat(communityChatMessageRepository.count()).isZero();
+    }
+
+    @Test
+    void 컬럼_길이를_넘는_메시지_키는_저장되지_않는다() throws Exception {
+        User author = givenUser("author");
+        ChatSetup setup = givenChatRoomWithSubscribedAuthor(author);
+
+        setup.authorClient().send(
+                "/publish/community/%d/chat".formatted(setup.post().getId()),
+                new CommunityChatRequest("k".repeat(37), "안녕하세요!", null, CommunityChatMessageType.TEXT)
+        );
+
+        assertThat(setup.authorClient().<CommunityChatPayload>waitForMessage(setup.chatChannel(), 1)).isNull();
+        assertThat(communityChatMessageRepository.count()).isZero();
+    }
+
+    @Test
+    void 메시지_키를_보내지_않으면_서버가_채운다() throws Exception {
+        User author = givenUser("author");
+        ChatSetup setup = givenChatRoomWithSubscribedAuthor(author);
+
+        setup.authorClient().send(
+                "/publish/community/%d/chat".formatted(setup.post().getId()),
+                new CommunityChatRequest(null, "안녕하세요!", null, CommunityChatMessageType.TEXT)
+        );
+
+        CommunityChatPayload received = setup.authorClient().waitForMessage(setup.chatChannel(), 5);
+
+        assertThat(received.messageKey()).isNotBlank();
+    }
+
+    @Test
+    void 클라이언트는_SYSTEM_타입을_보낼_수_없다() throws Exception {
+        User author = givenUser("author");
+        ChatSetup setup = givenChatRoomWithSubscribedAuthor(author);
+
+        setup.authorClient().send(
+                "/publish/community/%d/chat".formatted(setup.post().getId()),
+                new CommunityChatRequest("key-1", "{\"event\":\"JOIN\"}", null, CommunityChatMessageType.SYSTEM)
+        );
+
+        assertThat(setup.authorClient().<CommunityChatPayload>waitForMessage(setup.chatChannel(), 1)).isNull();
+        assertThat(communityChatMessageRepository.count()).isZero();
     }
 
     @Test
