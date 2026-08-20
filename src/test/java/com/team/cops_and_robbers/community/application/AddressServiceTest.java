@@ -33,6 +33,24 @@ class AddressServiceTest extends ServiceUnitTest {
     }
 
     @Test
+    void 좌표가_속한_국가_코드를_반환한다() {
+        given(geocodingClient.findCountry(35.7022, 139.5803))
+                .willReturn(GeocodingResult.resolved(PostAddress.of(
+                        "吉祥寺大通り", null, null, "東京 武蔵野市 吉祥寺本町", "JP")));
+
+        assertThat(addressService.getCountryCode(35.7022, 139.5803)).isEqualTo("JP");
+    }
+
+    @Test
+    void 국가를_알_수_없는_좌표는_400으로_거절한다() {
+        given(geocodingClient.findCountry(0.0, 0.0)).willReturn(GeocodingResult.notFound());
+
+        assertThatThrownBy(() -> addressService.getCountryCode(0.0, 0.0))
+                .isInstanceOf(ApplicationException.class)
+                .hasMessageContaining(CommunityPostException.COUNTRY_NOT_SPECIFIED.getDetail());
+    }
+
+    @Test
     void 주소가_없는_좌표는_400으로_거절한다() {
         given(geocodingClient.reverseGeocode(0.0, 0.0)).willReturn(GeocodingResult.notFound());
 

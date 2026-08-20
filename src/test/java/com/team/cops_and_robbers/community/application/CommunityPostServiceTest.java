@@ -215,55 +215,19 @@ class CommunityPostServiceTest extends ServiceUnitTest {
                     .isInstanceOf(ApplicationException.class);
         }
 
-        @Test
-        void 국가_코드가_없으면_좌표로_역지오코딩해_국가를_판별한다() {
-            given(geocodingClient.findCountry(35.7022, 139.5803))
-                    .willReturn(GeocodingResult.resolved(PostAddress.of(
-                            "吉祥寺大通り", null, null, "東京 武蔵野市 吉祥寺本町", "JP")));
-            given(communityPostRepository
-                    .findAllByCountryCodeOrderByCreatedAtDescIdDesc("JP", PageRequest.of(0, 11)))
-                    .willReturn(List.of());
 
-            CommunityPostCursorResult result = communityPostService.getPostList(
-                    new CommunityPostListCommand(null, 10, CommunityPostScope.ALL,
-                            CommunityPostSort.LATEST, null, 35.7022, 139.5803));
-
-            assertThat(result.countryCode()).isEqualTo("JP");
-        }
 
         @Test
-        void 국가_코드가_있으면_역지오코딩하지_않는다() {
-            given(communityPostRepository
-                    .findAllByCountryCodeOrderByCreatedAtDescIdDesc("KR", PageRequest.of(0, 11)))
-                    .willReturn(List.of());
-
-            communityPostService.getPostList(listCommand(null, 10));
-
-            then(geocodingClient).shouldHaveNoInteractions();
-        }
-
-        @Test
-        void 국가_코드도_좌표도_없으면_COUNTRY_NOT_SPECIFIED_예외가_발생한다() {
+        void 국가_코드가_없으면_COUNTRY_NOT_SPECIFIED_예외가_발생한다() {
             assertThatThrownBy(() -> new CommunityPostListCommand(
-                    null, 10, CommunityPostScope.ALL, CommunityPostSort.LATEST, null, null, null))
+                    null, 10, CommunityPostScope.ALL, CommunityPostSort.LATEST, null))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.COUNTRY_NOT_SPECIFIED.getDetail());
         }
 
-        @Test
-        void 주소가_없는_좌표로_조회하면_COUNTRY_NOT_SPECIFIED_예외가_발생한다() {
-            given(geocodingClient.findCountry(0.0, 0.0)).willReturn(GeocodingResult.notFound());
-
-            assertThatThrownBy(() -> communityPostService.getPostList(
-                    new CommunityPostListCommand(null, 10, CommunityPostScope.ALL,
-                            CommunityPostSort.LATEST, null, 0.0, 0.0)))
-                    .isInstanceOf(ApplicationException.class)
-                    .hasMessageContaining(CommunityPostException.COUNTRY_NOT_SPECIFIED.getDetail());
-        }
 
         private CommunityPostListCommand listCommand(String cursor, int size) {
-            return new CommunityPostListCommand(
-                    cursor, size, CommunityPostScope.ALL, CommunityPostSort.LATEST, "KR", null, null);
+            return new CommunityPostListCommand(cursor, size, CommunityPostScope.ALL, CommunityPostSort.LATEST, "KR");
         }
 
         private List<CommunityPost> postsOf(int count) {
