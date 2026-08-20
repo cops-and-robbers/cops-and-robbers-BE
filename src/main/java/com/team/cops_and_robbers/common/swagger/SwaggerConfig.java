@@ -35,6 +35,12 @@ public class SwaggerConfig {
                         ## v2.17.0 업데이트 내역
 
                         ### ⚠️ 주의 (클라이언트 동시 배포 필요)
+                        - GET /api/community-posts 목록이 국가별로 분리됨
+                          - countryCode 또는 현재 위치(latitude, longitude) 중 하나는 필수
+                          - 둘 다 없으면 400(COUNTRY_NOT_SPECIFIED)
+                          - 좌표로 보내면 서버가 국가를 판별해 응답의 countryCode에 실어줌
+                          - 다음 페이지부터는 그 countryCode를 그대로 넣어 좌표 없이 요청
+                          - 위치 권한을 거부한 사용자는 기기 국가 코드를 보내면 됨
                         - GET /api/community-posts 페이지네이션을 커서 방식으로 전환
                           - page 파라미터 제거, cursor 파라미터 추가
                           - 응답의 page 객체가 cursor 객체(nextCursor, hasNext)로 변경
@@ -44,7 +50,8 @@ public class SwaggerConfig {
                         ### ✨ 신규
                         - GET /api/community-posts/address 좌표 주소 조회 API 추가 (로그인 필요)
                           - 파라미터: latitude, longitude
-                          - 응답: region(동 단위, 게시글에 저장될 값), address(번지 포함, 작성자 확인용)
+                          - 응답: region(동 단위, 게시글에 저장될 값), address(번지 포함, 작성자 확인용),
+                            countryCode(ISO 3166-1 alpha-2)
                           - 작성 화면에서 핀을 찍은 직후 호출해 위치를 확인시키는 용도이며 저장하지 않는다
                           - 주소 없는 좌표는 400(ADDRESS_NOT_FOUND), 조회 실패는 500(ADDRESS_LOOKUP_FAILED)
                         - GET /api/community-posts scope, sort 파라미터 추가
@@ -62,7 +69,10 @@ public class SwaggerConfig {
                           - 필수 입력, 최대 50자. 예: 어린이대공원 정문
                           - 좌표로는 건물명·장소명을 신뢰할 수준으로 얻을 수 없어 작성자에게 받는다
 
+                        - 게시글 응답에 location.countryCode 추가, 목록 응답에 countryCode 추가
+
                         ### 🛠 변경
+                        - 해외 주소를 그 나라 언어로 저장 (일본은 일본어, 그 외는 영어)
                         - 역지오코딩 제공자를 카카오에서 VWorld(국내), Geoapify(해외)로 교체
                           - 카카오는 운영정책상 변환 결과를 DB에 저장할 수 없고 해외 좌표를 지원하지 않음
                           - 국내를 먼저 조회하고 주소를 얻지 못하면 해외로 넘어가므로 해외 게시글도 주소가 채워짐
