@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.common;
 
 import com.team.cops_and_robbers.auth.infrastructure.jwt.JwtTokenProvider;
 import com.team.cops_and_robbers.bug.repository.BugReportRepository;
+import com.team.cops_and_robbers.community.infrastructure.GeocodingClient;
 import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
@@ -55,6 +56,9 @@ public abstract class ServiceUnitTest {
 
     @Mock
     protected JwtTokenProvider jwtTokenProvider;
+
+    @Mock
+    protected GeocodingClient geocodingClient;
 
     protected static void setId(Object target, Long id) {
         ReflectionTestUtils.setField(target, "id", id);

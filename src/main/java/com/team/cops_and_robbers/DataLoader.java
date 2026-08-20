@@ -2,6 +2,10 @@ package com.team.cops_and_robbers;
 
 import com.team.cops_and_robbers.auth.infrastructure.jwt.JwtTokenProvider;
 import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
+import com.team.cops_and_robbers.community.application.dto.command.CommunityPostCreateCommand;
+import com.team.cops_and_robbers.community.domain.CommunityPost;
+import com.team.cops_and_robbers.community.domain.PostAddress;
+import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.game.area.application.dto.GameAreaData;
 import com.team.cops_and_robbers.game.area.domain.GameArea;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
@@ -39,6 +43,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DataLoader implements CommandLineRunner {
 
+    /** 커서 페이지네이션이 여러 페이지로 넘어가는지 확인할 수 있도록 넉넉히 만든다. 기본 size가 10이라 5페이지가 된다. */
+    private static final int COMMUNITY_POST_COUNT = 50;
+
     private final UserRepository userRepository;
     private final UserDeviceRepository userDeviceRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -46,6 +53,7 @@ public class DataLoader implements CommandLineRunner {
     private final GameRepository gameRepository;
     private final GameAreaRepository gameAreaRepository;
     private final GameParticipantRepository gameParticipantRepository;
+    private final CommunityPostRepository communityPostRepository;
 
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
@@ -53,7 +61,8 @@ public class DataLoader implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         if (userRepository.count() > 0) {
-            log.info("이미 데이터가 존재하여 초기화를 건너뜁니다.");
+            log.info("이미 데이터가 존재하여 초기화를 건너뜁니다. 커뮤니티 게시글이 없으면 그것만 생성합니다.");
+            createCommunityPosts(userRepository.findAll());
             return;
         }
 
@@ -80,6 +89,10 @@ public class DataLoader implements CommandLineRunner {
         gameParticipantRepository.updateStatusByGameId(game.getId(), ParticipantStatus.ALIVE);
 
         log.info("Game Started: [ID: {}, InviteCode: {}]", game.getId(), game.getInviteCode());
+
+        // 5. 커뮤니티 게시글 생성
+        createCommunityPosts(users);
+
         log.info("========== 테스트용 데이터 초기화 완료 ==========");
     }
 
@@ -141,5 +154,128 @@ public class DataLoader implements CommandLineRunner {
         participant.changeTeam(team);
         participant.updateReady(true);
         gameParticipantRepository.save(participant);
+    }
+
+    /**
+     * 커뮤니티 목록 화면 확인용 게시글. 시드를 순환해 {@link #COMMUNITY_POST_COUNT}건을 만든다.
+     * <p>
+     * 주소는 VWorld·Geoapify를 실제로 호출해 받은 값이다. 국내는 12개 지점 중 롯데타워만 도로명·건물명이
+     * 나오고 나머지는 지번만 내려왔다. 실제 분포가 그러하므로 시드도 그대로 맞춘다.
+     */
+    private void createCommunityPosts(List<User> users) {
+        if (users.isEmpty() || communityPostRepository.count() > 0) {
+            return;
+        }
+
+        List<CommunityPostSeed> seeds = List.of(
+                new CommunityPostSeed("잠실 롯데타워 앞", "지방에서 오시는 분들도 찾기 쉬워요.",
+                        37.5125, 127.1025, 15,
+                        "롯데월드타워 정문",
+                        PostAddress.of("서울특별시 송파구 신천동 29",
+                                "서울특별시 송파구 올림픽로 300", "롯데월드타워앤드롯데월드몰",
+                                "서울특별시 송파구 신천동", "KR")),
+                new CommunityPostSeed("세종대에서 경찰과 도둑 하실 분!", "세종대 정문 앞에서 모입니다. 초보 환영이에요.",
+                        37.5502, 127.0736, 8,
+                        "세종대 정문",
+                        PostAddress.of("서울특별시 광진구 군자동 98", null, null,
+                                "서울특별시 광진구 군자동", "KR")),
+                new CommunityPostSeed("강남역 근처 야간 게임", "퇴근하고 가볍게 한 판 하실 분 구합니다.",
+                        37.4979, 127.0276, 6,
+                        "강남역 11번 출구",
+                        PostAddress.of("서울특별시 서초구 서초동 1373", null, null,
+                                "서울특별시 서초구 서초동", "KR")),
+                new CommunityPostSeed("올림픽공원에서 대규모로", "넓은 곳에서 제대로 뛰어봅시다. 20명 목표!",
+                        37.5202, 127.1213, 20,
+                        "올림픽공원 평화의문",
+                        PostAddress.of("서울특별시 송파구 방이동 88-3", null, null,
+                                "서울특별시 송파구 방이동", "KR")),
+                new CommunityPostSeed("한강공원 뚝섬 모임", "돗자리 깔고 쉬다가 게임도 하고요.",
+                        37.5299, 127.0668, 10,
+                        "뚝섬한강공원 자벌레",
+                        PostAddress.of("서울특별시 광진구 자양동 112", null, null,
+                                "서울특별시 광진구 자양동", "KR")),
+                new CommunityPostSeed("여의도 벚꽃 시즌 게임", "꽃구경도 하고 게임도 하고 일석이조!",
+                        37.5265, 126.9245, 12,
+                        "여의도공원 문화의마당",
+                        PostAddress.of("서울특별시 영등포구 여의도동 2", null, null,
+                                "서울특별시 영등포구 여의도동", "KR")),
+                new CommunityPostSeed("홍대입구 주말 모임", "주말 오후에 홍대에서 만나요.",
+                        37.5572, 126.9245, 8,
+                        "홍대입구역 9번 출구",
+                        PostAddress.of("서울특별시 마포구 동교동 155-55", null, null,
+                                "서울특별시 마포구 동교동", "KR")),
+                new CommunityPostSeed("북서울꿈의숲 오전 게임", "아침 일찍 시작해서 점심 전에 끝냅니다.",
+                        37.6210, 127.0417, 10,
+                        "북서울꿈의숲 전망대",
+                        PostAddress.of("서울특별시 강북구 번동 90", null, null,
+                                "서울특별시 강북구 번동", "KR")),
+                new CommunityPostSeed("서울숲에서 만나요", "가족 단위도 환영합니다.",
+                        37.5444, 127.0374, 14,
+                        "서울숲 가족마당",
+                        PostAddress.of("서울특별시 성동구 성수동1가 720", null, null,
+                                "서울특별시 성동구 성수동1가", "KR")),
+                new CommunityPostSeed("건대입구 저녁 모임", "저녁 먹고 시작할 예정이에요.",
+                        37.5405, 127.0700, 6,
+                        "건대입구역 2번 출구",
+                        PostAddress.of("서울특별시 광진구 화양동 6-7", null, null,
+                                "서울특별시 광진구 화양동", "KR")),
+                new CommunityPostSeed("남산공원 야경 게임", "야경 보면서 뛰는 재미가 있습니다.",
+                        37.5512, 126.9882, 10,
+                        "남산공원 백범광장",
+                        PostAddress.of("서울특별시 용산구 용산동2가 산 1-11", null, null,
+                                "서울특별시 용산구 용산동2가", "KR")),
+                new CommunityPostSeed("뉴욕 타임스퀘어 번개", "해외 좌표는 Geoapify가 변환합니다.",
+                        40.7580, -73.9855, 8,
+                        "타임스퀘어",
+                        PostAddress.of("Sunglass Hut, 1540 Broadway, New York, NY 10036, United States of America",
+                                "1540 Broadway", "Sunglass Hut", "New York Manhattan", "US")),
+                new CommunityPostSeed("런던 빅벤 앞에서", "해외 게시글 표시 확인용입니다.",
+                        51.5007, -0.1246, 6,
+                        "빅벤 앞",
+                        PostAddress.of("Elizabeth Tower, Bridge Street, London, SW1A 2JR, United Kingdom",
+                                "Bridge Street", "Elizabeth Tower", "City of Westminster Millbank", "GB")),
+                new CommunityPostSeed("주소 변환 실패 케이스", "역지오코딩이 실패하면 지역이 null로 내려갑니다.",
+                        37.5665, 126.9780, 6,
+                        "서울시청 광장",
+                        PostAddress.empty())
+        );
+
+        for (int i = 0; i < COMMUNITY_POST_COUNT; i++) {
+            CommunityPostSeed seed = seeds.get(i % seeds.size());
+            User writer = users.get(i % users.size());
+            CommunityPostCreateCommand command = new CommunityPostCreateCommand(
+                    writer.getId(),
+                    toTitle(seed, i, seeds.size()),
+                    seed.content(),
+                    LocalDateTime.now().plusDays(i + 1L),
+                    seed.latitude(),
+                    seed.longitude(),
+                    seed.placeName(),
+                    seed.maxParticipants()
+            );
+            communityPostRepository.save(CommunityPost.createPost(command, seed.postAddress()));
+        }
+
+        log.info("Community Posts Created: [{}건]", COMMUNITY_POST_COUNT);
+    }
+
+    /** 시드를 순환해 만들기 때문에 두 바퀴째부터는 제목에 회차를 붙여 목록에서 구분되게 한다. */
+    private String toTitle(CommunityPostSeed seed, int index, int seedCount) {
+        int round = index / seedCount;
+        if (round == 0) {
+            return seed.title();
+        }
+        return seed.title() + " (" + (round + 1) + "차)";
+    }
+
+    private record CommunityPostSeed(
+            String title,
+            String content,
+            Double latitude,
+            Double longitude,
+            Integer maxParticipants,
+            String placeName,
+            PostAddress postAddress
+    ) {
     }
 }

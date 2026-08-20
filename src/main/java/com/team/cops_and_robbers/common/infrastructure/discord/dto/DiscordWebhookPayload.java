@@ -6,7 +6,11 @@ public record DiscordWebhookPayload(
         String username,
         List<DiscordEmbed> embeds
 ) {
-    public static DiscordWebhookPayload of(DiscordEmbed embed) {
+    public static DiscordWebhookPayload bug(DiscordEmbed embed) {
         return new DiscordWebhookPayload("버그 제보 알림봇", List.of(embed));
+    }
+
+    public static DiscordWebhookPayload alert(DiscordEmbed embed) {
+        return new DiscordWebhookPayload("서버 알림봇", List.of(embed));
     }
 }

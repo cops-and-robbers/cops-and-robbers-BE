@@ -9,6 +9,7 @@ public record CommunityPostCreateCommand(
         LocalDateTime meetingAt,
         Double latitude,
         Double longitude,
+        String placeName,
         Integer maxParticipants
 ) {
 }

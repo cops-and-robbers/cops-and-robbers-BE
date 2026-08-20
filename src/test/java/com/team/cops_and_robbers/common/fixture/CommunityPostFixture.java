@@ -17,9 +17,23 @@ public class CommunityPostFixture {
                 .latitude(37.4979)
                 .longitude(127.0276)
                 .maxParticipants(6)
+                .placeName("어린이대공원 정문")
+                .countryCode("KR")
                 .build();
         ReflectionTestUtils.setField(post, "createdAt", LocalDateTime.now());
         ReflectionTestUtils.setField(post, "updatedAt", LocalDateTime.now());
+        return post;
+    }
+
+    public static CommunityPost POST(Long userId, String address) {
+        CommunityPost post = POST(userId);
+        ReflectionTestUtils.setField(post, "address", address);
+        return post;
+    }
+
+    public static CommunityPost POST(Long userId, LocalDateTime createdAt) {
+        CommunityPost post = POST(userId);
+        ReflectionTestUtils.setField(post, "createdAt", createdAt);
         return post;
     }
 
@@ -32,6 +46,8 @@ public class CommunityPostFixture {
                 .latitude(37.5665)
                 .longitude(126.9780)
                 .maxParticipants(4)
+                .placeName("광화문광장 세종대왕상")
+                .countryCode("KR")
                 .status(RecruitmentStatus.COMPLETED)
                 .build();
         ReflectionTestUtils.setField(post, "createdAt", LocalDateTime.now());

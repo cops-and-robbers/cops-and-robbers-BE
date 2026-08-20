@@ -16,6 +16,11 @@ spring:
     validate-on-migrate: true
     encoding: UTF-8
 
+  http:
+    client:
+      connect-timeout: 2s
+      read-timeout: 2s
+
 jwt:
   access:
     secret: ${ACCESS_SECRET_KEY}
@@ -34,9 +39,16 @@ springdoc:
 encryption:
   secret-key: ${ENCRYPTION_KEY}
 
+geocoding:
+  vworld:
+    api-key: ${VWORLD_API_KEY:}
+  geoapify:
+    api-key: ${GEOAPIFY_API_KEY:}
+
 discord:
   webhook:
     bug: ${DISCORD_WEBHOOK_BUG}
+    alert: ${DISCORD_WEBHOOK_ALERT:}
 
 server:
   shutdown: graceful

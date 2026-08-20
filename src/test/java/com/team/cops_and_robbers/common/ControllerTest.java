@@ -9,10 +9,12 @@ import com.team.cops_and_robbers.auth.infrastructure.social.strategy.KakaoLoginS
 import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
 import com.team.cops_and_robbers.bug.repository.BugReportRepository;
 import com.team.cops_and_robbers.common.fcm.FcmService;
-import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.common.fixture.UserDeviceFixture;
 import com.team.cops_and_robbers.common.fixture.UserFixture;
+import com.team.cops_and_robbers.community.infrastructure.GeocodingClient;
+import com.team.cops_and_robbers.community.infrastructure.GeocodingResult;
+import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
@@ -40,6 +42,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 
 import static io.restassured.RestAssured.given;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 
 @Sql(scripts = "/truncate.sql")
 @ActiveProfiles("test")
@@ -63,6 +67,9 @@ public abstract class ControllerTest {
 
     @MockitoBean
     protected GameFcmNotifier gameFcmNotifier;
+
+    @MockitoBean
+    protected GeocodingClient geocodingClient;
 
     @Autowired
     protected UserRepository userRepository;
@@ -107,6 +114,9 @@ public abstract class ControllerTest {
     void setUp() {
         RestAssured.port = port;
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+        doReturn(GeocodingResult.failed())
+                .when(geocodingClient)
+                .reverseGeocode(any(), any());
     }
 
     protected String givenAccessToken(User user) {
