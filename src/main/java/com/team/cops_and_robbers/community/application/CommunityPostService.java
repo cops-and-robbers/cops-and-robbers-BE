@@ -61,8 +61,7 @@ public class CommunityPostService {
         boolean hasNext = fetched.size() > command.size();
         List<CommunityPost> posts = hasNext ? fetched.subList(0, command.size()) : fetched;
 
-        return new CommunityPostCursorResult(
-                toResults(posts), resolveNextCursor(posts, hasNext), hasNext, countryCode);
+        return new CommunityPostCursorResult(toResults(posts), resolveNextCursor(posts, hasNext), hasNext);
     }
 
 

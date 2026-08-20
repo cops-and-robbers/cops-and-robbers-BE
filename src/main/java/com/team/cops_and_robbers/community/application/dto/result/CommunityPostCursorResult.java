@@ -5,7 +5,6 @@ import java.util.List;
 public record CommunityPostCursorResult(
         List<CommunityPostResult> content,
         String nextCursor,
-        boolean hasNext,
-        String countryCode
+        boolean hasNext
 ) {
 }
