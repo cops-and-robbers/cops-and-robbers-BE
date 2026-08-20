@@ -85,6 +85,8 @@ class CommunityPostControllerTest extends ControllerTest {
 
         @Test
         void 지오코딩_호출이_실패하면_500을_응답한다() {
+            doReturn(GeocodingResult.failed()).when(geocodingClient).reverseGeocode(any(), any());
+
             ExtractableResponse<Response> extract = authenticated(accessToken)
                     .queryParam("latitude", 37.5502)
                     .queryParam("longitude", 127.0736)
