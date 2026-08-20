@@ -29,6 +29,8 @@ public class VWorldGeocodingClient implements GeocodingClient {
     private static final String BUILDING_NAME_DELIMITER = ",";
     private static final int BUILDING_NAME_INDEX = 1;
     private static final String REGION_DELIMITER = " ";
+    /** VWorld는 국내 전용이라 주소를 돌려줬다면 국내 좌표가 확정이다. */
+    private static final String DOMESTIC_COUNTRY_CODE = "KR";
 
     private final RestClient restClient;
     private final String apiKey;
@@ -58,6 +60,12 @@ public class VWorldGeocodingClient implements GeocodingClient {
             discordNotifier.sendGeocodingFailure(latitude, longitude, e.toString());
             return GeocodingResult.failed();
         }
+    }
+
+    /** VWorld는 한국어 단일 응답이라 주소 조회와 국가 조회가 같다. */
+    @Override
+    public GeocodingResult findCountry(Double latitude, Double longitude) {
+        return reverseGeocode(latitude, longitude);
     }
 
     private VWorldResponse requestGetAddress(Double latitude, Double longitude) {
@@ -113,14 +121,15 @@ public class VWorldGeocodingClient implements GeocodingClient {
 
         VWorldAddress road = findByType(addresses, TYPE_ROAD);
         if (road == null) {
-            return PostAddress.of(parcelText, null, null, region);
+            return PostAddress.of(parcelText, null, null, region, DOMESTIC_COUNTRY_CODE);
         }
 
         Matcher matcher = ROAD_TEXT.matcher(road.text());
         if (!matcher.matches()) {
-            return PostAddress.of(parcelText, road.text(), null, region);
+            return PostAddress.of(parcelText, road.text(), null, region, DOMESTIC_COUNTRY_CODE);
         }
-        return PostAddress.of(parcelText, matcher.group(1), extractBuildingName(matcher.group(2)), region);
+        return PostAddress.of(parcelText, matcher.group(1), extractBuildingName(matcher.group(2)),
+                region, DOMESTIC_COUNTRY_CODE);
     }
 
     /**

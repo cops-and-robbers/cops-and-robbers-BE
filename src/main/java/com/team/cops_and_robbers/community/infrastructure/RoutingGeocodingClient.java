@@ -24,4 +24,13 @@ public class RoutingGeocodingClient implements GeocodingClient {
         }
         return overseasClient.reverseGeocode(latitude, longitude);
     }
+
+    @Override
+    public GeocodingResult findCountry(Double latitude, Double longitude) {
+        GeocodingResult domesticResult = domesticClient.findCountry(latitude, longitude);
+        if (domesticResult instanceof GeocodingResult.Resolved) {
+            return domesticResult;
+        }
+        return overseasClient.findCountry(latitude, longitude);
+    }
 }
