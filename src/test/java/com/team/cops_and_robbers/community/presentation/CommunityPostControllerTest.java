@@ -47,7 +47,7 @@ class CommunityPostControllerTest extends ControllerTest {
         void 좌표_주소_조회에_성공하면_지역과_지번을_함께_200으로_응답한다() {
             doReturn(GeocodingResult.resolved(PostAddress.of(
                     "서울특별시 광진구 화양동 1-20", "서울특별시 광진구 능동로 216", "세종대학교",
-                    "서울특별시 광진구 화양동")))
+                    "서울특별시 광진구 화양동", "KR")))
                     .when(geocodingClient)
                     .reverseGeocode(any(), any());
 
@@ -165,7 +165,7 @@ class CommunityPostControllerTest extends ControllerTest {
         @Test
         void 역지오코딩에_성공하면_지역과_사용자_입력_장소를_함께_응답한다() {
             doReturn(GeocodingResult.resolved(
-                    PostAddress.of("서울특별시 광진구 군자동 98", null, null, "서울특별시 광진구 군자동")))
+                    PostAddress.of("서울특별시 광진구 군자동 98", null, null, "서울특별시 광진구 군자동", "KR")))
                     .when(geocodingClient)
                     .reverseGeocode(any(), any());
             Map<String, Object> location = Map.of("latitude", 37.5502, "longitude", 127.0736, "placeName", "세종대 정문");
@@ -230,6 +230,7 @@ class CommunityPostControllerTest extends ControllerTest {
 
             ExtractableResponse<Response> extract = unauthenticated()
                     .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
                     .when()
                     .get(POST_API_URL)
                     .then()
@@ -254,6 +255,7 @@ class CommunityPostControllerTest extends ControllerTest {
             }
             ExtractableResponse<Response> firstExtract = unauthenticated()
                     .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
                     .when()
                     .get(POST_API_URL)
                     .then()
@@ -263,6 +265,7 @@ class CommunityPostControllerTest extends ControllerTest {
             ExtractableResponse<Response> extract = unauthenticated()
                     .queryParam("size", 10)
                     .queryParam("cursor", nextCursor)
+                    .queryParam("countryCode", "KR")
                     .when()
                     .get(POST_API_URL)
                     .then()
@@ -282,6 +285,7 @@ class CommunityPostControllerTest extends ControllerTest {
         @Test
         void 게시글이_없으면_빈_목록으로_200을_응답한다() {
             ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("countryCode", "KR")
                     .when()
                     .get(POST_API_URL)
                     .then()
@@ -297,6 +301,7 @@ class CommunityPostControllerTest extends ControllerTest {
         @Test
         void 토큰_없이_요청해도_200을_응답한다() {
             ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("countryCode", "KR")
                     .when()
                     .get(POST_API_URL)
                     .then()
@@ -311,6 +316,7 @@ class CommunityPostControllerTest extends ControllerTest {
         void 잘못된_커서로_요청하면_400을_응답한다() {
             ExtractableResponse<Response> extract = unauthenticated()
                     .queryParam("cursor", "broken-cursor!!")
+                    .queryParam("countryCode", "KR")
                     .when()
                     .get(POST_API_URL)
                     .then()
@@ -325,6 +331,7 @@ class CommunityPostControllerTest extends ControllerTest {
         void 지원하지_않는_쿼리_파라미터로_요청하면_400을_응답한다() {
             ExtractableResponse<Response> extract = unauthenticated()
                     .queryParam("keyword", "강남")
+                    .queryParam("countryCode", "KR")
                     .when()
                     .get(POST_API_URL)
                     .then()
@@ -342,6 +349,7 @@ class CommunityPostControllerTest extends ControllerTest {
             ExtractableResponse<Response> extract = unauthenticated()
                     .queryParam("scope", "ALL")
                     .queryParam("sort", "LATEST")
+                    .queryParam("countryCode", "KR")
                     .when()
                     .get(POST_API_URL)
                     .then()
@@ -357,6 +365,7 @@ class CommunityPostControllerTest extends ControllerTest {
         void 아직_지원하지_않는_scope로_요청하면_400을_응답한다() {
             ExtractableResponse<Response> extract = unauthenticated()
                     .queryParam("scope", "NEARBY")
+                    .queryParam("countryCode", "KR")
                     .when()
                     .get(POST_API_URL)
                     .then()
@@ -373,6 +382,7 @@ class CommunityPostControllerTest extends ControllerTest {
         void 아직_지원하지_않는_sort로_요청하면_400을_응답한다() {
             ExtractableResponse<Response> extract = unauthenticated()
                     .queryParam("sort", "POPULAR")
+                    .queryParam("countryCode", "KR")
                     .when()
                     .get(POST_API_URL)
                     .then()
@@ -389,6 +399,7 @@ class CommunityPostControllerTest extends ControllerTest {
         void 정의되지_않은_scope_값으로_요청하면_400을_응답한다() {
             ExtractableResponse<Response> extract = unauthenticated()
                     .queryParam("scope", "EVERYTHING")
+                    .queryParam("countryCode", "KR")
                     .when()
                     .get(POST_API_URL)
                     .then()
@@ -405,6 +416,7 @@ class CommunityPostControllerTest extends ControllerTest {
                     .queryParam("scope", "NEARBY")
                     .queryParam("lat", 37.4979)
                     .queryParam("lng", 127.0276)
+                    .queryParam("countryCode", "KR")
                     .when()
                     .get(POST_API_URL)
                     .then()
@@ -420,6 +432,7 @@ class CommunityPostControllerTest extends ControllerTest {
             ExtractableResponse<Response> extract = unauthenticated()
                     .queryParam("page", 0)
                     .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
                     .when()
                     .get(POST_API_URL)
                     .then()
@@ -434,6 +447,7 @@ class CommunityPostControllerTest extends ControllerTest {
         void size가_0이면_400을_응답한다() {
             ExtractableResponse<Response> extract = unauthenticated()
                     .queryParam("size", 0)
+                    .queryParam("countryCode", "KR")
                     .when()
                     .get(POST_API_URL)
                     .then()
@@ -448,6 +462,7 @@ class CommunityPostControllerTest extends ControllerTest {
         void size가_100을_초과하면_400을_응답한다() {
             ExtractableResponse<Response> extract = unauthenticated()
                     .queryParam("size", 101)
+                    .queryParam("countryCode", "KR")
                     .when()
                     .get(POST_API_URL)
                     .then()

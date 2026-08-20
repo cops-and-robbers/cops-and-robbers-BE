@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -72,7 +73,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             given(userRepository.getByUserId(1L)).willReturn(USER());
             given(geocodingClient.reverseGeocode(37.4979, 127.0276))
                     .willReturn(GeocodingResult.resolved(
-                            PostAddress.of("서울 강남구 역삼동", "서울 강남구 테헤란로 152", "강남파이낸스센터", "서울 강남구 역삼동")));
+                            PostAddress.of("서울 강남구 역삼동", "서울 강남구 테헤란로 152", "강남파이낸스센터", "서울 강남구 역삼동", "KR")));
             given(communityPostRepository.save(any())).willReturn(post);
 
             communityPostService.createPost(
@@ -149,7 +150,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
 
         @Test
         void 커서가_없으면_첫_페이지와_다음_커서를_반환한다() {
-            given(communityPostRepository.findAllByOrderByCreatedAtDescIdDesc(PageRequest.of(0, 11)))
+            given(communityPostRepository.findAllByCountryCodeOrderByCreatedAtDescIdDesc("KR", PageRequest.of(0, 11)))
                     .willReturn(postsOf(11));
             given(userRepository.findAllById(List.of(1L))).willReturn(List.of(userWithId(1L, "무서운경찰관")));
 
@@ -164,7 +165,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
 
         @Test
         void 마지막_페이지면_hasNext가_false이고_커서가_null이다() {
-            given(communityPostRepository.findAllByOrderByCreatedAtDescIdDesc(PageRequest.of(0, 11)))
+            given(communityPostRepository.findAllByCountryCodeOrderByCreatedAtDescIdDesc("KR", PageRequest.of(0, 11)))
                     .willReturn(postsOf(3));
             given(userRepository.findAllById(List.of(1L))).willReturn(List.of(userWithId(1L, "무서운경찰관")));
 
@@ -180,7 +181,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         void 커서가_있으면_디코딩한_값으로_조회한다() {
             LocalDateTime cursorCreatedAt = LocalDateTime.of(2026, 8, 1, 5, 0);
             String cursor = CommunityPostCursor.encode(cursorCreatedAt, 5L);
-            given(communityPostRepository.findPageByCursor(cursorCreatedAt, 5L, PageRequest.of(0, 11)))
+            given(communityPostRepository.findPageByCursor("KR", cursorCreatedAt, 5L, PageRequest.of(0, 11)))
                     .willReturn(List.of());
 
             CommunityPostCursorResult result = communityPostService.getPostList(
@@ -196,7 +197,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             CommunityPost post2 = POST(999L, LocalDateTime.of(2026, 8, 1, 1, 0));
             setId(post1, 1L);
             setId(post2, 2L);
-            given(communityPostRepository.findAllByOrderByCreatedAtDescIdDesc(PageRequest.of(0, 11)))
+            given(communityPostRepository.findAllByCountryCodeOrderByCreatedAtDescIdDesc("KR", PageRequest.of(0, 11)))
                     .willReturn(List.of(post1, post2));
             given(userRepository.findAllById(List.of(1L, 999L)))
                     .willReturn(List.of(userWithId(1L, "무서운경찰관")));
@@ -215,8 +216,55 @@ class CommunityPostServiceTest extends ServiceUnitTest {
                     .isInstanceOf(ApplicationException.class);
         }
 
+        @Test
+        void 국가_코드가_없으면_좌표로_역지오코딩해_국가를_판별한다() {
+            given(geocodingClient.findCountry(35.7022, 139.5803))
+                    .willReturn(GeocodingResult.resolved(PostAddress.of(
+                            "吉祥寺大通り", null, null, "東京 武蔵野市 吉祥寺本町", "JP")));
+            given(communityPostRepository
+                    .findAllByCountryCodeOrderByCreatedAtDescIdDesc("JP", PageRequest.of(0, 11)))
+                    .willReturn(List.of());
+
+            CommunityPostCursorResult result = communityPostService.getPostList(
+                    new CommunityPostListCommand(null, 10, CommunityPostScope.ALL,
+                            CommunityPostSort.LATEST, null, 35.7022, 139.5803));
+
+            assertThat(result.countryCode()).isEqualTo("JP");
+        }
+
+        @Test
+        void 국가_코드가_있으면_역지오코딩하지_않는다() {
+            given(communityPostRepository
+                    .findAllByCountryCodeOrderByCreatedAtDescIdDesc("KR", PageRequest.of(0, 11)))
+                    .willReturn(List.of());
+
+            communityPostService.getPostList(listCommand(null, 10));
+
+            then(geocodingClient).shouldHaveNoInteractions();
+        }
+
+        @Test
+        void 국가_코드도_좌표도_없으면_COUNTRY_NOT_SPECIFIED_예외가_발생한다() {
+            assertThatThrownBy(() -> new CommunityPostListCommand(
+                    null, 10, CommunityPostScope.ALL, CommunityPostSort.LATEST, null, null, null))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(CommunityPostException.COUNTRY_NOT_SPECIFIED.getDetail());
+        }
+
+        @Test
+        void 주소가_없는_좌표로_조회하면_COUNTRY_NOT_SPECIFIED_예외가_발생한다() {
+            given(geocodingClient.findCountry(0.0, 0.0)).willReturn(GeocodingResult.notFound());
+
+            assertThatThrownBy(() -> communityPostService.getPostList(
+                    new CommunityPostListCommand(null, 10, CommunityPostScope.ALL,
+                            CommunityPostSort.LATEST, null, 0.0, 0.0)))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(CommunityPostException.COUNTRY_NOT_SPECIFIED.getDetail());
+        }
+
         private CommunityPostListCommand listCommand(String cursor, int size) {
-            return new CommunityPostListCommand(cursor, size, CommunityPostScope.ALL, CommunityPostSort.LATEST);
+            return new CommunityPostListCommand(
+                    cursor, size, CommunityPostScope.ALL, CommunityPostSort.LATEST, "KR", null, null);
         }
 
         private List<CommunityPost> postsOf(int count) {
@@ -289,7 +337,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
             given(geocodingClient.reverseGeocode(37.5665, 126.9780))
                     .willReturn(GeocodingResult.resolved(
-                            PostAddress.of("서울 중구 태평로1가", "서울특별시 중구 세종대로 110", "서울시청", "서울 중구 태평로1가")));
+                            PostAddress.of("서울 중구 태평로1가", "서울특별시 중구 세종대로 110", "서울시청", "서울 중구 태평로1가", "KR")));
 
             communityPostService.updatePost(new CommunityPostUpdateCommand(
                     1L, 1L, "제목", "내용", LocalDateTime.now().plusDays(3), 37.5665, 126.9780, "만나는곳", 6));
@@ -330,10 +378,11 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         void 좌표가_그대로여도_주소가_비어있으면_역지오코딩을_다시_시도한다() {
             CommunityPost post = POST(1L);
             setId(post, 1L);
+            ReflectionTestUtils.setField(post, "countryCode", null);
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
             given(geocodingClient.reverseGeocode(37.4979, 127.0276))
                     .willReturn(GeocodingResult.resolved(
-                            PostAddress.of("서울 강남구 역삼동", "서울 강남구 테헤란로 152", "강남파이낸스센터", "서울 강남구 역삼동")));
+                            PostAddress.of("서울 강남구 역삼동", "서울 강남구 테헤란로 152", "강남파이낸스센터", "서울 강남구 역삼동", "KR")));
 
             communityPostService.updatePost(new CommunityPostUpdateCommand(
                     1L, 1L, "새 제목", "새 내용", LocalDateTime.now().plusDays(3), 37.4979, 127.0276, "만나는곳", 6));

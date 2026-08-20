@@ -24,7 +24,7 @@ class AddressServiceTest extends ServiceUnitTest {
         given(geocodingClient.reverseGeocode(37.5502, 127.0736))
                 .willReturn(GeocodingResult.resolved(PostAddress.of(
                         "서울특별시 광진구 화양동 1-20", "서울특별시 광진구 능동로 216", "세종대학교",
-                        "서울특별시 광진구 화양동")));
+                        "서울특별시 광진구 화양동", "KR")));
 
         AddressResult result = addressService.getAddress(37.5502, 127.0736);
 

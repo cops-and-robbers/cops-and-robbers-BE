@@ -52,7 +52,7 @@ class VWorldGeocodingClientTest {
         assertThat(result).isEqualTo(GeocodingResult.resolved(PostAddress.of(
                 "서울특별시 송파구 신천동 29",
                 "서울특별시 송파구 올림픽로 300",
-                "롯데월드타워앤드롯데월드몰", "서울특별시 송파구 신천동")));
+                "롯데월드타워앤드롯데월드몰", "서울특별시 송파구 신천동", "KR")));
     }
 
     @Test
@@ -70,7 +70,7 @@ class VWorldGeocodingClientTest {
         GeocodingResult result = client.reverseGeocode(37.5447, 127.0557);
 
         assertThat(result).isEqualTo(GeocodingResult.resolved(PostAddress.of(
-                "서울특별시 성동구 성수동2가 289-30", "서울특별시 성동구 아차산로 100", null, "서울특별시 성동구 성수동2가")));
+                "서울특별시 성동구 성수동2가 289-30", "서울특별시 성동구 아차산로 100", null, "서울특별시 성동구 성수동2가", "KR")));
     }
 
     @Test
@@ -87,7 +87,7 @@ class VWorldGeocodingClientTest {
         GeocodingResult result = client.reverseGeocode(37.5502, 127.0736);
 
         assertThat(result).isEqualTo(GeocodingResult.resolved(
-                PostAddress.of("서울특별시 광진구 군자동 98", null, null, "서울특별시 광진구 군자동")));
+                PostAddress.of("서울특별시 광진구 군자동 98", null, null, "서울특별시 광진구 군자동", "KR")));
     }
 
     @Test
@@ -104,7 +104,7 @@ class VWorldGeocodingClientTest {
         GeocodingResult result = client.reverseGeocode(36.4800, 127.2890);
 
         assertThat(result).isEqualTo(GeocodingResult.resolved(
-                PostAddress.of("세종특별자치시  보람동 718", null, null, "세종특별자치시 보람동")));
+                PostAddress.of("세종특별자치시  보람동 718", null, null, "세종특별자치시 보람동", "KR")));
     }
 
     @Test
@@ -121,7 +121,7 @@ class VWorldGeocodingClientTest {
         GeocodingResult result = client.reverseGeocode(37.2636, 127.0286);
 
         assertThat(result).isEqualTo(GeocodingResult.resolved(PostAddress.of(
-                "경기도 수원시 팔달구 인계동 1111", null, null, "경기도 수원시 팔달구 인계동")));
+                "경기도 수원시 팔달구 인계동 1111", null, null, "경기도 수원시 팔달구 인계동", "KR")));
     }
 
     @Test
@@ -138,7 +138,7 @@ class VWorldGeocodingClientTest {
         GeocodingResult result = client.reverseGeocode(37.7500, 128.4500);
 
         assertThat(result).isEqualTo(GeocodingResult.resolved(PostAddress.of(
-                "강원특별자치도 홍천군 내면 창촌리 산 3", null, null, "강원특별자치도 홍천군 내면")));
+                "강원특별자치도 홍천군 내면 창촌리 산 3", null, null, "강원특별자치도 홍천군 내면", "KR")));
     }
 
     @Test

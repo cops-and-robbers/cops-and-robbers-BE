@@ -18,6 +18,7 @@ public class CommunityPostFixture {
                 .longitude(127.0276)
                 .maxParticipants(6)
                 .placeName("어린이대공원 정문")
+                .countryCode("KR")
                 .build();
         ReflectionTestUtils.setField(post, "createdAt", LocalDateTime.now());
         ReflectionTestUtils.setField(post, "updatedAt", LocalDateTime.now());
@@ -46,6 +47,7 @@ public class CommunityPostFixture {
                 .longitude(126.9780)
                 .maxParticipants(4)
                 .placeName("광화문광장 세종대왕상")
+                .countryCode("KR")
                 .status(RecruitmentStatus.COMPLETED)
                 .build();
         ReflectionTestUtils.setField(post, "createdAt", LocalDateTime.now());

@@ -15,9 +15,10 @@ import static org.mockito.Mockito.mock;
 class RoutingGeocodingClientTest {
 
     private static final PostAddress DOMESTIC_ADDRESS =
-            PostAddress.of("서울특별시 광진구 군자동 98", null, null, "서울특별시 광진구 군자동");
+            PostAddress.of("서울특별시 광진구 군자동 98", null, null, "서울특별시 광진구 군자동", "KR");
     private static final PostAddress OVERSEAS_ADDRESS =
-            PostAddress.of("Elizabeth Tower, Bridge Street, London", "Bridge Street", "Elizabeth Tower", "London");
+            PostAddress.of("Elizabeth Tower, Bridge Street, London", "Bridge Street", null,
+                    "England City of Westminster Millbank", "GB");
 
     private VWorldGeocodingClient domesticClient;
     private GeoapifyGeocodingClient overseasClient;
