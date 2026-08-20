@@ -228,16 +228,22 @@ public class DataLoader implements CommandLineRunner {
                         40.7580, -73.9855, 8,
                         "타임스퀘어",
                         PostAddress.of("Sunglass Hut, 1540 Broadway, New York, NY 10036, United States of America",
-                                "1540 Broadway", "Sunglass Hut", "New York Manhattan", "US")),
+                                "1540 Broadway", null, "New York Manhattan", "US")),
                 new CommunityPostSeed("런던 빅벤 앞에서", "해외 게시글 표시 확인용입니다.",
                         51.5007, -0.1246, 6,
                         "빅벤 앞",
                         PostAddress.of("Elizabeth Tower, Bridge Street, London, SW1A 2JR, United Kingdom",
-                                "Bridge Street", "Elizabeth Tower", "City of Westminster Millbank", "GB")),
-                new CommunityPostSeed("주소 변환 실패 케이스", "역지오코딩이 실패하면 지역이 null로 내려갑니다.",
-                        37.5665, 126.9780, 6,
-                        "서울시청 광장",
-                        PostAddress.empty())
+                                "Bridge Street", null, "England City of Westminster Millbank", "GB")),
+                new CommunityPostSeed("기치조지에서 경찰과 도둑", "일본 좌표는 현지어로 저장됩니다.",
+                        35.7022, 139.5803, 8,
+                        "吉祥寺駅 北口",
+                        PostAddress.of("吉祥寺大通り, 吉祥寺本町, 武蔵野市, TK 180-0000, 日本",
+                                null, null, "東京 武蔵野市 吉祥寺本町", "JP")),
+                new CommunityPostSeed("타이베이 101 앞", "지원 언어가 아닌 국가는 영어로 저장됩니다.",
+                        25.0330, 121.5654, 6,
+                        "台北101 入口",
+                        PostAddress.of("１００號 信義路五段, Xicun, Taipei 110615, Taiwan",
+                                "１００號 信義路五段", null, "Taipei Xicun", "TW"))
         );
 
         for (int i = 0; i < COMMUNITY_POST_COUNT; i++) {
