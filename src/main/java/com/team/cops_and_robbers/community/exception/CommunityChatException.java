@@ -12,6 +12,7 @@ public enum CommunityChatException implements ExceptionCode {
     NOT_A_CHAT_MEMBER(HttpStatus.FORBIDDEN, "채팅방 참여자 아님", "채팅방에 참여한 사용자만 이용할 수 있습니다."),
     ALREADY_JOINED(HttpStatus.CONFLICT, "이미 참여함", "이미 참여한 채팅방입니다."),
     CHAT_ROOM_FULL(HttpStatus.BAD_REQUEST, "정원 초과", "모집 정원이 가득 찼습니다."),
+    JOINED_CHAT_ROOM_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "참여 채팅방 수 초과", "참여할 수 있는 채팅방은 최대 100개입니다. 기존 채팅방을 나간 후 다시 시도해주세요."),
     RECRUITMENT_CLOSED(HttpStatus.BAD_REQUEST, "모집 종료", "모집이 종료되어 참여할 수 없습니다."),
     AUTHOR_CANNOT_LEAVE(HttpStatus.BAD_REQUEST, "작성자 나가기 불가", "작성자는 채팅방을 나갈 수 없습니다. 게시글을 삭제해주세요."),
     INVALID_MESSAGE_TYPE(HttpStatus.BAD_REQUEST, "잘못된 메시지 타입", "전송할 수 없는 메시지 타입입니다."),
