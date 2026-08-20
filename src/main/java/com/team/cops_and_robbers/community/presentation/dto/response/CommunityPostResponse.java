@@ -37,7 +37,10 @@ public record CommunityPostResponse(
                     example = "서울특별시 광진구 군자동", nullable = true)
             String region,
             @Schema(description = "작성자가 입력한 만나는 곳", example = "어린이대공원 정문")
-            String placeName
+            String placeName,
+            @Schema(description = "국가 코드(ISO 3166-1 alpha-2). 역지오코딩 실패 시 null",
+                    example = "KR", nullable = true)
+            String countryCode
     ) {
     }
 
@@ -53,7 +56,8 @@ public record CommunityPostResponse(
                         result.location().latitude(),
                         result.location().longitude(),
                         result.location().region(),
-                        result.location().placeName()),
+                        result.location().placeName(),
+                        result.location().countryCode()),
                 result.maxParticipants(),
                 result.status(),
                 result.createdAt(),

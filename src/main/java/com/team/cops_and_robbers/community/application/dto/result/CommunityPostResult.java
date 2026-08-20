@@ -21,7 +21,8 @@ public record CommunityPostResult(
             Double latitude,
             Double longitude,
             String region,
-            String placeName
+            String placeName,
+            String countryCode
     ) {
     }
 
@@ -37,7 +38,8 @@ public record CommunityPostResult(
                         post.getLatitude(),
                         post.getLongitude(),
                         post.getRegion(),
-                        post.getPlaceName()),
+                        post.getPlaceName(),
+                        post.getCountryCode()),
                 post.getMaxParticipants(),
                 post.getStatus(),
                 TimestampUtil.toIsoString(post.getCreatedAt()),

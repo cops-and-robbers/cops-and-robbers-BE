@@ -48,8 +48,12 @@ public interface CommunityPostControllerDocs {
     );
 
     @Operation(summary = "게시글 목록 조회",
-            description = "모집 게시글 목록을 최신순 커서 방식으로 조회합니다. 지원하지 않는 쿼리 파라미터가 포함되면 400을 반환합니다.")
-    @ApiErrorCode(value = CommunityPostException.class, codes = {"UNSUPPORTED_LIST_SCOPE", "UNSUPPORTED_LIST_SORT"})
+            description = "모집 게시글 목록을 국가별로 나눠 최신순 커서 방식으로 조회합니다. "
+                    + "국가를 아는 클라이언트는 countryCode를, 모르면 현재 좌표(latitude, longitude)를 보냅니다. "
+                    + "좌표로 보내면 서버가 역지오코딩해 국가를 판별하므로, 응답의 countryCode를 다음 페이지부터 그대로 사용하세요. "
+                    + "지원하지 않는 쿼리 파라미터가 포함되면 400을 반환합니다.")
+    @ApiErrorCode(value = CommunityPostException.class,
+            codes = {"UNSUPPORTED_LIST_SCOPE", "UNSUPPORTED_LIST_SORT", "COUNTRY_NOT_SPECIFIED", "ADDRESS_LOOKUP_FAILED"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 커서 / 사이즈 범위 초과 / 미지원 파라미터")
@@ -60,7 +64,13 @@ public interface CommunityPostControllerDocs {
             @Parameter(description = "조회 범위. 현재는 ALL만 지원하며 NEARBY, MINE은 400", example = "ALL")
             @RequestParam(defaultValue = "ALL") CommunityPostScope scope,
             @Parameter(description = "정렬 기준. 현재는 LATEST만 지원하며 POPULAR, DISTANCE, DEADLINE은 400", example = "LATEST")
-            @RequestParam(defaultValue = "LATEST") CommunityPostSort sort
+            @RequestParam(defaultValue = "LATEST") CommunityPostSort sort,
+            @Parameter(description = "조회할 국가 코드(ISO 3166-1 alpha-2). 좌표를 보내지 않으면 필수", example = "KR")
+            @RequestParam(required = false) String countryCode,
+            @Parameter(description = "현재 위치 위도. countryCode를 보내지 않으면 필수", example = "37.5502")
+            @RequestParam(required = false) Double latitude,
+            @Parameter(description = "현재 위치 경도. countryCode를 보내지 않으면 필수", example = "127.0736")
+            @RequestParam(required = false) Double longitude
     );
 
     @Operation(summary = "게시글 단건 조회", description = "특정 모집 게시글을 조회합니다.")

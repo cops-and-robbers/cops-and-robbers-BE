@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.community.application;
 
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.common.exception.InfrastructureException;
 import com.team.cops_and_robbers.community.application.dto.CommunityPostCursor;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostCreateCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostDeleteCommand;
@@ -19,6 +20,7 @@ import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -47,15 +49,38 @@ public class CommunityPostService {
     }
 
     public CommunityPostCursorResult getPostList(CommunityPostListCommand command) {
+        String countryCode = resolveCountryCode(command);
+
         Pageable pageable = PageRequest.of(0, command.size() + 1);
         List<CommunityPost> fetched = CommunityPostCursor.decode(command.cursor())
-                .map(cursor -> communityPostRepository.findPageByCursor(cursor.createdAt(), cursor.id(), pageable))
-                .orElseGet(() -> communityPostRepository.findAllByOrderByCreatedAtDescIdDesc(pageable));
+                .map(cursor -> communityPostRepository.findPageByCursor(
+                        countryCode, cursor.createdAt(), cursor.id(), pageable))
+                .orElseGet(() -> communityPostRepository
+                        .findAllByCountryCodeOrderByCreatedAtDescIdDesc(countryCode, pageable));
 
         boolean hasNext = fetched.size() > command.size();
         List<CommunityPost> posts = hasNext ? fetched.subList(0, command.size()) : fetched;
 
-        return new CommunityPostCursorResult(toResults(posts), resolveNextCursor(posts, hasNext), hasNext);
+        return new CommunityPostCursorResult(
+                toResults(posts), resolveNextCursor(posts, hasNext), hasNext, countryCode);
+    }
+
+    /**
+     * 좌표로 들어오면 국가를 알아낸다. 목록은 주소를 저장하지 않으므로 표기 언어를 맞추는 호출은 하지 않는다.
+     * 응답에 국가 코드를 실어 보내므로 다음 페이지부터는 좌표 없이 요청할 수 있다.
+     */
+    private String resolveCountryCode(CommunityPostListCommand command) {
+        if (!command.needsCountryLookup()) {
+            return command.countryCode().toUpperCase(Locale.ROOT);
+        }
+
+        return switch (geocodingClient.findCountry(command.latitude(), command.longitude())) {
+            case GeocodingResult.Resolved resolved -> resolved.postAddress().countryCode();
+            case GeocodingResult.NotFound ignored ->
+                    throw new ApplicationException(CommunityPostException.COUNTRY_NOT_SPECIFIED);
+            case GeocodingResult.Failed ignored ->
+                    throw new InfrastructureException(CommunityPostException.ADDRESS_LOOKUP_FAILED);
+        };
     }
 
     public CommunityPostResult getPost(Long postId) {

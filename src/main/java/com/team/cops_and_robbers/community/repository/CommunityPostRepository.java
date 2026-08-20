@@ -13,15 +13,17 @@ import org.springframework.data.repository.query.Param;
 
 public interface CommunityPostRepository extends JpaRepository<CommunityPost, Long> {
 
-    List<CommunityPost> findAllByOrderByCreatedAtDescIdDesc(Pageable pageable);
+    List<CommunityPost> findAllByCountryCodeOrderByCreatedAtDescIdDesc(String countryCode, Pageable pageable);
 
     @Query("""
             select p from CommunityPost p
-            where p.createdAt < :cursorCreatedAt
-               or (p.createdAt = :cursorCreatedAt and p.id < :cursorId)
+            where p.countryCode = :countryCode
+              and (p.createdAt < :cursorCreatedAt
+                or (p.createdAt = :cursorCreatedAt and p.id < :cursorId))
             order by p.createdAt desc, p.id desc
             """)
     List<CommunityPost> findPageByCursor(
+            @Param("countryCode") String countryCode,
             @Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
             @Param("cursorId") Long cursorId,
             Pageable pageable
