@@ -52,8 +52,8 @@ class NicknameLanguageTest {
     @DisplayName("낱말 목록")
     class Words {
 
-        private static final int ADJECTIVE_COUNT = 14;
-        private static final int ANIMAL_COUNT = 10;
+        private static final int ADJECTIVE_COUNT = 30;
+        private static final int ANIMAL_COUNT = 25;
 
         @Test
         void 모든_언어가_같은_개수의_낱말을_가진다() {
