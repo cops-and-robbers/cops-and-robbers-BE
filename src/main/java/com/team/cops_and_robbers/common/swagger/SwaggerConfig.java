@@ -30,8 +30,28 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.17.0")
+                .version("2.18.0")
                 .description("""
+                        ## v2.18.0 업데이트 내역
+
+                        ### ⚠️ 주의 (클라이언트 동시 배포 필요)
+                        - GET /api/community-posts 에서 latitude, longitude 파라미터 제거
+                          - countryCode만 받는다. 보내면 400(INVALID_QUERY_PARAMETER)
+                          - 국가는 GET /api/community-posts/country 로 먼저 조회한다
+                        - 목록 응답 최상위의 countryCode 제거 (요청값을 되돌려주던 중복)
+
+                        ### ✨ 신규
+                        - GET /api/community-posts/country 좌표 국가 조회 API (로그인 불필요)
+                          - 파라미터: latitude, longitude / 응답: countryCode
+                          - 화면 진입 때 한 번 호출해 국가를 얻고, 이후 페이지는 그 값을 재사용한다
+                          - 주소를 만들지 않아 벤더 호출이 1회다
+
+                        ### 🛠 변경
+                        - 역지오코딩이 완전히 실패하면 게시글을 만들지 않는다 (500 ADDRESS_LOOKUP_FAILED)
+                          - 주소 없이 저장하면 국가 코드가 비어 어느 목록에도 걸리지 않기 때문
+                        - GET /api/community-posts, GET /api/community-posts/{postId} 는 로그인 불필요
+                          (동작은 이전과 같고 문서 표기만 바로잡음)
+
                         ## v2.17.0 업데이트 내역
 
                         ### ⚠️ 주의 (클라이언트 동시 배포 필요)
