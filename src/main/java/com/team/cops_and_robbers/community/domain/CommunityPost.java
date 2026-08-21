@@ -68,7 +68,7 @@ public class CommunityPost extends BaseTimeEntity {
     @Column(length = 255)
     private String region;
 
-    @Column(length = 2)
+    @Column(nullable = false, length = 2)
     private String countryCode;
 
     @Column(nullable = false, length = 50)
