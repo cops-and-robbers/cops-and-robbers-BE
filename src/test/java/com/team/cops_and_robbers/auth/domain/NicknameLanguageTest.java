@@ -75,7 +75,6 @@ class NicknameLanguageTest {
             });
         }
 
-        /** 전부 히라가나면 ねむたいねずみ처럼 낱말 경계가 보이지 않아 동물만 카타카나로 쓴다. */
         @Test
         void 일본어_동물은_카타카나로_표기한다() {
             assertThat(NicknameLanguage.JA.animals())

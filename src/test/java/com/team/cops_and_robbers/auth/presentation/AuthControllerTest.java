@@ -148,7 +148,6 @@ class AuthControllerTest extends ControllerTest {
             });
         }
 
-        /** 지원하지 않는 언어는 한국어로 떨어진다. */
         @Test
         void 지원하지_않는_언어면_한국어_닉네임을_발급한다() {
             String nickname = signUpWith("fr-FR", "social_fr");
@@ -158,7 +157,6 @@ class AuthControllerTest extends ControllerTest {
             });
         }
 
-        /** 헤더가 없으면 spring.web.locale 기본값(ko)이 적용된다. */
         @Test
         void 헤더가_없으면_한국어_닉네임을_발급한다() {
             String nickname = signUpWith(null, "social_none");

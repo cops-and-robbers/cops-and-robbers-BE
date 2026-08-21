@@ -3,15 +3,7 @@ package com.team.cops_and_robbers.auth.domain;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * 자동 생성 닉네임의 언어별 낱말 목록.
- * <p>
- * 낱말이 직업이면 유능함이 전제라 "잠많은형사" 같은 조합이 성립하지 않고,
- * "사기꾼"처럼 자동으로 붙었을 때 모욕이 되는 것도 섞인다.
- * 동물은 어떤 수식어와도 붙고 세 언어가 1:1로 대응된다.
- * <p>
- * 세 언어의 낱말 수는 같아야 한다. 한쪽만 늘리면 언어에 따라 조합 수가 달라진다.
- */
+/** 자동 생성 닉네임의 언어별 낱말 목록. 세 언어의 낱말 수는 같아야 한다. */
 public enum NicknameLanguage {
 
     KO(
@@ -24,7 +16,7 @@ public enum NicknameLanguage {
                     "너구리", "수달", "고슴도치", "부엉이", "펭귄", "물개", "판다", "사슴", "늑대",
                     "거북이", "두루미", "고래", "돌고래", "코알라", "알파카")
     ),
-    /** 동물만 카타카나로 쓴다. 전부 히라가나면 "ねむたいねずみ"처럼 낱말 경계가 보이지 않는다. */
+    /** 전부 히라가나면 낱말 경계가 보이지 않아 동물만 카타카나로 쓴다. */
     JA(
             List.of("すばやい", "しずかな", "のんびり", "こっそり", "ゆかいな", "かしこい", "ゆうかんな",
                     "ふしぎな", "やさしい", "ねむたい", "はらぺこ", "にこにこ", "げんきな", "おっとり",
@@ -56,7 +48,7 @@ public enum NicknameLanguage {
         this.animals = animals;
     }
 
-    /** Accept-Language로 들어온 언어 코드를 매핑한다. 헤더가 없거나 지원하지 않는 언어면 한국어로 떨어뜨린다. */
+    /** 지원하지 않는 언어와 null은 한국어로 떨어뜨린다. */
     public static NicknameLanguage from(String languageCode) {
         return Arrays.stream(values())
                 .filter(language -> language.name().equalsIgnoreCase(languageCode))

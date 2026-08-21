@@ -33,7 +33,6 @@ class RandomNicknameGeneratorTest {
         });
     }
 
-    /** 패딩이 없으면 재빠른고양이7 처럼 1~3자리도 나온다. */
     @Test
     void 숫자는_항상_네_자리로_붙인다() {
         assertSoftly(softly -> {
@@ -59,7 +58,6 @@ class RandomNicknameGeneratorTest {
         });
     }
 
-    /** User.nickname이 30자라 세 언어 모두 넉넉히 들어가야 한다. */
     @Test
     void 닉네임이_스무_자를_넘지_않는다() {
         assertSoftly(softly -> {
