@@ -27,6 +27,7 @@ class CommunityPostControllerTest extends ControllerTest {
 
     private static final String POST_API_URL = "/api/community-posts";
     private static final String ADDRESS_API_URL = POST_API_URL + "/address";
+    private static final String COUNTRY_API_URL = POST_API_URL + "/country";
 
     private User user;
     private String accessToken;
@@ -37,6 +38,49 @@ class CommunityPostControllerTest extends ControllerTest {
         user = givenUser();
         accessToken = givenAccessToken(user);
         otherAccessToken = givenAccessToken(givenUser("다른유저"));
+    }
+
+    @Nested
+    @DisplayName("좌표 국가 조회 API")
+    class GetCountry {
+
+        @Test
+        void 좌표의_국가_코드를_200으로_응답한다() {
+            doReturn(GeocodingResult.resolved(PostAddress.of(
+                    "吉祥寺大通り", null, null, "東京 武蔵野市 吉祥寺本町", "JP")))
+                    .when(geocodingClient)
+                    .findCountry(any(), any());
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("latitude", 35.7022)
+                    .queryParam("longitude", 139.5803)
+                    .when()
+                    .get(COUNTRY_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getString("countryCode")).isEqualTo("JP");
+            });
+        }
+
+        @Test
+        void 국가를_알_수_없는_좌표는_400을_응답한다() {
+            doReturn(GeocodingResult.notFound()).when(geocodingClient).findCountry(any(), any());
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("latitude", 0.0)
+                    .queryParam("longitude", 0.0)
+                    .when()
+                    .get(COUNTRY_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
     }
 
     @Nested
@@ -85,6 +129,8 @@ class CommunityPostControllerTest extends ControllerTest {
 
         @Test
         void 지오코딩_호출이_실패하면_500을_응답한다() {
+            doReturn(GeocodingResult.failed()).when(geocodingClient).reverseGeocode(any(), any());
+
             ExtractableResponse<Response> extract = authenticated(accessToken)
                     .queryParam("latitude", 37.5502)
                     .queryParam("longitude", 127.0736)

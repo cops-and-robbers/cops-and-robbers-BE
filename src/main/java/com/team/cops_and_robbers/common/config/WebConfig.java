@@ -41,6 +41,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/auth/**",
                         "/api/user/check-nickname",
                         "/api/community-posts",
+                        "/api/community-posts/country",
                         "/api/community-posts/{postId:\\d+}",
                         "/actuator/health"
                 );

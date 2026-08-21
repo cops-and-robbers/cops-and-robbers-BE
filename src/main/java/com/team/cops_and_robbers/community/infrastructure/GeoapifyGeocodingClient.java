@@ -116,6 +116,8 @@ public class GeoapifyGeocodingClient implements GeocodingClient {
      * 해외에는 지번 체계가 없어 전체 주소를 address에, 번지와 도로명을 합쳐 roadAddress에 담는다.
      * <p>
      * 바다처럼 주소가 없는 좌표는 formatted가 비어 있어 이것으로 걸러낸다.
+     * country_code가 없는 좌표(공해 경계 등)도 주소 없음으로 본다. 국가를 모르면 어느 목록에도 걸리지 않아
+     * 작성자조차 찾을 수 없는 게시글이 된다.
      * name은 좌표에 가장 가까운 장소 이름이라 건물명으로 쓸 수 없다.
      * (타임스퀘어 좌표에서 인근 상점인 "Sunglass Hut"이 나온다.)
      */
@@ -125,7 +127,7 @@ public class GeoapifyGeocodingClient implements GeocodingClient {
         }
 
         GeoapifyPlace place = response.results().getFirst();
-        if (!StringUtils.hasText(place.formatted())) {
+        if (!StringUtils.hasText(place.formatted()) || !StringUtils.hasText(place.countryCode())) {
             return PostAddress.empty();
         }
         return PostAddress.of(place.formatted(), toRoadAddress(place), null,

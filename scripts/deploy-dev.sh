@@ -81,7 +81,12 @@ for i in $(seq 1 $MAX_RETRY); do
 done
 
 
-# 6. 정리
+# 6. Tailscale 경유 규칙 복구
+# 배포 중 Docker가 iptables를 다시 만들면서 컨테이너→tailscale0 포워딩 규칙이 날아간다.
+# 이게 없으면 dev에서 VWorld 호출이 전부 타임아웃된다.
+sudo systemctl restart tailscale-docker-forward || log "WARN" "TAILSCALE_FORWARD_RESTORE_FAILED"
+
+# 7. 정리
 sudo docker image prune -f
 rm -f .env
 finish_logging "INFO"

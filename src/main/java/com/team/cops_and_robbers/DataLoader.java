@@ -167,7 +167,37 @@ public class DataLoader implements CommandLineRunner {
             return;
         }
 
-        List<CommunityPostSeed> seeds = List.of(
+
+        for (int i = 0; i < COMMUNITY_POST_COUNT; i++) {
+            CommunityPostSeed seed = COMMUNITY_POST_SEEDS.get(i % COMMUNITY_POST_SEEDS.size());
+            User writer = users.get(i % users.size());
+            CommunityPostCreateCommand command = new CommunityPostCreateCommand(
+                    writer.getId(),
+                    toTitle(seed, i, COMMUNITY_POST_SEEDS.size()),
+                    seed.content(),
+                    LocalDateTime.now().plusDays(i + 1L),
+                    seed.latitude(),
+                    seed.longitude(),
+                    seed.placeName(),
+                    seed.maxParticipants()
+            );
+            communityPostRepository.save(CommunityPost.createPost(command, seed.postAddress()));
+        }
+
+        log.info("Community Posts Created: [{}건]", COMMUNITY_POST_COUNT);
+    }
+
+    /** 시드를 순환해 만들기 때문에 두 바퀴째부터는 제목에 회차를 붙여 목록에서 구분되게 한다. */
+    private String toTitle(CommunityPostSeed seed, int index, int seedCount) {
+        int round = index / seedCount;
+        if (round == 0) {
+            return seed.title();
+        }
+        return seed.title() + " (" + (round + 1) + "차)";
+    }
+
+    /** dev 확인용 시드. 주소는 실제 벤더 응답을 그대로 옮긴 값이다. */
+    private static final List<CommunityPostSeed> COMMUNITY_POST_SEEDS = List.of(
                 new CommunityPostSeed("잠실 롯데타워 앞", "지방에서 오시는 분들도 찾기 쉬워요.",
                         37.5125, 127.1025, 15,
                         "롯데월드타워 정문",
@@ -219,54 +249,67 @@ public class DataLoader implements CommandLineRunner {
                         "건대입구역 2번 출구",
                         PostAddress.of("서울특별시 광진구 화양동 6-7", null, null,
                                 "서울특별시 광진구 화양동", "KR")),
+                new CommunityPostSeed("吉祥寺でケイドロやりませんか", "夕方から軽く一回！初心者歓迎です。",
+                        35.7031, 139.5797, 8,
+                        "吉祥寺駅 北口",
+                        PostAddress.of("吉祥寺, 武蔵野市, TK 180-0005, 日本",
+                                null, null, "東京 武蔵野市", "JP")),
+                new CommunityPostSeed("舞鶴で第2回やります", "前回楽しかったのでまた集まります。",
+                        35.4751, 135.386, 6,
+                        "舞鶴赤れんがパーク",
+                        PostAddress.of("舞鶴市役所, 国道27号, 北吸, 舞鶴市, 625-0087, 日本",
+                                "国道27号", null, "舞鶴市 北吸", "JP")),
+                new CommunityPostSeed("渋谷スクランブル 夜の部", "人が多いところでスリル満点です。",
+                        35.6595, 139.7005, 10,
+                        "渋谷スクランブル交差点",
+                        PostAddress.of("2-9 道玄坂二丁目, 東京, TK 150-0043, 日本",
+                                "2-9 道玄坂二丁目", null, "東京", "JP")),
+                new CommunityPostSeed("新宿御苑で午前中に", "広い公園なので思いきり走れます。",
+                        35.6852, 139.71, 12,
+                        "新宿御苑 大木戸門",
+                        PostAddress.of("中央休憩所売店, 甲州街道, 新宿区, TK 160-8484, 日本",
+                                "甲州街道", null, "東京 新宿区", "JP")),
+                new CommunityPostSeed("上野公園 週末集合", "家族連れも大歓迎です。",
+                        35.7148, 139.7737, 10,
+                        "上野公園 噴水前",
+                        PostAddress.of("正岡子規記念球場, パンダ橋, 上野公園, 台東区, TK 110-0007, 日本",
+                                "パンダ橋", null, "東京 台東区 上野公園", "JP")),
+                new CommunityPostSeed("大阪城公園で大人数", "20人目標で大きくやりましょう！",
+                        34.6873, 135.5262, 20,
+                        "大阪城公園 太陽の広場",
+                        PostAddress.of("大阪城, 1, 中央区, 大阪市, 大阪城 540-0002, 日本",
+                                null, null, "大阪市 中央区", "JP")),
+                new CommunityPostSeed("横浜みなとみらい 夜景ラン", "夜景を見ながら走れます。",
+                        35.456, 139.638, 8,
+                        "横浜赤レンガ倉庫",
+                        PostAddress.of("7-9 新港二丁目, 横浜市, KN 231-0063, 日本",
+                                "7-9 新港二丁目", null, "神奈川 横浜市", "JP")),
+                new CommunityPostSeed("札幌大通公園でナイトゲーム", "涼しい時間帯にやります。",
+                        43.059, 141.3468, 10,
+                        "大通公園 テレビ塔前",
+                        PostAddress.of("1-12 大通西七丁目, 札幌, HK 064-0801, 日本",
+                                "1-12 大通西七丁目", null, "北海 札幌", "JP")),
+                new CommunityPostSeed("Cops and Robbers at Central Park", "Casual game after work. Beginners welcome!",
+                        40.7829, -73.9654, 10,
+                        "Bethesda Terrace",
+                        PostAddress.of("Great Lawn Ball Field 8, 86th Street Transverse, New York, NY 11025, United States of America",
+                                "86th Street Transverse", null, "New York Manhattan", "US")),
+                new CommunityPostSeed("Hyde Park weekend run", "Sunday afternoon, see you there.",
+                        51.5073, -0.1657, 8,
+                        "Speakers' Corner",
+                        PostAddress.of("Hyde Park, London, ENG, United Kingdom",
+                                null, null, "England London Hyde Park", "GB")),
+                new CommunityPostSeed("Darling Harbour sunset game", "Starting right before sunset.",
+                        -33.8737, 151.2004, 8,
+                        "Darling Harbour Playground",
+                        PostAddress.of("5110 Western Distributor, Sydney NSW 2000, Australia",
+                                "5110 Western Distributor", null, "New South Wales Sydney", "AU")),
                 new CommunityPostSeed("남산공원 야경 게임", "야경 보면서 뛰는 재미가 있습니다.",
                         37.5512, 126.9882, 10,
                         "남산공원 백범광장",
                         PostAddress.of("서울특별시 용산구 용산동2가 산 1-11", null, null,
-                                "서울특별시 용산구 용산동2가", "KR")),
-                new CommunityPostSeed("뉴욕 타임스퀘어 번개", "해외 좌표는 Geoapify가 변환합니다.",
-                        40.7580, -73.9855, 8,
-                        "타임스퀘어",
-                        PostAddress.of("Sunglass Hut, 1540 Broadway, New York, NY 10036, United States of America",
-                                "1540 Broadway", "Sunglass Hut", "New York Manhattan", "US")),
-                new CommunityPostSeed("런던 빅벤 앞에서", "해외 게시글 표시 확인용입니다.",
-                        51.5007, -0.1246, 6,
-                        "빅벤 앞",
-                        PostAddress.of("Elizabeth Tower, Bridge Street, London, SW1A 2JR, United Kingdom",
-                                "Bridge Street", "Elizabeth Tower", "City of Westminster Millbank", "GB")),
-                new CommunityPostSeed("주소 변환 실패 케이스", "역지오코딩이 실패하면 지역이 null로 내려갑니다.",
-                        37.5665, 126.9780, 6,
-                        "서울시청 광장",
-                        PostAddress.empty())
-        );
-
-        for (int i = 0; i < COMMUNITY_POST_COUNT; i++) {
-            CommunityPostSeed seed = seeds.get(i % seeds.size());
-            User writer = users.get(i % users.size());
-            CommunityPostCreateCommand command = new CommunityPostCreateCommand(
-                    writer.getId(),
-                    toTitle(seed, i, seeds.size()),
-                    seed.content(),
-                    LocalDateTime.now().plusDays(i + 1L),
-                    seed.latitude(),
-                    seed.longitude(),
-                    seed.placeName(),
-                    seed.maxParticipants()
-            );
-            communityPostRepository.save(CommunityPost.createPost(command, seed.postAddress()));
-        }
-
-        log.info("Community Posts Created: [{}건]", COMMUNITY_POST_COUNT);
-    }
-
-    /** 시드를 순환해 만들기 때문에 두 바퀴째부터는 제목에 회차를 붙여 목록에서 구분되게 한다. */
-    private String toTitle(CommunityPostSeed seed, int index, int seedCount) {
-        int round = index / seedCount;
-        if (round == 0) {
-            return seed.title();
-        }
-        return seed.title() + " (" + (round + 1) + "차)";
-    }
+                                "서울특별시 용산구 용산동2가", "KR"))
+    );
 
     private record CommunityPostSeed(
             String title,

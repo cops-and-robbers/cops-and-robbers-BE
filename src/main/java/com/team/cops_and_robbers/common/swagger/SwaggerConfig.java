@@ -30,16 +30,34 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.17.0")
+                .version("2.18.0")
                 .description("""
+                        ## v2.18.0 업데이트 내역
+
+                        ### ⚠️ 주의 (클라이언트 동시 배포 필요)
+                        - GET /api/community-posts 에서 latitude, longitude 파라미터 제거
+                          - countryCode만 받는다. 보내면 400(INVALID_QUERY_PARAMETER)
+                          - 국가는 GET /api/community-posts/country 로 먼저 조회한다
+                        - 목록 응답 최상위의 countryCode 제거 (요청값을 되돌려주던 중복)
+
+                        ### ✨ 신규
+                        - GET /api/community-posts/country 좌표 국가 조회 API (로그인 불필요)
+                          - 파라미터: latitude, longitude / 응답: countryCode
+                          - 화면 진입 때 한 번 호출해 국가를 얻고, 이후 페이지는 그 값을 재사용한다
+                          - 주소를 만들지 않아 벤더 호출이 1회다
+
+                        ### 🛠 변경
+                        - 역지오코딩이 완전히 실패하면 게시글을 만들지 않는다 (500 ADDRESS_LOOKUP_FAILED)
+                          - 주소 없이 저장하면 국가 코드가 비어 어느 목록에도 걸리지 않기 때문
+                        - GET /api/community-posts, GET /api/community-posts/{postId} 는 로그인 불필요
+                          (동작은 이전과 같고 문서 표기만 바로잡음)
+
                         ## v2.17.0 업데이트 내역
 
                         ### ⚠️ 주의 (클라이언트 동시 배포 필요)
                         - GET /api/community-posts 목록이 국가별로 분리됨
-                          - countryCode 또는 현재 위치(latitude, longitude) 중 하나는 필수
-                          - 둘 다 없으면 400(COUNTRY_NOT_SPECIFIED)
-                          - 좌표로 보내면 서버가 국가를 판별해 응답의 countryCode에 실어줌
-                          - 다음 페이지부터는 그 countryCode를 그대로 넣어 좌표 없이 요청
+                          - countryCode 필수. 없으면 400(COUNTRY_NOT_SPECIFIED)
+                          - GET /api/community-posts/country 로 먼저 국가를 조회한 뒤 넣는다
                           - 위치 권한을 거부한 사용자는 기기 국가 코드를 보내면 됨
                         - GET /api/community-posts 페이지네이션을 커서 방식으로 전환
                           - page 파라미터 제거, cursor 파라미터 추가
@@ -48,6 +66,9 @@ public class SwaggerConfig {
                           - 지원하지 않는 쿼리 파라미터를 보내면 400(INVALID_QUERY_PARAMETER)
 
                         ### ✨ 신규
+                        - GET /api/community-posts/country 좌표 국가 조회 API 추가 (로그인 불필요)
+                          - 파라미터: latitude, longitude / 응답: countryCode
+                          - 목록 조회 전에 한 번 호출해 국가를 얻는 용도. 주소는 만들지 않아 벤더 호출이 1회
                         - GET /api/community-posts/address 좌표 주소 조회 API 추가 (로그인 필요)
                           - 파라미터: latitude, longitude
                           - 응답: region(동 단위, 게시글에 저장될 값), address(번지 포함, 작성자 확인용),
@@ -64,7 +85,8 @@ public class SwaggerConfig {
                         - 게시글 응답에 location.region 추가 (동 단위 지역)
                           - 작성/수정 시 좌표를 서버에서 1회 역지오코딩하여 저장
                           - 예: 서울특별시 광진구 군자동 (번지 제외)
-                          - 역지오코딩 실패 시 null
+                          - 역지오코딩이 실패하면 게시글이 생성되지 않음 (500 ADDRESS_LOOKUP_FAILED)
+                            주소 없이 저장하면 countryCode가 비어 어느 국가 목록에도 걸리지 않기 때문
                         - 게시글 요청/응답에 location.placeName 추가 (작성자가 입력하는 만나는 곳)
                           - 필수 입력, 최대 50자. 예: 어린이대공원 정문
                           - 좌표로는 건물명·장소명을 신뢰할 수준으로 얻을 수 없어 작성자에게 받는다

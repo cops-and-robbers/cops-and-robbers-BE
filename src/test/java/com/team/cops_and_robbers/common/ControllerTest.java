@@ -12,6 +12,7 @@ import com.team.cops_and_robbers.common.fcm.FcmService;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.common.fixture.UserDeviceFixture;
 import com.team.cops_and_robbers.common.fixture.UserFixture;
+import com.team.cops_and_robbers.community.domain.PostAddress;
 import com.team.cops_and_robbers.community.infrastructure.GeocodingClient;
 import com.team.cops_and_robbers.community.infrastructure.GeocodingResult;
 import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
@@ -114,7 +115,9 @@ public abstract class ControllerTest {
     void setUp() {
         RestAssured.port = port;
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-        doReturn(GeocodingResult.failed())
+        doReturn(GeocodingResult.resolved(PostAddress.of(
+                "서울특별시 광진구 화양동 1-20", "서울특별시 광진구 능동로 216", null,
+                "서울특별시 광진구 화양동", "KR")))
                 .when(geocodingClient)
                 .reverseGeocode(any(), any());
     }
