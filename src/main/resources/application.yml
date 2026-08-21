@@ -18,10 +18,11 @@ spring:
 
   http:
     client:
-      # 국내 좌표는 VWorld 실패 시 Geoapify로 넘어가고, 일본·한국은 언어를 맞추려 한 번 더 부른다.
-      # 최악의 경우 이 값의 3배까지 걸리므로 무작정 늘리지 않는다.
+      # VWorld 실측이 0.05초, 터널 경유 dev에서도 0.5초 미만이다.
+      # 실패 시 Geoapify로 넘어가고 한국·일본은 언어를 맞추려 한 번 더 부르므로,
+      # 이 값의 3배까지 사용자가 기다린다. 넉넉히 잡으면 장애를 늦게 알아챌 뿐이다.
       connect-timeout: 2s
-      read-timeout: 5s
+      read-timeout: 2s
 
 jwt:
   access:
