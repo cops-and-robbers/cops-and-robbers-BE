@@ -211,6 +211,19 @@ class GeoapifyGeocodingClientTest {
         assertThat(result).isInstanceOf(GeocodingResult.NotFound.class);
     }
 
+    /** 국가를 모르면 어느 국가 목록에도 안 걸려 작성자조차 못 찾는 글이 된다. */
+    @Test
+    void 국가_코드가_없으면_주소가_있어도_주소_없음으로_본다() {
+        server.expect(requestTo(startsWith(REVERSE_GEOCODE_URL)))
+                .andRespond(withSuccess("""
+                        {"results":[{"formatted":"Some Place, Antarctica","state":"Antarctica"}]}
+                        """, MediaType.APPLICATION_JSON));
+
+        GeocodingResult result = client.reverseGeocode(-82.0, 0.0);
+
+        assertThat(result).isInstanceOf(GeocodingResult.NotFound.class);
+    }
+
     @Test
     void 결과가_비어있으면_주소_없음을_반환한다() {
         server.expect(requestTo(startsWith(REVERSE_GEOCODE_URL)))
