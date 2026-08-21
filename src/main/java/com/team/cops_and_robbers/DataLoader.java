@@ -167,7 +167,37 @@ public class DataLoader implements CommandLineRunner {
             return;
         }
 
-        List<CommunityPostSeed> seeds = List.of(
+
+        for (int i = 0; i < COMMUNITY_POST_COUNT; i++) {
+            CommunityPostSeed seed = COMMUNITY_POST_SEEDS.get(i % COMMUNITY_POST_SEEDS.size());
+            User writer = users.get(i % users.size());
+            CommunityPostCreateCommand command = new CommunityPostCreateCommand(
+                    writer.getId(),
+                    toTitle(seed, i, COMMUNITY_POST_SEEDS.size()),
+                    seed.content(),
+                    LocalDateTime.now().plusDays(i + 1L),
+                    seed.latitude(),
+                    seed.longitude(),
+                    seed.placeName(),
+                    seed.maxParticipants()
+            );
+            communityPostRepository.save(CommunityPost.createPost(command, seed.postAddress()));
+        }
+
+        log.info("Community Posts Created: [{}건]", COMMUNITY_POST_COUNT);
+    }
+
+    /** 시드를 순환해 만들기 때문에 두 바퀴째부터는 제목에 회차를 붙여 목록에서 구분되게 한다. */
+    private String toTitle(CommunityPostSeed seed, int index, int seedCount) {
+        int round = index / seedCount;
+        if (round == 0) {
+            return seed.title();
+        }
+        return seed.title() + " (" + (round + 1) + "차)";
+    }
+
+    /** dev 확인용 시드. 주소는 실제 벤더 응답을 그대로 옮긴 값이다. */
+    private static final List<CommunityPostSeed> COMMUNITY_POST_SEEDS = List.of(
                 new CommunityPostSeed("잠실 롯데타워 앞", "지방에서 오시는 분들도 찾기 쉬워요.",
                         37.5125, 127.1025, 15,
                         "롯데월드타워 정문",
@@ -279,35 +309,7 @@ public class DataLoader implements CommandLineRunner {
                         "남산공원 백범광장",
                         PostAddress.of("서울특별시 용산구 용산동2가 산 1-11", null, null,
                                 "서울특별시 용산구 용산동2가", "KR"))
-        );
-
-        for (int i = 0; i < COMMUNITY_POST_COUNT; i++) {
-            CommunityPostSeed seed = seeds.get(i % seeds.size());
-            User writer = users.get(i % users.size());
-            CommunityPostCreateCommand command = new CommunityPostCreateCommand(
-                    writer.getId(),
-                    toTitle(seed, i, seeds.size()),
-                    seed.content(),
-                    LocalDateTime.now().plusDays(i + 1L),
-                    seed.latitude(),
-                    seed.longitude(),
-                    seed.placeName(),
-                    seed.maxParticipants()
-            );
-            communityPostRepository.save(CommunityPost.createPost(command, seed.postAddress()));
-        }
-
-        log.info("Community Posts Created: [{}건]", COMMUNITY_POST_COUNT);
-    }
-
-    /** 시드를 순환해 만들기 때문에 두 바퀴째부터는 제목에 회차를 붙여 목록에서 구분되게 한다. */
-    private String toTitle(CommunityPostSeed seed, int index, int seedCount) {
-        int round = index / seedCount;
-        if (round == 0) {
-            return seed.title();
-        }
-        return seed.title() + " (" + (round + 1) + "차)";
-    }
+    );
 
     private record CommunityPostSeed(
             String title,
