@@ -31,6 +31,12 @@ public class CommunityPostFixture {
         return post;
     }
 
+    public static CommunityPost PAST_POST(Long userId) {
+        CommunityPost post = POST(userId);
+        ReflectionTestUtils.setField(post, "meetingAt", LocalDateTime.now().minusDays(1));
+        return post;
+    }
+
     public static CommunityPost POST(Long userId, LocalDateTime createdAt) {
         CommunityPost post = POST(userId);
         ReflectionTestUtils.setField(post, "createdAt", createdAt);

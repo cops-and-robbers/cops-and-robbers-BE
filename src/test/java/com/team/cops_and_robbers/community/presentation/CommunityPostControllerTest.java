@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.PAST_POST;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.mockito.ArgumentMatchers.any;
@@ -538,6 +539,22 @@ class CommunityPostControllerTest extends ControllerTest {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
                 softly.assertThat(extract.jsonPath().getLong("id")).isEqualTo(postId);
                 softly.assertThat(extract.jsonPath().getString("status")).isEqualTo("RECRUITING");
+            });
+        }
+
+        @Test
+        void 모임_날짜가_지난_게시글은_ENDED로_내려온다() {
+            Long postId = communityPostRepository.save(PAST_POST(user.getId())).getId();
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .when()
+                    .get(POST_API_URL + "/" + postId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getString("status")).isEqualTo("ENDED");
             });
         }
 

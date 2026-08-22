@@ -115,4 +115,16 @@ public class CommunityPost extends BaseTimeEntity {
     public void updateStatus(RecruitmentStatus status) {
         this.status = status;
     }
+
+    /** 날짜가 지나면 ENDED로 본다. 저장된 status는 그대로 두고 조회 시점에 판정한다. */
+    public RecruitmentStatus currentStatus() {
+        if (meetingAt.isBefore(LocalDateTime.now())) {
+            return RecruitmentStatus.ENDED;
+        }
+        return status;
+    }
+
+    public boolean isClosed() {
+        return currentStatus().isClosed();
+    }
 }
