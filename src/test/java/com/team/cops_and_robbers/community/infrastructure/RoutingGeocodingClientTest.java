@@ -75,6 +75,36 @@ class RoutingGeocodingClientTest {
     }
 
     @Test
+    void 국토_밖_좌표는_국내를_거치지_않고_해외로_간다() {
+        given(overseasClient.findCountry(any(), any()))
+                .willReturn(GeocodingResult.resolved(OVERSEAS_ADDRESS));
+
+        client.findCountry(35.6812, 139.767);
+
+        then(domesticClient).shouldHaveNoInteractions();
+    }
+
+    @Test
+    void 독도는_국내로_판정해_국내를_먼저_부른다() {
+        given(domesticClient.findCountry(any(), any()))
+                .willReturn(GeocodingResult.resolved(DOMESTIC_ADDRESS));
+
+        client.findCountry(37.2412, 131.8646);
+
+        then(overseasClient).shouldHaveNoInteractions();
+    }
+
+    @Test
+    void 마라도는_국내로_판정해_국내를_먼저_부른다() {
+        given(domesticClient.findCountry(any(), any()))
+                .willReturn(GeocodingResult.resolved(DOMESTIC_ADDRESS));
+
+        client.findCountry(33.1118, 126.2683);
+
+        then(overseasClient).shouldHaveNoInteractions();
+    }
+
+    @Test
     void 양쪽_모두_실패하면_실패를_반환한다() {
         given(domesticClient.reverseGeocode(any(), any())).willReturn(GeocodingResult.failed());
         given(overseasClient.reverseGeocode(any(), any())).willReturn(GeocodingResult.failed());

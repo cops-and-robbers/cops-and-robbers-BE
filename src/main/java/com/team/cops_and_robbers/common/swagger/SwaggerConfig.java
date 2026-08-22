@@ -30,8 +30,26 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.18.0")
+                .version("2.19.0")
                 .description("""
+                        ## v2.19.0 업데이트 내역
+
+                        ### ✨ 신규
+                        - 게시글 응답 location에 address(지번 주소) 추가
+                          - 예: 서울특별시 광진구 군자동 98 (region은 번지를 뺀 동 단위)
+                          - 화면 표기는 region 그대로 쓰고, 주소 복사에 address를 쓴다
+                          - 목록·상세·생성·수정 응답에 모두 내려간다
+                          - 역지오코딩으로 지번을 얻지 못한 좌표는 null
+
+                        ### 🛠 변경
+                        - 신규 회원 닉네임을 Accept-Language 언어로 생성 (ko / ja / en)
+                          - ko: 재빠른고양이3721 / ja: すばやいネコ3721 / en: SpeedyCat3721
+                          - 헤더가 없거나 지원하지 않는 언어면 한국어
+                          - 대부분의 클라이언트가 기기 설정으로 헤더를 자동 전송한다
+                        - 닉네임 낱말을 직업에서 동물로 교체
+                          - 직업은 "잠많은형사" 같은 조합이 성립하지 않고, 모욕이 되는 낱말이 섞여 있었다
+                        - 닉네임 끝 숫자를 4자리로 고정 (기존에는 패딩이 없어 1~3자리도 생성됨)
+
                         ## v2.18.0 업데이트 내역
 
                         ### ⚠️ 주의 (클라이언트 동시 배포 필요)
@@ -41,7 +59,7 @@ public class SwaggerConfig {
                         - 목록 응답 최상위의 countryCode 제거 (요청값을 되돌려주던 중복)
 
                         ### ✨ 신규
-                        - GET /api/community-posts/country 좌표 국가 조회 API (로그인 불필요)
+                        - GET /api/community-posts/country 좌표 국가 조회 API 🔓 no auth
                           - 파라미터: latitude, longitude / 응답: countryCode
                           - 화면 진입 때 한 번 호출해 국가를 얻고, 이후 페이지는 그 값을 재사용한다
                           - 주소를 만들지 않아 벤더 호출이 1회다
@@ -49,7 +67,7 @@ public class SwaggerConfig {
                         ### 🛠 변경
                         - 역지오코딩이 완전히 실패하면 게시글을 만들지 않는다 (500 ADDRESS_LOOKUP_FAILED)
                           - 주소 없이 저장하면 국가 코드가 비어 어느 목록에도 걸리지 않기 때문
-                        - GET /api/community-posts, GET /api/community-posts/{postId} 는 로그인 불필요
+                        - GET /api/community-posts, GET /api/community-posts/{postId} 🔓 no auth
                           (동작은 이전과 같고 문서 표기만 바로잡음)
 
                         ## v2.17.0 업데이트 내역
@@ -59,6 +77,10 @@ public class SwaggerConfig {
                           - countryCode 필수. 없으면 400(COUNTRY_NOT_SPECIFIED)
                           - GET /api/community-posts/country 로 먼저 국가를 조회한 뒤 넣는다
                           - 위치 권한을 거부한 사용자는 기기 국가 코드를 보내면 됨
+                          - countryCode 는 국가(ISO 3166-1 alpha-2)이지 언어가 아니다.
+                            UI 언어를 그대로 넣으면 안 된다. ja / en 을 보내면 400 이 아니라
+                            200 + 빈 목록이 내려와 오류로 보이지 않는다
+                            (ja → JP 가 아니고, en 에 대응하는 국가는 없다)
                         - GET /api/community-posts 페이지네이션을 커서 방식으로 전환
                           - page 파라미터 제거, cursor 파라미터 추가
                           - 응답의 page 객체가 cursor 객체(nextCursor, hasNext)로 변경
@@ -66,10 +88,10 @@ public class SwaggerConfig {
                           - 지원하지 않는 쿼리 파라미터를 보내면 400(INVALID_QUERY_PARAMETER)
 
                         ### ✨ 신규
-                        - GET /api/community-posts/country 좌표 국가 조회 API 추가 (로그인 불필요)
+                        - GET /api/community-posts/country 좌표 국가 조회 API 추가 🔓 no auth
                           - 파라미터: latitude, longitude / 응답: countryCode
                           - 목록 조회 전에 한 번 호출해 국가를 얻는 용도. 주소는 만들지 않아 벤더 호출이 1회
-                        - GET /api/community-posts/address 좌표 주소 조회 API 추가 (로그인 필요)
+                        - GET /api/community-posts/address 좌표 주소 조회 API 추가 🔒 auth required
                           - 파라미터: latitude, longitude
                           - 응답: region(동 단위, 게시글에 저장될 값), address(번지 포함, 작성자 확인용),
                             countryCode(ISO 3166-1 alpha-2)
@@ -102,7 +124,7 @@ public class SwaggerConfig {
                         ## v2.16.0 업데이트 내역
 
                         ### 🛠 변경
-                        - GET /api/community-posts, GET /api/community-posts/{postId} 비로그인 조회 허용
+                        - GET /api/community-posts, GET /api/community-posts/{postId} 🔓 no auth 로 전환
                           - 웹뷰 지원을 위해 @AuthUser 제거
 
                         ## v2.15.0 업데이트 내역

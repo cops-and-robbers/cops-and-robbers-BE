@@ -36,6 +36,9 @@ public record CommunityPostResponse(
             @Schema(description = "동 단위 지역 (역지오코딩 실패 시 null)",
                     example = "서울특별시 광진구 군자동", nullable = true)
             String region,
+            @Schema(description = "지번 주소. 화면에 노출하지 않고 주소 복사에 쓴다 (역지오코딩 실패 시 null)",
+                    example = "서울특별시 광진구 군자동 98", nullable = true)
+            String address,
             @Schema(description = "작성자가 입력한 만나는 곳", example = "어린이대공원 정문")
             String placeName,
             @Schema(description = "국가 코드(ISO 3166-1 alpha-2). 역지오코딩 실패 시 null",
@@ -56,6 +59,7 @@ public record CommunityPostResponse(
                         result.location().latitude(),
                         result.location().longitude(),
                         result.location().region(),
+                        result.location().address(),
                         result.location().placeName(),
                         result.location().countryCode()),
                 result.maxParticipants(),

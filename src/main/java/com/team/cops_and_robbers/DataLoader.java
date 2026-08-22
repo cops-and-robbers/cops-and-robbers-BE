@@ -35,7 +35,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Profile("dev")
@@ -62,7 +64,7 @@ public class DataLoader implements CommandLineRunner {
     public void run(String... args) {
         if (userRepository.count() > 0) {
             log.info("이미 데이터가 존재하여 초기화를 건너뜁니다. 커뮤니티 게시글이 없으면 그것만 생성합니다.");
-            createCommunityPosts(userRepository.findAll());
+            createCommunityPosts();
             return;
         }
 
@@ -91,7 +93,7 @@ public class DataLoader implements CommandLineRunner {
         log.info("Game Started: [ID: {}, InviteCode: {}]", game.getId(), game.getInviteCode());
 
         // 5. 커뮤니티 게시글 생성
-        createCommunityPosts(users);
+        createCommunityPosts();
 
         log.info("========== 테스트용 데이터 초기화 완료 ==========");
     }
@@ -162,15 +164,16 @@ public class DataLoader implements CommandLineRunner {
      * 주소는 VWorld·Geoapify를 실제로 호출해 받은 값이다. 국내는 12개 지점 중 롯데타워만 도로명·건물명이
      * 나오고 나머지는 지번만 내려왔다. 실제 분포가 그러하므로 시드도 그대로 맞춘다.
      */
-    private void createCommunityPosts(List<User> users) {
-        if (users.isEmpty() || communityPostRepository.count() > 0) {
+    private void createCommunityPosts() {
+        if (communityPostRepository.count() > 0) {
             return;
         }
 
+        Map<String, User> writers = new HashMap<>();
 
         for (int i = 0; i < COMMUNITY_POST_COUNT; i++) {
             CommunityPostSeed seed = COMMUNITY_POST_SEEDS.get(i % COMMUNITY_POST_SEEDS.size());
-            User writer = users.get(i % users.size());
+            User writer = writerFor(seed.postAddress().countryCode(), i, writers);
             CommunityPostCreateCommand command = new CommunityPostCreateCommand(
                     writer.getId(),
                     toTitle(seed, i, COMMUNITY_POST_SEEDS.size()),
@@ -187,13 +190,46 @@ public class DataLoader implements CommandLineRunner {
         log.info("Community Posts Created: [{}건]", COMMUNITY_POST_COUNT);
     }
 
-    /** 시드를 순환해 만들기 때문에 두 바퀴째부터는 제목에 회차를 붙여 목록에서 구분되게 한다. */
+    /** 시드를 순환해 만들기 때문에 두 바퀴째부터는 제목에 회차를 붙여 목록에서 구분되게 한다. 게시글 언어를 가리지 않도록 숫자만 붙인다. */
     private String toTitle(CommunityPostSeed seed, int index, int seedCount) {
         int round = index / seedCount;
         if (round == 0) {
             return seed.title();
         }
-        return seed.title() + " (" + (round + 1) + "차)";
+        return seed.title() + " #" + (round + 1);
+    }
+
+    /**
+     * 게시글은 그 나라 말로 쓰였는데 작성자만 한글이면 목록에 언어가 섞여 보인다.
+     * 게임용 유저를 돌려쓰지 않고 국가에 맞는 작성자를 따로 만든다.
+     */
+    private User writerFor(String countryCode, int index, Map<String, User> created) {
+        List<CommunityWriter> candidates = switch (countryCode) {
+            case "KR" -> KOREAN_WRITERS;
+            case "JP" -> JAPANESE_WRITERS;
+            default -> ENGLISH_WRITERS;
+        };
+        CommunityWriter writer = candidates.get(index % candidates.size());
+
+        return created.computeIfAbsent(writer.socialId(), socialId ->
+                userRepository.findBySocialIdAndSocialType(socialId, SocialType.GOOGLE)
+                        .orElseGet(() -> userRepository.save(
+                                User.signUp(socialId, SocialType.GOOGLE, writer.nickname()))));
+    }
+
+    private static final List<CommunityWriter> KOREAN_WRITERS = List.of(
+            new CommunityWriter("seed-writer-ko-1", "재빠른고양이3721"),
+            new CommunityWriter("seed-writer-ko-2", "느긋한너구리8204"));
+
+    private static final List<CommunityWriter> JAPANESE_WRITERS = List.of(
+            new CommunityWriter("seed-writer-ja-1", "すばやいネコ3721"),
+            new CommunityWriter("seed-writer-ja-2", "のんびりタヌキ8204"));
+
+    private static final List<CommunityWriter> ENGLISH_WRITERS = List.of(
+            new CommunityWriter("seed-writer-en-1", "SpeedyCat3721"),
+            new CommunityWriter("seed-writer-en-2", "SleepyRaccoon8204"));
+
+    private record CommunityWriter(String socialId, String nickname) {
     }
 
     /** dev 확인용 시드. 주소는 실제 벤더 응답을 그대로 옮긴 값이다. */

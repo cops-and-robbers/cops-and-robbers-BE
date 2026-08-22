@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.auth.application;
 
 import com.team.cops_and_robbers.auth.application.dto.command.AdminLoginCommand;
 import com.team.cops_and_robbers.auth.application.dto.command.LoginCommand;
+import com.team.cops_and_robbers.auth.domain.NicknameLanguage;
 import com.team.cops_and_robbers.auth.application.dto.result.AdminLoginResult;
 import com.team.cops_and_robbers.auth.application.dto.result.LoginResult;
 import com.team.cops_and_robbers.auth.application.event.UserFcmTokenUpdatedEvent;
@@ -68,7 +69,7 @@ class AuthServiceTest extends ServiceUnitTest {
             when(socialLoginStrategy.validateAndGetSocialId(anyString())).thenReturn(socialId);
             when(userRepository.findBySocialIdAndSocialType(socialId, SocialType.KAKAO))
                     .thenReturn(Optional.empty());
-            when(randomNicknameGenerator.generate()).thenReturn(nickname);
+            when(randomNicknameGenerator.generate(any(NicknameLanguage.class))).thenReturn(nickname);
             when(userRepository.existsByNickname(nickname)).thenReturn(false);
 
             User savedUser = User.signUp(socialId, SocialType.KAKAO, nickname);
