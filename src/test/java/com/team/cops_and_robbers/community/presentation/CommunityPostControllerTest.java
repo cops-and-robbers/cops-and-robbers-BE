@@ -542,6 +542,24 @@ class CommunityPostControllerTest extends ControllerTest {
         }
 
         @Test
+        void 조회_결과에_지번_주소가_함께_내려온다() {
+            Long postId = communityPostRepository.save(
+                    POST(user.getId(), "서울특별시 광진구 군자동 98")).getId();
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .when()
+                    .get(POST_API_URL + "/" + postId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getString("location.address"))
+                        .isEqualTo("서울특별시 광진구 군자동 98");
+            });
+        }
+
+        @Test
         void 존재하지_않는_게시글_조회시_404를_응답한다() {
             ExtractableResponse<Response> extract = authenticated(accessToken)
                     .when()
