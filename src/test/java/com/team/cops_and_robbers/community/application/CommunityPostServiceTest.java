@@ -179,7 +179,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             assertThat(result.content()).hasSize(10);
             assertThat(result.hasNext()).isTrue();
             assertThat(result.nextCursor())
-                    .isEqualTo(CommunityPostCursor.encode("KR", CommunityPostSort.LATEST, false, CommunityPostCursor.sortKeyOf(LocalDateTime.of(2026, 8, 1, 0, 0).plusHours(2)), 2L));
+                    .isEqualTo(CommunityPostCursor.encode("KR", CommunityPostSort.LATEST, null, false, CommunityPostCursor.sortKeyOf(LocalDateTime.of(2026, 8, 1, 0, 0).plusHours(2)), 2L));
         }
 
         @Test
@@ -199,7 +199,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         @Test
         void 커서가_있으면_디코딩한_값으로_조회한다() {
             LocalDateTime cursorCreatedAt = LocalDateTime.of(2026, 8, 1, 5, 0);
-            String cursor = CommunityPostCursor.encode("KR", CommunityPostSort.LATEST, false, CommunityPostCursor.sortKeyOf(cursorCreatedAt), 5L);
+            String cursor = CommunityPostCursor.encode("KR", CommunityPostSort.LATEST, null, false, CommunityPostCursor.sortKeyOf(cursorCreatedAt), 5L);
             given(communityPostRepository.findPage(any(CommunityPostSearchCondition.class), any(CommunityPostCursor.class), eq(10)))
                     .willReturn(List.of());
 

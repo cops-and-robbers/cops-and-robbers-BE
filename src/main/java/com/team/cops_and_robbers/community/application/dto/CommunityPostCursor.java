@@ -13,21 +13,24 @@ import org.springframework.util.StringUtils;
 
 /**
  * 마감 여부가 1차 정렬 기준이라 커서에도 담는다.
- * sortKey는 정렬에 따라 createdAt · meetingAt · 거리(m)이며, 국가나 정렬이 요청과 다르면 거절한다.
+ * sortKey는 정렬에 따라 createdAt · meetingAt · 거리(m)이며, 국가·정렬·검색어가 요청과 다르면 거절한다.
+ * 거리 기준 좌표는 담지 않는다. 사용자가 조금만 움직여도 커서가 막히면 안 되기 때문이다.
  */
 public record CommunityPostCursor(
         String countryCode,
         CommunityPostSort sort,
+        int keywordHash,
         int closed,
         String sortKey,
         Long id
 ) {
     private static final String DELIMITER = "\\|";
-    private static final int PART_COUNT = 5;
+    private static final int PART_COUNT = 6;
 
-    public static String encode(
-            String countryCode, CommunityPostSort sort, boolean closed, String sortKey, Long id) {
-        String raw = countryCode + "|" + sort.name() + "|" + (closed ? 1 : 0) + "|" + sortKey + "|" + id;
+    public static String encode(String countryCode, CommunityPostSort sort, String keyword,
+                                boolean closed, String sortKey, Long id) {
+        String raw = countryCode + "|" + sort.name() + "|" + keywordHash(keyword) + "|"
+                + (closed ? 1 : 0) + "|" + sortKey + "|" + id;
         return Base64.getUrlEncoder().withoutPadding()
                 .encodeToString(raw.getBytes(StandardCharsets.UTF_8));
     }
@@ -36,12 +39,15 @@ public record CommunityPostCursor(
         return sortAt.truncatedTo(ChronoUnit.MICROS).toString();
     }
 
-    public static Optional<CommunityPostCursor> decode(String value, String countryCode, CommunityPostSort sort) {
+    public static Optional<CommunityPostCursor> decode(
+            String value, String countryCode, CommunityPostSort sort, String keyword) {
         if (!StringUtils.hasText(value)) {
             return Optional.empty();
         }
         CommunityPostCursor cursor = parse(value)
-                .filter(parsed -> parsed.countryCode().equals(countryCode) && parsed.sort() == sort)
+                .filter(parsed -> parsed.countryCode().equals(countryCode)
+                        && parsed.sort() == sort
+                        && parsed.keywordHash() == keywordHash(keyword))
                 .orElseThrow(() -> new ApplicationException(CommonException.INVALID_QUERY_PARAMETER));
         return Optional.of(cursor);
     }
@@ -52,6 +58,11 @@ public record CommunityPostCursor(
 
     public double distance() {
         return Double.parseDouble(sortKey);
+    }
+
+    /** 검색어에 구분자가 들어갈 수 있어 값을 그대로 담지 않고 해시로 비교한다. */
+    private static int keywordHash(String keyword) {
+        return StringUtils.hasText(keyword) ? keyword.trim().hashCode() : 0;
     }
 
     private static void validateSortKey(CommunityPostCursor cursor) {
@@ -73,8 +84,9 @@ public record CommunityPostCursor(
                     parts[0],
                     CommunityPostSort.valueOf(parts[1]),
                     Integer.parseInt(parts[2]),
-                    parts[3],
-                    Long.parseLong(parts[4]));
+                    Integer.parseInt(parts[3]),
+                    parts[4],
+                    Long.parseLong(parts[5]));
             validateSortKey(cursor);
             return Optional.of(cursor);
         } catch (IllegalArgumentException | DateTimeParseException e) {

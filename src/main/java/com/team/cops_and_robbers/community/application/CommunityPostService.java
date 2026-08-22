@@ -63,7 +63,7 @@ public class CommunityPostService {
                 countryCode, command.sort(), command.latitude(), command.longitude(), command.keyword());
         List<CommunityPostRow> fetched = communityPostRepository.findPage(
                 condition,
-                CommunityPostCursor.decode(command.cursor(), countryCode, command.sort()).orElse(null),
+                CommunityPostCursor.decode(command.cursor(), countryCode, command.sort(), command.keyword()).orElse(null),
                 command.size());
 
         boolean hasNext = fetched.size() > command.size();
@@ -71,7 +71,7 @@ public class CommunityPostService {
         List<CommunityPost> posts = rows.stream().map(CommunityPostRow::post).toList();
 
         return new CommunityPostCursorResult(
-                toResults(posts), resolveNextCursor(rows, hasNext, countryCode, command.sort()), hasNext);
+                toResults(posts), resolveNextCursor(rows, hasNext, countryCode, command), hasNext);
     }
 
 
@@ -161,13 +161,14 @@ public class CommunityPostService {
     }
 
     private String resolveNextCursor(
-            List<CommunityPostRow> rows, boolean hasNext, String countryCode, CommunityPostSort sort) {
+            List<CommunityPostRow> rows, boolean hasNext, String countryCode, CommunityPostListCommand command) {
         if (!hasNext) {
             return null;
         }
         CommunityPostRow last = rows.getLast();
         CommunityPost post = last.post();
-        return CommunityPostCursor.encode(countryCode, sort, post.isClosed(), sortKeyOf(last, sort), post.getId());
+        return CommunityPostCursor.encode(countryCode, command.sort(), command.keyword(),
+                post.isClosed(), sortKeyOf(last, command.sort()), post.getId());
     }
 
     private String sortKeyOf(CommunityPostRow row, CommunityPostSort sort) {
