@@ -86,7 +86,11 @@ public interface CommunityPostControllerDocs {
     );
 
     @SecurityRequirements
-    @Operation(summary = "게시글 단건 조회 (로그인 불필요)", description = "특정 모집 게시글을 조회합니다.")
+    @Operation(summary = "게시글 단건 조회 (로그인 불필요)",
+            description = "특정 모집 게시글을 조회합니다.\n\n"
+                    + "location.region은 동 단위(예: 서울특별시 광진구 군자동), "
+                    + "location.address는 번지까지 포함한 지번 주소입니다(예: 서울특별시 광진구 군자동 98). "
+                    + "화면에는 region을 쓰고 주소 복사에는 address를 쓰세요.")
     @ApiErrorCode(value = CommunityPostException.class, codes = {"POST_NOT_FOUND"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공")

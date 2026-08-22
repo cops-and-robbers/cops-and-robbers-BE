@@ -34,6 +34,13 @@ public class SwaggerConfig {
                 .description("""
                         ## v2.19.0 업데이트 내역
 
+                        ### ✨ 신규
+                        - 게시글 응답 location에 address(지번 주소) 추가
+                          - 예: 서울특별시 광진구 군자동 98 (region은 번지를 뺀 동 단위)
+                          - 화면 표기는 region 그대로 쓰고, 주소 복사에 address를 쓴다
+                          - 목록·상세·생성·수정 응답에 모두 내려간다
+                          - 역지오코딩으로 지번을 얻지 못한 좌표는 null
+
                         ### 🛠 변경
                         - 신규 회원 닉네임을 Accept-Language 언어로 생성 (ko / ja / en)
                           - ko: 재빠른고양이3721 / ja: すばやいネコ3721 / en: SpeedyCat3721
