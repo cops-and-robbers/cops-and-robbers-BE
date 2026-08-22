@@ -15,7 +15,8 @@ public record CommunityPostListCommand(
         CommunityPostSort sort,
         String countryCode,
         Double latitude,
-        Double longitude
+        Double longitude,
+        String keyword
 ) {
     private static final int MAX_SIZE = 100;
 

@@ -6,6 +6,7 @@ public record CommunityPostSearchCondition(
         String countryCode,
         CommunityPostSort sort,
         Double latitude,
-        Double longitude
+        Double longitude,
+        String keyword
 ) {
 }

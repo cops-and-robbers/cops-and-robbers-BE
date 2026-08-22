@@ -23,6 +23,8 @@ import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.PAST
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.PAST_POST;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST_AT;
+import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST_TITLED;
+import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST_PLACED;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST_MEETING_IN;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.mockito.ArgumentMatchers.any;
@@ -380,6 +382,72 @@ class CommunityPostControllerTest extends ControllerTest {
         }
 
         @Test
+        void 검색어가_제목에_있으면_조회된다() {
+            Long target = communityPostRepository.save(
+                    POST_TITLED(user.getId(), "어린이대공원에서 겜할사람~")).getId();
+            communityPostRepository.save(POST_PLACED(user.getId(), "서울특별시 강남구 역삼동", "강남역 11번 출구"));
+
+            ExtractableResponse<Response> extract = searchBy("어린이");
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getList("content.id", Long.class))
+                        .containsExactly(target);
+            });
+        }
+
+        @Test
+        void 검색어가_지역에_있으면_조회된다() {
+            Long target = communityPostRepository.save(
+                    POST_PLACED(user.getId(), "서울특별시 광진구 화양동", "세종대학교")).getId();
+            communityPostRepository.save(POST_PLACED(user.getId(), "부산광역시 해운대구 우동", "해운대해수욕장"));
+
+            ExtractableResponse<Response> extract = searchBy("서울");
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.jsonPath().getList("content.id", Long.class))
+                        .containsExactly(target);
+            });
+        }
+
+        @Test
+        void 검색어가_장소명에_있으면_조회된다() {
+            Long target = communityPostRepository.save(
+                    POST_PLACED(user.getId(), "서울특별시 광진구 화양동", "세종대학교")).getId();
+            communityPostRepository.save(POST_PLACED(user.getId(), "서울특별시 광진구 화양동", "건대입구역"));
+
+            ExtractableResponse<Response> extract = searchBy("세종대");
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.jsonPath().getList("content.id", Long.class))
+                        .containsExactly(target);
+            });
+        }
+
+        @Test
+        void 검색어가_비어있으면_전체를_조회한다() {
+            communityPostRepository.save(POST(user.getId()));
+            communityPostRepository.save(POST(user.getId()));
+
+            ExtractableResponse<Response> extract = searchBy("   ");
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.jsonPath().getList("content")).hasSize(2);
+            });
+        }
+
+        private ExtractableResponse<Response> searchBy(String keyword) {
+            return unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("keyword", keyword)
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+        }
+
+        @Test
         void 거리순은_보낸_좌표에서_가까운_순서로_조회한다() {
             Long seoul = communityPostRepository.save(POST_AT(user.getId(), 37.5665, 126.9780)).getId();
             Long busan = communityPostRepository.save(POST_AT(user.getId(), 35.1796, 129.0756)).getId();
@@ -650,7 +718,7 @@ class CommunityPostControllerTest extends ControllerTest {
         @Test
         void 지원하지_않는_쿼리_파라미터로_요청하면_400을_응답한다() {
             ExtractableResponse<Response> extract = unauthenticated()
-                    .queryParam("keyword", "강남")
+                    .queryParam("page", 1)
                     .queryParam("countryCode", "KR")
                     .when()
                     .get(POST_API_URL)

@@ -86,7 +86,9 @@ public interface CommunityPostControllerDocs {
             @Parameter(description = "사용자 위도. sort=DISTANCE 일 때만 필수이고, 그 외 정렬에서 보내면 400")
             @RequestParam(required = false) Double latitude,
             @Parameter(description = "사용자 경도. sort=DISTANCE 일 때만 필수이고, 그 외 정렬에서 보내면 400")
-            @RequestParam(required = false) Double longitude
+            @RequestParam(required = false) Double longitude,
+            @Parameter(description = "검색어. 제목·장소명·지역에서 찾는다 (대소문자 무시)", example = "서울")
+            @RequestParam(required = false) String keyword
     );
 
     @SecurityRequirements

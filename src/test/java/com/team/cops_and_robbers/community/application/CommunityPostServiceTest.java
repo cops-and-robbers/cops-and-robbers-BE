@@ -240,7 +240,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         @Test
         void 국가_코드가_없으면_COUNTRY_NOT_SPECIFIED_예외가_발생한다() {
             assertThatThrownBy(() -> new CommunityPostListCommand(
-                    null, 10, CommunityPostScope.ALL, CommunityPostSort.LATEST, null, null, null))
+                    null, 10, CommunityPostScope.ALL, CommunityPostSort.LATEST, null, null, null, null))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.COUNTRY_NOT_SPECIFIED.getDetail());
         }
@@ -248,7 +248,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
 
         private CommunityPostListCommand listCommand(String cursor, int size) {
             return new CommunityPostListCommand(
-                    cursor, size, CommunityPostScope.ALL, CommunityPostSort.LATEST, "KR", null, null);
+                    cursor, size, CommunityPostScope.ALL, CommunityPostSort.LATEST, "KR", null, null, null);
         }
 
         private List<CommunityPostRow> postsOf(int count) {

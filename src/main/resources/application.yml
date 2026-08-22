@@ -1,5 +1,6 @@
 
 
+
 spring:
   web:
     # Accept-Language 헤더가 없을 때의 기본값. 지정하지 않으면 JVM 기본 로캘로 떨어진다.

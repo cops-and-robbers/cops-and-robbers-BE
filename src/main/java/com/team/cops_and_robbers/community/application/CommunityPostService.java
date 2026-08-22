@@ -60,7 +60,7 @@ public class CommunityPostService {
         String countryCode = command.countryCode().toUpperCase(Locale.ROOT);
 
         CommunityPostSearchCondition condition = new CommunityPostSearchCondition(
-                countryCode, command.sort(), command.latitude(), command.longitude());
+                countryCode, command.sort(), command.latitude(), command.longitude(), command.keyword());
         List<CommunityPostRow> fetched = communityPostRepository.findPage(
                 condition,
                 CommunityPostCursor.decode(command.cursor(), command.sort()).orElse(null),

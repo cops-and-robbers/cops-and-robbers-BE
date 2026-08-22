@@ -63,6 +63,10 @@ public class SwaggerConfig {
                           - latitude, longitude 필수. 없으면 400
                           - 다른 정렬에서 좌표를 보내면 400 (조용히 무시되지 않도록)
                           - POPULAR는 아직 400
+                        - GET /api/community-posts keyword 검색 추가
+                          - 제목 · 장소명(placeName) · 지역(region)에서 찾는다 (대소문자 무시)
+                          - 화면에 보이는 글자로 찾을 수 있게 셋을 함께 본다. 지번 주소는 복사용이라 제외
+                          - 공백만 보내면 검색 없이 전체를 내려준다
                         - 커서에 정렬 종류가 담기므로 받은 정렬과 다른 sort로 보내면 400
 
                         ### 🛠 변경

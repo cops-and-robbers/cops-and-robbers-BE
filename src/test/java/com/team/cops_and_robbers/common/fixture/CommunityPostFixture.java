@@ -47,6 +47,19 @@ public class CommunityPostFixture {
         return post;
     }
 
+    public static CommunityPost POST_TITLED(Long userId, String title) {
+        CommunityPost post = POST(userId);
+        ReflectionTestUtils.setField(post, "title", title);
+        return post;
+    }
+
+    public static CommunityPost POST_PLACED(Long userId, String region, String placeName) {
+        CommunityPost post = POST(userId);
+        ReflectionTestUtils.setField(post, "region", region);
+        ReflectionTestUtils.setField(post, "placeName", placeName);
+        return post;
+    }
+
     public static CommunityPost POST_AT(Long userId, double latitude, double longitude) {
         CommunityPost post = POST(userId);
         ReflectionTestUtils.setField(post, "location", point(latitude, longitude));

@@ -74,7 +74,7 @@ public class CommunityPostController implements CommunityPostControllerDocs {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @AllowedQueryParams({"cursor", "size", "scope", "sort", "countryCode", "latitude", "longitude"})
+    @AllowedQueryParams({"cursor", "size", "scope", "sort", "countryCode", "latitude", "longitude", "keyword"})
     @GetMapping
     public ResponseEntity<CommunityPostListResponse> getPostList(
             @RequestParam(required = false) String cursor,
@@ -83,10 +83,11 @@ public class CommunityPostController implements CommunityPostControllerDocs {
             @RequestParam(defaultValue = "LATEST") CommunityPostSort sort,
             @RequestParam String countryCode,
             @RequestParam(required = false) Double latitude,
-            @RequestParam(required = false) Double longitude
+            @RequestParam(required = false) Double longitude,
+            @RequestParam(required = false) String keyword
     ) {
-        CommunityPostListCommand command =
-                new CommunityPostListCommand(cursor, size, scope, sort, countryCode, latitude, longitude);
+        CommunityPostListCommand command = new CommunityPostListCommand(
+                cursor, size, scope, sort, countryCode, latitude, longitude, keyword);
         CommunityPostCursorResult result = communityPostService.getPostList(command);
         CommunityPostListResponse response = CommunityPostListResponse.from(result);
         return ResponseEntity.ok(response);

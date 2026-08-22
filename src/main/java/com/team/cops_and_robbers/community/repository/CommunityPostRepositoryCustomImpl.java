@@ -18,6 +18,7 @@ import com.team.cops_and_robbers.community.domain.RecruitmentStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.util.StringUtils;
 
 @RequiredArgsConstructor
 public class CommunityPostRepositoryCustomImpl implements CommunityPostRepositoryCustom {
@@ -35,11 +36,23 @@ public class CommunityPostRepositoryCustomImpl implements CommunityPostRepositor
                 .from(communityPost)
                 .where(
                         communityPost.countryCode.eq(condition.countryCode()),
+                        keywordContains(condition.keyword()),
                         afterCursor(closedRank, distance, condition.sort(), cursor)
                 )
                 .orderBy(orderBy(closedRank, distance, condition.sort()))
                 .limit(size + 1L)
                 .fetch();
+    }
+
+    /** 화면에 보이는 건 제목과 지역·장소명 조합이라 그 셋만 훑는다. 지번 주소는 복사용이라 뺀다. */
+    private BooleanExpression keywordContains(String keyword) {
+        if (!StringUtils.hasText(keyword)) {
+            return null;
+        }
+        String trimmed = keyword.trim();
+        return communityPost.title.containsIgnoreCase(trimmed)
+                .or(communityPost.placeName.containsIgnoreCase(trimmed))
+                .or(communityPost.region.containsIgnoreCase(trimmed));
     }
 
     /** {@link CommunityPost#isClosed()}와 같은 규칙이다. */
