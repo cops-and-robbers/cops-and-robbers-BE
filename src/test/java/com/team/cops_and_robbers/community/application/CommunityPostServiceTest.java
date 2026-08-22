@@ -167,7 +167,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
 
         @Test
         void 커서가_없으면_첫_페이지와_다음_커서를_반환한다() {
-            given(communityPostRepository.findPage("KR", null, 10))
+            given(communityPostRepository.findPage("KR", CommunityPostSort.LATEST, null, 10))
                     .willReturn(postsOf(11));
             given(userRepository.findAllById(List.of(1L))).willReturn(List.of(userWithId(1L, "무서운경찰관")));
 
@@ -177,12 +177,12 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             assertThat(result.content()).hasSize(10);
             assertThat(result.hasNext()).isTrue();
             assertThat(result.nextCursor())
-                    .isEqualTo(CommunityPostCursor.encode(false, LocalDateTime.of(2026, 8, 1, 0, 0).plusHours(2), 2L));
+                    .isEqualTo(CommunityPostCursor.encode(CommunityPostSort.LATEST, false, LocalDateTime.of(2026, 8, 1, 0, 0).plusHours(2), 2L));
         }
 
         @Test
         void 마지막_페이지면_hasNext가_false이고_커서가_null이다() {
-            given(communityPostRepository.findPage("KR", null, 10))
+            given(communityPostRepository.findPage("KR", CommunityPostSort.LATEST, null, 10))
                     .willReturn(postsOf(3));
             given(userRepository.findAllById(List.of(1L))).willReturn(List.of(userWithId(1L, "무서운경찰관")));
 
@@ -197,8 +197,8 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         @Test
         void 커서가_있으면_디코딩한_값으로_조회한다() {
             LocalDateTime cursorCreatedAt = LocalDateTime.of(2026, 8, 1, 5, 0);
-            String cursor = CommunityPostCursor.encode(false, cursorCreatedAt, 5L);
-            given(communityPostRepository.findPage(eq("KR"), any(CommunityPostCursor.class), eq(10)))
+            String cursor = CommunityPostCursor.encode(CommunityPostSort.LATEST, false, cursorCreatedAt, 5L);
+            given(communityPostRepository.findPage(eq("KR"), eq(CommunityPostSort.LATEST), any(CommunityPostCursor.class), eq(10)))
                     .willReturn(List.of());
 
             CommunityPostCursorResult result = communityPostService.getPostList(
@@ -214,7 +214,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             CommunityPost post2 = POST(999L, LocalDateTime.of(2026, 8, 1, 1, 0));
             setId(post1, 1L);
             setId(post2, 2L);
-            given(communityPostRepository.findPage("KR", null, 10))
+            given(communityPostRepository.findPage("KR", CommunityPostSort.LATEST, null, 10))
                     .willReturn(List.of(post1, post2));
             given(userRepository.findAllById(List.of(1L, 999L)))
                     .willReturn(List.of(userWithId(1L, "무서운경찰관")));

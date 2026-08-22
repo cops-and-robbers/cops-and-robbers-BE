@@ -22,6 +22,7 @@ import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.COMP
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.PAST_COMPLETED_POST;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.PAST_POST;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST;
+import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST_MEETING_IN;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -317,6 +318,92 @@ class CommunityPostControllerTest extends ControllerTest {
                 softly.assertThat(ids).hasSize(3);
                 softly.assertThat(ids.getFirst()).isEqualTo(recruitingId);
                 softly.assertThat(ids.subList(1, 3)).containsExactlyInAnyOrder(completedId, endedId);
+            });
+        }
+
+        @Test
+        void 마감임박순은_모임_날짜가_가까운_순서로_조회한다() {
+            Long far = communityPostRepository.save(POST_MEETING_IN(user.getId(), 10)).getId();
+            Long near = communityPostRepository.save(POST_MEETING_IN(user.getId(), 1)).getId();
+            Long middle = communityPostRepository.save(POST_MEETING_IN(user.getId(), 5)).getId();
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "DEADLINE")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getList("content.id", Long.class))
+                        .containsExactly(near, middle, far);
+            });
+        }
+
+        @Test
+        void 마감임박순_커서로_다음_페이지를_중복과_누락_없이_조회한다() {
+            for (int i = 1; i <= 6; i++) {
+                communityPostRepository.save(POST_MEETING_IN(user.getId(), i));
+            }
+
+            ExtractableResponse<Response> firstExtract = unauthenticated()
+                    .queryParam("size", 4)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "DEADLINE")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+            String nextCursor = firstExtract.jsonPath().getString("cursor.nextCursor");
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 4)
+                    .queryParam("cursor", nextCursor)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "DEADLINE")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            List<Long> firstIds = firstExtract.jsonPath().getList("content.id", Long.class);
+            List<Long> secondIds = extract.jsonPath().getList("content.id", Long.class);
+            assertSoftly(softly -> {
+                softly.assertThat(firstIds).hasSize(4);
+                softly.assertThat(secondIds).hasSize(2);
+                softly.assertThat(firstIds).doesNotContainAnyElementsOf(secondIds);
+            });
+        }
+
+        @Test
+        void 다른_정렬로_받은_커서로_요청하면_400을_응답한다() {
+            for (int i = 0; i < 3; i++) {
+                communityPostRepository.save(POST(user.getId()));
+            }
+            String latestCursor = unauthenticated()
+                    .queryParam("size", 1)
+                    .queryParam("countryCode", "KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract()
+                    .jsonPath().getString("cursor.nextCursor");
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 1)
+                    .queryParam("cursor", latestCursor)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "DEADLINE")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
             });
         }
 

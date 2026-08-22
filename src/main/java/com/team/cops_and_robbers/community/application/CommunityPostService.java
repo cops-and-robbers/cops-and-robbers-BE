@@ -12,6 +12,7 @@ import com.team.cops_and_robbers.community.application.dto.result.CommunityPostC
 import com.team.cops_and_robbers.community.application.dto.result.CommunityPostResult;
 import com.team.cops_and_robbers.community.domain.CommunityChatMember;
 import com.team.cops_and_robbers.community.domain.CommunityPost;
+import com.team.cops_and_robbers.community.domain.CommunityPostSort;
 import com.team.cops_and_robbers.community.domain.PostAddress;
 import com.team.cops_and_robbers.community.exception.CommunityPostException;
 import com.team.cops_and_robbers.community.infrastructure.GeocodingClient;
@@ -57,12 +58,15 @@ public class CommunityPostService {
         String countryCode = command.countryCode().toUpperCase(Locale.ROOT);
 
         List<CommunityPost> fetched = communityPostRepository.findPage(
-                countryCode, CommunityPostCursor.decode(command.cursor()).orElse(null), command.size());
+                countryCode, command.sort(),
+                CommunityPostCursor.decode(command.cursor(), command.sort()).orElse(null),
+                command.size());
 
         boolean hasNext = fetched.size() > command.size();
         List<CommunityPost> posts = hasNext ? fetched.subList(0, command.size()) : fetched;
 
-        return new CommunityPostCursorResult(toResults(posts), resolveNextCursor(posts, hasNext), hasNext);
+        return new CommunityPostCursorResult(
+                toResults(posts), resolveNextCursor(posts, hasNext, command.sort()), hasNext);
     }
 
 
@@ -151,12 +155,13 @@ public class CommunityPostService {
                 .toList();
     }
 
-    private String resolveNextCursor(List<CommunityPost> posts, boolean hasNext) {
+    private String resolveNextCursor(List<CommunityPost> posts, boolean hasNext, CommunityPostSort sort) {
         if (!hasNext) {
             return null;
         }
         CommunityPost last = posts.getLast();
-        return CommunityPostCursor.encode(last.isClosed(), last.getCreatedAt(), last.getId());
+        LocalDateTime sortAt = sort == CommunityPostSort.DEADLINE ? last.getMeetingAt() : last.getCreatedAt();
+        return CommunityPostCursor.encode(sort, last.isClosed(), sortAt, last.getId());
     }
 
     private Map<Long, String> findWriterNicknames(List<CommunityPost> posts) {

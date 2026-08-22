@@ -75,11 +75,11 @@ public interface CommunityPostControllerDocs {
             @ApiResponse(responseCode = "400", description = "잘못된 커서 / 사이즈 범위 초과 / 미지원 파라미터")
     })
     ResponseEntity<CommunityPostListResponse> getPostList(
-            @Parameter(description = "이전 응답의 nextCursor 값 (첫 페이지는 생략)") @RequestParam(required = false) String cursor,
+            @Parameter(description = "이전 응답의 nextCursor 값 (첫 페이지는 생략). 받은 정렬과 다른 sort로 보내면 400") @RequestParam(required = false) String cursor,
             @Parameter(description = "페이지 크기 (1~100)", example = "10") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "조회 범위. 현재는 ALL만 지원하며 NEARBY, MINE은 400", example = "ALL")
             @RequestParam(defaultValue = "ALL") CommunityPostScope scope,
-            @Parameter(description = "정렬 기준. 현재는 LATEST만 지원하며 POPULAR, DISTANCE, DEADLINE은 400", example = "LATEST")
+            @Parameter(description = "정렬 기준. LATEST, DEADLINE 지원. POPULAR, DISTANCE는 400. 마감된 글은 정렬과 무관하게 맨 뒤", example = "LATEST")
             @RequestParam(defaultValue = "LATEST") CommunityPostSort sort,
             @Parameter(description = "조회할 국가 코드(ISO 3166-1 alpha-2). 필수", example = "KR")
             @RequestParam String countryCode

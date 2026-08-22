@@ -27,7 +27,7 @@ public record CommunityPostListCommand(
         if (scope != CommunityPostScope.ALL) {
             throw new ApplicationException(CommunityPostException.UNSUPPORTED_LIST_SCOPE);
         }
-        if (sort != CommunityPostSort.LATEST) {
+        if (sort == CommunityPostSort.POPULAR || sort == CommunityPostSort.DISTANCE) {
             throw new ApplicationException(CommunityPostException.UNSUPPORTED_LIST_SORT);
         }
     }

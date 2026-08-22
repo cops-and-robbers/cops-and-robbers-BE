@@ -57,6 +57,18 @@ public class SwaggerConfig {
                           - SYSTEM·GAME_INVITE 본문에는 닉네임을 넣지 않는다. 화면 문구는 senderNickname으로 조립한다
                         - 게시글을 만들면 작성자가 채팅방 멤버로 자동 등록되고, 게시글을 지우면 대화 내역도 함께 지워진다
 
+                        ### ✨ 신규 — 커뮤니티 목록 정렬
+                        - GET /api/community-posts sort=DEADLINE 지원 (모임 날짜 오름차순)
+                          - POPULAR, DISTANCE는 아직 400
+                          - 커서에 정렬 종류가 담기므로 받은 정렬과 다른 sort로 보내면 400
+
+                        ### 🛠 변경
+                        - 마감된 게시글은 정렬과 무관하게 목록 맨 뒤로
+                          - 작성자가 마감(COMPLETED)했거나 모임 날짜가 지난(ENDED) 글
+                        - 모임 날짜가 지난 게시글의 status를 ENDED로 내려줌
+                          - RECRUITING / COMPLETED / ENDED (ENDED 신규)
+                          - 저장하지 않고 조회 시점에 판정한다
+
                         ## v2.19.0 업데이트 내역
 
                         ### ✨ 신규

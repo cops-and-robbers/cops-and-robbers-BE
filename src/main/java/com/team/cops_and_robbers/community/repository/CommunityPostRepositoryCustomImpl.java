@@ -2,12 +2,15 @@ package com.team.cops_and_robbers.community.repository;
 
 import static com.team.cops_and_robbers.community.domain.QCommunityPost.communityPost;
 
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.DateTimePath;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team.cops_and_robbers.community.application.dto.CommunityPostCursor;
 import com.team.cops_and_robbers.community.domain.CommunityPost;
+import com.team.cops_and_robbers.community.domain.CommunityPostSort;
 import com.team.cops_and_robbers.community.domain.RecruitmentStatus;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,16 +22,17 @@ public class CommunityPostRepositoryCustomImpl implements CommunityPostRepositor
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<CommunityPost> findPage(String countryCode, CommunityPostCursor cursor, int size) {
+    public List<CommunityPost> findPage(
+            String countryCode, CommunityPostSort sort, CommunityPostCursor cursor, int size) {
         NumberExpression<Integer> closedRank = closedRank(LocalDateTime.now());
 
         return queryFactory
                 .selectFrom(communityPost)
                 .where(
                         communityPost.countryCode.eq(countryCode),
-                        afterCursor(closedRank, cursor)
+                        afterCursor(closedRank, sort, cursor)
                 )
-                .orderBy(closedRank.asc(), communityPost.createdAt.desc(), communityPost.id.desc())
+                .orderBy(orderBy(closedRank, sort))
                 .limit(size + 1L)
                 .fetch();
     }
@@ -42,14 +46,32 @@ public class CommunityPostRepositoryCustomImpl implements CommunityPostRepositor
                 .otherwise(0);
     }
 
-    private BooleanExpression afterCursor(NumberExpression<Integer> closedRank, CommunityPostCursor cursor) {
+    private OrderSpecifier<?>[] orderBy(NumberExpression<Integer> closedRank, CommunityPostSort sort) {
+        if (sort == CommunityPostSort.DEADLINE) {
+            return new OrderSpecifier<?>[]{
+                    closedRank.asc(), communityPost.meetingAt.asc(), communityPost.id.asc()};
+        }
+        return new OrderSpecifier<?>[]{
+                closedRank.asc(), communityPost.createdAt.desc(), communityPost.id.desc()};
+    }
+
+    private BooleanExpression afterCursor(
+            NumberExpression<Integer> closedRank, CommunityPostSort sort, CommunityPostCursor cursor) {
         if (cursor == null) {
             return null;
         }
         return closedRank.gt(cursor.closed())
-                .or(closedRank.eq(cursor.closed())
-                        .and(communityPost.createdAt.lt(cursor.createdAt())
-                                .or(communityPost.createdAt.eq(cursor.createdAt())
-                                        .and(communityPost.id.lt(cursor.id())))));
+                .or(closedRank.eq(cursor.closed()).and(afterSortKey(sort, cursor)));
+    }
+
+    private BooleanExpression afterSortKey(CommunityPostSort sort, CommunityPostCursor cursor) {
+        if (sort == CommunityPostSort.DEADLINE) {
+            DateTimePath<LocalDateTime> meetingAt = communityPost.meetingAt;
+            return meetingAt.gt(cursor.sortAt())
+                    .or(meetingAt.eq(cursor.sortAt()).and(communityPost.id.gt(cursor.id())));
+        }
+        DateTimePath<LocalDateTime> createdAt = communityPost.createdAt;
+        return createdAt.lt(cursor.sortAt())
+                .or(createdAt.eq(cursor.sortAt()).and(communityPost.id.lt(cursor.id())));
     }
 }
