@@ -11,15 +11,17 @@ import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Optional;
 
+/** 마감 여부가 1차 정렬 기준이라 커서에도 담는다. */
 public record CommunityPostCursor(
+        int closed,
         LocalDateTime createdAt,
         Long id
 ) {
     private static final String DELIMITER = "\\|";
-    private static final int PART_COUNT = 2;
+    private static final int PART_COUNT = 3;
 
-    public static String encode(LocalDateTime createdAt, Long id) {
-        String raw = createdAt.truncatedTo(ChronoUnit.MICROS) + "|" + id;
+    public static String encode(boolean closed, LocalDateTime createdAt, Long id) {
+        String raw = (closed ? 1 : 0) + "|" + createdAt.truncatedTo(ChronoUnit.MICROS) + "|" + id;
         return Base64.getUrlEncoder().withoutPadding()
                 .encodeToString(raw.getBytes(StandardCharsets.UTF_8));
     }
@@ -40,7 +42,10 @@ public record CommunityPostCursor(
             if (parts.length != PART_COUNT) {
                 return Optional.empty();
             }
-            return Optional.of(new CommunityPostCursor(LocalDateTime.parse(parts[0]), Long.parseLong(parts[1])));
+            return Optional.of(new CommunityPostCursor(
+                    Integer.parseInt(parts[0]),
+                    LocalDateTime.parse(parts[1]),
+                    Long.parseLong(parts[2])));
         } catch (IllegalArgumentException | DateTimeParseException e) {
             return Optional.empty();
         }

@@ -22,8 +22,6 @@ import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,12 +56,8 @@ public class CommunityPostService {
     public CommunityPostCursorResult getPostList(CommunityPostListCommand command) {
         String countryCode = command.countryCode().toUpperCase(Locale.ROOT);
 
-        Pageable pageable = PageRequest.of(0, command.size() + 1);
-        List<CommunityPost> fetched = CommunityPostCursor.decode(command.cursor())
-                .map(cursor -> communityPostRepository.findPageByCursor(
-                        countryCode, cursor.createdAt(), cursor.id(), pageable))
-                .orElseGet(() -> communityPostRepository
-                        .findAllByCountryCodeOrderByCreatedAtDescIdDesc(countryCode, pageable));
+        List<CommunityPost> fetched = communityPostRepository.findPage(
+                countryCode, CommunityPostCursor.decode(command.cursor()).orElse(null), command.size());
 
         boolean hasNext = fetched.size() > command.size();
         List<CommunityPost> posts = hasNext ? fetched.subList(0, command.size()) : fetched;
@@ -162,7 +156,7 @@ public class CommunityPostService {
             return null;
         }
         CommunityPost last = posts.getLast();
-        return CommunityPostCursor.encode(last.getCreatedAt(), last.getId());
+        return CommunityPostCursor.encode(last.isClosed(), last.getCreatedAt(), last.getId());
     }
 
     private Map<Long, String> findWriterNicknames(List<CommunityPost> posts) {

@@ -20,9 +20,10 @@ class CommunityPostCursorTest {
     void 인코딩한_커서를_다시_디코딩하면_같은_값이_나온다() {
         LocalDateTime createdAt = LocalDateTime.of(2026, 8, 15, 12, 30, 45, 123456000);
 
-        String encoded = CommunityPostCursor.encode(createdAt, 42L);
+        String encoded = CommunityPostCursor.encode(true, createdAt, 42L);
         CommunityPostCursor decoded = CommunityPostCursor.decode(encoded).orElseThrow();
 
+        assertThat(decoded.closed()).isEqualTo(1);
         assertThat(decoded.createdAt()).isEqualTo(createdAt);
         assertThat(decoded.id()).isEqualTo(42L);
     }
@@ -54,7 +55,7 @@ class CommunityPostCursorTest {
     @Test
     void 시각_형식이_잘못된_커서는_INVALID_QUERY_PARAMETER_예외가_발생한다() {
         String invalidTime = Base64.getUrlEncoder().withoutPadding()
-                .encodeToString("어제|42".getBytes(StandardCharsets.UTF_8));
+                .encodeToString("0|어제|42".getBytes(StandardCharsets.UTF_8));
 
         assertThatThrownBy(() -> CommunityPostCursor.decode(invalidTime))
                 .isInstanceOf(ApplicationException.class)

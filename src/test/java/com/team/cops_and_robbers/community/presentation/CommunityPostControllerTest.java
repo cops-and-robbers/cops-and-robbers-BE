@@ -18,6 +18,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.COMPLETED_POST;
+import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.PAST_COMPLETED_POST;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.PAST_POST;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
@@ -292,6 +294,93 @@ class CommunityPostControllerTest extends ControllerTest {
                 softly.assertThat(extract.jsonPath().getString("content[0].location.region")).isNull();
                 softly.assertThat(extract.jsonPath().getString("content[0].location.placeName"))
                         .isEqualTo("어린이대공원 정문");
+            });
+        }
+
+        @Test
+        void 마감된_게시글은_모집중인_게시글보다_뒤에_온다() {
+            Long completedId = communityPostRepository.save(COMPLETED_POST(user.getId())).getId();
+            Long endedId = communityPostRepository.save(PAST_POST(user.getId())).getId();
+            Long recruitingId = communityPostRepository.save(POST(user.getId())).getId();
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            List<Long> ids = extract.jsonPath().getList("content.id", Long.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(ids).hasSize(3);
+                softly.assertThat(ids.getFirst()).isEqualTo(recruitingId);
+                softly.assertThat(ids.subList(1, 3)).containsExactlyInAnyOrder(completedId, endedId);
+            });
+        }
+
+        /** 정렬은 쿼리가, status는 자바가 판정한다. 둘이 어긋나면 여기서 깨진다. */
+        @Test
+        void 목록_순서와_응답_상태가_같은_마감_기준을_따른다() {
+            communityPostRepository.save(POST(user.getId()));
+            communityPostRepository.save(COMPLETED_POST(user.getId()));
+            communityPostRepository.save(PAST_POST(user.getId()));
+            communityPostRepository.save(PAST_COMPLETED_POST(user.getId()));
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            List<String> statuses = extract.jsonPath().getList("content.status", String.class);
+            int firstClosed = statuses.indexOf(statuses.stream()
+                    .filter(status -> !status.equals("RECRUITING"))
+                    .findFirst()
+                    .orElseThrow());
+
+            assertSoftly(softly -> {
+                softly.assertThat(statuses).hasSize(4);
+                softly.assertThat(statuses.subList(0, firstClosed)).containsOnly("RECRUITING");
+                softly.assertThat(statuses.subList(firstClosed, statuses.size()))
+                        .doesNotContain("RECRUITING");
+            });
+        }
+
+        @Test
+        void 마감_경계를_넘는_커서도_중복과_누락_없이_조회한다() {
+            for (int i = 0; i < 3; i++) {
+                communityPostRepository.save(POST(user.getId()));
+                communityPostRepository.save(COMPLETED_POST(user.getId()));
+            }
+
+            ExtractableResponse<Response> firstExtract = unauthenticated()
+                    .queryParam("size", 4)
+                    .queryParam("countryCode", "KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+            String nextCursor = firstExtract.jsonPath().getString("cursor.nextCursor");
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 4)
+                    .queryParam("cursor", nextCursor)
+                    .queryParam("countryCode", "KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            List<Long> firstIds = firstExtract.jsonPath().getList("content.id", Long.class);
+            List<Long> secondIds = extract.jsonPath().getList("content.id", Long.class);
+            assertSoftly(softly -> {
+                softly.assertThat(firstIds).hasSize(4);
+                softly.assertThat(secondIds).hasSize(2);
+                softly.assertThat(firstIds).doesNotContainAnyElementsOf(secondIds);
             });
         }
 
