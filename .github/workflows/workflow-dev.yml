@@ -2,7 +2,8 @@ name: 👮🏻 Dev CI/CD 파이프라인 🥷
 
 on:
   push:
-    branches: [ "dev" ]
+    branches: [ "dev", "hyerimh/refactor-160-nickname-language" ]
+  workflow_dispatch:
 
 jobs:
   deploy:
