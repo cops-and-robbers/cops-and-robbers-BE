@@ -21,9 +21,10 @@ spring:
 
   http:
     client:
-      # 임시: 콜드 커넥션이 시간 부족인지 판별용. 확인 후 되돌린다
-      connect-timeout: 10s
-      read-timeout: 4s
+      # read-timeout이 연결까지 포함한 요청 전체를 덮으므로 connect-timeout은 그 이하일 때만 의미가 있다.
+      # dev 실측: Geoapify 웜 1.3초 콜드 3.3초, VWorld 웜 0.2초.
+      connect-timeout: 5s
+      read-timeout: 5s
 
 jwt:
   access:
