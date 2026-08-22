@@ -474,6 +474,15 @@ class CommunityPostControllerTest extends ControllerTest {
         }
 
         @Test
+        void 검색어가_한_글자면_400을_응답한다() {
+            ExtractableResponse<Response> extract = searchBy("서");
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
         void 검색어가_비어있으면_전체를_조회한다() {
             communityPostRepository.save(POST(user.getId()));
             communityPostRepository.save(POST(user.getId()));
