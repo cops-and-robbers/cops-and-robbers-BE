@@ -3,6 +3,8 @@ package com.team.cops_and_robbers.community.application;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.exception.InfrastructureException;
 import com.team.cops_and_robbers.community.application.dto.CommunityPostCursor;
+import com.team.cops_and_robbers.community.application.dto.CommunityPostSearchCondition;
+import com.team.cops_and_robbers.community.application.dto.CommunityPostRow;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostCreateCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostDeleteCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostListCommand;
@@ -12,6 +14,7 @@ import com.team.cops_and_robbers.community.application.dto.result.CommunityPostC
 import com.team.cops_and_robbers.community.application.dto.result.CommunityPostResult;
 import com.team.cops_and_robbers.community.domain.CommunityChatMember;
 import com.team.cops_and_robbers.community.domain.CommunityPost;
+import com.team.cops_and_robbers.community.domain.CommunityPostSort;
 import com.team.cops_and_robbers.community.domain.PostAddress;
 import com.team.cops_and_robbers.community.exception.CommunityPostException;
 import com.team.cops_and_robbers.community.infrastructure.GeocodingClient;
@@ -22,8 +25,6 @@ import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,17 +59,19 @@ public class CommunityPostService {
     public CommunityPostCursorResult getPostList(CommunityPostListCommand command) {
         String countryCode = command.countryCode().toUpperCase(Locale.ROOT);
 
-        Pageable pageable = PageRequest.of(0, command.size() + 1);
-        List<CommunityPost> fetched = CommunityPostCursor.decode(command.cursor())
-                .map(cursor -> communityPostRepository.findPageByCursor(
-                        countryCode, cursor.createdAt(), cursor.id(), pageable))
-                .orElseGet(() -> communityPostRepository
-                        .findAllByCountryCodeOrderByCreatedAtDescIdDesc(countryCode, pageable));
+        CommunityPostSearchCondition condition = new CommunityPostSearchCondition(
+                countryCode, command.sort(), command.latitude(), command.longitude(), command.keyword());
+        List<CommunityPostRow> fetched = communityPostRepository.findPage(
+                condition,
+                CommunityPostCursor.decode(command.cursor(), countryCode, command.sort(), command.keyword()).orElse(null),
+                command.size());
 
         boolean hasNext = fetched.size() > command.size();
-        List<CommunityPost> posts = hasNext ? fetched.subList(0, command.size()) : fetched;
+        List<CommunityPostRow> rows = hasNext ? fetched.subList(0, command.size()) : fetched;
+        List<CommunityPost> posts = rows.stream().map(CommunityPostRow::post).toList();
 
-        return new CommunityPostCursorResult(toResults(posts), resolveNextCursor(posts, hasNext), hasNext);
+        return new CommunityPostCursorResult(
+                toResults(posts), resolveNextCursor(rows, hasNext, countryCode, command), hasNext);
     }
 
 
@@ -157,12 +160,23 @@ public class CommunityPostService {
                 .toList();
     }
 
-    private String resolveNextCursor(List<CommunityPost> posts, boolean hasNext) {
+    private String resolveNextCursor(
+            List<CommunityPostRow> rows, boolean hasNext, String countryCode, CommunityPostListCommand command) {
         if (!hasNext) {
             return null;
         }
-        CommunityPost last = posts.getLast();
-        return CommunityPostCursor.encode(last.getCreatedAt(), last.getId());
+        CommunityPostRow last = rows.getLast();
+        CommunityPost post = last.post();
+        return CommunityPostCursor.encode(countryCode, command.sort(), command.keyword(),
+                post.isClosed(), sortKeyOf(last, command.sort()), post.getId());
+    }
+
+    private String sortKeyOf(CommunityPostRow row, CommunityPostSort sort) {
+        return switch (sort) {
+            case DEADLINE -> CommunityPostCursor.sortKeyOf(row.post().getMeetingAt());
+            case DISTANCE -> String.valueOf(row.distance());
+            default -> CommunityPostCursor.sortKeyOf(row.post().getCreatedAt());
+        };
     }
 
     private Map<Long, String> findWriterNicknames(List<CommunityPost> posts) {

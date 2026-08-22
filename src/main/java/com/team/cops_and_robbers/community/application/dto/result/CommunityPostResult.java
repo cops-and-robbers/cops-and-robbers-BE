@@ -43,7 +43,7 @@ public record CommunityPostResult(
                         post.getPlaceName(),
                         post.getCountryCode()),
                 post.getMaxParticipants(),
-                post.getStatus(),
+                post.currentStatus(),
                 TimestampUtil.toIsoString(post.getCreatedAt()),
                 TimestampUtil.toIsoString(post.getUpdatedAt())
         );

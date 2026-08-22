@@ -8,7 +8,6 @@ import com.team.cops_and_robbers.community.application.event.CommunityChatMessag
 import com.team.cops_and_robbers.community.domain.CommunityChatMember;
 import com.team.cops_and_robbers.community.domain.CommunityChatMessage;
 import com.team.cops_and_robbers.community.domain.CommunityPost;
-import com.team.cops_and_robbers.community.domain.RecruitmentStatus;
 import com.team.cops_and_robbers.community.exception.CommunityChatException;
 import com.team.cops_and_robbers.community.repository.CommunityChatMemberCountProjection;
 import com.team.cops_and_robbers.community.repository.CommunityChatMemberRepository;
@@ -124,7 +123,7 @@ public class CommunityChatMemberService {
     }
 
     private void validateRecruiting(CommunityPost post) {
-        if (post.getStatus() != RecruitmentStatus.RECRUITING) {
+        if (post.isClosed()) {
             throw new ApplicationException(CommunityChatException.RECRUITMENT_CLOSED);
         }
     }

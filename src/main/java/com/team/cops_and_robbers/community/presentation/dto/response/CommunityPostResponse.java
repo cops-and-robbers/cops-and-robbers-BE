@@ -21,7 +21,7 @@ public record CommunityPostResponse(
         LocationResponse location,
         @Schema(description = "모집 인원", example = "6")
         Integer maxParticipants,
-        @Schema(description = "모집 상태", example = "RECRUITING")
+        @Schema(description = "모집 상태. 모임 날짜가 지나면 ENDED", example = "RECRUITING")
         RecruitmentStatus status,
         @Schema(description = "생성일시", example = "2026-08-07T12:00:00+09:00")
         String createdAt,

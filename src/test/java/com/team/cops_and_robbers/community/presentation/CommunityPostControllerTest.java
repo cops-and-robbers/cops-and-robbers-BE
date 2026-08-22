@@ -18,7 +18,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.COMPLETED_POST;
+import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.PAST_COMPLETED_POST;
+import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.PAST_POST;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST;
+import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST_AT;
+import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST_IN_COUNTRY;
+import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST_TITLED;
+import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST_PLACED;
+import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST_MEETING_IN;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -295,6 +303,398 @@ class CommunityPostControllerTest extends ControllerTest {
         }
 
         @Test
+        void 다른_국가의_게시글은_목록에_나오지_않는다() {
+            Long korea = communityPostRepository.save(POST_IN_COUNTRY(user.getId(), "KR")).getId();
+            communityPostRepository.save(POST_IN_COUNTRY(user.getId(), "JP"));
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getList("content.id", Long.class))
+                        .containsExactly(korea);
+            });
+        }
+
+        @Test
+        void 다른_국가로_받은_커서로_요청하면_400을_응답한다() {
+            for (int i = 0; i < 3; i++) {
+                communityPostRepository.save(POST_IN_COUNTRY(user.getId(), "KR"));
+            }
+            String koreaCursor = unauthenticated()
+                    .queryParam("size", 1)
+                    .queryParam("countryCode", "KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract()
+                    .jsonPath().getString("cursor.nextCursor");
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 1)
+                    .queryParam("cursor", koreaCursor)
+                    .queryParam("countryCode", "JP")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
+        void 마감된_게시글은_모집중인_게시글보다_뒤에_온다() {
+            Long completedId = communityPostRepository.save(COMPLETED_POST(user.getId())).getId();
+            Long endedId = communityPostRepository.save(PAST_POST(user.getId())).getId();
+            Long recruitingId = communityPostRepository.save(POST(user.getId())).getId();
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            List<Long> ids = extract.jsonPath().getList("content.id", Long.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(ids).hasSize(3);
+                softly.assertThat(ids.getFirst()).isEqualTo(recruitingId);
+                softly.assertThat(ids.subList(1, 3)).containsExactlyInAnyOrder(completedId, endedId);
+            });
+        }
+
+        @Test
+        void 마감임박순은_모임_날짜가_가까운_순서로_조회한다() {
+            Long far = communityPostRepository.save(POST_MEETING_IN(user.getId(), 10)).getId();
+            Long near = communityPostRepository.save(POST_MEETING_IN(user.getId(), 1)).getId();
+            Long middle = communityPostRepository.save(POST_MEETING_IN(user.getId(), 5)).getId();
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "DEADLINE")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getList("content.id", Long.class))
+                        .containsExactly(near, middle, far);
+            });
+        }
+
+        @Test
+        void 마감임박순_커서로_다음_페이지를_중복과_누락_없이_조회한다() {
+            for (int i = 1; i <= 6; i++) {
+                communityPostRepository.save(POST_MEETING_IN(user.getId(), i));
+            }
+
+            ExtractableResponse<Response> firstExtract = unauthenticated()
+                    .queryParam("size", 4)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "DEADLINE")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+            String nextCursor = firstExtract.jsonPath().getString("cursor.nextCursor");
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 4)
+                    .queryParam("cursor", nextCursor)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "DEADLINE")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            List<Long> firstIds = firstExtract.jsonPath().getList("content.id", Long.class);
+            List<Long> secondIds = extract.jsonPath().getList("content.id", Long.class);
+            assertSoftly(softly -> {
+                softly.assertThat(firstIds).hasSize(4);
+                softly.assertThat(secondIds).hasSize(2);
+                softly.assertThat(firstIds).doesNotContainAnyElementsOf(secondIds);
+            });
+        }
+
+        @Test
+        void 검색어가_제목에_있으면_조회된다() {
+            Long target = communityPostRepository.save(
+                    POST_TITLED(user.getId(), "어린이대공원에서 겜할사람~")).getId();
+            communityPostRepository.save(POST_PLACED(user.getId(), "서울특별시 강남구 역삼동", "강남역 11번 출구"));
+
+            ExtractableResponse<Response> extract = searchBy("어린이");
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getList("content.id", Long.class))
+                        .containsExactly(target);
+            });
+        }
+
+        @Test
+        void 검색어가_지역에_있으면_조회된다() {
+            Long target = communityPostRepository.save(
+                    POST_PLACED(user.getId(), "서울특별시 광진구 화양동", "세종대학교")).getId();
+            communityPostRepository.save(POST_PLACED(user.getId(), "부산광역시 해운대구 우동", "해운대해수욕장"));
+
+            ExtractableResponse<Response> extract = searchBy("서울");
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.jsonPath().getList("content.id", Long.class))
+                        .containsExactly(target);
+            });
+        }
+
+        @Test
+        void 검색어가_장소명에_있으면_조회된다() {
+            Long target = communityPostRepository.save(
+                    POST_PLACED(user.getId(), "서울특별시 광진구 화양동", "세종대학교")).getId();
+            communityPostRepository.save(POST_PLACED(user.getId(), "서울특별시 광진구 화양동", "건대입구역"));
+
+            ExtractableResponse<Response> extract = searchBy("세종대");
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.jsonPath().getList("content.id", Long.class))
+                        .containsExactly(target);
+            });
+        }
+
+        @Test
+        void 검색어가_한_글자면_400을_응답한다() {
+            ExtractableResponse<Response> extract = searchBy("서");
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
+        void 검색어가_비어있으면_전체를_조회한다() {
+            communityPostRepository.save(POST(user.getId()));
+            communityPostRepository.save(POST(user.getId()));
+
+            ExtractableResponse<Response> extract = searchBy("   ");
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.jsonPath().getList("content")).hasSize(2);
+            });
+        }
+
+        private ExtractableResponse<Response> searchBy(String keyword) {
+            return unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("keyword", keyword)
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+        }
+
+        @Test
+        void 거리순은_보낸_좌표에서_가까운_순서로_조회한다() {
+            Long seoul = communityPostRepository.save(POST_AT(user.getId(), 37.5665, 126.9780)).getId();
+            Long busan = communityPostRepository.save(POST_AT(user.getId(), 35.1796, 129.0756)).getId();
+            Long daejeon = communityPostRepository.save(POST_AT(user.getId(), 36.3504, 127.3845)).getId();
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "DISTANCE")
+                    .queryParam("latitude", 37.5665)
+                    .queryParam("longitude", 126.9780)
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getList("content.id", Long.class))
+                        .containsExactly(seoul, daejeon, busan);
+            });
+        }
+
+        @Test
+        void 거리순_커서로_다음_페이지를_중복과_누락_없이_조회한다() {
+            for (int i = 0; i < 6; i++) {
+                communityPostRepository.save(POST_AT(user.getId(), 37.5 + i * 0.1, 127.0));
+            }
+
+            ExtractableResponse<Response> firstExtract = unauthenticated()
+                    .queryParam("size", 4)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "DISTANCE")
+                    .queryParam("latitude", 37.5)
+                    .queryParam("longitude", 127.0)
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+            String nextCursor = firstExtract.jsonPath().getString("cursor.nextCursor");
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 4)
+                    .queryParam("cursor", nextCursor)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "DISTANCE")
+                    .queryParam("latitude", 37.5)
+                    .queryParam("longitude", 127.0)
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            List<Long> firstIds = firstExtract.jsonPath().getList("content.id", Long.class);
+            List<Long> secondIds = extract.jsonPath().getList("content.id", Long.class);
+            assertSoftly(softly -> {
+                softly.assertThat(firstIds).hasSize(4);
+                softly.assertThat(secondIds).hasSize(2);
+                softly.assertThat(firstIds).doesNotContainAnyElementsOf(secondIds);
+            });
+        }
+
+        @Test
+        void 거리순인데_좌표가_없으면_400을_응답한다() {
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "DISTANCE")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
+        void 거리순이_아닌데_좌표를_보내면_400을_응답한다() {
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("latitude", 37.5665)
+                    .queryParam("longitude", 126.9780)
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
+        void 다른_정렬로_받은_커서로_요청하면_400을_응답한다() {
+            for (int i = 0; i < 3; i++) {
+                communityPostRepository.save(POST(user.getId()));
+            }
+            String latestCursor = unauthenticated()
+                    .queryParam("size", 1)
+                    .queryParam("countryCode", "KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract()
+                    .jsonPath().getString("cursor.nextCursor");
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 1)
+                    .queryParam("cursor", latestCursor)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "DEADLINE")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        /** 정렬은 쿼리가, status는 자바가 판정한다. 둘이 어긋나면 여기서 깨진다. */
+        @Test
+        void 목록_순서와_응답_상태가_같은_마감_기준을_따른다() {
+            communityPostRepository.save(POST(user.getId()));
+            communityPostRepository.save(COMPLETED_POST(user.getId()));
+            communityPostRepository.save(PAST_POST(user.getId()));
+            communityPostRepository.save(PAST_COMPLETED_POST(user.getId()));
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            List<String> statuses = extract.jsonPath().getList("content.status", String.class);
+            int firstClosed = statuses.indexOf(statuses.stream()
+                    .filter(status -> !status.equals("RECRUITING"))
+                    .findFirst()
+                    .orElseThrow());
+
+            assertSoftly(softly -> {
+                softly.assertThat(statuses).hasSize(4);
+                softly.assertThat(statuses.subList(0, firstClosed)).containsOnly("RECRUITING");
+                softly.assertThat(statuses.subList(firstClosed, statuses.size()))
+                        .doesNotContain("RECRUITING");
+            });
+        }
+
+        @Test
+        void 마감_경계를_넘는_커서도_중복과_누락_없이_조회한다() {
+            for (int i = 0; i < 3; i++) {
+                communityPostRepository.save(POST(user.getId()));
+                communityPostRepository.save(COMPLETED_POST(user.getId()));
+            }
+
+            ExtractableResponse<Response> firstExtract = unauthenticated()
+                    .queryParam("size", 4)
+                    .queryParam("countryCode", "KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+            String nextCursor = firstExtract.jsonPath().getString("cursor.nextCursor");
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 4)
+                    .queryParam("cursor", nextCursor)
+                    .queryParam("countryCode", "KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            List<Long> firstIds = firstExtract.jsonPath().getList("content.id", Long.class);
+            List<Long> secondIds = extract.jsonPath().getList("content.id", Long.class);
+            assertSoftly(softly -> {
+                softly.assertThat(firstIds).hasSize(4);
+                softly.assertThat(secondIds).hasSize(2);
+                softly.assertThat(firstIds).doesNotContainAnyElementsOf(secondIds);
+            });
+        }
+
+        @Test
         void 커서로_다음_페이지를_중복과_누락_없이_조회하면_200을_응답한다() {
             for (int i = 0; i < 15; i++) {
                 communityPostRepository.save(POST(user.getId()));
@@ -376,7 +776,7 @@ class CommunityPostControllerTest extends ControllerTest {
         @Test
         void 지원하지_않는_쿼리_파라미터로_요청하면_400을_응답한다() {
             ExtractableResponse<Response> extract = unauthenticated()
-                    .queryParam("keyword", "강남")
+                    .queryParam("page", 1)
                     .queryParam("countryCode", "KR")
                     .when()
                     .get(POST_API_URL)
@@ -538,6 +938,22 @@ class CommunityPostControllerTest extends ControllerTest {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
                 softly.assertThat(extract.jsonPath().getLong("id")).isEqualTo(postId);
                 softly.assertThat(extract.jsonPath().getString("status")).isEqualTo("RECRUITING");
+            });
+        }
+
+        @Test
+        void 모임_날짜가_지난_게시글은_ENDED로_내려온다() {
+            Long postId = communityPostRepository.save(PAST_POST(user.getId())).getId();
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .when()
+                    .get(POST_API_URL + "/" + postId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getString("status")).isEqualTo("ENDED");
             });
         }
 

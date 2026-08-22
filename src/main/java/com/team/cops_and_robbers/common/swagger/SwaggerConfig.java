@@ -30,8 +30,31 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.20.0")
+                .version("2.21.0")
                 .description("""
+                        ## v2.21.0 업데이트 내역
+
+                        ### ✨ 신규 — 커뮤니티 목록 정렬 · 검색
+                        - GET /api/community-posts sort=DEADLINE 지원 (모임 날짜 오름차순)
+                        - GET /api/community-posts sort=DISTANCE 지원 (사용자 좌표 기준 가까운 순)
+                          - latitude, longitude 필수. 없으면 400
+                          - 다른 정렬에서 좌표를 보내면 400 (조용히 무시되지 않도록)
+                          - POPULAR는 아직 400
+                        - GET /api/community-posts keyword 검색 추가
+                          - 제목 · 장소명(placeName) · 지역(region)에서 찾는다 (대소문자 무시)
+                          - 화면에 보이는 글자로 찾을 수 있게 셋을 함께 본다. 지번 주소는 복사용이라 제외
+                          - 공백 제외 2자 이상. 미만이면 400(INVALID_QUERY_PARAMETER), 공백만 보내면 전체 조회
+                        - 커서에 국가·정렬·검색어가 담긴다. 하나라도 요청과 다르면 400
+                          - 거리 기준 좌표는 담지 않는다. 이동해도 커서가 막히지 않게 하기 위함
+
+                        ### 🛠 변경
+                        - 마감된 게시글은 정렬과 무관하게 목록 맨 뒤로
+                          - 작성자가 마감(COMPLETED)했거나 모임 날짜가 지난(ENDED) 글
+                        - 모임 날짜가 지난 게시글의 status를 ENDED로 내려줌
+                          - RECRUITING / COMPLETED / ENDED (ENDED 신규)
+                          - 저장하지 않고 조회 시점에 판정한다
+                        - 게시글 좌표를 PostGIS Point로 저장 (응답의 latitude/longitude는 그대로)
+
                         ## v2.20.0 업데이트 내역
 
                         ### ⚠️ 주의 (클라이언트 대응 필요)

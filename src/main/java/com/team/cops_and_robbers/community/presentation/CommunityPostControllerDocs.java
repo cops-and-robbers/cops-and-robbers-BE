@@ -72,17 +72,24 @@ public interface CommunityPostControllerDocs {
             codes = {"UNSUPPORTED_LIST_SCOPE", "UNSUPPORTED_LIST_SORT", "COUNTRY_NOT_SPECIFIED", "ADDRESS_LOOKUP_FAILED"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 커서 / 사이즈 범위 초과 / 미지원 파라미터")
+            @ApiResponse(responseCode = "400",
+                    description = "잘못된 커서 / 사이즈 범위 초과 / 미지원 파라미터 / 검색어 2자 미만 / 거리순 좌표 누락")
     })
     ResponseEntity<CommunityPostListResponse> getPostList(
-            @Parameter(description = "이전 응답의 nextCursor 값 (첫 페이지는 생략)") @RequestParam(required = false) String cursor,
+            @Parameter(description = "이전 응답의 nextCursor 값 (첫 페이지는 생략). 국가·정렬·검색어가 받았을 때와 다르면 400") @RequestParam(required = false) String cursor,
             @Parameter(description = "페이지 크기 (1~100)", example = "10") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "조회 범위. 현재는 ALL만 지원하며 NEARBY, MINE은 400", example = "ALL")
             @RequestParam(defaultValue = "ALL") CommunityPostScope scope,
-            @Parameter(description = "정렬 기준. 현재는 LATEST만 지원하며 POPULAR, DISTANCE, DEADLINE은 400", example = "LATEST")
+            @Parameter(description = "정렬 기준. LATEST, DEADLINE, DISTANCE 지원. POPULAR는 400. 마감된 글은 정렬과 무관하게 맨 뒤", example = "LATEST")
             @RequestParam(defaultValue = "LATEST") CommunityPostSort sort,
             @Parameter(description = "조회할 국가 코드(ISO 3166-1 alpha-2). 필수", example = "KR")
-            @RequestParam String countryCode
+            @RequestParam String countryCode,
+            @Parameter(description = "사용자 위도. sort=DISTANCE 일 때만 필수이고, 그 외 정렬에서 보내면 400")
+            @RequestParam(required = false) Double latitude,
+            @Parameter(description = "사용자 경도. sort=DISTANCE 일 때만 필수이고, 그 외 정렬에서 보내면 400")
+            @RequestParam(required = false) Double longitude,
+            @Parameter(description = "검색어. 제목·장소명·지역에서 찾는다 (대소문자 무시). 공백 제외 2자 이상이어야 하며 미만이면 400, 공백만 보내면 전체 조회", example = "서울")
+            @RequestParam(required = false) String keyword
     );
 
     @SecurityRequirements
