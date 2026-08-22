@@ -177,11 +177,20 @@ class CommunityChatServiceTest extends ServiceUnitTest {
         void 초대_정보는_서버가_JSON으로_직렬화해_저장한다() {
             givenChatMember();
 
-            communityChatService.send(inviteCommand(new CommunityChatGameInviteData(NICKNAME, "ABC123")));
+            communityChatService.send(inviteCommand(new CommunityChatGameInviteData("ABC123")));
 
-            assertThat(captureSavedMessage().getMessage())
-                    .contains("\"inviteCode\":\"ABC123\"")
-                    .contains("\"inviterNickname\":\"%s\"".formatted(NICKNAME));
+            CommunityChatMessage saved = captureSavedMessage();
+            assertThat(saved.getMessage()).contains("\"inviteCode\":\"ABC123\"");
+            assertThat(saved.getSenderNickname()).isEqualTo(NICKNAME);
+        }
+
+        @Test
+        void 초대_본문에는_닉네임이_저장되지_않아_위장할_수_없다() {
+            givenChatMember();
+
+            communityChatService.send(inviteCommand(new CommunityChatGameInviteData("ABC123")));
+
+            assertThat(captureSavedMessage().getMessage()).doesNotContain("inviterNickname");
         }
 
         @Test
@@ -194,15 +203,7 @@ class CommunityChatServiceTest extends ServiceUnitTest {
         @Test
         void 초대_코드가_비어있으면_전송할_수_없다() {
             assertThatThrownBy(() ->
-                    communityChatService.send(inviteCommand(new CommunityChatGameInviteData(NICKNAME, "  "))))
-                    .isInstanceOf(ApplicationException.class)
-                    .hasMessageContaining(CommunityChatException.INVALID_GAME_INVITE.getDetail());
-        }
-
-        @Test
-        void 초대자_닉네임이_없으면_전송할_수_없다() {
-            assertThatThrownBy(() ->
-                    communityChatService.send(inviteCommand(new CommunityChatGameInviteData(null, "ABC123"))))
+                    communityChatService.send(inviteCommand(new CommunityChatGameInviteData("  "))))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityChatException.INVALID_GAME_INVITE.getDetail());
         }

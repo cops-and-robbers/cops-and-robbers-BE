@@ -117,16 +117,15 @@ class CommunityChatE2ETest extends WebSocketE2ETest {
                 new CommunityChatRequest(
                         "key-1",
                         null,
-                        new CommunityChatGameInviteData(author.getNickname(), "ABC123"),
+                        new CommunityChatGameInviteData("ABC123"),
                         CommunityChatMessageType.GAME_INVITE)
         );
 
         CommunityChatPayload received = setup.authorClient().waitForMessage(setup.chatChannel(), 5);
 
         assertThat(received.messageType()).isEqualTo(CommunityChatMessageType.GAME_INVITE);
-        assertThat(received.message())
-                .contains("\"inviteCode\":\"ABC123\"")
-                .contains("\"inviterNickname\":\"%s\"".formatted(author.getNickname()));
+        assertThat(received.message()).contains("\"inviteCode\":\"ABC123\"");
+        assertThat(received.senderNickname()).isEqualTo(author.getNickname());
     }
 
     @Test
@@ -139,7 +138,7 @@ class CommunityChatE2ETest extends WebSocketE2ETest {
                 new CommunityChatRequest(
                         "key-1",
                         null,
-                        new CommunityChatGameInviteData(author.getNickname(), null),
+                        new CommunityChatGameInviteData(null),
                         CommunityChatMessageType.GAME_INVITE)
         );
 

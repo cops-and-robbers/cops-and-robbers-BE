@@ -138,9 +138,7 @@ public class CommunityChatService {
     }
 
     private CommunityChatGameInviteData validatedInvite(CommunityChatGameInviteData invite) {
-        if (invite == null
-                || !StringUtils.hasText(invite.inviteCode())
-                || !StringUtils.hasText(invite.inviterNickname())) {
+        if (invite == null || !StringUtils.hasText(invite.inviteCode())) {
             throw new ApplicationException(CommunityChatException.INVALID_GAME_INVITE);
         }
         return invite;
