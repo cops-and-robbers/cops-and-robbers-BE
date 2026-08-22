@@ -30,8 +30,33 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.19.0")
+                .version("2.20.0")
                 .description("""
+                        ## v2.20.0 업데이트 내역
+
+                        ### ⚠️ 주의 (클라이언트 대응 필요)
+                        - 소켓 접속 주소를 /connection 으로 변경
+                          - 기존 /game-connection 도 계속 동작한다 (별칭 유지)
+                          - 게임용과 커뮤니티용 소켓을 따로 열지 말고 하나로 함께 쓴다
+                        - 게임 초대 메시지 전송 형식이 문자열에서 객체로 변경
+                          - message에 JSON 문자열을 넣던 방식 → gameInvite 객체로 전달
+                          - gameInvite에 inviterNickname은 없다. 초대자는 발신자와 같으므로 senderNickname을 쓴다
+
+                        ### ✨ 신규 — 커뮤니티 채팅 (모집 게시글 단톡방)
+                        - POST /api/community-posts/{postId}/chat/join — 채팅방 참여
+                          - 모집 중인 게시글에만 참여할 수 있고, 정원과 참여 방 수(100개) 상한이 있다
+                        - DELETE /api/community-posts/{postId}/chat/leave — 채팅방 나가기
+                          - 작성자는 나갈 수 없다. 나가면 대화 내역을 볼 수 없다
+                        - GET /api/community-posts/{postId}/chat/messages — 채팅 내역 조회 (커서 페이지네이션)
+                        - GET /api/community-posts/chat/rooms — 내 채팅방 목록 (최근 대화순)
+                        - 실시간 송수신은 STOMP로 한다
+                          - 구독 /subscribe/community/{postId}/chat, 전송 /publish/community/{postId}/chat
+                          - 멤버가 아니면 구독이 거부된다
+                        - 메시지 타입은 TEXT / SYSTEM / GAME_INVITE 세 가지
+                          - SYSTEM은 서버 전용이라 클라이언트가 보낼 수 없다
+                          - SYSTEM·GAME_INVITE 본문에는 닉네임을 넣지 않는다. 화면 문구는 senderNickname으로 조립한다
+                        - 게시글을 만들면 작성자가 채팅방 멤버로 자동 등록되고, 게시글을 지우면 대화 내역도 함께 지워진다
+
                         ## v2.19.0 업데이트 내역
 
                         ### ✨ 신규

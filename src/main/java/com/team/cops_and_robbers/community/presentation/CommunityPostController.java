@@ -17,8 +17,8 @@ import com.team.cops_and_robbers.community.presentation.dto.request.CommunityPos
 import com.team.cops_and_robbers.community.presentation.dto.request.CommunityPostUpdateRequest;
 import com.team.cops_and_robbers.community.presentation.dto.response.AddressResponse;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityPostListResponse;
-import com.team.cops_and_robbers.community.presentation.dto.response.CountryResponse;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityPostResponse;
+import com.team.cops_and_robbers.community.presentation.dto.response.CountryResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.community.presentation.dto.response;
 
 import com.team.cops_and_robbers.community.application.dto.result.CommunityPostCursorResult;
 import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.util.List;
 
 public record CommunityPostListResponse(

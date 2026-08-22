@@ -2,10 +2,10 @@ package com.team.cops_and_robbers.auth.application;
 
 import com.team.cops_and_robbers.auth.application.dto.command.AdminLoginCommand;
 import com.team.cops_and_robbers.auth.application.dto.command.LoginCommand;
-import com.team.cops_and_robbers.auth.domain.NicknameLanguage;
 import com.team.cops_and_robbers.auth.application.dto.result.AdminLoginResult;
 import com.team.cops_and_robbers.auth.application.dto.result.LoginResult;
 import com.team.cops_and_robbers.auth.application.event.UserFcmTokenUpdatedEvent;
+import com.team.cops_and_robbers.auth.domain.NicknameLanguage;
 import com.team.cops_and_robbers.auth.domain.Tokens;
 import com.team.cops_and_robbers.auth.exception.AuthException;
 import com.team.cops_and_robbers.auth.infrastructure.social.strategy.SocialLoginStrategy;
@@ -34,7 +34,11 @@ import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class AuthServiceTest extends ServiceUnitTest {
 

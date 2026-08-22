@@ -10,24 +10,28 @@ import com.team.cops_and_robbers.community.application.dto.command.CommunityPost
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostUpdateCommand;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityPostCursorResult;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityPostResult;
+import com.team.cops_and_robbers.community.domain.CommunityChatMember;
 import com.team.cops_and_robbers.community.domain.CommunityPost;
 import com.team.cops_and_robbers.community.domain.PostAddress;
 import com.team.cops_and_robbers.community.exception.CommunityPostException;
 import com.team.cops_and_robbers.community.infrastructure.GeocodingClient;
 import com.team.cops_and_robbers.community.infrastructure.GeocodingResult;
+import com.team.cops_and_robbers.community.repository.CommunityChatMemberRepository;
+import com.team.cops_and_robbers.community.repository.CommunityChatMessageRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.repository.UserRepository;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +39,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommunityPostService {
 
     private final CommunityPostRepository communityPostRepository;
+    private final CommunityChatMemberRepository communityChatMemberRepository;
+    private final CommunityChatMessageRepository communityChatMessageRepository;
     private final UserRepository userRepository;
     private final GeocodingClient geocodingClient;
 
@@ -45,6 +51,7 @@ public class CommunityPostService {
 
         User writer = userRepository.getByUserId(command.writerId());
         CommunityPost post = communityPostRepository.save(CommunityPost.createPost(command, postAddress));
+        communityChatMemberRepository.save(CommunityChatMember.createMember(post.getId(), command.writerId()));
         return CommunityPostResult.from(post, writer.getNickname());
     }
 
@@ -80,10 +87,16 @@ public class CommunityPostService {
         return CommunityPostResult.from(post, findWriterNickname(post.getWriterId()));
     }
 
+    /**
+     * 채팅 데이터를 지우는 동안 참여 요청이 끼어들면 게시글 없는 멤버 행이 남는다.
+     * 참여와 같은 게시글 행 락을 잡아 두 흐름이 겹치지 않게 한다.
+     */
     @Transactional
     public void deletePost(CommunityPostDeleteCommand command) {
-        CommunityPost post = communityPostRepository.getByPostId(command.postId());
+        CommunityPost post = communityPostRepository.getByPostIdForUpdate(command.postId());
         validateAuthor(post, command.writerId());
+        communityChatMessageRepository.deleteAllByCommunityPostId(command.postId());
+        communityChatMemberRepository.deleteAllByCommunityPostId(command.postId());
         communityPostRepository.deleteByPostId(command.postId());
     }
 

@@ -1,4 +1,6 @@
 TRUNCATE TABLE
+    community_chat_messages,
+    community_chat_members,
     community_posts,
     notices,
     reports,

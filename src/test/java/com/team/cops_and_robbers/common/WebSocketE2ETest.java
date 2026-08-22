@@ -29,7 +29,11 @@ public abstract class WebSocketE2ETest extends ControllerTest {
     }
 
     protected StompTestClient connect(String token) throws Exception {
-        StompTestClient client = new StompTestClient(stompClient, port, token);
+        return connect(token, StompTestClient.SOCKET_PATH);
+    }
+
+    protected StompTestClient connect(String token, String socketPath) throws Exception {
+        StompTestClient client = new StompTestClient(stompClient, port, token, socketPath);
         clients.add(client);
         return client;
     }

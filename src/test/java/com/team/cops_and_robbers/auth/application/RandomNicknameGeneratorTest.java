@@ -4,7 +4,6 @@ import com.team.cops_and_robbers.auth.domain.NicknameLanguage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 @DisplayName("랜덤 닉네임 생성기")

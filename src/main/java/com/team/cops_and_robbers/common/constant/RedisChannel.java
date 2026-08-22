@@ -18,7 +18,9 @@ public enum RedisChannel {
     LOCATION_ROBBER("game:%s:location:robber"),
 
     PING_POLICE("game:%s:ping:police"),
-    PING_ROBBER("game:%s:ping:robber");
+    PING_ROBBER("game:%s:ping:robber"),
+
+    COMMUNITY_CHAT("community:%s:chat");
 
     private final String format;
 
@@ -26,7 +28,10 @@ public enum RedisChannel {
         return String.format(format, "*");
     }
 
-    public String getTopic(Long gameId) {
-        return String.format(format, gameId);
+    /**
+     * 게임 채널은 gameId, 커뮤니티 채널은 postId를 받는다.
+     */
+    public String getTopic(Long id) {
+        return String.format(format, id);
     }
 }

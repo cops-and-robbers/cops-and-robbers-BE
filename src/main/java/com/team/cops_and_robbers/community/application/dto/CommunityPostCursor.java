@@ -2,13 +2,14 @@ package com.team.cops_and_robbers.community.application.dto;
 
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.exception.CommonException;
+import org.springframework.util.StringUtils;
+
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Optional;
-import org.springframework.util.StringUtils;
 
 public record CommunityPostCursor(
         LocalDateTime createdAt,
