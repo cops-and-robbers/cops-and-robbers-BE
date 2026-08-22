@@ -12,6 +12,9 @@ import com.team.cops_and_robbers.common.fcm.FcmService;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.common.fixture.UserDeviceFixture;
 import com.team.cops_and_robbers.common.fixture.UserFixture;
+import com.team.cops_and_robbers.community.domain.PostAddress;
+import com.team.cops_and_robbers.community.infrastructure.GeocodingClient;
+import com.team.cops_and_robbers.community.infrastructure.GeocodingResult;
 import com.team.cops_and_robbers.community.repository.CommunityChatMemberRepository;
 import com.team.cops_and_robbers.community.repository.CommunityChatMessageRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
@@ -42,6 +45,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 
 import static io.restassured.RestAssured.given;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 
 @Sql(scripts = "/truncate.sql")
 @ActiveProfiles("test")
@@ -65,6 +70,9 @@ public abstract class ControllerTest {
 
     @MockitoBean
     protected GameFcmNotifier gameFcmNotifier;
+
+    @MockitoBean
+    protected GeocodingClient geocodingClient;
 
     @Autowired
     protected UserRepository userRepository;
@@ -115,6 +123,11 @@ public abstract class ControllerTest {
     void setUp() {
         RestAssured.port = port;
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+        doReturn(GeocodingResult.resolved(PostAddress.of(
+                "서울특별시 광진구 화양동 1-20", "서울특별시 광진구 능동로 216", null,
+                "서울특별시 광진구 화양동", "KR")))
+                .when(geocodingClient)
+                .reverseGeocode(any(), any());
     }
 
     protected String givenAccessToken(User user) {

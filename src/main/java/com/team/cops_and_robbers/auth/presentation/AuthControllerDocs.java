@@ -23,7 +23,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface AuthControllerDocs {
 
     @Operation(summary = "소셜 로그인",
-            description = "소셜 로그인을 통해 서비스에 로그인합니다. 신규 회원인 경우 자동으로 회원가입이 진행되며, Access Token과 Refresh Token이 발급됩니다."
+            description = "소셜 로그인을 통해 서비스에 로그인합니다. 신규 회원인 경우 자동으로 회원가입이 진행되며, Access Token과 Refresh Token이 발급됩니다.\n\n"
+                    + "**신규 회원의 닉네임은 Accept-Language 헤더의 언어로 생성됩니다.**\n"
+                    + "- `ko` → 재빠른고양이3721\n"
+                    + "- `ja` → すばやいネコ3721\n"
+                    + "- `en` → SpeedyCat3721\n"
+                    + "- 헤더가 없거나 지원하지 않는 언어면 한국어로 생성됩니다.\n\n"
+                    + "대부분의 HTTP 클라이언트가 기기 설정으로 이 헤더를 자동으로 붙입니다. "
+                    + "직접 지정하려면 요청에 `Accept-Language: ja-JP` 형태로 실어 보내세요."
     )
     @ApiErrorCode(value = AuthException.class, codes = {"INVALID_FIREBASE_TOKEN", "EXPIRED_FIREBASE_TOKEN"})
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
@@ -36,7 +43,7 @@ public interface AuthControllerDocs {
                                     value = """
                                             {
                                                 "userId": 1,
-                                                "nickname": "민첩한괴도5308",
+                                                "nickname": "재빠른고양이3721",
                                                 "tokens": {
                                                     "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzY4NDk1MDA1LCJleHAiOjE3Njg0OTg2MDV9...",
                                                     "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzY4NDk1MDA1LCJleHAiOjE3Njk3MDQ2MDV9..."

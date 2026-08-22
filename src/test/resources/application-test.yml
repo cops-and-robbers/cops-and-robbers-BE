@@ -42,7 +42,14 @@ firebase:
 encryption:
   secret-key: "ZYmgBIo7U4s58oc+qDmA+MTg04gBlkOMNmjgl1wlw9A="
 
+geocoding:
+  vworld:
+    api-key: "dummy-vworld-key"
+  geoapify:
+    api-key: "dummy-geoapify-key"
+
 discord:
   webhook:
-    bug: "https://discord.com/api/webhooks/dummy"
+    bug: ""
+    alert: ""
 

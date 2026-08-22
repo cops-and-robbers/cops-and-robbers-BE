@@ -19,6 +19,7 @@ import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.domain.UserDevice;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -113,6 +114,78 @@ class AuthControllerTest extends ControllerTest {
                 softly.assertThat(response.title()).isEqualTo(CommonException.INVALID_INPUT_VALUE.getTitle());
                 softly.assertThat(response.detail()).contains("idToken");
             });
+        }
+    }
+
+    @Nested
+    @DisplayName("회원가입 시 닉네임 언어")
+    class SignUpNicknameLanguage {
+
+        @Test
+        void 일본어_요청이면_일본어_닉네임을_발급한다() {
+            String nickname = signUpWith("ja-JP", "social_ja");
+
+            assertSoftly(softly -> {
+                softly.assertThat(nickname).matches("[\\p{IsHiragana}\\p{IsKatakana}ー]+\\d{4}");
+            });
+        }
+
+        @Test
+        void 한국어_요청이면_한국어_닉네임을_발급한다() {
+            String nickname = signUpWith("ko-KR", "social_ko");
+
+            assertSoftly(softly -> {
+                softly.assertThat(nickname).matches("[가-힣]+\\d{4}");
+            });
+        }
+
+        @Test
+        void 영어_요청이면_영어_닉네임을_발급한다() {
+            String nickname = signUpWith("en-US", "social_en");
+
+            assertSoftly(softly -> {
+                softly.assertThat(nickname).matches("[A-Za-z]+\\d{4}");
+            });
+        }
+
+        @Test
+        void 지원하지_않는_언어면_한국어_닉네임을_발급한다() {
+            String nickname = signUpWith("fr-FR", "social_fr");
+
+            assertSoftly(softly -> {
+                softly.assertThat(nickname).matches("[가-힣]+\\d{4}");
+            });
+        }
+
+        @Test
+        void 헤더가_없으면_한국어_닉네임을_발급한다() {
+            String nickname = signUpWith(null, "social_none");
+
+            assertSoftly(softly -> {
+                softly.assertThat(nickname).matches("[가-힣]+\\d{4}");
+            });
+        }
+
+        private String signUpWith(String acceptLanguage, String socialId) {
+            doReturn(socialId).when(googleLoginStrategy).validateAndGetSocialId(anyString());
+
+            LoginRequest request = new LoginRequest(
+                    SocialType.GOOGLE, "valid_token", "fcm_token", DeviceType.IOS, socialId);
+
+            RequestSpecification spec = unauthenticated().body(request);
+            if (acceptLanguage != null) {
+                spec = spec.header("Accept-Language", acceptLanguage);
+            }
+
+            Long userId = spec
+                    .when()
+                    .post("/api/auth/login")
+                    .then()
+                    .extract()
+                    .as(LoginResponse.class)
+                    .userId();
+
+            return userRepository.getByUserId(userId).getNickname();
         }
     }
 

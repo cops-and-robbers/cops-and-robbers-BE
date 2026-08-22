@@ -1,4 +1,7 @@
 spring:
+  web:
+    # Accept-Language 헤더가 없을 때의 기본값. 지정하지 않으면 JVM 기본 로캘로 떨어진다.
+    locale: ko
   application:
     name: cops-and-robbers
 
@@ -15,6 +18,13 @@ spring:
     out-of-order: false
     validate-on-migrate: true
     encoding: UTF-8
+
+  http:
+    client:
+      # read-timeout이 연결까지 포함한 요청 전체를 덮으므로 connect-timeout은 그 이하일 때만 의미가 있다.
+      # dev 실측: Geoapify 웜 1.3초 콜드 3.3초, VWorld 웜 0.2초.
+      connect-timeout: 5s
+      read-timeout: 5s
 
 jwt:
   access:
@@ -34,9 +44,16 @@ springdoc:
 encryption:
   secret-key: ${ENCRYPTION_KEY}
 
+geocoding:
+  vworld:
+    api-key: ${VWORLD_API_KEY:}
+  geoapify:
+    api-key: ${GEOAPIFY_API_KEY:}
+
 discord:
   webhook:
     bug: ${DISCORD_WEBHOOK_BUG}
+    alert: ${DISCORD_WEBHOOK_ALERT:}
 
 server:
   shutdown: graceful

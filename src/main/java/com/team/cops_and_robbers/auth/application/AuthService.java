@@ -6,6 +6,7 @@ import com.team.cops_and_robbers.auth.application.dto.command.LoginCommand;
 import com.team.cops_and_robbers.auth.application.dto.result.AdminLoginResult;
 import com.team.cops_and_robbers.auth.application.dto.result.LoginResult;
 import com.team.cops_and_robbers.auth.application.event.UserFcmTokenUpdatedEvent;
+import com.team.cops_and_robbers.auth.domain.NicknameLanguage;
 import com.team.cops_and_robbers.auth.domain.Tokens;
 import com.team.cops_and_robbers.auth.exception.AuthException;
 import com.team.cops_and_robbers.auth.infrastructure.jwt.JwtTokenProvider;
@@ -20,6 +21,7 @@ import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -110,10 +112,12 @@ public class AuthService {
     }
 
     private String generateUniqueNickname() {
+        NicknameLanguage language = NicknameLanguage.from(LocaleContextHolder.getLocale().getLanguage());
+
         int retryCount = 0;
         String nickname;
         do {
-            nickname = randomNicknameGenerator.generate();
+            nickname = randomNicknameGenerator.generate(language);
             retryCount++;
             if (retryCount > MAXIMUM_NICKNAME_GENERATE_RETRY_COUNT) {
                 log.warn("[SignUp] 닉네임 생성 재시도 횟수 초과");

@@ -4,12 +4,16 @@
     <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
     <property name="LOG_PATH" value="/log"/>
 
-    <!-- dev 환경: 콘솔만 -->
+    <!-- dev 환경: 파일 + 콘솔. 배포마다 컨테이너가 새로 떠서 docker logs가 사라지므로 파일로도 남긴다 -->
     <springProfile name="dev">
+        <include resource="logback/file/app-appender.xml"/>
+        <include resource="logback/file/error-appender.xml"/>
         <include resource="logback/console/app-console.xml"/>
         <include resource="logback/console/error-console.xml"/>
 
         <root level="INFO">
+            <appender-ref ref="FILE_APP"/>
+            <appender-ref ref="FILE_ERROR"/>
             <appender-ref ref="APP_CONSOLE"/>
             <appender-ref ref="ERROR_CONSOLE"/>
         </root>

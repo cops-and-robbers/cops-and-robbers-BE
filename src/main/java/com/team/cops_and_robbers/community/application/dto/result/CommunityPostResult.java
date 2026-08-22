@@ -7,6 +7,7 @@ import com.team.cops_and_robbers.community.domain.RecruitmentStatus;
 public record CommunityPostResult(
         Long id,
         Long writerId,
+        String writerNickname,
         String title,
         String content,
         String meetingAt,
@@ -18,18 +19,29 @@ public record CommunityPostResult(
 ) {
     public record LocationResult(
             Double latitude,
-            Double longitude
+            Double longitude,
+            String region,
+            String address,
+            String placeName,
+            String countryCode
     ) {
     }
 
-    public static CommunityPostResult from(CommunityPost post) {
+    public static CommunityPostResult from(CommunityPost post, String writerNickname) {
         return new CommunityPostResult(
                 post.getId(),
                 post.getWriterId(),
+                writerNickname,
                 post.getTitle(),
                 post.getContent(),
                 TimestampUtil.toIsoString(post.getMeetingAt()),
-                new LocationResult(post.getLatitude(), post.getLongitude()),
+                new LocationResult(
+                        post.getLatitude(),
+                        post.getLongitude(),
+                        post.getRegion(),
+                        post.getAddress(),
+                        post.getPlaceName(),
+                        post.getCountryCode()),
                 post.getMaxParticipants(),
                 post.getStatus(),
                 TimestampUtil.toIsoString(post.getCreatedAt()),
