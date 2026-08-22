@@ -49,10 +49,10 @@ public class CommunityPostRepositoryCustomImpl implements CommunityPostRepositor
         if (!StringUtils.hasText(keyword)) {
             return null;
         }
-        String trimmed = keyword.trim();
-        return communityPost.title.containsIgnoreCase(trimmed)
-                .or(communityPost.placeName.containsIgnoreCase(trimmed))
-                .or(communityPost.region.containsIgnoreCase(trimmed));
+        String normalized = keyword.replaceAll("\\s+", "");
+        return communityPost.title.containsIgnoreCase(normalized)
+                .or(communityPost.placeName.containsIgnoreCase(normalized))
+                .or(communityPost.region.containsIgnoreCase(normalized));
     }
 
     /** {@link CommunityPost#isClosed()}와 같은 규칙이다. */
@@ -94,8 +94,9 @@ public class CommunityPostRepositoryCustomImpl implements CommunityPostRepositor
         if (cursor == null) {
             return null;
         }
-        return closedRank.gt(cursor.closed())
-                .or(closedRank.eq(cursor.closed()).and(afterSortKey(distance, sort, cursor)));
+        int cursorClosedRank = cursor.isClosed() ? 1 : 0;
+        return closedRank.gt(cursorClosedRank)
+                .or(closedRank.eq(cursorClosedRank).and(afterSortKey(distance, sort, cursor)));
     }
 
     private BooleanExpression afterSortKey(

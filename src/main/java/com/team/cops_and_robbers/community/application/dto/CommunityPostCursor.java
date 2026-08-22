@@ -20,7 +20,7 @@ public record CommunityPostCursor(
         String countryCode,
         CommunityPostSort sort,
         int keywordHash,
-        int closed,
+        boolean isClosed,
         String sortKey,
         Long id
 ) {
@@ -28,9 +28,9 @@ public record CommunityPostCursor(
     private static final int PART_COUNT = 6;
 
     public static String encode(String countryCode, CommunityPostSort sort, String keyword,
-                                boolean closed, String sortKey, Long id) {
+                                boolean isClosed, String sortKey, Long id) {
         String raw = countryCode + "|" + sort.name() + "|" + keywordHash(keyword) + "|"
-                + (closed ? 1 : 0) + "|" + sortKey + "|" + id;
+                + (isClosed ? 1 : 0) + "|" + sortKey + "|" + id;
         return Base64.getUrlEncoder().withoutPadding()
                 .encodeToString(raw.getBytes(StandardCharsets.UTF_8));
     }
@@ -84,7 +84,7 @@ public record CommunityPostCursor(
                     parts[0],
                     CommunityPostSort.valueOf(parts[1]),
                     Integer.parseInt(parts[2]),
-                    Integer.parseInt(parts[3]),
+                    Integer.parseInt(parts[3]) == 1,
                     parts[4],
                     Long.parseLong(parts[5]));
             validateSortKey(cursor);

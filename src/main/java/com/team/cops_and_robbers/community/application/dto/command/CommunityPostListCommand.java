@@ -48,7 +48,6 @@ public record CommunityPostListCommand(
         }
     }
 
-    /** 좌표는 거리순에만 쓴다. 다른 정렬에서 받으면 조용히 무시되므로 거절한다. */
     private static void validateCoordinates(CommunityPostSort sort, Double latitude, Double longitude) {
         boolean given = latitude != null || longitude != null;
         if (sort == CommunityPostSort.DISTANCE && (latitude == null || longitude == null)) {

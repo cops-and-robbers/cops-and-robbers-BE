@@ -26,7 +26,7 @@ class CommunityPostCursorTest {
 
         assertThat(decoded.countryCode()).isEqualTo("KR");
         assertThat(decoded.sort()).isEqualTo(CommunityPostSort.LATEST);
-        assertThat(decoded.closed()).isEqualTo(1);
+        assertThat(decoded.isClosed()).isTrue();
         assertThat(decoded.sortAt()).isEqualTo(createdAt);
         assertThat(decoded.id()).isEqualTo(42L);
     }
