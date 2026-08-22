@@ -16,6 +16,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.PrecisionModel;
 
 import java.time.LocalDateTime;
 
@@ -26,6 +30,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CommunityPost extends BaseTimeEntity {
+
+    private static final GeometryFactory GEOMETRY_FACTORY =
+            new GeometryFactory(new PrecisionModel(), 4326);
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,11 +50,8 @@ public class CommunityPost extends BaseTimeEntity {
     @Column(nullable = false)
     private LocalDateTime meetingAt;
 
-    @Column(nullable = false)
-    private Double latitude;
-
-    @Column(nullable = false)
-    private Double longitude;
+    @Column(columnDefinition = "GEOMETRY(POINT, 4326)", nullable = false)
+    private Point location;
 
     @Column(nullable = false)
     private Integer maxParticipants;
@@ -81,8 +85,7 @@ public class CommunityPost extends BaseTimeEntity {
                 .title(command.title())
                 .content(command.content())
                 .meetingAt(command.meetingAt())
-                .latitude(command.latitude())
-                .longitude(command.longitude())
+                .location(toPoint(command.latitude(), command.longitude()))
                 .maxParticipants(command.maxParticipants())
                 .placeName(command.placeName())
                 .address(postAddress.address())
@@ -97,8 +100,7 @@ public class CommunityPost extends BaseTimeEntity {
         this.title = command.title();
         this.content = command.content();
         this.meetingAt = command.meetingAt();
-        this.latitude = command.latitude();
-        this.longitude = command.longitude();
+        this.location = toPoint(command.latitude(), command.longitude());
         this.maxParticipants = command.maxParticipants();
         this.placeName = command.placeName();
         this.address = postAddress.address();
@@ -106,6 +108,18 @@ public class CommunityPost extends BaseTimeEntity {
         this.buildingName = postAddress.buildingName();
         this.region = postAddress.region();
         this.countryCode = postAddress.countryCode();
+    }
+
+    public Double getLatitude() {
+        return location.getY();
+    }
+
+    public Double getLongitude() {
+        return location.getX();
+    }
+
+    private static Point toPoint(Double latitude, Double longitude) {
+        return GEOMETRY_FACTORY.createPoint(new Coordinate(longitude, latitude));
     }
 
     public PostAddress getPostAddress() {

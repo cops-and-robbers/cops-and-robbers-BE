@@ -22,6 +22,7 @@ import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.COMP
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.PAST_COMPLETED_POST;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.PAST_POST;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST;
+import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST_AT;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST_MEETING_IN;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.mockito.ArgumentMatchers.any;
@@ -375,6 +376,102 @@ class CommunityPostControllerTest extends ControllerTest {
                 softly.assertThat(firstIds).hasSize(4);
                 softly.assertThat(secondIds).hasSize(2);
                 softly.assertThat(firstIds).doesNotContainAnyElementsOf(secondIds);
+            });
+        }
+
+        @Test
+        void 거리순은_보낸_좌표에서_가까운_순서로_조회한다() {
+            Long seoul = communityPostRepository.save(POST_AT(user.getId(), 37.5665, 126.9780)).getId();
+            Long busan = communityPostRepository.save(POST_AT(user.getId(), 35.1796, 129.0756)).getId();
+            Long daejeon = communityPostRepository.save(POST_AT(user.getId(), 36.3504, 127.3845)).getId();
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "DISTANCE")
+                    .queryParam("latitude", 37.5665)
+                    .queryParam("longitude", 126.9780)
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getList("content.id", Long.class))
+                        .containsExactly(seoul, daejeon, busan);
+            });
+        }
+
+        @Test
+        void 거리순_커서로_다음_페이지를_중복과_누락_없이_조회한다() {
+            for (int i = 0; i < 6; i++) {
+                communityPostRepository.save(POST_AT(user.getId(), 37.5 + i * 0.1, 127.0));
+            }
+
+            ExtractableResponse<Response> firstExtract = unauthenticated()
+                    .queryParam("size", 4)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "DISTANCE")
+                    .queryParam("latitude", 37.5)
+                    .queryParam("longitude", 127.0)
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+            String nextCursor = firstExtract.jsonPath().getString("cursor.nextCursor");
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 4)
+                    .queryParam("cursor", nextCursor)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "DISTANCE")
+                    .queryParam("latitude", 37.5)
+                    .queryParam("longitude", 127.0)
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            List<Long> firstIds = firstExtract.jsonPath().getList("content.id", Long.class);
+            List<Long> secondIds = extract.jsonPath().getList("content.id", Long.class);
+            assertSoftly(softly -> {
+                softly.assertThat(firstIds).hasSize(4);
+                softly.assertThat(secondIds).hasSize(2);
+                softly.assertThat(firstIds).doesNotContainAnyElementsOf(secondIds);
+            });
+        }
+
+        @Test
+        void 거리순인데_좌표가_없으면_400을_응답한다() {
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "DISTANCE")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
+        void 거리순이_아닌데_좌표를_보내면_400을_응답한다() {
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("latitude", 37.5665)
+                    .queryParam("longitude", 126.9780)
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
             });
         }
 

@@ -13,22 +13,25 @@ import org.springframework.util.StringUtils;
 
 /**
  * 마감 여부가 1차 정렬 기준이라 커서에도 담는다.
- * sortAt은 정렬 기준에 따라 createdAt이거나 meetingAt이며, 커서와 요청의 정렬이 다르면 거절한다.
+ * sortKey는 정렬에 따라 createdAt · meetingAt · 거리(m)이며, 커서와 요청의 정렬이 다르면 거절한다.
  */
 public record CommunityPostCursor(
         CommunityPostSort sort,
         int closed,
-        LocalDateTime sortAt,
+        String sortKey,
         Long id
 ) {
     private static final String DELIMITER = "\\|";
     private static final int PART_COUNT = 4;
 
-    public static String encode(CommunityPostSort sort, boolean closed, LocalDateTime sortAt, Long id) {
-        String raw = sort.name() + "|" + (closed ? 1 : 0) + "|"
-                + sortAt.truncatedTo(ChronoUnit.MICROS) + "|" + id;
+    public static String encode(CommunityPostSort sort, boolean closed, String sortKey, Long id) {
+        String raw = sort.name() + "|" + (closed ? 1 : 0) + "|" + sortKey + "|" + id;
         return Base64.getUrlEncoder().withoutPadding()
                 .encodeToString(raw.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public static String sortKeyOf(LocalDateTime sortAt) {
+        return sortAt.truncatedTo(ChronoUnit.MICROS).toString();
     }
 
     public static Optional<CommunityPostCursor> decode(String value, CommunityPostSort sort) {
@@ -41,6 +44,22 @@ public record CommunityPostCursor(
         return Optional.of(cursor);
     }
 
+    public LocalDateTime sortAt() {
+        return LocalDateTime.parse(sortKey);
+    }
+
+    public double distance() {
+        return Double.parseDouble(sortKey);
+    }
+
+    private static void validateSortKey(CommunityPostCursor cursor) {
+        if (cursor.sort() == CommunityPostSort.DISTANCE) {
+            cursor.distance();
+            return;
+        }
+        cursor.sortAt();
+    }
+
     private static Optional<CommunityPostCursor> parse(String value) {
         try {
             String[] parts = new String(Base64.getUrlDecoder().decode(value), StandardCharsets.UTF_8)
@@ -48,11 +67,13 @@ public record CommunityPostCursor(
             if (parts.length != PART_COUNT) {
                 return Optional.empty();
             }
-            return Optional.of(new CommunityPostCursor(
+            CommunityPostCursor cursor = new CommunityPostCursor(
                     CommunityPostSort.valueOf(parts[0]),
                     Integer.parseInt(parts[1]),
-                    LocalDateTime.parse(parts[2]),
-                    Long.parseLong(parts[3])));
+                    parts[2],
+                    Long.parseLong(parts[3]));
+            validateSortKey(cursor);
+            return Optional.of(cursor);
         } catch (IllegalArgumentException | DateTimeParseException e) {
             return Optional.empty();
         }

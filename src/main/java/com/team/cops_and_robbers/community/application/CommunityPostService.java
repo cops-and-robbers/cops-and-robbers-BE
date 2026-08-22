@@ -3,6 +3,8 @@ package com.team.cops_and_robbers.community.application;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.exception.InfrastructureException;
 import com.team.cops_and_robbers.community.application.dto.CommunityPostCursor;
+import com.team.cops_and_robbers.community.application.dto.CommunityPostSearchCondition;
+import com.team.cops_and_robbers.community.application.dto.CommunityPostRow;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostCreateCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostDeleteCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostListCommand;
@@ -57,16 +59,19 @@ public class CommunityPostService {
     public CommunityPostCursorResult getPostList(CommunityPostListCommand command) {
         String countryCode = command.countryCode().toUpperCase(Locale.ROOT);
 
-        List<CommunityPost> fetched = communityPostRepository.findPage(
-                countryCode, command.sort(),
+        CommunityPostSearchCondition condition = new CommunityPostSearchCondition(
+                countryCode, command.sort(), command.latitude(), command.longitude());
+        List<CommunityPostRow> fetched = communityPostRepository.findPage(
+                condition,
                 CommunityPostCursor.decode(command.cursor(), command.sort()).orElse(null),
                 command.size());
 
         boolean hasNext = fetched.size() > command.size();
-        List<CommunityPost> posts = hasNext ? fetched.subList(0, command.size()) : fetched;
+        List<CommunityPostRow> rows = hasNext ? fetched.subList(0, command.size()) : fetched;
+        List<CommunityPost> posts = rows.stream().map(CommunityPostRow::post).toList();
 
         return new CommunityPostCursorResult(
-                toResults(posts), resolveNextCursor(posts, hasNext, command.sort()), hasNext);
+                toResults(posts), resolveNextCursor(rows, hasNext, command.sort()), hasNext);
     }
 
 
@@ -155,13 +160,21 @@ public class CommunityPostService {
                 .toList();
     }
 
-    private String resolveNextCursor(List<CommunityPost> posts, boolean hasNext, CommunityPostSort sort) {
+    private String resolveNextCursor(List<CommunityPostRow> rows, boolean hasNext, CommunityPostSort sort) {
         if (!hasNext) {
             return null;
         }
-        CommunityPost last = posts.getLast();
-        LocalDateTime sortAt = sort == CommunityPostSort.DEADLINE ? last.getMeetingAt() : last.getCreatedAt();
-        return CommunityPostCursor.encode(sort, last.isClosed(), sortAt, last.getId());
+        CommunityPostRow last = rows.getLast();
+        CommunityPost post = last.post();
+        return CommunityPostCursor.encode(sort, post.isClosed(), sortKeyOf(last, sort), post.getId());
+    }
+
+    private String sortKeyOf(CommunityPostRow row, CommunityPostSort sort) {
+        return switch (sort) {
+            case DEADLINE -> CommunityPostCursor.sortKeyOf(row.post().getMeetingAt());
+            case DISTANCE -> String.valueOf(row.distance());
+            default -> CommunityPostCursor.sortKeyOf(row.post().getCreatedAt());
+        };
     }
 
     private Map<Long, String> findWriterNicknames(List<CommunityPost> posts) {

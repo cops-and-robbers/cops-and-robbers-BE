@@ -4,6 +4,8 @@ import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.exception.InfrastructureException;
 import com.team.cops_and_robbers.community.application.dto.CommunityPostCursor;
+import com.team.cops_and_robbers.community.application.dto.CommunityPostRow;
+import com.team.cops_and_robbers.community.application.dto.CommunityPostSearchCondition;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostCreateCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostDeleteCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostListCommand;
@@ -167,7 +169,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
 
         @Test
         void 커서가_없으면_첫_페이지와_다음_커서를_반환한다() {
-            given(communityPostRepository.findPage("KR", CommunityPostSort.LATEST, null, 10))
+            given(communityPostRepository.findPage(any(CommunityPostSearchCondition.class), eq(null), eq(10)))
                     .willReturn(postsOf(11));
             given(userRepository.findAllById(List.of(1L))).willReturn(List.of(userWithId(1L, "무서운경찰관")));
 
@@ -177,12 +179,12 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             assertThat(result.content()).hasSize(10);
             assertThat(result.hasNext()).isTrue();
             assertThat(result.nextCursor())
-                    .isEqualTo(CommunityPostCursor.encode(CommunityPostSort.LATEST, false, LocalDateTime.of(2026, 8, 1, 0, 0).plusHours(2), 2L));
+                    .isEqualTo(CommunityPostCursor.encode(CommunityPostSort.LATEST, false, CommunityPostCursor.sortKeyOf(LocalDateTime.of(2026, 8, 1, 0, 0).plusHours(2)), 2L));
         }
 
         @Test
         void 마지막_페이지면_hasNext가_false이고_커서가_null이다() {
-            given(communityPostRepository.findPage("KR", CommunityPostSort.LATEST, null, 10))
+            given(communityPostRepository.findPage(any(CommunityPostSearchCondition.class), eq(null), eq(10)))
                     .willReturn(postsOf(3));
             given(userRepository.findAllById(List.of(1L))).willReturn(List.of(userWithId(1L, "무서운경찰관")));
 
@@ -197,8 +199,8 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         @Test
         void 커서가_있으면_디코딩한_값으로_조회한다() {
             LocalDateTime cursorCreatedAt = LocalDateTime.of(2026, 8, 1, 5, 0);
-            String cursor = CommunityPostCursor.encode(CommunityPostSort.LATEST, false, cursorCreatedAt, 5L);
-            given(communityPostRepository.findPage(eq("KR"), eq(CommunityPostSort.LATEST), any(CommunityPostCursor.class), eq(10)))
+            String cursor = CommunityPostCursor.encode(CommunityPostSort.LATEST, false, CommunityPostCursor.sortKeyOf(cursorCreatedAt), 5L);
+            given(communityPostRepository.findPage(any(CommunityPostSearchCondition.class), any(CommunityPostCursor.class), eq(10)))
                     .willReturn(List.of());
 
             CommunityPostCursorResult result = communityPostService.getPostList(
@@ -214,8 +216,8 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             CommunityPost post2 = POST(999L, LocalDateTime.of(2026, 8, 1, 1, 0));
             setId(post1, 1L);
             setId(post2, 2L);
-            given(communityPostRepository.findPage("KR", CommunityPostSort.LATEST, null, 10))
-                    .willReturn(List.of(post1, post2));
+            given(communityPostRepository.findPage(any(CommunityPostSearchCondition.class), eq(null), eq(10)))
+                    .willReturn(List.of(new CommunityPostRow(post1, null), new CommunityPostRow(post2, null)));
             given(userRepository.findAllById(List.of(1L, 999L)))
                     .willReturn(List.of(userWithId(1L, "무서운경찰관")));
 
@@ -238,24 +240,25 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         @Test
         void 국가_코드가_없으면_COUNTRY_NOT_SPECIFIED_예외가_발생한다() {
             assertThatThrownBy(() -> new CommunityPostListCommand(
-                    null, 10, CommunityPostScope.ALL, CommunityPostSort.LATEST, null))
+                    null, 10, CommunityPostScope.ALL, CommunityPostSort.LATEST, null, null, null))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.COUNTRY_NOT_SPECIFIED.getDetail());
         }
 
 
         private CommunityPostListCommand listCommand(String cursor, int size) {
-            return new CommunityPostListCommand(cursor, size, CommunityPostScope.ALL, CommunityPostSort.LATEST, "KR");
+            return new CommunityPostListCommand(
+                    cursor, size, CommunityPostScope.ALL, CommunityPostSort.LATEST, "KR", null, null);
         }
 
-        private List<CommunityPost> postsOf(int count) {
-            List<CommunityPost> posts = new ArrayList<>();
+        private List<CommunityPostRow> postsOf(int count) {
+            List<CommunityPostRow> rows = new ArrayList<>();
             for (int i = count; i >= 1; i--) {
                 CommunityPost post = POST(1L, LocalDateTime.of(2026, 8, 1, 0, 0).plusHours(i));
                 setId(post, (long) i);
-                posts.add(post);
+                rows.add(new CommunityPostRow(post, null));
             }
-            return posts;
+            return rows;
         }
 
         private User userWithId(Long id, String nickname) {

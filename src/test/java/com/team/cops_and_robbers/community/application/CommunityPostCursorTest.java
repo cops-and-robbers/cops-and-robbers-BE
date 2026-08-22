@@ -21,7 +21,7 @@ class CommunityPostCursorTest {
     void 인코딩한_커서를_다시_디코딩하면_같은_값이_나온다() {
         LocalDateTime createdAt = LocalDateTime.of(2026, 8, 15, 12, 30, 45, 123456000);
 
-        String encoded = CommunityPostCursor.encode(CommunityPostSort.LATEST, true, createdAt, 42L);
+        String encoded = CommunityPostCursor.encode(CommunityPostSort.LATEST, true, CommunityPostCursor.sortKeyOf(createdAt), 42L);
         CommunityPostCursor decoded = CommunityPostCursor.decode(encoded, CommunityPostSort.LATEST).orElseThrow();
 
         assertThat(decoded.sort()).isEqualTo(CommunityPostSort.LATEST);
@@ -33,7 +33,7 @@ class CommunityPostCursorTest {
     @Test
     void 정렬이_다른_커서는_INVALID_QUERY_PARAMETER_예외가_발생한다() {
         String latestCursor = CommunityPostCursor.encode(
-                CommunityPostSort.LATEST, false, LocalDateTime.of(2026, 8, 15, 12, 0), 1L);
+                CommunityPostSort.LATEST, false, CommunityPostCursor.sortKeyOf(LocalDateTime.of(2026, 8, 15, 12, 0)), 1L);
 
         assertThatThrownBy(() -> CommunityPostCursor.decode(latestCursor, CommunityPostSort.DEADLINE))
                 .isInstanceOf(ApplicationException.class)

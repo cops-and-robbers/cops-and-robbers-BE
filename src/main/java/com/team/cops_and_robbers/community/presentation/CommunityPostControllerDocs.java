@@ -79,10 +79,14 @@ public interface CommunityPostControllerDocs {
             @Parameter(description = "페이지 크기 (1~100)", example = "10") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "조회 범위. 현재는 ALL만 지원하며 NEARBY, MINE은 400", example = "ALL")
             @RequestParam(defaultValue = "ALL") CommunityPostScope scope,
-            @Parameter(description = "정렬 기준. LATEST, DEADLINE 지원. POPULAR, DISTANCE는 400. 마감된 글은 정렬과 무관하게 맨 뒤", example = "LATEST")
+            @Parameter(description = "정렬 기준. LATEST, DEADLINE, DISTANCE 지원. POPULAR는 400. 마감된 글은 정렬과 무관하게 맨 뒤", example = "LATEST")
             @RequestParam(defaultValue = "LATEST") CommunityPostSort sort,
             @Parameter(description = "조회할 국가 코드(ISO 3166-1 alpha-2). 필수", example = "KR")
-            @RequestParam String countryCode
+            @RequestParam String countryCode,
+            @Parameter(description = "사용자 위도. sort=DISTANCE 일 때만 필수이고, 그 외 정렬에서 보내면 400")
+            @RequestParam(required = false) Double latitude,
+            @Parameter(description = "사용자 경도. sort=DISTANCE 일 때만 필수이고, 그 외 정렬에서 보내면 400")
+            @RequestParam(required = false) Double longitude
     );
 
     @SecurityRequirements

@@ -59,8 +59,11 @@ public class SwaggerConfig {
 
                         ### ✨ 신규 — 커뮤니티 목록 정렬
                         - GET /api/community-posts sort=DEADLINE 지원 (모임 날짜 오름차순)
-                          - POPULAR, DISTANCE는 아직 400
-                          - 커서에 정렬 종류가 담기므로 받은 정렬과 다른 sort로 보내면 400
+                        - GET /api/community-posts sort=DISTANCE 지원 (사용자 좌표 기준 가까운 순)
+                          - latitude, longitude 필수. 없으면 400
+                          - 다른 정렬에서 좌표를 보내면 400 (조용히 무시되지 않도록)
+                          - POPULAR는 아직 400
+                        - 커서에 정렬 종류가 담기므로 받은 정렬과 다른 sort로 보내면 400
 
                         ### 🛠 변경
                         - 마감된 게시글은 정렬과 무관하게 목록 맨 뒤로
