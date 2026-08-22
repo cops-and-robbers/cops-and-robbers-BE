@@ -21,7 +21,7 @@ spring:
 
   http:
     client:
-      connect-timeout: 2s
+      connect-timeout: 4s
       read-timeout: 4s
 
 jwt:
