@@ -23,6 +23,7 @@ import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.PAST
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.PAST_POST;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST_AT;
+import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST_IN_COUNTRY;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST_TITLED;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST_PLACED;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST_MEETING_IN;
@@ -298,6 +299,54 @@ class CommunityPostControllerTest extends ControllerTest {
                 softly.assertThat(extract.jsonPath().getString("content[0].location.region")).isNull();
                 softly.assertThat(extract.jsonPath().getString("content[0].location.placeName"))
                         .isEqualTo("어린이대공원 정문");
+            });
+        }
+
+        @Test
+        void 다른_국가의_게시글은_목록에_나오지_않는다() {
+            Long korea = communityPostRepository.save(POST_IN_COUNTRY(user.getId(), "KR")).getId();
+            communityPostRepository.save(POST_IN_COUNTRY(user.getId(), "JP"));
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getList("content.id", Long.class))
+                        .containsExactly(korea);
+            });
+        }
+
+        @Test
+        void 다른_국가로_받은_커서로_요청하면_400을_응답한다() {
+            for (int i = 0; i < 3; i++) {
+                communityPostRepository.save(POST_IN_COUNTRY(user.getId(), "KR"));
+            }
+            String koreaCursor = unauthenticated()
+                    .queryParam("size", 1)
+                    .queryParam("countryCode", "KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract()
+                    .jsonPath().getString("cursor.nextCursor");
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 1)
+                    .queryParam("cursor", koreaCursor)
+                    .queryParam("countryCode", "JP")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
             });
         }
 

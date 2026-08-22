@@ -37,7 +37,7 @@ public record CommunityChatRoomResult(
         return new CommunityChatRoomResult(
                 post.getId(),
                 post.getTitle(),
-                post.getStatus(),
+                post.currentStatus(),
                 TimestampUtil.toIsoString(post.getMeetingAt()),
                 memberCount,
                 lastMessage == null ? null : LastMessageResult.from(lastMessage)

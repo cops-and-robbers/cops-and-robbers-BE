@@ -60,6 +60,12 @@ public class CommunityPostFixture {
         return post;
     }
 
+    public static CommunityPost POST_IN_COUNTRY(Long userId, String countryCode) {
+        CommunityPost post = POST(userId);
+        ReflectionTestUtils.setField(post, "countryCode", countryCode);
+        return post;
+    }
+
     public static CommunityPost POST_AT(Long userId, double latitude, double longitude) {
         CommunityPost post = POST(userId);
         ReflectionTestUtils.setField(post, "location", point(latitude, longitude));

@@ -163,6 +163,20 @@ class CommunityChatQueryControllerTest extends ControllerTest {
         }
 
         @Test
+        void 모임_날짜가_지난_방은_ENDED로_조회된다() {
+            User member = givenUser("member");
+            CommunityPost post = communityPostRepository.save(CommunityPostFixture.PAST_POST(member.getId()));
+            communityChatMemberRepository.save(CommunityChatMember.createMember(post.getId(), member.getId()));
+
+            Map<String, Object> response = authenticated(givenAccessToken(member))
+                    .get(ROOMS_PATH)
+                    .then().statusCode(200)
+                    .extract().as(new TypeRef<>() {});
+
+            assertThat(extractRooms(response).getFirst().get("status")).isEqualTo("ENDED");
+        }
+
+        @Test
         void 참여하지_않은_방은_목록에_나오지_않는다() {
             User member = givenUser("member");
             givenChatRoom(member);

@@ -19,6 +19,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import java.util.Optional;
 
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.COMPLETED_POST;
+import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.PAST_POST;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -80,6 +81,19 @@ class CommunityChatMemberServiceTest extends ServiceUnitTest {
             CommunityPost completed = COMPLETED_POST(AUTHOR_ID);
             setId(completed, POST_ID);
             given(communityPostRepository.getByPostIdForUpdate(POST_ID)).willReturn(completed);
+
+            assertThatThrownBy(() -> communityChatMemberService.join(CommunityChatJoinCommand.of(JOINER_ID, POST_ID)))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(CommunityChatException.RECRUITMENT_CLOSED.getDetail());
+
+            then(communityChatMemberRepository).should(never()).save(any());
+        }
+
+        @Test
+        void 모임_날짜가_지난_게시글에는_참여할_수_없다() {
+            CommunityPost ended = PAST_POST(AUTHOR_ID);
+            setId(ended, POST_ID);
+            given(communityPostRepository.getByPostIdForUpdate(POST_ID)).willReturn(ended);
 
             assertThatThrownBy(() -> communityChatMemberService.join(CommunityChatJoinCommand.of(JOINER_ID, POST_ID)))
                     .isInstanceOf(ApplicationException.class)
