@@ -5,6 +5,8 @@ import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatJoinCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatLeaveCommand;
 import com.team.cops_and_robbers.community.domain.CommunityChatMember;
+import com.team.cops_and_robbers.community.domain.CommunityChatMessage;
+import com.team.cops_and_robbers.community.domain.CommunityChatMessageType;
 import com.team.cops_and_robbers.community.domain.CommunityPost;
 import com.team.cops_and_robbers.community.exception.CommunityChatException;
 import org.junit.jupiter.api.DisplayName;
@@ -47,22 +49,29 @@ class CommunityChatMemberServiceTest extends ServiceUnitTest {
         return post;
     }
 
+    private CommunityChatMessage givenSystemMessage(String eventJson) {
+        return CommunityChatMessage.createMessage("key-1", POST_ID, JOINER_ID, USER().getNickname(),
+                eventJson, CommunityChatMessageType.SYSTEM);
+    }
+
     @Nested
     @DisplayName("채팅방 참여")
     class Join {
 
         @Test
         void 참여하면_멤버와_JOIN_시스템_메시지가_저장된다() {
+            CommunityChatMessage joinMessage = givenSystemMessage("{\"event\":\"JOIN\"}");
             given(communityPostRepository.getByPostIdForUpdate(POST_ID)).willReturn(givenPost());
             given(communityChatMemberRepository.existsByCommunityPostIdAndUserId(POST_ID, JOINER_ID)).willReturn(false);
             given(communityChatMemberRepository.countByUserId(JOINER_ID)).willReturn(0);
             given(communityChatMemberRepository.countByCommunityPostId(POST_ID)).willReturn(1);
             given(userRepository.getByUserId(JOINER_ID)).willReturn(USER());
+            given(communityChatSystemMessageFactory.createJoinMessage(anyLong(), any())).willReturn(joinMessage);
 
             communityChatMemberService.join(CommunityChatJoinCommand.of(JOINER_ID, POST_ID));
 
             then(communityChatMemberRepository).should().save(any(CommunityChatMember.class));
-            then(communityChatSystemMessageFactory).should().createJoinMessage(anyLong(), any());
+            then(communityChatMessageRepository).should().save(joinMessage);
             then(eventPublisher).should().publishEvent(any(Object.class));
         }
 
@@ -126,14 +135,16 @@ class CommunityChatMemberServiceTest extends ServiceUnitTest {
         @Test
         void 나가면_LEAVE_시스템_메시지_저장_후_멤버가_삭제된다() {
             CommunityChatMember member = CommunityChatMember.createMember(POST_ID, JOINER_ID);
+            CommunityChatMessage leaveMessage = givenSystemMessage("{\"event\":\"LEAVE\"}");
             given(communityPostRepository.getByPostId(POST_ID)).willReturn(givenPost());
             given(communityChatMemberRepository.findByCommunityPostIdAndUserId(POST_ID, JOINER_ID))
                     .willReturn(Optional.of(member));
             given(userRepository.getByUserId(JOINER_ID)).willReturn(USER());
+            given(communityChatSystemMessageFactory.createLeaveMessage(anyLong(), any())).willReturn(leaveMessage);
 
             communityChatMemberService.leave(CommunityChatLeaveCommand.of(JOINER_ID, POST_ID));
 
-            then(communityChatSystemMessageFactory).should().createLeaveMessage(anyLong(), any());
+            then(communityChatMessageRepository).should().save(leaveMessage);
             then(communityChatMemberRepository).should().delete(member);
             then(eventPublisher).should().publishEvent(any(Object.class));
         }

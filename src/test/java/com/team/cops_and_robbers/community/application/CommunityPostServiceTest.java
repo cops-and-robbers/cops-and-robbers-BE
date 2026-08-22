@@ -194,7 +194,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         void 작성자가_게시글을_삭제하면_deleteByPostId가_호출된다() {
             CommunityPost post = POST(1L);
             setId(post, 1L);
-            given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(communityPostRepository.getByPostIdForUpdate(1L)).willReturn(post);
 
             communityPostService.deletePost(new CommunityPostDeleteCommand(1L, 1L));
 
@@ -205,7 +205,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         void 게시글을_삭제하면_채팅_메시지와_멤버도_함께_정리된다() {
             CommunityPost post = POST(1L);
             setId(post, 1L);
-            given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(communityPostRepository.getByPostIdForUpdate(1L)).willReturn(post);
 
             communityPostService.deletePost(new CommunityPostDeleteCommand(1L, 1L));
 
@@ -217,7 +217,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         void 작성자가_아닌_사용자가_삭제하면_FORBIDDEN_NOT_AUTHOR_예외가_발생한다() {
             CommunityPost post = POST(1L);
             setId(post, 1L);
-            given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(communityPostRepository.getByPostIdForUpdate(1L)).willReturn(post);
 
             assertThatThrownBy(() -> communityPostService.deletePost(new CommunityPostDeleteCommand(999L, 1L)))
                     .isInstanceOf(ApplicationException.class)
@@ -226,7 +226,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
 
         @Test
         void 존재하지_않는_ID로_삭제하면_POST_NOT_FOUND_예외가_발생한다() {
-            given(communityPostRepository.getByPostId(999L))
+            given(communityPostRepository.getByPostIdForUpdate(999L))
                     .willThrow(new ApplicationException(CommunityPostException.POST_NOT_FOUND));
 
             assertThatThrownBy(() -> communityPostService.deletePost(new CommunityPostDeleteCommand(1L, 999L)))

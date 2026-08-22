@@ -58,9 +58,13 @@ public class CommunityPostService {
         return CommunityPostResult.from(post);
     }
 
+    /**
+     * 채팅 데이터를 지우는 동안 참여 요청이 끼어들면 게시글 없는 멤버 행이 남는다.
+     * 참여와 같은 게시글 행 락을 잡아 두 흐름이 겹치지 않게 한다.
+     */
     @Transactional
     public void deletePost(CommunityPostDeleteCommand command) {
-        CommunityPost post = communityPostRepository.getByPostId(command.postId());
+        CommunityPost post = communityPostRepository.getByPostIdForUpdate(command.postId());
         validateAuthor(post, command.writerId());
         communityChatMessageRepository.deleteAllByCommunityPostId(command.postId());
         communityChatMemberRepository.deleteAllByCommunityPostId(command.postId());
