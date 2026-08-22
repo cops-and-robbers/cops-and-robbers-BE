@@ -21,7 +21,8 @@ spring:
 
   http:
     client:
-      connect-timeout: 4s
+      # 임시: 콜드 커넥션이 시간 부족인지 판별용. 확인 후 되돌린다
+      connect-timeout: 10s
       read-timeout: 4s
 
 jwt:
