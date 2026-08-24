@@ -1,4 +1,7 @@
 TRUNCATE TABLE
+    community_comments,
+    community_post_likes,
+    community_post_scraps,
     community_chat_messages,
     community_chat_members,
     community_posts,
