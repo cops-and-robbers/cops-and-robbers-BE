@@ -19,7 +19,8 @@ public enum CommunityChatException implements ExceptionCode {
     INVALID_GAME_INVITE(HttpStatus.BAD_REQUEST, "잘못된 게임 초대", "게임 초대 정보의 형식이 올바르지 않습니다."),
     INVALID_MESSAGE_KEY(HttpStatus.BAD_REQUEST, "잘못된 메시지 키", "메시지 키는 36자 이하로 입력해주세요."),
     EMPTY_MESSAGE(HttpStatus.BAD_REQUEST, "빈 메시지", "메시지 내용을 입력해주세요."),
-    MESSAGE_TOO_LONG(HttpStatus.BAD_REQUEST, "메시지 길이 초과", "메시지는 500자 이하로 입력해주세요.");
+    MESSAGE_TOO_LONG(HttpStatus.BAD_REQUEST, "메시지 길이 초과", "메시지는 500자 이하로 입력해주세요."),
+    CHAT_MESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅 메시지를 찾을 수 없음", "해당 채팅 메시지를 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String title;

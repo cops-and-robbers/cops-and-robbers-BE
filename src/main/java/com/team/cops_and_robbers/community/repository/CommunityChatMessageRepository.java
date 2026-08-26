@@ -1,6 +1,8 @@
 package com.team.cops_and_robbers.community.repository;
 
+import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.community.domain.CommunityChatMessage;
+import com.team.cops_and_robbers.community.exception.CommunityChatException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -11,6 +13,11 @@ import java.util.Collection;
 import java.util.List;
 
 public interface CommunityChatMessageRepository extends JpaRepository<CommunityChatMessage, Long> {
+
+    default CommunityChatMessage getById(Long id) {
+        return findById(id)
+                .orElseThrow(() -> new ApplicationException(CommunityChatException.CHAT_MESSAGE_NOT_FOUND));
+    }
 
     /**
      * 커서 페이징. cursor가 null이면 최신부터 조회한다.

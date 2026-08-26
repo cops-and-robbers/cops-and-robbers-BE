@@ -30,8 +30,31 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.22.0")
+                .version("2.23.0")
                 .description("""
+                        ## v2.23.0 업데이트 내역
+
+                        ### ✨ 신규 — 커뮤니티 신고 (모집글 · 채팅)
+                        - POST /api/report/community-post — 모집글 신고
+                          - postId, reportType, etcReason
+                        - POST /api/report/community-chat — 채팅 메시지 신고
+                          - chatMessageId, reportType, etcReason
+                          - chatMessageId는 채팅 내역 조회 응답의 id를 그대로 쓴다
+                        - reportType은 인게임 채팅 신고와 같은 값을 쓴다 (신규 값 없음)
+                          - FISHING / VERBAL_ABUSE / IMPERSONATION / SPAM / CHEATING / DEMORALIZATION / ETC
+                        - ETC면 etcReason 필수, 최대 300자. 없으면 400(ETC_REASON_REQUIRED)
+                        - 본인을 신고하면 400(SELF_REPORT)
+                        - 같은 대상을 다시 신고하면 409(DUPLICATE_REPORT)
+                          - 모집글은 신고자+작성자+글, 채팅은 신고자+발신자+메시지 기준
+                        - 없는 글은 404(POST_NOT_FOUND), 없는 메시지는 404(CHAT_MESSAGE_NOT_FOUND)
+
+                        ### 🛠 변경
+                        - 게시글 응답의 writerNickname이 탈퇴한 작성자면 "알수없음" (기존 null)
+                          - 목록 · 상세 · 생성 · 수정 응답에 모두 적용된다
+                        - 작성자가 탈퇴하면 그 사람의 모집중(RECRUITING) 게시글이 COMPLETED로 바뀐다
+                          - 응답할 사람이 없는 모임에 참여 요청이 계속 가지 않도록 하기 위함
+                          - 이미 마감했거나 날짜가 지난 글은 건드리지 않는다
+
                         ## v2.22.0 업데이트 내역
 
                         ### ✨ 신규 — 댓글·좋아요·스크랩

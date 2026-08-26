@@ -1,0 +1,41 @@
+# ─── 커뮤니티 채팅 신고 쿼리/뮤테이션 ──────────────────────
+extend type Query {
+  adminCommunityChatReports(
+    page: Int = 0
+    size: Int = 20
+    status: ReportStatus
+    sortDirection: SortDirection = DESC
+  ): AdminCommunityChatReportPage!
+}
+
+extend type Mutation {
+  updateCommunityChatReportStatus(
+    reportId: ID!
+    status: ReportStatus!
+    adminMemo: String
+  ): AdminCommunityChatReport!
+}
+
+# ─── 커뮤니티 채팅 신고 타입 ────────────────────────────────
+type AdminCommunityChatReportPage {
+  content: [AdminCommunityChatReport!]!
+  totalElements: Int!
+  totalPages: Int!
+  page: Int!
+  size: Int!
+}
+
+type AdminCommunityChatReport {
+  id: ID!
+  chatMessageId: ID!
+  reporterUserId: ID!
+  reporterNickname: String!
+  reportedUserId: ID!
+  reportedNickname: String!
+  messageContent: String!
+  reportType: ReportType!
+  etcReason: String
+  status: ReportStatus!
+  adminMemo: String
+  createdAt: String!
+}

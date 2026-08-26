@@ -17,6 +17,9 @@ public record CommunityPostResult(
         String createdAt,
         String updatedAt
 ) {
+
+    private static final String UNKNOWN_USER = "알수없음";
+
     public record LocationResult(
             Double latitude,
             Double longitude,
@@ -31,7 +34,7 @@ public record CommunityPostResult(
         return new CommunityPostResult(
                 post.getId(),
                 post.getWriterId(),
-                writerNickname,
+                writerNickname != null ? writerNickname : UNKNOWN_USER,
                 post.getTitle(),
                 post.getContent(),
                 TimestampUtil.toIsoString(post.getMeetingAt()),

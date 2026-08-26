@@ -14,14 +14,14 @@ public record AdminBugReportResult(
         String createdAt
 ) {
 
-    private static final String WITHDRAWN_USER = "탈퇴한 사용자";
+    private static final String UNKNOWN_USER = "알수없음";
 
     public static AdminBugReportResult of(BugReport bugReport, String userNickname) {
         return new AdminBugReportResult(
                 bugReport.getId(),
                 bugReport.getContent(),
                 bugReport.getUserId(),
-                userNickname != null ? userNickname : WITHDRAWN_USER,
+                userNickname != null ? userNickname : UNKNOWN_USER,
                 bugReport.getStatus(),
                 bugReport.getAdminMemo(),
                 TimestampUtil.toIsoString(bugReport.getCreatedAt())

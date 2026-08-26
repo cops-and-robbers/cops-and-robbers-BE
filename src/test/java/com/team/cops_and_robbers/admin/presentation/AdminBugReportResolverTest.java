@@ -100,7 +100,7 @@ class AdminBugReportResolverTest extends ControllerTest {
         }
 
         @Test
-        void 탈퇴한_유저의_닉네임은_탈퇴한_사용자로_반환된다() {
+        void 탈퇴한_유저의_닉네임은_알수없음으로_반환된다() {
             bugReportRepository.save(BugReportFixture.PENDING_BUG_REPORT(9999L));
 
             ExtractableResponse<Response> response = executeQuery(
@@ -109,7 +109,7 @@ class AdminBugReportResolverTest extends ControllerTest {
 
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(200);
-                softly.assertThat(response.jsonPath().getString("data.adminBugReports.content[0].userNickname")).isEqualTo("탈퇴한 사용자");
+                softly.assertThat(response.jsonPath().getString("data.adminBugReports.content[0].userNickname")).isEqualTo("알수없음");
             });
         }
     }
@@ -146,7 +146,7 @@ class AdminBugReportResolverTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(200);
                 softly.assertThat(response.jsonPath().getString("data.updateBugReportStatus.status")).isEqualTo("RESOLVED");
-                softly.assertThat(response.jsonPath().getString("data.updateBugReportStatus.userNickname")).isEqualTo("탈퇴한 사용자");
+                softly.assertThat(response.jsonPath().getString("data.updateBugReportStatus.userNickname")).isEqualTo("알수없음");
             });
         }
     }

@@ -1,13 +1,13 @@
 package com.team.cops_and_robbers.admin.application.dto.result.report;
 
 import com.team.cops_and_robbers.common.util.TimestampUtil;
-import com.team.cops_and_robbers.report.domain.ChatReport;
+import com.team.cops_and_robbers.report.domain.CommunityChatReport;
 import com.team.cops_and_robbers.report.domain.ReportStatus;
 import com.team.cops_and_robbers.report.domain.ReportType;
 
-public record AdminReportResult(
+public record AdminCommunityChatReportResult(
         Long id,
-        Long gameId,
+        Long chatMessageId,
         Long reporterUserId,
         String reporterNickname,
         Long reportedUserId,
@@ -22,10 +22,10 @@ public record AdminReportResult(
 
     private static final String UNKNOWN_USER = "알수없음";
 
-    public static AdminReportResult of(ChatReport report, String reporterNickname, String reportedNickname) {
-        return new AdminReportResult(
+    public static AdminCommunityChatReportResult of(CommunityChatReport report, String reporterNickname, String reportedNickname) {
+        return new AdminCommunityChatReportResult(
                 report.getId(),
-                report.getGameId(),
+                report.getChatMessageId(),
                 report.getReporterUserId(),
                 reporterNickname != null ? reporterNickname : UNKNOWN_USER,
                 report.getReportedUserId(),
