@@ -20,6 +20,7 @@ import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.presentation.dto.request.AgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.GamePushAgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
+import com.team.cops_and_robbers.user.presentation.dto.request.ProfileIconUpdateRequest;
 import com.team.cops_and_robbers.user.presentation.dto.response.GamePushAgreementResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.MyPageResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.NicknameCheckResponse;
@@ -446,6 +447,57 @@ class UserControllerTest extends ControllerTest {
                     .body(request)
                     .when()
                     .patch("/api/user/me/nickname")
+                    .then()
+                    .extract();
+
+            // then
+            ErrorResponse response = extract.as(ErrorResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+                softly.assertThat(response.title()).isEqualTo(CommonException.INVALID_INPUT_VALUE.getTitle());
+            });
+        }
+    }
+
+    @Nested
+    @DisplayName("프로필 아이콘 변경 API")
+    class UpdateProfileIcon {
+
+        @Test
+        void 유효한_아이콘_번호로_변경_요청시_성공하고_204_NO_CONTENT를_응답해야_한다() {
+            // given
+            User user = givenUser();
+            String accessToken = givenAccessToken(user);
+            ProfileIconUpdateRequest request = new ProfileIconUpdateRequest(2);
+
+            // when
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .patch("/api/user/me/profile-icon")
+                    .then()
+                    .extract();
+
+            // then
+            User updatedUser = userRepository.getByUserId(user.getId());
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(204);
+                softly.assertThat(updatedUser.getProfileIcon()).isEqualTo(2);
+            });
+        }
+
+        @Test
+        void 아이콘_번호가_0_이하이면_400_BAD_REQUEST를_응답해야_한다() {
+            // given
+            User user = givenUser();
+            String accessToken = givenAccessToken(user);
+            ProfileIconUpdateRequest request = new ProfileIconUpdateRequest(0);
+
+            // when
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .patch("/api/user/me/profile-icon")
                     .then()
                     .extract();
 

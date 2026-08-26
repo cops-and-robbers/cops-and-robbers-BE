@@ -17,6 +17,7 @@ import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepo
 import com.team.cops_and_robbers.user.application.dto.command.AgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.GamePushAgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
+import com.team.cops_and_robbers.user.application.dto.command.ProfileIconUpdateCommand;
 import com.team.cops_and_robbers.user.application.dto.result.GamePushAgreementResult;
 import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.User;
@@ -150,5 +151,11 @@ public class UserService {
     public void updateGamePushAgreement(GamePushAgreementCommand command) {
         User user = userRepository.getByUserId(command.userId());
         user.updateGamePush(command.allowGamePush());
+    }
+
+    @Transactional
+    public void updateProfileIcon(ProfileIconUpdateCommand command) {
+        User user = userRepository.getByUserId(command.userId());
+        user.updateProfileIcon(command.profileIcon());
     }
 }

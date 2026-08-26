@@ -7,6 +7,7 @@ import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.presentation.dto.request.AgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.GamePushAgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
+import com.team.cops_and_robbers.user.presentation.dto.request.ProfileIconUpdateRequest;
 import com.team.cops_and_robbers.user.presentation.dto.response.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -117,5 +118,18 @@ public interface UserControllerDocs {
     ResponseEntity<Void> updateGamePushAgreement(
             @Parameter(hidden = true) LoginUser loginUser,
             @RequestBody @Valid GamePushAgreementRequest request
+    );
+
+    @Operation(summary = "프로필 아이콘 변경",
+            description = "로그인한 사용자의 프로필 아이콘 번호를 변경합니다. 아이콘 번호는 앱에 내장된 SVG 에셋 번호와 1:1로 대응하며, 서버는 값의 범위를 검증하지 않습니다."
+    )
+    @ApiErrorCode(value = UserException.class, codes = {"USER_NOT_FOUND"})
+    @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "변경 성공 (응답 본문 없음)")
+    })
+    ResponseEntity<Void> updateProfileIcon(
+            @Parameter(hidden = true) LoginUser loginUser,
+            @RequestBody @Valid ProfileIconUpdateRequest request
     );
 }
