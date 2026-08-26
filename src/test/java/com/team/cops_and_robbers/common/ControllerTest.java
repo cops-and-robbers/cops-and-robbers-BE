@@ -17,7 +17,10 @@ import com.team.cops_and_robbers.community.infrastructure.GeocodingClient;
 import com.team.cops_and_robbers.community.infrastructure.GeocodingResult;
 import com.team.cops_and_robbers.community.repository.CommunityChatMemberRepository;
 import com.team.cops_and_robbers.community.repository.CommunityChatMessageRepository;
+import com.team.cops_and_robbers.community.repository.CommunityCommentRepository;
+import com.team.cops_and_robbers.community.repository.CommunityPostLikeRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
+import com.team.cops_and_robbers.community.repository.CommunityPostScrapRepository;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
@@ -112,6 +115,15 @@ public abstract class ControllerTest {
 
     @Autowired
     protected CommunityChatMessageRepository communityChatMessageRepository;
+
+    @Autowired
+    protected CommunityCommentRepository communityCommentRepository;
+
+    @Autowired
+    protected CommunityPostLikeRepository communityPostLikeRepository;
+
+    @Autowired
+    protected CommunityPostScrapRepository communityPostScrapRepository;
 
     @Autowired
     protected JwtTokenProvider jwtTokenProvider;
