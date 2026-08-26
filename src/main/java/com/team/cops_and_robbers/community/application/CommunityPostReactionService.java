@@ -14,6 +14,7 @@ import com.team.cops_and_robbers.community.repository.CommunityPostScrapReposito
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,13 +34,21 @@ public class CommunityPostReactionService {
     private final CommunityPostRepository communityPostRepository;
     private final UserRepository userRepository;
 
+    /**
+     * exists 체크와 save 사이에도 동시에 두 번 눌린 요청이 둘 다 통과할 수 있다.
+     * 최후 방어선은 유니크 제약이라, 거기서 막히면 DataIntegrityViolationException을 도메인 예외로 바꿔 던진다.
+     */
     @Transactional
     public void likePost(Long postId, Long userId) {
         communityPostRepository.getByPostId(postId);
         if (communityPostLikeRepository.existsByCommunityPostIdAndUserId(postId, userId)) {
             throw new ApplicationException(CommunityPostReactionException.ALREADY_LIKED);
         }
-        communityPostLikeRepository.save(CommunityPostLike.createLike(postId, userId));
+        try {
+            communityPostLikeRepository.save(CommunityPostLike.createLike(postId, userId));
+        } catch (DataIntegrityViolationException e) {
+            throw new ApplicationException(CommunityPostReactionException.ALREADY_LIKED);
+        }
     }
 
     @Transactional
@@ -50,13 +59,18 @@ public class CommunityPostReactionService {
         }
     }
 
+    /** likePost와 같은 이유로 save를 try-catch로 감싼다. */
     @Transactional
     public void scrapPost(Long postId, Long userId) {
         communityPostRepository.getByPostId(postId);
         if (communityPostScrapRepository.existsByCommunityPostIdAndUserId(postId, userId)) {
             throw new ApplicationException(CommunityPostReactionException.ALREADY_SCRAPPED);
         }
-        communityPostScrapRepository.save(CommunityPostScrap.createScrap(postId, userId));
+        try {
+            communityPostScrapRepository.save(CommunityPostScrap.createScrap(postId, userId));
+        } catch (DataIntegrityViolationException e) {
+            throw new ApplicationException(CommunityPostReactionException.ALREADY_SCRAPPED);
+        }
     }
 
     @Transactional

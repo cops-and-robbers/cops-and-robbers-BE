@@ -13,6 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
 
@@ -83,6 +84,17 @@ class CommunityPostReactionServiceTest extends ServiceUnitTest {
         }
 
         @Test
+        void 동시에_두_번_눌려_유니크_제약이_걸려도_ALREADY_LIKED로_응답한다() {
+            givenPost();
+            given(communityPostLikeRepository.existsByCommunityPostIdAndUserId(POST_ID, USER_ID)).willReturn(false);
+            given(communityPostLikeRepository.save(any())).willThrow(new DataIntegrityViolationException("duplicate"));
+
+            assertThatThrownBy(() -> communityPostReactionService.likePost(POST_ID, USER_ID))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(CommunityPostReactionException.ALREADY_LIKED.getDetail());
+        }
+
+        @Test
         void 존재하지_않는_게시글에는_좋아요를_누를_수_없다() {
             given(communityPostRepository.getByPostId(POST_ID))
                     .willThrow(new ApplicationException(CommunityPostException.POST_NOT_FOUND));
@@ -136,6 +148,17 @@ class CommunityPostReactionServiceTest extends ServiceUnitTest {
                     .hasMessageContaining(CommunityPostReactionException.ALREADY_SCRAPPED.getDetail());
 
             then(communityPostScrapRepository).should(never()).save(any());
+        }
+
+        @Test
+        void 동시에_두_번_눌려_유니크_제약이_걸려도_ALREADY_SCRAPPED로_응답한다() {
+            givenPost();
+            given(communityPostScrapRepository.existsByCommunityPostIdAndUserId(POST_ID, USER_ID)).willReturn(false);
+            given(communityPostScrapRepository.save(any())).willThrow(new DataIntegrityViolationException("duplicate"));
+
+            assertThatThrownBy(() -> communityPostReactionService.scrapPost(POST_ID, USER_ID))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(CommunityPostReactionException.ALREADY_SCRAPPED.getDetail());
         }
 
         @Test
