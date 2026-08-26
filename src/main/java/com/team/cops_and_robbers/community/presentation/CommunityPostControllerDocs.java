@@ -69,7 +69,7 @@ public interface CommunityPostControllerDocs {
                     + "countryCode는 필수이며, GET /api/community-posts/country 로 먼저 조회하세요. "
                     + "지원하지 않는 쿼리 파라미터가 포함되면 400을 반환합니다.")
     @ApiErrorCode(value = CommunityPostException.class,
-            codes = {"UNSUPPORTED_LIST_SCOPE", "UNSUPPORTED_LIST_SORT", "COUNTRY_NOT_SPECIFIED", "ADDRESS_LOOKUP_FAILED"})
+            codes = {"UNSUPPORTED_LIST_SCOPE", "COUNTRY_NOT_SPECIFIED", "ADDRESS_LOOKUP_FAILED"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "400",

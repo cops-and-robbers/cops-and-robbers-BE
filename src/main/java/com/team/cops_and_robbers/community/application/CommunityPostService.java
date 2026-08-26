@@ -183,6 +183,7 @@ public class CommunityPostService {
         return switch (sort) {
             case DEADLINE -> CommunityPostCursor.sortKeyOf(row.post().getMeetingAt());
             case DISTANCE -> String.valueOf(row.distance());
+            case POPULAR -> String.valueOf(row.score());
             default -> CommunityPostCursor.sortKeyOf(row.post().getCreatedAt());
         };
     }

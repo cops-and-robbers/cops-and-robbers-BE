@@ -14,7 +14,6 @@ public enum CommunityPostException implements ExceptionCode {
     INVALID_MEETING_DATE(HttpStatus.BAD_REQUEST, "잘못된 모임 날짜", "모임 날짜는 현재 시간 이후여야 합니다."),
     ADDRESS_NOT_FOUND(HttpStatus.BAD_REQUEST, "주소를 찾을 수 없는 위치", "선택한 위치의 주소를 찾을 수 없습니다. 다른 장소를 선택해주세요."),
     UNSUPPORTED_LIST_SCOPE(HttpStatus.BAD_REQUEST, "지원하지 않는 조회 범위", "현재는 전체 조회(scope=ALL)만 지원합니다."),
-    UNSUPPORTED_LIST_SORT(HttpStatus.BAD_REQUEST, "지원하지 않는 정렬 기준", "현재는 최신순(sort=LATEST)만 지원합니다."),
     COUNTRY_NOT_SPECIFIED(HttpStatus.BAD_REQUEST, "국가를 특정할 수 없음", "countryCode 또는 현재 위치(latitude, longitude) 중 하나는 필수입니다."),
     ADDRESS_LOOKUP_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "주소 조회 실패", "주소를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
 

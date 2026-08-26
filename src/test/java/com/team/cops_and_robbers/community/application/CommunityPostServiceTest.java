@@ -218,7 +218,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             setId(post1, 1L);
             setId(post2, 2L);
             given(communityPostRepository.findPage(any(CommunityPostSearchCondition.class), eq(null), eq(10)))
-                    .willReturn(List.of(new CommunityPostRow(post1, null), new CommunityPostRow(post2, null)));
+                    .willReturn(List.of(new CommunityPostRow(post1, null, null), new CommunityPostRow(post2, null, null)));
             given(userRepository.findAllById(List.of(1L, 999L)))
                     .willReturn(List.of(userWithId(1L, "무서운경찰관", 2)));
 
@@ -259,7 +259,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             for (int i = count; i >= 1; i--) {
                 CommunityPost post = POST(1L, LocalDateTime.of(2026, 8, 1, 0, 0).plusHours(i));
                 setId(post, (long) i);
-                rows.add(new CommunityPostRow(post, null));
+                rows.add(new CommunityPostRow(post, null, null));
             }
             return rows;
         }
