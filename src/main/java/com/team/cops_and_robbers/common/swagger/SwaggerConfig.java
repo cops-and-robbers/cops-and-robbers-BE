@@ -30,8 +30,25 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.23.0")
+                .version("2.24.0")
                 .description("""
+                        ## v2.24.0 업데이트 내역
+
+                        ### ✨ 신규 — 프로필 아이콘
+                        - 프로필 아이콘은 앱 내장 SVG 에셋이라 이미지가 아닌 아이콘 번호(정수)만 저장한다
+                        - 회원 정보에 profileIcon 필드 추가 (기본값 1)
+                          - GET /api/user/me 응답에 포함
+                          - PATCH /api/user/me/profile-icon — 아이콘 번호 저장·수정 (요청: profileIcon)
+                        - 서버는 번호 범위를 검증하지 않는다. 앱 에셋과 1:1 대응하며 현재 1, 2가 있고 이후 앱에서만 늘어난다
+                        - 커뮤니티 모집글 목록·단건, 댓글 응답에 작성자 writerProfileIcon 추가
+                          - 탈퇴한 작성자는 기본 아이콘 번호로 내려온다 (닉네임이 "알수없음"으로 오는 경우와 동일 시점)
+                          - 삭제된 댓글은 writerId·writerNickname처럼 writerProfileIcon도 null
+
+                        ### 🛠 변경 — 인기순(POPULAR) 정렬 지원
+                        - 지금까지 sort=POPULAR 요청은 400(UNSUPPORTED_LIST_SORT)으로 막혀 있었는데, 규칙을 정하고 구현했다
+                        - 점수 = 좋아요*1 + 스크랩*2 + 채팅 참여(멤버 수)*3
+                        - 최근 7일 이내 작성된 글만 대상이며, 마감된 글은 다른 정렬과 동일하게 항상 맨 뒤
+
                         ## v2.23.0 업데이트 내역
 
                         ### ✨ 신규 — 커뮤니티 신고 (모집글 · 채팅)
