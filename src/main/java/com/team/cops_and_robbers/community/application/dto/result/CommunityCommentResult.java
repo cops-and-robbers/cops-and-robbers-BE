@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.community.application.dto.result;
 
 import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.community.domain.CommunityComment;
+import com.team.cops_and_robbers.user.domain.User;
 
 import java.util.List;
 
@@ -10,6 +11,7 @@ public record CommunityCommentResult(
         Long parentId,
         Long writerId,
         String writerNickname,
+        Integer writerProfileIcon,
         String content,
         boolean deleted,
         String createdAt,
@@ -20,7 +22,7 @@ public record CommunityCommentResult(
 
     public static CommunityCommentResult of(
             CommunityComment comment,
-            String writerNickname,
+            User writer,
             List<CommunityCommentResult> replies
     ) {
         boolean deleted = comment.isDeleted();
@@ -28,7 +30,8 @@ public record CommunityCommentResult(
                 comment.getId(),
                 comment.getParentId(),
                 deleted ? null : comment.getWriterId(),
-                deleted ? null : (writerNickname != null ? writerNickname : WITHDRAWN_USER),
+                deleted ? null : (writer != null ? writer.getNickname() : WITHDRAWN_USER),
+                deleted ? null : (writer != null ? writer.getProfileIcon() : User.DEFAULT_PROFILE_ICON),
                 deleted ? null : comment.getContent(),
                 deleted,
                 TimestampUtil.toIsoString(comment.getCreatedAt()),
@@ -37,7 +40,7 @@ public record CommunityCommentResult(
         );
     }
 
-    public static CommunityCommentResult from(CommunityComment comment, String writerNickname) {
-        return of(comment, writerNickname, List.of());
+    public static CommunityCommentResult from(CommunityComment comment, User writer) {
+        return of(comment, writer, List.of());
     }
 }
