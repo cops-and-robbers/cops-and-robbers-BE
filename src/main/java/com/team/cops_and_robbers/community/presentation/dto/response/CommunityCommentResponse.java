@@ -10,9 +10,9 @@ public record CommunityCommentResponse(
         Long id,
         @Schema(description = "부모 댓글 ID. 1depth 댓글이면 null", example = "null", nullable = true)
         Long parentId,
-        @Schema(description = "작성자 ID (삭제된 댓글이거나 탈퇴한 유저면 null)", example = "7", nullable = true)
+        @Schema(description = "작성자 ID (삭제된 댓글이면 null)", example = "7", nullable = true)
         Long writerId,
-        @Schema(description = "작성자 닉네임 (삭제된 댓글이거나 탈퇴한 유저면 null)",
+        @Schema(description = "작성자 닉네임 (삭제된 댓글이면 null, 탈퇴한 유저면 \"알수없음\")",
                 example = "무서운경찰관", nullable = true)
         String writerNickname,
         @Schema(description = "댓글 내용 (삭제된 댓글이면 null)", example = "몇 시에 만나나요?", nullable = true)

@@ -231,6 +231,22 @@ class CommunityCommentServiceTest extends ServiceUnitTest {
             assertThat(content.content()).isNull();
             assertThat(content.writerNickname()).isNull();
         }
+
+        @Test
+        void 탈퇴한_유저의_댓글은_닉네임이_탈퇴한_사용자로_내려온다() {
+            given(communityCommentRepository.findRootPageByCursor(any(), any(), any()))
+                    .willReturn(List.of(comment(10L, null, WRITER_ID, "댓글")));
+            given(communityCommentRepository.findRepliesByParentIds(anyList())).willReturn(List.of());
+            given(userRepository.findAllById(anyList())).willReturn(List.of());
+
+            CommunityCommentListResult result =
+                    communityCommentService.getComments(CommunityCommentListCommand.of(POST_ID, null, 10));
+
+            CommunityCommentResult content = result.content().getFirst();
+            assertThat(content.deleted()).isFalse();
+            assertThat(content.writerId()).isEqualTo(WRITER_ID);
+            assertThat(content.writerNickname()).isEqualTo("알수없음");
+        }
     }
 
     @Nested

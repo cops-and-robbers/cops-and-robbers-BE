@@ -41,6 +41,7 @@ public class SwaggerConfig {
                         - GET /api/community-posts/{postId}/comments — 댓글 목록 조회 🔓 no auth
                           - 오래된 순 커서 페이지네이션. 답글은 부모 댓글의 replies에 함께 담겨 내려온다
                           - 답글이 남아있는 삭제된 댓글은 deleted: true로 남고 content·writerNickname은 null
+                          - 탈퇴한 작성자의 댓글은 writerNickname이 "알수없음" (writerId는 그대로 내려간다)
                         - DELETE /api/community-posts/comments/{commentId} — 댓글 삭제
                           - 작성자만 삭제 가능
                           - 답글이 남아있으면 실제로 지우지 않고 삭제 표시만 한다 (마지막 답글이 지워질 때 함께 정리됨)

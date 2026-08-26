@@ -16,6 +16,8 @@ public record CommunityCommentResult(
         String updatedAt,
         List<CommunityCommentResult> replies
 ) {
+    private static final String WITHDRAWN_USER = "알수없음";
+
     public static CommunityCommentResult of(
             CommunityComment comment,
             String writerNickname,
@@ -26,7 +28,7 @@ public record CommunityCommentResult(
                 comment.getId(),
                 comment.getParentId(),
                 deleted ? null : comment.getWriterId(),
-                deleted ? null : writerNickname,
+                deleted ? null : (writerNickname != null ? writerNickname : WITHDRAWN_USER),
                 deleted ? null : comment.getContent(),
                 deleted,
                 TimestampUtil.toIsoString(comment.getCreatedAt()),
