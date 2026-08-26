@@ -4,26 +4,33 @@ import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatJoinCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatLeaveCommand;
+import com.team.cops_and_robbers.community.application.dto.result.CommunityChatMemberListResult;
 import com.team.cops_and_robbers.community.domain.CommunityChatMember;
 import com.team.cops_and_robbers.community.domain.CommunityChatMessage;
 import com.team.cops_and_robbers.community.domain.CommunityChatMessageType;
 import com.team.cops_and_robbers.community.domain.CommunityPost;
 import com.team.cops_and_robbers.community.exception.CommunityChatException;
+import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
 import java.util.Optional;
 
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.COMPLETED_POST;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.PAST_POST;
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -183,6 +190,70 @@ class CommunityChatMemberServiceTest extends ServiceUnitTest {
             assertThatThrownBy(() -> communityChatMemberService.leave(CommunityChatLeaveCommand.of(JOINER_ID, POST_ID)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityChatException.NOT_A_CHAT_MEMBER.getDetail());
+        }
+    }
+
+    @Nested
+    @DisplayName("채팅방 멤버 목록 조회")
+    class GetMembers {
+
+        @Test
+        void 작성자_여부와_닉네임_아이콘이_포함된_멤버_목록을_반환한다() {
+            CommunityChatMember author = CommunityChatMember.createMember(POST_ID, AUTHOR_ID);
+            CommunityChatMember joiner = CommunityChatMember.createMember(POST_ID, JOINER_ID);
+            given(communityChatMemberRepository.existsByCommunityPostIdAndUserId(POST_ID, AUTHOR_ID)).willReturn(true);
+            given(communityChatMemberRepository.findAllByCommunityPostId(POST_ID))
+                    .willReturn(List.of(author, joiner));
+            given(communityPostRepository.getByPostId(POST_ID)).willReturn(givenPost());
+            given(userRepository.findAllById(anyList())).willReturn(List.of(
+                    userWithId(AUTHOR_ID, "작성자", 2), userWithId(JOINER_ID, "참여자", 1)));
+
+            CommunityChatMemberListResult result = communityChatMemberService.getMembers(POST_ID, AUTHOR_ID);
+
+            assertThat(result.members()).hasSize(2);
+            CommunityChatMemberListResult.Member authorMember = result.members().stream()
+                    .filter(member -> member.userId().equals(AUTHOR_ID)).findFirst().orElseThrow();
+            assertSoftly(softly -> {
+                softly.assertThat(authorMember.nickname()).isEqualTo("작성자");
+                softly.assertThat(authorMember.profileIcon()).isEqualTo(2);
+                softly.assertThat(authorMember.isAuthor()).isTrue();
+            });
+        }
+
+        @Test
+        void 탈퇴한_멤버는_알수없음_닉네임과_기본_아이콘으로_내려온다() {
+            CommunityChatMember withdrawn = CommunityChatMember.createMember(POST_ID, JOINER_ID);
+            given(communityChatMemberRepository.existsByCommunityPostIdAndUserId(POST_ID, AUTHOR_ID)).willReturn(true);
+            given(communityChatMemberRepository.findAllByCommunityPostId(POST_ID)).willReturn(List.of(withdrawn));
+            given(communityPostRepository.getByPostId(POST_ID)).willReturn(givenPost());
+            given(userRepository.findAllById(anyList())).willReturn(List.of());
+
+            CommunityChatMemberListResult result = communityChatMemberService.getMembers(POST_ID, AUTHOR_ID);
+
+            CommunityChatMemberListResult.Member member = result.members().getFirst();
+            assertSoftly(softly -> {
+                softly.assertThat(member.nickname()).isEqualTo("알수없음");
+                softly.assertThat(member.profileIcon()).isEqualTo(User.DEFAULT_PROFILE_ICON);
+                softly.assertThat(member.isAuthor()).isFalse();
+            });
+        }
+
+        @Test
+        void 멤버가_아니면_조회할_수_없다() {
+            given(communityChatMemberRepository.existsByCommunityPostIdAndUserId(POST_ID, JOINER_ID)).willReturn(false);
+
+            assertThatThrownBy(() -> communityChatMemberService.getMembers(POST_ID, JOINER_ID))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(CommunityChatException.NOT_A_CHAT_MEMBER.getDetail());
+
+            then(communityChatMemberRepository).should(never()).findAllByCommunityPostId(any());
+        }
+
+        private User userWithId(Long id, String nickname, int profileIcon) {
+            User user = USER(nickname);
+            setId(user, id);
+            ReflectionTestUtils.setField(user, "profileIcon", profileIcon);
+            return user;
         }
     }
 }

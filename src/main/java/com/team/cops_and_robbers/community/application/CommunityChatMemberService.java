@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.community.application;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatJoinCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatLeaveCommand;
+import com.team.cops_and_robbers.community.application.dto.result.CommunityChatMemberListResult;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityChatRoomResult;
 import com.team.cops_and_robbers.community.application.event.CommunityChatMessageSavedEvent;
 import com.team.cops_and_robbers.community.domain.CommunityChatMember;
@@ -99,6 +100,32 @@ public class CommunityChatMemberService {
                         lastMessages.get(post.getId())))
                 .sorted(RECENT_CHAT_FIRST)
                 .toList();
+    }
+
+    public CommunityChatMemberListResult getMembers(Long postId, Long requesterId) {
+        validateChatMember(postId, requesterId);
+
+        List<CommunityChatMember> members = communityChatMemberRepository.findAllByCommunityPostId(postId);
+        Long writerId = communityPostRepository.getByPostId(postId).getWriterId();
+        Map<Long, User> users = findUsers(members);
+
+        List<CommunityChatMemberListResult.Member> results = members.stream()
+                .map(member -> CommunityChatMemberListResult.Member.of(
+                                member.getUserId(), users.get(member.getUserId()), writerId))
+                .toList();
+        return new CommunityChatMemberListResult(results);
+    }
+
+    private void validateChatMember(Long postId, Long userId) {
+        if (!communityChatMemberRepository.existsByCommunityPostIdAndUserId(postId, userId)) {
+            throw new ApplicationException(CommunityChatException.NOT_A_CHAT_MEMBER);
+        }
+    }
+
+    private Map<Long, User> findUsers(List<CommunityChatMember> members) {
+        List<Long> userIds = members.stream().map(CommunityChatMember::getUserId).distinct().toList();
+        return userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
     }
 
     private Map<Long, Long> findMemberCounts(List<Long> postIds) {

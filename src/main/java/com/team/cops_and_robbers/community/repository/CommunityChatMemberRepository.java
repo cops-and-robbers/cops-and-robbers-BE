@@ -16,6 +16,8 @@ public interface CommunityChatMemberRepository extends JpaRepository<CommunityCh
 
     Optional<CommunityChatMember> findByCommunityPostIdAndUserId(Long communityPostId, Long userId);
 
+    List<CommunityChatMember> findAllByCommunityPostId(Long communityPostId);
+
     int countByCommunityPostId(Long communityPostId);
 
     int countByUserId(Long userId);

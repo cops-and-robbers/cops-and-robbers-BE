@@ -202,4 +202,55 @@ class CommunityChatQueryControllerTest extends ControllerTest {
             return (Map<String, Object>) room.get("lastMessage");
         }
     }
+
+    @Nested
+    @DisplayName("채팅방 멤버 목록 조회")
+    class GetMembers {
+
+        private static final String MEMBERS_PATH = "/api/community-posts/{postId}/chat/members";
+
+        @Test
+        void 작성자_여부를_포함한_멤버_목록을_조회한다() {
+            User author = givenUser("author");
+            CommunityPost post = communityPostRepository.save(CommunityPostFixture.POST(author.getId()));
+            communityChatMemberRepository.save(CommunityChatMember.createMember(post.getId(), author.getId()));
+            User joiner = givenUser("joiner");
+            communityChatMemberRepository.save(CommunityChatMember.createMember(post.getId(), joiner.getId()));
+
+            Map<String, Object> response = authenticated(givenAccessToken(author))
+                    .get(MEMBERS_PATH, post.getId())
+                    .then().statusCode(200)
+                    .extract().as(new TypeRef<>() {});
+
+            List<Map<String, Object>> members = extractMembers(response);
+            assertThat(members).hasSize(2);
+            Map<String, Object> authorMember = members.stream()
+                    .filter(member -> member.get("userId").equals(author.getId().intValue()))
+                    .findFirst().orElseThrow();
+            assertThat(authorMember.get("nickname")).isEqualTo("author");
+            assertThat(authorMember.get("profileIcon")).isEqualTo(author.getProfileIcon());
+            assertThat(authorMember.get("isAuthor")).isEqualTo(true);
+            Map<String, Object> joinerMember = members.stream()
+                    .filter(member -> member.get("userId").equals(joiner.getId().intValue()))
+                    .findFirst().orElseThrow();
+            assertThat(joinerMember.get("isAuthor")).isEqualTo(false);
+        }
+
+        @Test
+        void 채팅방_멤버가_아니면_조회할_수_없다() {
+            User member = givenUser("member");
+            CommunityPost post = givenChatRoom(member);
+            User outsider = givenUser("outsider");
+
+            authenticated(givenAccessToken(outsider))
+                    .get(MEMBERS_PATH, post.getId())
+                    .then()
+                    .statusCode(CommunityChatException.NOT_A_CHAT_MEMBER.getHttpStatus().value());
+        }
+
+        @SuppressWarnings("unchecked")
+        private List<Map<String, Object>> extractMembers(Map<String, Object> response) {
+            return (List<Map<String, Object>>) response.get("members");
+        }
+    }
 }

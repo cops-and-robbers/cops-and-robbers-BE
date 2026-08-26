@@ -5,6 +5,7 @@ import com.team.cops_and_robbers.common.swagger.ApiErrorCode;
 import com.team.cops_and_robbers.community.exception.CommunityChatException;
 import com.team.cops_and_robbers.community.exception.CommunityPostException;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityChatHistoryResponse;
+import com.team.cops_and_robbers.community.presentation.dto.response.CommunityChatMemberListResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -36,6 +37,18 @@ public interface CommunityChatMemberControllerDocs {
             @ApiResponse(responseCode = "204", description = "나가기 성공")
     })
     ResponseEntity<Void> leave(
+            @Parameter(hidden = true) LoginUser loginUser,
+            @Parameter(description = "게시글 ID", example = "1") @PathVariable Long postId
+    );
+
+    @Operation(summary = "채팅방 멤버 목록 조회",
+            description = "채팅방 사이드바용 멤버 목록을 조회합니다. 해당 방 멤버만 조회할 수 있습니다. "
+                    + "닉네임·프로필 아이콘은 채팅 내역과 같은 규칙(조회 시점 현재 값, 탈퇴 유저는 기본값)으로 내려줍니다.")
+    @ApiErrorCode(value = CommunityChatException.class, codes = {"NOT_A_CHAT_MEMBER"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
+    ResponseEntity<CommunityChatMemberListResponse> getMembers(
             @Parameter(hidden = true) LoginUser loginUser,
             @Parameter(description = "게시글 ID", example = "1") @PathVariable Long postId
     );
