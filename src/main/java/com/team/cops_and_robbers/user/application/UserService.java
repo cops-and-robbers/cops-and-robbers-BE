@@ -7,6 +7,8 @@ import com.team.cops_and_robbers.auth.exception.AuthException;
 import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.exception.InfrastructureException;
+import com.team.cops_and_robbers.community.domain.RecruitmentStatus;
+import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
@@ -46,6 +48,7 @@ public class UserService {
     private final GameParticipantRepository gameParticipantRepository;
     private final GameAreaRepository gameAreaRepository;
     private final GameRepository gameRepository;
+    private final CommunityPostRepository communityPostRepository;
 
     @Transactional(readOnly = true)
     public User getUserInfo(Long loginUserId) {
@@ -105,6 +108,7 @@ public class UserService {
         if (gameParticipantRepository.existsActiveGameByUserId(user.getId())) {
             throw new ApplicationException(UserException.CANNOT_WITHDRAW);
         }
+        closeRecruitingPosts(userId);
         userDeviceRepository.deleteByUserId(userId);
         userRepository.deleteUserByIdDirectly(user.getId());
         refreshTokenRepository.delete(user.getId());
@@ -118,6 +122,12 @@ public class UserService {
             }
             throw new InfrastructureException(AuthException.FIREBASE_SERVER_ERROR);
         }
+    }
+
+    private void closeRecruitingPosts(Long writerId) {
+        communityPostRepository.findAllByWriterId(writerId).stream()
+                .filter(post -> post.getStatus() == RecruitmentStatus.RECRUITING)
+                .forEach(post -> post.updateStatus(RecruitmentStatus.COMPLETED));
     }
 
     @Transactional

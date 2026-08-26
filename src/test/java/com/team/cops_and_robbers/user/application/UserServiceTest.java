@@ -6,8 +6,11 @@ import com.google.firebase.auth.FirebaseAuthException;
 import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.common.fixture.CommunityPostFixture;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
+import com.team.cops_and_robbers.community.domain.CommunityPost;
+import com.team.cops_and_robbers.community.domain.RecruitmentStatus;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
@@ -31,6 +34,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
@@ -332,6 +336,25 @@ class UserServiceTest extends ServiceUnitTest {
             // then
             then(userRepository).should().deleteUserByIdDirectly(user.getId());
             then(refreshTokenRepository).should().delete(user.getId());
+        }
+
+        @Test
+        void 탈퇴하면_모집중인_게시글이_자동으로_마감된다() throws Exception {
+            // given
+            given(userRepository.getByUserId(user.getId())).willReturn(user);
+            given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(false);
+
+            CommunityPost recruitingPost = CommunityPostFixture.POST(user.getId());
+            CommunityPost completedPost = CommunityPostFixture.COMPLETED_POST(user.getId());
+            given(communityPostRepository.findAllByWriterId(user.getId()))
+                    .willReturn(List.of(recruitingPost, completedPost));
+
+            // when
+            userService.deleteAccount(user.getId());
+
+            // then
+            assertThat(recruitingPost.getStatus()).isEqualTo(RecruitmentStatus.COMPLETED);
+            assertThat(completedPost.getStatus()).isEqualTo(RecruitmentStatus.COMPLETED);
         }
     }
 
