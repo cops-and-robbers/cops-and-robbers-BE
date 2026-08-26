@@ -149,6 +149,7 @@ class UserControllerTest extends ControllerTest {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
                 softly.assertThat(response.userId()).isEqualTo(user.getId());
                 softly.assertThat(response.nickname()).isEqualTo(user.getNickname());
+                softly.assertThat(response.profileIcon()).isEqualTo(user.getProfileIcon());
             });
         }
 
