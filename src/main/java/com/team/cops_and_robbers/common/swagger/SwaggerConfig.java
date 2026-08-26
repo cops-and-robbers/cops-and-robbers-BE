@@ -30,8 +30,27 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.21.0")
+                .version("2.22.0")
                 .description("""
+                        ## v2.22.0 업데이트 내역
+
+                        ### ✨ 신규 — 댓글·좋아요·스크랩
+                        - POST /api/community-posts/{postId}/comments — 댓글/답글 작성
+                          - parentId를 보내면 답글, 생략하면 일반 댓글
+                          - 댓글은 2depth로 고정. 답글에 답글을 달면 400(INVALID_COMMENT_DEPTH)
+                        - GET /api/community-posts/{postId}/comments — 댓글 목록 조회 🔓 no auth
+                          - 오래된 순 커서 페이지네이션. 답글은 부모 댓글의 replies에 함께 담겨 내려온다
+                          - 답글이 남아있는 삭제된 댓글은 deleted: true로 남고 content·writerNickname은 null
+                        - DELETE /api/community-posts/comments/{commentId} — 댓글 삭제
+                          - 작성자만 삭제 가능
+                          - 답글이 남아있으면 실제로 지우지 않고 삭제 표시만 한다 (마지막 답글이 지워질 때 함께 정리됨)
+                        - POST/DELETE /api/community-posts/{postId}/likes — 좋아요 · 취소
+                          - 중복 좋아요는 409(ALREADY_LIKED), 누른 적 없는 취소는 404(LIKE_NOT_FOUND)
+                        - POST/DELETE /api/community-posts/{postId}/scraps — 스크랩 · 취소
+                          - 중복 스크랩은 409(ALREADY_SCRAPPED), 스크랩한 적 없는 취소는 404(SCRAP_NOT_FOUND)
+                        - GET /api/community-posts/scraps — 내 스크랩 목록 조회
+                          - 스크랩한 순서(최신순) 커서 페이지네이션
+
                         ## v2.21.0 업데이트 내역
 
                         ### ✨ 신규 — 커뮤니티 목록 정렬 · 검색
