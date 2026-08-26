@@ -13,7 +13,7 @@ import org.springframework.util.StringUtils;
 
 /**
  * 마감 여부가 1차 정렬 기준이라 커서에도 담는다.
- * sortKey는 정렬에 따라 createdAt · meetingAt · 거리(m)이며, 국가·정렬·검색어가 요청과 다르면 거절한다.
+ * sortKey는 정렬에 따라 createdAt · meetingAt · 거리(m) · 인기 점수이며, 국가·정렬·검색어가 요청과 다르면 거절한다.
  * 거리 기준 좌표는 담지 않는다. 사용자가 조금만 움직여도 커서가 막히면 안 되기 때문이다.
  */
 public record CommunityPostCursor(
@@ -60,17 +60,21 @@ public record CommunityPostCursor(
         return Double.parseDouble(sortKey);
     }
 
+    public long score() {
+        return Long.parseLong(sortKey);
+    }
+
     /** 검색어에 구분자가 들어갈 수 있어 값을 그대로 담지 않고 해시로 비교한다. */
     private static int keywordHash(String keyword) {
         return StringUtils.hasText(keyword) ? keyword.trim().hashCode() : 0;
     }
 
     private static void validateSortKey(CommunityPostCursor cursor) {
-        if (cursor.sort() == CommunityPostSort.DISTANCE) {
-            cursor.distance();
-            return;
+        switch (cursor.sort()) {
+            case DISTANCE -> cursor.distance();
+            case POPULAR -> cursor.score();
+            default -> cursor.sortAt();
         }
-        cursor.sortAt();
     }
 
     private static Optional<CommunityPostCursor> parse(String value) {

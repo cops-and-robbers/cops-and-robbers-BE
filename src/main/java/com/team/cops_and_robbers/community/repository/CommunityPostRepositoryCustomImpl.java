@@ -1,6 +1,9 @@
 package com.team.cops_and_robbers.community.repository;
 
+import static com.team.cops_and_robbers.community.domain.QCommunityChatMember.communityChatMember;
 import static com.team.cops_and_robbers.community.domain.QCommunityPost.communityPost;
+import static com.team.cops_and_robbers.community.domain.QCommunityPostLike.communityPostLike;
+import static com.team.cops_and_robbers.community.domain.QCommunityPostScrap.communityPostScrap;
 
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
@@ -8,6 +11,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team.cops_and_robbers.community.application.dto.CommunityPostCursor;
 import com.team.cops_and_robbers.community.application.dto.CommunityPostRow;
@@ -23,23 +27,34 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class CommunityPostRepositoryCustomImpl implements CommunityPostRepositoryCustom {
 
+    /**
+     * 인기순 대상은 최근 N일 이내 작성글로 제한한다.
+     */
+    private static final long POPULAR_WINDOW_DAYS = 7;
+    private static final long LIKE_WEIGHT = 1L;
+    private static final long SCRAP_WEIGHT = 2L;
+    private static final long CHAT_MEMBER_WEIGHT = 3L;
+
     private final JPAQueryFactory queryFactory;
 
     @Override
     public List<CommunityPostRow> findPage(
             CommunityPostSearchCondition condition, CommunityPostCursor cursor, int size) {
-        NumberExpression<Integer> closedRank = closedRank(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+        NumberExpression<Integer> closedRank = closedRank(now);
         NumberExpression<Double> distance = distance(condition);
+        NumberExpression<Long> score = popularityScore(condition);
 
         return queryFactory
-                .select(Projections.constructor(CommunityPostRow.class, communityPost, distance))
+                .select(Projections.constructor(CommunityPostRow.class, communityPost, distance, score))
                 .from(communityPost)
                 .where(
                         communityPost.countryCode.eq(condition.countryCode()),
                         keywordContains(condition.keyword()),
-                        afterCursor(closedRank, distance, condition.sort(), cursor)
+                        withinPopularWindow(condition.sort(), now),
+                        afterCursor(closedRank, distance, score, condition.sort(), cursor)
                 )
-                .orderBy(orderBy(closedRank, distance, condition.sort()))
+                .orderBy(orderBy(closedRank, distance, score, condition.sort()))
                 .limit(size + 1L)
                 .fetch();
     }
@@ -73,13 +88,48 @@ public class CommunityPostRepositoryCustomImpl implements CommunityPostRepositor
                 communityPost.location, condition.longitude(), condition.latitude());
     }
 
+    private NumberExpression<Long> popularityScore(CommunityPostSearchCondition condition) {
+        if (condition.sort() != CommunityPostSort.POPULAR) {
+            return Expressions.asNumber(0L).nullif(0L);
+        }
+        NumberExpression<Long> likeCount = Expressions.numberTemplate(Long.class, "({0})",
+                JPAExpressions.select(communityPostLike.count())
+                        .from(communityPostLike)
+                        .where(communityPostLike.communityPostId.eq(communityPost.id)));
+        NumberExpression<Long> scrapCount = Expressions.numberTemplate(Long.class, "({0})",
+                JPAExpressions.select(communityPostScrap.count())
+                        .from(communityPostScrap)
+                        .where(communityPostScrap.communityPostId.eq(communityPost.id)));
+        NumberExpression<Long> memberCount = Expressions.numberTemplate(Long.class, "({0})",
+                JPAExpressions.select(communityChatMember.count())
+                        .from(communityChatMember)
+                        .where(communityChatMember.communityPostId.eq(communityPost.id)));
+
+        return likeCount.multiply(LIKE_WEIGHT)
+                .add(scrapCount.multiply(SCRAP_WEIGHT))
+                .add(memberCount.multiply(CHAT_MEMBER_WEIGHT));
+    }
+
+    private BooleanExpression withinPopularWindow(CommunityPostSort sort, LocalDateTime now) {
+        if (sort != CommunityPostSort.POPULAR) {
+            return null;
+        }
+        return communityPost.createdAt.goe(now.minusDays(POPULAR_WINDOW_DAYS));
+    }
+
     private OrderSpecifier<?>[] orderBy(
-            NumberExpression<Integer> closedRank, NumberExpression<Double> distance, CommunityPostSort sort) {
+            NumberExpression<Integer> closedRank,
+            NumberExpression<Double> distance,
+            NumberExpression<Long> score,
+            CommunityPostSort sort
+    ) {
         return switch (sort) {
             case DEADLINE -> new OrderSpecifier<?>[]{
                     closedRank.asc(), communityPost.meetingAt.asc(), communityPost.id.asc()};
             case DISTANCE -> new OrderSpecifier<?>[]{
                     closedRank.asc(), distance.asc(), communityPost.id.asc()};
+            case POPULAR -> new OrderSpecifier<?>[]{
+                    closedRank.asc(), score.desc(), communityPost.id.desc()};
             default -> new OrderSpecifier<?>[]{
                     closedRank.asc(), communityPost.createdAt.desc(), communityPost.id.desc()};
         };
@@ -88,6 +138,7 @@ public class CommunityPostRepositoryCustomImpl implements CommunityPostRepositor
     private BooleanExpression afterCursor(
             NumberExpression<Integer> closedRank,
             NumberExpression<Double> distance,
+            NumberExpression<Long> score,
             CommunityPostSort sort,
             CommunityPostCursor cursor
     ) {
@@ -96,17 +147,19 @@ public class CommunityPostRepositoryCustomImpl implements CommunityPostRepositor
         }
         int cursorClosedRank = cursor.isClosed() ? 1 : 0;
         return closedRank.gt(cursorClosedRank)
-                .or(closedRank.eq(cursorClosedRank).and(afterSortKey(distance, sort, cursor)));
+                .or(closedRank.eq(cursorClosedRank).and(afterSortKey(distance, score, sort, cursor)));
     }
 
     private BooleanExpression afterSortKey(
-            NumberExpression<Double> distance, CommunityPostSort sort, CommunityPostCursor cursor) {
+            NumberExpression<Double> distance, NumberExpression<Long> score, CommunityPostSort sort, CommunityPostCursor cursor) {
         return switch (sort) {
             case DEADLINE -> communityPost.meetingAt.gt(cursor.sortAt())
                     .or(communityPost.meetingAt.eq(cursor.sortAt())
                             .and(communityPost.id.gt(cursor.id())));
             case DISTANCE -> distance.gt(cursor.distance())
                     .or(distance.eq(cursor.distance()).and(communityPost.id.gt(cursor.id())));
+            case POPULAR -> score.lt(cursor.score())
+                    .or(score.eq(cursor.score()).and(communityPost.id.lt(cursor.id())));
             default -> communityPost.createdAt.lt(cursor.sortAt())
                     .or(communityPost.createdAt.eq(cursor.sortAt())
                             .and(communityPost.id.lt(cursor.id())));

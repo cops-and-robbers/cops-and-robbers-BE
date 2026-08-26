@@ -6,12 +6,14 @@ import com.team.cops_and_robbers.user.application.UserService;
 import com.team.cops_and_robbers.user.application.dto.command.AgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.GamePushAgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
+import com.team.cops_and_robbers.user.application.dto.command.ProfileIconUpdateCommand;
 import com.team.cops_and_robbers.user.application.dto.result.GamePushAgreementResult;
 import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.presentation.dto.request.AgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.GamePushAgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
+import com.team.cops_and_robbers.user.presentation.dto.request.ProfileIconUpdateRequest;
 import com.team.cops_and_robbers.user.presentation.dto.response.AgreementResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.DeleteAccountResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.GamePushAgreementResponse;
@@ -131,6 +133,19 @@ public class UserController implements UserControllerDocs {
     ) {
         GamePushAgreementCommand command = GamePushAgreementCommand.of(loginUser.userId(), request.allowGamePush());
         userService.updateGamePushAgreement(command);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 10. 사용자 프로필 아이콘 번호를 변경합니다.
+     */
+    @PatchMapping("/me/profile-icon")
+    public ResponseEntity<Void> updateProfileIcon(
+            @AuthUser LoginUser loginUser,
+            @RequestBody @Valid ProfileIconUpdateRequest request
+    ) {
+        ProfileIconUpdateCommand command = ProfileIconUpdateCommand.of(loginUser.userId(), request.profileIcon());
+        userService.updateProfileIcon(command);
         return ResponseEntity.noContent().build();
     }
 }

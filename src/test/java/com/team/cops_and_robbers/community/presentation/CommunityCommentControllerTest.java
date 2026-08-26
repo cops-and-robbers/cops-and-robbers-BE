@@ -112,6 +112,7 @@ class CommunityCommentControllerTest extends ControllerTest {
             assertThat(deletedRoot.get("deleted")).isEqualTo(true);
             assertThat(deletedRoot.get("content")).isNull();
             assertThat(deletedRoot.get("writerNickname")).isNull();
+            assertThat(deletedRoot.get("writerProfileIcon")).isNull();
         }
 
         @Test
@@ -171,6 +172,7 @@ class CommunityCommentControllerTest extends ControllerTest {
 
             assertThat(response.get("content")).isEqualTo("몇 시에 만나나요?");
             assertThat(response.get("writerNickname")).isEqualTo("작성자");
+            assertThat(response.get("writerProfileIcon")).isEqualTo(writer.getProfileIcon());
         }
 
         @Test

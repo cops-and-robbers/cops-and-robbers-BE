@@ -26,6 +26,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseTimeEntity {
 
+    public static final int DEFAULT_PROFILE_ICON = 1;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -61,6 +63,10 @@ public class User extends BaseTimeEntity {
     private LocalDateTime termsAgreedAt;
 
     private LocalDateTime marketingAgreedAt;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private int profileIcon = DEFAULT_PROFILE_ICON;
 
     public static User signUp(String socialId, SocialType socialType, String nickname) {
         return User.builder()
@@ -117,5 +123,9 @@ public class User extends BaseTimeEntity {
 
     public void updateGamePush(boolean allowGamePush) {
         this.allowGamePush = allowGamePush;
+    }
+
+    public void updateProfileIcon(int profileIcon) {
+        this.profileIcon = profileIcon;
     }
 }

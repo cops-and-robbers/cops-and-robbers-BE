@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -84,12 +85,12 @@ public class CommunityPostReactionService {
         List<CommunityPostScrap> scraps = hasNext ? fetched.subList(0, command.size()) : fetched;
 
         Map<Long, CommunityPost> postsById = findPostsById(scraps);
-        Map<Long, String> nicknames = findWriterNicknames(postsById.values());
+        Map<Long, User> writers = findWriters(postsById.values());
 
         List<CommunityPostResult> content = scraps.stream()
                 .map(scrap -> postsById.get(scrap.getCommunityPostId()))
                 .filter(Objects::nonNull)
-                .map(post -> CommunityPostResult.from(post, nicknames.get(post.getWriterId())))
+                .map(post -> CommunityPostResult.from(post, writers.get(post.getWriterId())))
                 .toList();
         Long nextCursor = hasNext ? scraps.getLast().getId() : null;
 
@@ -102,9 +103,9 @@ public class CommunityPostReactionService {
                 .collect(Collectors.toMap(CommunityPost::getId, post -> post));
     }
 
-    private Map<Long, String> findWriterNicknames(Collection<CommunityPost> posts) {
+    private Map<Long, User> findWriters(Collection<CommunityPost> posts) {
         List<Long> writerIds = posts.stream().map(CommunityPost::getWriterId).distinct().toList();
         return userRepository.findAllById(writerIds).stream()
-                .collect(Collectors.toMap(User::getId, User::getNickname));
+                .collect(Collectors.toMap(User::getId, Function.identity()));
     }
 }

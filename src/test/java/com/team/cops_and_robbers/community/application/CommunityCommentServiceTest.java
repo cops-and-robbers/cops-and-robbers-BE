@@ -55,6 +55,12 @@ class CommunityCommentServiceTest extends ServiceUnitTest {
         return user;
     }
 
+    private User userWithNickname(Long userId, String nickname, int profileIcon) {
+        User user = userWithNickname(userId, nickname);
+        ReflectionTestUtils.setField(user, "profileIcon", profileIcon);
+        return user;
+    }
+
     private CommunityComment comment(Long id, Long parentId, Long writerId, String content) {
         CommunityComment comment = CommunityComment.createComment(POST_ID, parentId, writerId, content);
         setId(comment, id);
@@ -84,6 +90,7 @@ class CommunityCommentServiceTest extends ServiceUnitTest {
 
             assertThat(result.content()).isEqualTo("내용");
             assertThat(result.writerNickname()).isEqualTo("작성자");
+            assertThat(result.writerProfileIcon()).isEqualTo(User.DEFAULT_PROFILE_ICON);
             then(eventPublisher).should().publishEvent(any(Object.class));
         }
 
@@ -205,14 +212,16 @@ class CommunityCommentServiceTest extends ServiceUnitTest {
             given(communityCommentRepository.findRootPageByCursor(any(), any(), any())).willReturn(List.of(root));
             given(communityCommentRepository.findRepliesByParentIds(anyList())).willReturn(List.of(reply));
             given(userRepository.findAllById(anyList())).willReturn(List.of(
-                    userWithNickname(WRITER_ID, "루트작성자"), userWithNickname(200L, "답글작성자")));
+                    userWithNickname(WRITER_ID, "루트작성자"), userWithNickname(200L, "답글작성자", 2)));
 
             CommunityCommentListResult result =
                     communityCommentService.getComments(CommunityCommentListCommand.of(POST_ID, null, 10));
 
             assertThat(result.content()).hasSize(1);
             assertThat(result.content().getFirst().replies()).hasSize(1);
-            assertThat(result.content().getFirst().replies().getFirst().writerNickname()).isEqualTo("답글작성자");
+            CommunityCommentResult replyResult = result.content().getFirst().replies().getFirst();
+            assertThat(replyResult.writerNickname()).isEqualTo("답글작성자");
+            assertThat(replyResult.writerProfileIcon()).isEqualTo(2);
         }
 
         @Test
@@ -230,6 +239,7 @@ class CommunityCommentServiceTest extends ServiceUnitTest {
             assertThat(content.deleted()).isTrue();
             assertThat(content.content()).isNull();
             assertThat(content.writerNickname()).isNull();
+            assertThat(content.writerProfileIcon()).isNull();
         }
 
         @Test
@@ -246,6 +256,7 @@ class CommunityCommentServiceTest extends ServiceUnitTest {
             assertThat(content.deleted()).isFalse();
             assertThat(content.writerId()).isEqualTo(WRITER_ID);
             assertThat(content.writerNickname()).isEqualTo("알수없음");
+            assertThat(content.writerProfileIcon()).isEqualTo(User.DEFAULT_PROFILE_ICON);
         }
     }
 

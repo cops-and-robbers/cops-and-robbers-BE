@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,7 +49,7 @@ public class CommunityCommentService {
         );
         eventPublisher.publishEvent(new CommunityCommentCreatedEvent(saved));
 
-        return CommunityCommentResult.from(saved, findWriterNickname(command.writerId()));
+        return CommunityCommentResult.from(saved, findWriter(command.writerId()));
     }
 
     /**
@@ -69,13 +70,13 @@ public class CommunityCommentService {
         boolean hasNext = fetched.size() > command.size();
         List<CommunityComment> roots = hasNext ? fetched.subList(0, command.size()) : fetched;
 
-        // 루트 댓글 기준으로 대댓글 조회 + 작성자 닉네임을 한 번에 조회 (N+1 방지)
+        // 루트 댓글 기준으로 대댓글 조회 + 작성자를 한 번에 조회 (N+1 방지)
         List<CommunityComment> replies = findReplies(roots);
-        Map<Long, String> nicknames = findWriterNicknames(Stream.concat(roots.stream(), replies.stream()).toList());
+        Map<Long, User> writers = findWriters(Stream.concat(roots.stream(), replies.stream()).toList());
         Map<Long, List<CommunityComment>> repliesByParent = groupRepliesByParent(replies);
 
         List<CommunityCommentResult> content = roots.stream()
-                .map(root -> toResultWithReplies(root, repliesByParent, nicknames))
+                .map(root -> toResultWithReplies(root, repliesByParent, writers))
                 .toList();
 
         Long nextCursor = hasNext ? roots.getLast().getId() : null;
@@ -156,27 +157,25 @@ public class CommunityCommentService {
     private CommunityCommentResult toResultWithReplies(
             CommunityComment root,
             Map<Long, List<CommunityComment>> repliesByParent,
-            Map<Long, String> nicknames
+            Map<Long, User> writers
     ) {
         List<CommunityCommentResult> replies = repliesByParent.getOrDefault(root.getId(), List.of()).stream()
-                .map(reply -> CommunityCommentResult.from(reply, nicknames.get(reply.getWriterId())))
+                .map(reply -> CommunityCommentResult.from(reply, writers.get(reply.getWriterId())))
                 .toList();
-        return CommunityCommentResult.of(root, nicknames.get(root.getWriterId()), replies);
+        return CommunityCommentResult.of(root, writers.get(root.getWriterId()), replies);
     }
 
-    private String findWriterNickname(Long writerId) {
-        return userRepository.findById(writerId)
-                .map(User::getNickname)
-                .orElse(null);
+    private User findWriter(Long writerId) {
+        return userRepository.findById(writerId).orElse(null);
     }
 
-    private Map<Long, String> findWriterNicknames(List<CommunityComment> comments) {
+    private Map<Long, User> findWriters(List<CommunityComment> comments) {
         List<Long> writerIds = comments.stream()
                 .map(CommunityComment::getWriterId)
                 .distinct()
                 .toList();
 
         return userRepository.findAllById(writerIds).stream()
-                .collect(Collectors.toMap(User::getId, User::getNickname));
+                .collect(Collectors.toMap(User::getId, Function.identity()));
     }
 }

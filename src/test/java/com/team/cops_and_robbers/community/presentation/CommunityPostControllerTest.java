@@ -1,6 +1,9 @@
 package com.team.cops_and_robbers.community.presentation;
 
 import com.team.cops_and_robbers.common.ControllerTest;
+import com.team.cops_and_robbers.community.domain.CommunityChatMember;
+import com.team.cops_and_robbers.community.domain.CommunityPostLike;
+import com.team.cops_and_robbers.community.domain.CommunityPostScrap;
 import com.team.cops_and_robbers.community.domain.PostAddress;
 import com.team.cops_and_robbers.community.domain.RecruitmentStatus;
 import com.team.cops_and_robbers.community.exception.CommunityPostException;
@@ -13,7 +16,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +42,9 @@ class CommunityPostControllerTest extends ControllerTest {
     private static final String POST_API_URL = "/api/community-posts";
     private static final String ADDRESS_API_URL = POST_API_URL + "/address";
     private static final String COUNTRY_API_URL = POST_API_URL + "/country";
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     private User user;
     private String accessToken;
@@ -296,6 +305,7 @@ class CommunityPostControllerTest extends ControllerTest {
                 softly.assertThat(extract.jsonPath().getBoolean("cursor.hasNext")).isTrue();
                 softly.assertThat(extract.jsonPath().getString("cursor.nextCursor")).isNotBlank();
                 softly.assertThat(extract.jsonPath().getString("content[0].writerNickname")).isEqualTo("무서운경찰관");
+                softly.assertThat(extract.jsonPath().getInt("content[0].writerProfileIcon")).isEqualTo(writer.getProfileIcon());
                 softly.assertThat(extract.jsonPath().getString("content[0].location.region")).isNull();
                 softly.assertThat(extract.jsonPath().getString("content[0].location.placeName"))
                         .isEqualTo("어린이대공원 정문");
@@ -602,6 +612,127 @@ class CommunityPostControllerTest extends ControllerTest {
         }
 
         @Test
+        void 인기순은_좋아요_스크랩_채팅참여를_가중합한_점수가_높은_순서로_조회한다() {
+            Long low = communityPostRepository.save(POST(user.getId())).getId();
+            Long high = communityPostRepository.save(POST(user.getId())).getId();
+            Long mid = communityPostRepository.save(POST(user.getId())).getId();
+
+            // high: 채팅 참여 3명 * 3점 = 9점
+            for (int i = 0; i < 3; i++) {
+                communityChatMemberRepository.save(CommunityChatMember.createMember(high, givenUser("참여자" + i).getId()));
+            }
+            // mid: 좋아요 1개(1점) + 스크랩 1개(2점) = 3점
+            communityPostLikeRepository.save(CommunityPostLike.createLike(mid, givenUser("좋아요러").getId()));
+            communityPostScrapRepository.save(CommunityPostScrap.createScrap(mid, givenUser("스크랩러").getId()));
+            // low: 반응 없음 = 0점
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "POPULAR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getList("content.id", Long.class))
+                        .containsExactly(high, mid, low);
+            });
+        }
+
+        @Test
+        void 인기순은_마감된_글을_점수와_무관하게_맨_뒤로_보낸다() {
+            Long completedId = communityPostRepository.save(COMPLETED_POST(user.getId())).getId();
+            communityChatMemberRepository.save(
+                    CommunityChatMember.createMember(completedId, givenUser("참여자").getId()));
+            Long recruitingId = communityPostRepository.save(POST(user.getId())).getId();
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "POPULAR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getList("content.id", Long.class))
+                        .containsExactly(recruitingId, completedId);
+            });
+        }
+
+        @Test
+        void 인기순은_작성된지_7일이_넘은_글은_제외한다() {
+            Long recent = communityPostRepository.save(POST(user.getId())).getId();
+            Long old = communityPostRepository.save(POST(user.getId())).getId();
+            for (int i = 0; i < 5; i++) {
+                communityChatMemberRepository.save(CommunityChatMember.createMember(old, givenUser("참여자" + i).getId()));
+            }
+            jdbcTemplate.update(
+                    "UPDATE community_posts SET created_at = ? WHERE id = ?",
+                    Timestamp.valueOf(LocalDateTime.now().minusDays(8)),
+                    old
+            );
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "POPULAR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getList("content.id", Long.class))
+                        .containsExactly(recent);
+            });
+        }
+
+        @Test
+        void 인기순_커서로_다음_페이지를_중복과_누락_없이_조회한다() {
+            for (int i = 0; i < 6; i++) {
+                Long postId = communityPostRepository.save(POST(user.getId())).getId();
+                for (int j = 0; j <= i; j++) {
+                    communityPostLikeRepository.save(CommunityPostLike.createLike(postId, givenUser("유저" + i + "-" + j).getId()));
+                }
+            }
+
+            ExtractableResponse<Response> firstExtract = unauthenticated()
+                    .queryParam("size", 4)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "POPULAR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+            String nextCursor = firstExtract.jsonPath().getString("cursor.nextCursor");
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 4)
+                    .queryParam("cursor", nextCursor)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("sort", "POPULAR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            List<Long> firstIds = firstExtract.jsonPath().getList("content.id", Long.class);
+            List<Long> secondIds = extract.jsonPath().getList("content.id", Long.class);
+            assertSoftly(softly -> {
+                softly.assertThat(firstIds).hasSize(4);
+                softly.assertThat(secondIds).hasSize(2);
+                softly.assertThat(firstIds).doesNotContainAnyElementsOf(secondIds);
+            });
+        }
+
+        @Test
         void 다른_정렬로_받은_커서로_요청하면_400을_응답한다() {
             for (int i = 0; i < 3; i++) {
                 communityPostRepository.save(POST(user.getId()));
@@ -821,23 +952,6 @@ class CommunityPostControllerTest extends ControllerTest {
                 softly.assertThat(extract.statusCode()).isEqualTo(400);
                 softly.assertThat(extract.jsonPath().getString("detail"))
                         .isEqualTo(CommunityPostException.UNSUPPORTED_LIST_SCOPE.getDetail());
-            });
-        }
-
-        @Test
-        void 아직_지원하지_않는_sort로_요청하면_400을_응답한다() {
-            ExtractableResponse<Response> extract = unauthenticated()
-                    .queryParam("sort", "POPULAR")
-                    .queryParam("countryCode", "KR")
-                    .when()
-                    .get(POST_API_URL)
-                    .then()
-                    .extract();
-
-            assertSoftly(softly -> {
-                softly.assertThat(extract.statusCode()).isEqualTo(400);
-                softly.assertThat(extract.jsonPath().getString("detail"))
-                        .isEqualTo(CommunityPostException.UNSUPPORTED_LIST_SORT.getDetail());
             });
         }
 

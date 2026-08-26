@@ -18,6 +18,7 @@ import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.user.application.dto.command.AgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.GamePushAgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
+import com.team.cops_and_robbers.user.application.dto.command.ProfileIconUpdateCommand;
 import com.team.cops_and_robbers.user.application.dto.result.GamePushAgreementResult;
 import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.User;
@@ -282,6 +283,24 @@ class UserServiceTest extends ServiceUnitTest {
 
             // then
             assertThat(user.isAllowGamePush()).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("프로필 아이콘 변경")
+    class UpdateProfileIcon {
+
+        @Test
+        void 아이콘_번호_변경에_성공한다() {
+            // given
+            ProfileIconUpdateCommand command = ProfileIconUpdateCommand.of(user.getId(), 2);
+            given(userRepository.getByUserId(user.getId())).willReturn(user);
+
+            // when
+            userService.updateProfileIcon(command);
+
+            // then
+            assertThat(user.getProfileIcon()).isEqualTo(2);
         }
     }
 

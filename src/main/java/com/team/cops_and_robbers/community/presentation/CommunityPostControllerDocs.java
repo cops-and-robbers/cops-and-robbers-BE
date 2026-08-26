@@ -69,7 +69,7 @@ public interface CommunityPostControllerDocs {
                     + "countryCode는 필수이며, GET /api/community-posts/country 로 먼저 조회하세요. "
                     + "지원하지 않는 쿼리 파라미터가 포함되면 400을 반환합니다.")
     @ApiErrorCode(value = CommunityPostException.class,
-            codes = {"UNSUPPORTED_LIST_SCOPE", "UNSUPPORTED_LIST_SORT", "COUNTRY_NOT_SPECIFIED", "ADDRESS_LOOKUP_FAILED"})
+            codes = {"UNSUPPORTED_LIST_SCOPE", "COUNTRY_NOT_SPECIFIED", "ADDRESS_LOOKUP_FAILED"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "400",
@@ -80,7 +80,9 @@ public interface CommunityPostControllerDocs {
             @Parameter(description = "페이지 크기 (1~100)", example = "10") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "조회 범위. 현재는 ALL만 지원하며 NEARBY, MINE은 400", example = "ALL")
             @RequestParam(defaultValue = "ALL") CommunityPostScope scope,
-            @Parameter(description = "정렬 기준. LATEST, DEADLINE, DISTANCE 지원. POPULAR는 400. 마감된 글은 정렬과 무관하게 맨 뒤", example = "LATEST")
+            @Parameter(description = "정렬 기준. LATEST, DEADLINE, DISTANCE, POPULAR 지원. "
+                    + "POPULAR는 좋아요*1 + 스크랩*2 + 채팅 참여(멤버 수)*3 점수로 계산하며 최근 7일 이내 작성글만 대상. "
+                    + "마감된 글은 정렬과 무관하게 맨 뒤", example = "LATEST")
             @RequestParam(defaultValue = "LATEST") CommunityPostSort sort,
             @Parameter(description = "조회할 국가 코드(ISO 3166-1 alpha-2). 필수", example = "KR")
             @RequestParam String countryCode,

@@ -31,9 +31,6 @@ public record CommunityPostListCommand(
         if (scope != CommunityPostScope.ALL) {
             throw new ApplicationException(CommunityPostException.UNSUPPORTED_LIST_SCOPE);
         }
-        if (sort == CommunityPostSort.POPULAR) {
-            throw new ApplicationException(CommunityPostException.UNSUPPORTED_LIST_SORT);
-        }
         validateCoordinates(sort, latitude, longitude);
         validateKeyword(keyword);
     }

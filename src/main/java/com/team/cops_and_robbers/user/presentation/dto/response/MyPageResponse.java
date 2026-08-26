@@ -14,7 +14,9 @@ public record MyPageResponse(
         @Schema(description = "게임 알림 수신 여부", example = "true")
         boolean allowGamePush,
         @Schema(description = "마케팅 알림 수신 여부", example = "false")
-        boolean allowMarketingPush
+        boolean allowMarketingPush,
+        @Schema(description = "프로필 아이콘 번호", example = "1")
+        int profileIcon
 ) {
     public static MyPageResponse from(User user) {
         return new MyPageResponse(
@@ -22,7 +24,8 @@ public record MyPageResponse(
                 user.getNickname(),
                 user.getSocialType(),
                 user.isAllowGamePush(),
-                user.isAllowMarketingPush()
+                user.isAllowMarketingPush(),
+                user.getProfileIcon()
         );
     }
 }

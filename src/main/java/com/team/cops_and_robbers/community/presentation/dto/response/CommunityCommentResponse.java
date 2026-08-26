@@ -15,6 +15,9 @@ public record CommunityCommentResponse(
         @Schema(description = "작성자 닉네임 (삭제된 댓글이면 null, 탈퇴한 유저면 \"알수없음\")",
                 example = "무서운경찰관", nullable = true)
         String writerNickname,
+        @Schema(description = "작성자 프로필 아이콘 번호 (삭제된 댓글이면 null, 탈퇴한 유저면 기본 아이콘 번호)",
+                example = "1", nullable = true)
+        Integer writerProfileIcon,
         @Schema(description = "댓글 내용 (삭제된 댓글이면 null)", example = "몇 시에 만나나요?", nullable = true)
         String content,
         @Schema(description = "삭제 여부. true면 답글이 남아 자리만 지킨 댓글이라 "
@@ -33,6 +36,7 @@ public record CommunityCommentResponse(
                 result.parentId(),
                 result.writerId(),
                 result.writerNickname(),
+                result.writerProfileIcon(),
                 result.content(),
                 result.deleted(),
                 result.createdAt(),
