@@ -233,7 +233,7 @@ class CommunityCommentServiceTest extends ServiceUnitTest {
         }
 
         @Test
-        void 탈퇴한_유저의_댓글은_닉네임이_탈퇴한_사용자로_내려온다() {
+        void 탈퇴한_유저의_댓글은_닉네임이_알수없음으로_내려온다() {
             given(communityCommentRepository.findRootPageByCursor(any(), any(), any()))
                     .willReturn(List.of(comment(10L, null, WRITER_ID, "댓글")));
             given(communityCommentRepository.findRepliesByParentIds(anyList())).willReturn(List.of());

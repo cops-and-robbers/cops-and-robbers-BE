@@ -34,10 +34,6 @@ public class CommunityPostReactionService {
     private final CommunityPostRepository communityPostRepository;
     private final UserRepository userRepository;
 
-    /**
-     * exists 체크와 save 사이에도 동시에 두 번 눌린 요청이 둘 다 통과할 수 있다.
-     * 최후 방어선은 유니크 제약이라, 거기서 막히면 DataIntegrityViolationException을 도메인 예외로 바꿔 던진다.
-     */
     @Transactional
     public void likePost(Long postId, Long userId) {
         communityPostRepository.getByPostId(postId);
@@ -59,7 +55,6 @@ public class CommunityPostReactionService {
         }
     }
 
-    /** likePost와 같은 이유로 save를 try-catch로 감싼다. */
     @Transactional
     public void scrapPost(Long postId, Long userId) {
         communityPostRepository.getByPostId(postId);
