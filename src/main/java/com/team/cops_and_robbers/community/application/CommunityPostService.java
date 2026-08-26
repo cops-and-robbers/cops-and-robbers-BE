@@ -35,6 +35,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -59,7 +60,7 @@ public class CommunityPostService {
         User writer = userRepository.getByUserId(command.writerId());
         CommunityPost post = communityPostRepository.save(CommunityPost.createPost(command, postAddress));
         communityChatMemberRepository.save(CommunityChatMember.createMember(post.getId(), command.writerId()));
-        return CommunityPostResult.from(post, writer.getNickname());
+        return CommunityPostResult.from(post, writer);
     }
 
     public CommunityPostCursorResult getPostList(CommunityPostListCommand command) {
@@ -83,7 +84,7 @@ public class CommunityPostService {
 
     public CommunityPostResult getPost(Long postId) {
         CommunityPost post = communityPostRepository.getByPostId(postId);
-        return CommunityPostResult.from(post, findWriterNickname(post.getWriterId()));
+        return CommunityPostResult.from(post, findWriter(post.getWriterId()));
     }
 
     @Transactional
@@ -93,7 +94,7 @@ public class CommunityPostService {
         validateMeetingDate(command.meetingAt());
         PostAddress postAddress = resolveUpdatedAddress(post, command);
         post.updatePost(command, postAddress);
-        return CommunityPostResult.from(post, findWriterNickname(post.getWriterId()));
+        return CommunityPostResult.from(post, findWriter(post.getWriterId()));
     }
 
     /**
@@ -117,7 +118,7 @@ public class CommunityPostService {
         CommunityPost post = communityPostRepository.getByPostId(command.postId());
         validateAuthor(post, command.writerId());
         post.updateStatus(command.status());
-        return CommunityPostResult.from(post, findWriterNickname(post.getWriterId()));
+        return CommunityPostResult.from(post, findWriter(post.getWriterId()));
     }
 
     private void validateAuthor(CommunityPost post, Long writerId) {
@@ -156,16 +157,14 @@ public class CommunityPostService {
         };
     }
 
-    private String findWriterNickname(Long writerId) {
-        return userRepository.findById(writerId)
-                .map(User::getNickname)
-                .orElse(null);
+    private User findWriter(Long writerId) {
+        return userRepository.findById(writerId).orElse(null);
     }
 
     private List<CommunityPostResult> toResults(List<CommunityPost> posts) {
-        Map<Long, String> nicknames = findWriterNicknames(posts);
+        Map<Long, User> writers = findWriters(posts);
         return posts.stream()
-                .map(post -> CommunityPostResult.from(post, nicknames.get(post.getWriterId())))
+                .map(post -> CommunityPostResult.from(post, writers.get(post.getWriterId())))
                 .toList();
     }
 
@@ -188,13 +187,13 @@ public class CommunityPostService {
         };
     }
 
-    private Map<Long, String> findWriterNicknames(List<CommunityPost> posts) {
+    private Map<Long, User> findWriters(List<CommunityPost> posts) {
         List<Long> writerIds = posts.stream()
                 .map(CommunityPost::getWriterId)
                 .distinct()
                 .toList();
         return userRepository.findAllById(writerIds).stream()
-                .collect(Collectors.toMap(User::getId, User::getNickname));
+                .collect(Collectors.toMap(User::getId, Function.identity()));
     }
 }
 

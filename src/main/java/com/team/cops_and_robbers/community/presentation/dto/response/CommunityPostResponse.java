@@ -11,6 +11,8 @@ public record CommunityPostResponse(
         Long writerId,
         @Schema(description = "작성자 닉네임 (탈퇴한 유저면 \"알수없음\")", example = "무서운경찰관")
         String writerNickname,
+        @Schema(description = "작성자 프로필 아이콘 번호 (탈퇴한 유저면 기본 아이콘 번호)", example = "1")
+        int writerProfileIcon,
         @Schema(description = "제목", example = "같이 경찰과 도둑 하실 분!")
         String title,
         @Schema(description = "내용", example = "강남역 근처에서 5명 모집합니다.")
@@ -52,6 +54,7 @@ public record CommunityPostResponse(
                 result.id(),
                 result.writerId(),
                 result.writerNickname(),
+                result.writerProfileIcon(),
                 result.title(),
                 result.content(),
                 result.meetingAt(),

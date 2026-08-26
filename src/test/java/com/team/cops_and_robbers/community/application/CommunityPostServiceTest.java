@@ -149,6 +149,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
                             LocalDateTime.now().plusDays(3), 37.4979, 127.0276, "만나는곳", 6));
 
             assertThat(result.writerNickname()).isEqualTo("무서운경찰관");
+            assertThat(result.writerProfileIcon()).isEqualTo(User.DEFAULT_PROFILE_ICON);
         }
 
         @Test
@@ -211,7 +212,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         }
 
         @Test
-        void 목록의_작성자_닉네임이_매핑되고_탈퇴한_작성자는_알수없음으로_표시된다() {
+        void 목록의_작성자_닉네임과_아이콘이_매핑되고_탈퇴한_작성자는_알수없음과_기본_아이콘으로_표시된다() {
             CommunityPost post1 = POST(1L, LocalDateTime.of(2026, 8, 1, 2, 0));
             CommunityPost post2 = POST(999L, LocalDateTime.of(2026, 8, 1, 1, 0));
             setId(post1, 1L);
@@ -219,13 +220,15 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             given(communityPostRepository.findPage(any(CommunityPostSearchCondition.class), eq(null), eq(10)))
                     .willReturn(List.of(new CommunityPostRow(post1, null), new CommunityPostRow(post2, null)));
             given(userRepository.findAllById(List.of(1L, 999L)))
-                    .willReturn(List.of(userWithId(1L, "무서운경찰관")));
+                    .willReturn(List.of(userWithId(1L, "무서운경찰관", 2)));
 
             CommunityPostCursorResult result = communityPostService.getPostList(
                     listCommand(null, 10));
 
             assertThat(result.content().get(0).writerNickname()).isEqualTo("무서운경찰관");
+            assertThat(result.content().get(0).writerProfileIcon()).isEqualTo(2);
             assertThat(result.content().get(1).writerNickname()).isEqualTo("알수없음");
+            assertThat(result.content().get(1).writerProfileIcon()).isEqualTo(User.DEFAULT_PROFILE_ICON);
         }
 
         @Test
@@ -264,6 +267,12 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         private User userWithId(Long id, String nickname) {
             User user = USER(nickname);
             setId(user, id);
+            return user;
+        }
+
+        private User userWithId(Long id, String nickname, int profileIcon) {
+            User user = userWithId(id, nickname);
+            ReflectionTestUtils.setField(user, "profileIcon", profileIcon);
             return user;
         }
     }

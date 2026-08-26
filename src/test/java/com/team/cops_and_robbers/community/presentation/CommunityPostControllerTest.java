@@ -296,6 +296,7 @@ class CommunityPostControllerTest extends ControllerTest {
                 softly.assertThat(extract.jsonPath().getBoolean("cursor.hasNext")).isTrue();
                 softly.assertThat(extract.jsonPath().getString("cursor.nextCursor")).isNotBlank();
                 softly.assertThat(extract.jsonPath().getString("content[0].writerNickname")).isEqualTo("무서운경찰관");
+                softly.assertThat(extract.jsonPath().getInt("content[0].writerProfileIcon")).isEqualTo(writer.getProfileIcon());
                 softly.assertThat(extract.jsonPath().getString("content[0].location.region")).isNull();
                 softly.assertThat(extract.jsonPath().getString("content[0].location.placeName"))
                         .isEqualTo("어린이대공원 정문");

@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseTimeEntity {
 
-    private static final int DEFAULT_PROFILE_ICON = 1;
+    public static final int DEFAULT_PROFILE_ICON = 1;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
