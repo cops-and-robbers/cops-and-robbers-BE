@@ -4,12 +4,13 @@ import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.community.domain.CommunityPost;
 import com.team.cops_and_robbers.community.exception.CommunityPostException;
 import jakarta.persistence.LockModeType;
-import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import java.util.Optional;
 
 public interface CommunityPostRepository
         extends JpaRepository<CommunityPost, Long>, CommunityPostRepositoryCustom {

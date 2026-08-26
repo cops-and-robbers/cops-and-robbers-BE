@@ -3,8 +3,8 @@ package com.team.cops_and_robbers.community.application;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.exception.InfrastructureException;
 import com.team.cops_and_robbers.community.application.dto.CommunityPostCursor;
-import com.team.cops_and_robbers.community.application.dto.CommunityPostSearchCondition;
 import com.team.cops_and_robbers.community.application.dto.CommunityPostRow;
+import com.team.cops_and_robbers.community.application.dto.CommunityPostSearchCondition;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostCreateCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostDeleteCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostListCommand;
@@ -21,7 +21,10 @@ import com.team.cops_and_robbers.community.infrastructure.GeocodingClient;
 import com.team.cops_and_robbers.community.infrastructure.GeocodingResult;
 import com.team.cops_and_robbers.community.repository.CommunityChatMemberRepository;
 import com.team.cops_and_robbers.community.repository.CommunityChatMessageRepository;
+import com.team.cops_and_robbers.community.repository.CommunityCommentRepository;
+import com.team.cops_and_robbers.community.repository.CommunityPostLikeRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
+import com.team.cops_and_robbers.community.repository.CommunityPostScrapRepository;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +45,9 @@ public class CommunityPostService {
     private final CommunityPostRepository communityPostRepository;
     private final CommunityChatMemberRepository communityChatMemberRepository;
     private final CommunityChatMessageRepository communityChatMessageRepository;
+    private final CommunityCommentRepository communityCommentRepository;
+    private final CommunityPostLikeRepository communityPostLikeRepository;
+    private final CommunityPostScrapRepository communityPostScrapRepository;
     private final UserRepository userRepository;
     private final GeocodingClient geocodingClient;
 
@@ -100,6 +106,9 @@ public class CommunityPostService {
         validateAuthor(post, command.writerId());
         communityChatMessageRepository.deleteAllByCommunityPostId(command.postId());
         communityChatMemberRepository.deleteAllByCommunityPostId(command.postId());
+        communityCommentRepository.deleteAllByCommunityPostId(command.postId());
+        communityPostLikeRepository.deleteAllByCommunityPostId(command.postId());
+        communityPostScrapRepository.deleteAllByCommunityPostId(command.postId());
         communityPostRepository.deleteByPostId(command.postId());
     }
 

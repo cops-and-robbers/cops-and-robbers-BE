@@ -453,6 +453,19 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         }
 
         @Test
+        void 게시글을_삭제하면_댓글과_좋아요와_스크랩도_함께_정리된다() {
+            CommunityPost post = POST(1L);
+            setId(post, 1L);
+            given(communityPostRepository.getByPostIdForUpdate(1L)).willReturn(post);
+
+            communityPostService.deletePost(new CommunityPostDeleteCommand(1L, 1L));
+
+            then(communityCommentRepository).should().deleteAllByCommunityPostId(1L);
+            then(communityPostLikeRepository).should().deleteAllByCommunityPostId(1L);
+            then(communityPostScrapRepository).should().deleteAllByCommunityPostId(1L);
+        }
+
+        @Test
         void 작성자가_아닌_사용자가_삭제하면_FORBIDDEN_NOT_AUTHOR_예외가_발생한다() {
             CommunityPost post = POST(1L);
             setId(post, 1L);

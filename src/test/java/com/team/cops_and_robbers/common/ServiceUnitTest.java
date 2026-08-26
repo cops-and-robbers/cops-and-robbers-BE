@@ -5,7 +5,10 @@ import com.team.cops_and_robbers.bug.repository.BugReportRepository;
 import com.team.cops_and_robbers.community.infrastructure.GeocodingClient;
 import com.team.cops_and_robbers.community.repository.CommunityChatMemberRepository;
 import com.team.cops_and_robbers.community.repository.CommunityChatMessageRepository;
+import com.team.cops_and_robbers.community.repository.CommunityCommentRepository;
+import com.team.cops_and_robbers.community.repository.CommunityPostLikeRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
+import com.team.cops_and_robbers.community.repository.CommunityPostScrapRepository;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
@@ -61,6 +64,15 @@ public abstract class ServiceUnitTest {
 
     @Mock
     protected CommunityChatMessageRepository communityChatMessageRepository;
+
+    @Mock
+    protected CommunityCommentRepository communityCommentRepository;
+
+    @Mock
+    protected CommunityPostLikeRepository communityPostLikeRepository;
+
+    @Mock
+    protected CommunityPostScrapRepository communityPostScrapRepository;
 
     @Mock
     protected JwtTokenProvider jwtTokenProvider;
