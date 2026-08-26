@@ -3,7 +3,11 @@ package com.team.cops_and_robbers.report.presentation;
 import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.report.application.ReportService;
+import com.team.cops_and_robbers.report.application.dto.command.CommunityChatReportCommand;
+import com.team.cops_and_robbers.report.application.dto.command.CommunityPostReportCommand;
 import com.team.cops_and_robbers.report.application.dto.command.ReportCommand;
+import com.team.cops_and_robbers.report.presentation.dto.request.CommunityChatReportRequest;
+import com.team.cops_and_robbers.report.presentation.dto.request.CommunityPostReportRequest;
 import com.team.cops_and_robbers.report.presentation.dto.request.ReportRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +32,26 @@ public class ReportController implements ReportControllerDocs {
     ) {
         ReportCommand command = ReportCommand.of(loginUser.userId(), request);
         reportService.reportChat(command);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PostMapping("/community-post")
+    public ResponseEntity<Void> reportCommunityPost(
+            @AuthUser LoginUser loginUser,
+            @RequestBody @Valid CommunityPostReportRequest request
+    ) {
+        CommunityPostReportCommand command = CommunityPostReportCommand.of(loginUser.userId(), request);
+        reportService.reportCommunityPost(command);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PostMapping("/community-chat")
+    public ResponseEntity<Void> reportCommunityChat(
+            @AuthUser LoginUser loginUser,
+            @RequestBody @Valid CommunityChatReportRequest request
+    ) {
+        CommunityChatReportCommand command = CommunityChatReportCommand.of(loginUser.userId(), request);
+        reportService.reportCommunityChat(command);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 }
