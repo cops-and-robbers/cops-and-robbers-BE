@@ -49,7 +49,7 @@ public class SwaggerConfig {
                         - 없는 글은 404(POST_NOT_FOUND), 없는 메시지는 404(CHAT_MESSAGE_NOT_FOUND)
 
                         ### 🛠 변경
-                        - 게시글 응답의 writerNickname이 탈퇴한 작성자면 "탈퇴한 사용자" (기존 null)
+                        - 게시글 응답의 writerNickname이 탈퇴한 작성자면 "알수없음" (기존 null)
                           - 목록 · 상세 · 생성 · 수정 응답에 모두 적용된다
                         - 작성자가 탈퇴하면 그 사람의 모집중(RECRUITING) 게시글이 COMPLETED로 바뀐다
                           - 응답할 사람이 없는 모임에 참여 요청이 계속 가지 않도록 하기 위함

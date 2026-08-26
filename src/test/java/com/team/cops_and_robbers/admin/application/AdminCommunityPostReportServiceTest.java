@@ -76,7 +76,7 @@ class AdminCommunityPostReportServiceTest extends ServiceUnitTest {
         }
 
         @Test
-        void 탈퇴한_유저의_닉네임은_탈퇴한_사용자로_반환된다() {
+        void 탈퇴한_유저의_닉네임은_알수없음으로_반환된다() {
             // given
             AdminReportListCommand command = new AdminReportListCommand(0, 10, null, SortDirection.DESC);
             Page<CommunityPostReport> reportPage = new PageImpl<>(List.of(communityPostReport), PageRequest.of(0, 10), 1);
@@ -88,8 +88,8 @@ class AdminCommunityPostReportServiceTest extends ServiceUnitTest {
 
             // then
             assertSoftly(softly -> {
-                softly.assertThat(result.content().get(0).reporterNickname()).isEqualTo("탈퇴한 사용자");
-                softly.assertThat(result.content().get(0).reportedNickname()).isEqualTo("탈퇴한 사용자");
+                softly.assertThat(result.content().get(0).reporterNickname()).isEqualTo("알수없음");
+                softly.assertThat(result.content().get(0).reportedNickname()).isEqualTo("알수없음");
             });
         }
     }

@@ -17,16 +17,16 @@ public record AdminAllReportResult(
         String createdAt
 ) {
 
-    private static final String WITHDRAWN_USER = "탈퇴한 사용자";
+    private static final String UNKNOWN_USER = "알수없음";
 
     public static AdminAllReportResult of(AdminAllReportRow row, String reporterNickname, String reportedNickname) {
         return new AdminAllReportResult(
                 row.getId(),
                 ReportSource.valueOf(row.getSource()),
                 row.getReporterUserId(),
-                reporterNickname != null ? reporterNickname : WITHDRAWN_USER,
+                reporterNickname != null ? reporterNickname : UNKNOWN_USER,
                 row.getReportedUserId(),
-                reportedNickname != null ? reportedNickname : WITHDRAWN_USER,
+                reportedNickname != null ? reportedNickname : UNKNOWN_USER,
                 row.getContent(),
                 ReportStatus.valueOf(row.getStatus()),
                 TimestampUtil.toIsoString(row.getCreatedAt())

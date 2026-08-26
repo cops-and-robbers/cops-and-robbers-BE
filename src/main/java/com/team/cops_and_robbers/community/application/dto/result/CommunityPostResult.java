@@ -18,7 +18,7 @@ public record CommunityPostResult(
         String updatedAt
 ) {
 
-    private static final String WITHDRAWN_USER = "탈퇴한 사용자";
+    private static final String UNKNOWN_USER = "알수없음";
 
     public record LocationResult(
             Double latitude,
@@ -34,7 +34,7 @@ public record CommunityPostResult(
         return new CommunityPostResult(
                 post.getId(),
                 post.getWriterId(),
-                writerNickname != null ? writerNickname : WITHDRAWN_USER,
+                writerNickname != null ? writerNickname : UNKNOWN_USER,
                 post.getTitle(),
                 post.getContent(),
                 TimestampUtil.toIsoString(post.getMeetingAt()),

@@ -9,7 +9,7 @@ public record CommunityPostResponse(
         Long id,
         @Schema(description = "작성자 ID", example = "1")
         Long writerId,
-        @Schema(description = "작성자 닉네임 (탈퇴한 유저면 \"탈퇴한 사용자\")", example = "무서운경찰관")
+        @Schema(description = "작성자 닉네임 (탈퇴한 유저면 \"알수없음\")", example = "무서운경찰관")
         String writerNickname,
         @Schema(description = "제목", example = "같이 경찰과 도둑 하실 분!")
         String title,

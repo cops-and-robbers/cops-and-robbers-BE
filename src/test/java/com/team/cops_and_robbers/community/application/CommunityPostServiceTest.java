@@ -211,7 +211,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         }
 
         @Test
-        void 목록의_작성자_닉네임이_매핑되고_탈퇴한_작성자는_탈퇴한_사용자로_표시된다() {
+        void 목록의_작성자_닉네임이_매핑되고_탈퇴한_작성자는_알수없음으로_표시된다() {
             CommunityPost post1 = POST(1L, LocalDateTime.of(2026, 8, 1, 2, 0));
             CommunityPost post2 = POST(999L, LocalDateTime.of(2026, 8, 1, 1, 0));
             setId(post1, 1L);
@@ -225,7 +225,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
                     listCommand(null, 10));
 
             assertThat(result.content().get(0).writerNickname()).isEqualTo("무서운경찰관");
-            assertThat(result.content().get(1).writerNickname()).isEqualTo("탈퇴한 사용자");
+            assertThat(result.content().get(1).writerNickname()).isEqualTo("알수없음");
         }
 
         @Test

@@ -21,7 +21,7 @@ public record AdminCommunityPostReportResult(
         String createdAt
 ) {
 
-    private static final String WITHDRAWN_USER = "탈퇴한 사용자";
+    private static final String UNKNOWN_USER = "알수없음";
 
     public static AdminCommunityPostReportResult of(CommunityPostReport report, String reporterNickname, String reportedNickname) {
         return new AdminCommunityPostReportResult(
@@ -30,9 +30,9 @@ public record AdminCommunityPostReportResult(
                 report.getPostTitle(),
                 report.getPostContent(),
                 report.getReporterUserId(),
-                reporterNickname != null ? reporterNickname : WITHDRAWN_USER,
+                reporterNickname != null ? reporterNickname : UNKNOWN_USER,
                 report.getReportedUserId(),
-                reportedNickname != null ? reportedNickname : WITHDRAWN_USER,
+                reportedNickname != null ? reportedNickname : UNKNOWN_USER,
                 report.getReportType(),
                 report.getEtcReason(),
                 report.getStatus(),
