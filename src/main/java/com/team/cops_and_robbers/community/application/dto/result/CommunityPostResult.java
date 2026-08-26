@@ -20,8 +20,6 @@ public record CommunityPostResult(
         String updatedAt
 ) {
 
-    private static final String UNKNOWN_USER = "알수없음";
-
     public record LocationResult(
             Double latitude,
             Double longitude,
@@ -40,7 +38,7 @@ public record CommunityPostResult(
         return new CommunityPostResult(
                 post.getId(),
                 post.getWriterId(),
-                writer != null ? writer.getNickname() : UNKNOWN_USER,
+                writer != null ? writer.getNickname() : User.UNKNOWN_NICKNAME,
                 writer != null ? writer.getProfileIcon() : User.DEFAULT_PROFILE_ICON,
                 post.getTitle(),
                 post.getContent(),
