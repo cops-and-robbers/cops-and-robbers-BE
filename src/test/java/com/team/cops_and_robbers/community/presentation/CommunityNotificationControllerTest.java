@@ -13,6 +13,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +26,9 @@ class CommunityNotificationControllerTest extends ControllerTest {
     private static final String NOTIFICATIONS_PATH = "/api/community-posts/notifications";
     private static final String UNREAD_COUNT_PATH = NOTIFICATIONS_PATH + "/unread-count";
     private static final String READ_PATH = NOTIFICATIONS_PATH + "/read";
+
+    /** 서버 시계가 KST로 고정돼 있어 테스트도 같은 기준으로 시각을 만든다. */
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -92,7 +96,7 @@ class CommunityNotificationControllerTest extends ControllerTest {
         @Test
         void 보관_기간이_지난_알림은_조회되지_않는다() {
             User user = givenUser("유저");
-            givenCreatedAt(givenNotification(user), LocalDateTime.now().minusDays(61));
+            givenCreatedAt(givenNotification(user), LocalDateTime.now(KST).minusDays(61));
 
             assertThat(extractContent(getNotifications(user))).isEmpty();
         }
@@ -162,7 +166,7 @@ class CommunityNotificationControllerTest extends ControllerTest {
         @Test
         void 보관_기간이_지난_알림은_세지_않는다() {
             User user = givenUser("유저");
-            givenCreatedAt(givenNotification(user), LocalDateTime.now().minusDays(61));
+            givenCreatedAt(givenNotification(user), LocalDateTime.now(KST).minusDays(61));
 
             assertThat(unreadCountOf(user)).isZero();
         }
@@ -199,7 +203,7 @@ class CommunityNotificationControllerTest extends ControllerTest {
             authenticated(givenAccessToken(user))
                     .post(READ_PATH)
                     .then().statusCode(204);
-            givenCreatedAt(givenNotification(user), LocalDateTime.now().plusMinutes(1));
+            givenCreatedAt(givenNotification(user), LocalDateTime.now(KST).plusMinutes(1));
 
             assertThat(unreadCountOf(user)).isEqualTo(1);
         }
