@@ -18,9 +18,11 @@ import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.presentation.dto.request.AgreementRequest;
+import com.team.cops_and_robbers.user.presentation.dto.request.CommunityPushAgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.GamePushAgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.ProfileIconUpdateRequest;
+import com.team.cops_and_robbers.user.presentation.dto.response.CommunityPushAgreementResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.GamePushAgreementResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.MyPageResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.NicknameCheckResponse;
@@ -723,6 +725,114 @@ class UserControllerTest extends ControllerTest {
                     .body(new GamePushAgreementRequest(true))
                     .when()
                     .put("/api/user/agreements/game-push")
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(401);
+            });
+        }
+    }
+
+    @Nested
+    @DisplayName("커뮤니티 푸시 알림 수신 동의 여부 조회 API")
+    class GetCommunityPushAgreement {
+
+        @Test
+        void 가입_직후에는_수신_동의가_켜져_있다() {
+            // given
+            User user = givenUser();
+            String accessToken = givenAccessToken(user);
+
+            // when
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .when()
+                    .get("/api/user/agreements/community-push")
+                    .then()
+                    .extract();
+
+            // then
+            CommunityPushAgreementResponse response = extract.as(CommunityPushAgreementResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(response.allowCommunityPush()).isTrue();
+            });
+        }
+
+        @Test
+        void 토큰이_없으면_401_UNAUTHORIZED를_응답한다() {
+            // when
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .when()
+                    .get("/api/user/agreements/community-push")
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(401);
+            });
+        }
+    }
+
+    @Nested
+    @DisplayName("커뮤니티 푸시 알림 수신 동의 여부 업데이트 API")
+    class UpdateCommunityPushAgreement {
+
+        @Test
+        void false로_업데이트하면_DB에_반영되고_204_NO_CONTENT를_응답한다() {
+            // given
+            User user = givenUser();
+            String accessToken = givenAccessToken(user);
+            CommunityPushAgreementRequest request = new CommunityPushAgreementRequest(false);
+
+            // when
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .put("/api/user/agreements/community-push")
+                    .then()
+                    .extract();
+
+            // then
+            User updatedUser = userRepository.getByUserId(user.getId());
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(204);
+                softly.assertThat(updatedUser.isAllowCommunityPush()).isFalse();
+            });
+        }
+
+        @Test
+        void allowCommunityPush가_null이면_400_BAD_REQUEST를_응답한다() {
+            // given
+            User user = givenUser();
+            String accessToken = givenAccessToken(user);
+            CommunityPushAgreementRequest request = new CommunityPushAgreementRequest(null);
+
+            // when
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .put("/api/user/agreements/community-push")
+                    .then()
+                    .extract();
+
+            // then
+            ErrorResponse response = extract.as(ErrorResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+                softly.assertThat(response.title()).isEqualTo(CommonException.INVALID_INPUT_VALUE.getTitle());
+            });
+        }
+
+        @Test
+        void 토큰이_없으면_401_UNAUTHORIZED를_응답한다() {
+            // when
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .body(new CommunityPushAgreementRequest(true))
+                    .when()
+                    .put("/api/user/agreements/community-push")
                     .then()
                     .extract();
 

@@ -5,6 +5,7 @@ import com.team.cops_and_robbers.common.exception.CommonException;
 import com.team.cops_and_robbers.common.swagger.ApiErrorCode;
 import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.presentation.dto.request.AgreementRequest;
+import com.team.cops_and_robbers.user.presentation.dto.request.CommunityPushAgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.GamePushAgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.ProfileIconUpdateRequest;
@@ -118,6 +119,30 @@ public interface UserControllerDocs {
     ResponseEntity<Void> updateGamePushAgreement(
             @Parameter(hidden = true) LoginUser loginUser,
             @RequestBody @Valid GamePushAgreementRequest request
+    );
+
+    @Operation(summary = "커뮤니티 푸시 알림 수신 동의 여부 조회",
+            description = "로그인한 사용자의 커뮤니티 푸시 알림 수신 동의 여부를 조회합니다. 가입 시 기본값은 수신 동의입니다."
+    )
+    @ApiErrorCode(value = UserException.class, codes = {"USER_NOT_FOUND"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
+    ResponseEntity<CommunityPushAgreementResponse> getCommunityPushAgreement(
+            @Parameter(hidden = true) LoginUser loginUser);
+
+    @Operation(summary = "커뮤니티 푸시 알림 수신 동의 여부 업데이트",
+            description = "로그인한 사용자의 커뮤니티 푸시 알림 수신 동의 여부를 업데이트합니다. "
+                    + "끄면 푸시만 오지 않고 알림함에는 그대로 쌓입니다."
+    )
+    @ApiErrorCode(value = UserException.class, codes = {"USER_NOT_FOUND"})
+    @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "업데이트 성공 (응답 본문 없음)")
+    })
+    ResponseEntity<Void> updateCommunityPushAgreement(
+            @Parameter(hidden = true) LoginUser loginUser,
+            @RequestBody @Valid CommunityPushAgreementRequest request
     );
 
     @Operation(summary = "프로필 아이콘 변경",
