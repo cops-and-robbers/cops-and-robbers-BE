@@ -18,7 +18,8 @@ public record CommunityPostResult(
         RecruitmentStatus status,
         String createdAt,
         String updatedAt,
-        boolean chatJoined
+        boolean chatJoined,
+        CommunityPostNotificationSettingResult notificationSettings
 ) {
 
     public record LocationResult(
@@ -35,8 +36,18 @@ public record CommunityPostResult(
      * 탈퇴한 작성자는 writer가 null로 들어온다.
      * 닉네임은 "알수없음"으로, 프로필 아이콘은 기본 아이콘 번호로 내려준다.
      * chatJoined는 호출부에서 요청자 기준으로 계산해 넘긴다. 비로그인 조회는 false로 넘어온다.
+     * notificationSettings는 단건 조회에서만 채운다. 목록에서는 쓰지 않아 null이다.
      */
     public static CommunityPostResult from(CommunityPost post, User writer, boolean chatJoined) {
+        return of(post, writer, chatJoined, null);
+    }
+
+    public static CommunityPostResult of(
+            CommunityPost post,
+            User writer,
+            boolean chatJoined,
+            CommunityPostNotificationSettingResult notificationSettings
+    ) {
         return new CommunityPostResult(
                 post.getId(),
                 post.getWriterId(),
@@ -56,7 +67,8 @@ public record CommunityPostResult(
                 post.currentStatus(),
                 TimestampUtil.toIsoString(post.getCreatedAt()),
                 TimestampUtil.toIsoString(post.getUpdatedAt()),
-                chatJoined
+                chatJoined,
+                notificationSettings
         );
     }
 }

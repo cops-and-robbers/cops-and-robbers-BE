@@ -30,7 +30,10 @@ public record CommunityPostResponse(
         @Schema(description = "수정일시", example = "2026-08-07T12:00:00+09:00")
         String updatedAt,
         @Schema(description = "내가 이 게시글의 채팅방에 참여 중인지 여부. 비로그인 조회는 false", example = "false")
-        boolean chatJoined
+        boolean chatJoined,
+        @Schema(description = "이 글의 내 알림 설정. 단건 조회에서만 내려가고 목록·비로그인 조회는 null",
+                nullable = true)
+        CommunityPostNotificationSettingResponse notificationSettings
 ) {
     public record LocationResponse(
             @Schema(description = "위도", example = "37.4979")
@@ -71,7 +74,8 @@ public record CommunityPostResponse(
                 result.status(),
                 result.createdAt(),
                 result.updatedAt(),
-                result.chatJoined()
+                result.chatJoined(),
+                CommunityPostNotificationSettingResponse.from(result.notificationSettings())
         );
     }
 }

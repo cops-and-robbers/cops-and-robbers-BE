@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.community.presentation;
 import com.team.cops_and_robbers.common.ControllerTest;
 import com.team.cops_and_robbers.community.domain.CommunityChatMember;
 import com.team.cops_and_robbers.community.domain.CommunityPostLike;
+import com.team.cops_and_robbers.community.domain.CommunityPostNotificationSetting;
 import com.team.cops_and_robbers.community.domain.CommunityPostScrap;
 import com.team.cops_and_robbers.community.domain.PostAddress;
 import com.team.cops_and_robbers.community.domain.RecruitmentStatus;
@@ -1131,6 +1132,73 @@ class CommunityPostControllerTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
                 softly.assertThat(extract.jsonPath().getBoolean("chatJoined")).isFalse();
+            });
+        }
+
+        @Test
+        void 토큰_없이_요청하면_notificationSettings는_null이다() {
+            Long postId = communityPostRepository.save(POST(user.getId())).getId();
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .when()
+                    .get(POST_API_URL + "/" + postId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getMap("notificationSettings")).isNull();
+            });
+        }
+
+        @Test
+        void 내가_쓴_글은_댓글_알림만_켜진_기본값이_내려온다() {
+            Long postId = communityPostRepository.save(POST(user.getId())).getId();
+
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .when()
+                    .get(POST_API_URL + "/" + postId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.jsonPath().getBoolean("notificationSettings.notifyComments")).isTrue();
+                softly.assertThat(extract.jsonPath().getBoolean("notificationSettings.notifyReplies")).isFalse();
+            });
+        }
+
+        @Test
+        void 남의_글은_알림이_모두_꺼진_기본값이_내려온다() {
+            User writer = givenUser("다른작성자");
+            Long postId = communityPostRepository.save(POST(writer.getId())).getId();
+
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .when()
+                    .get(POST_API_URL + "/" + postId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.jsonPath().getBoolean("notificationSettings.notifyComments")).isFalse();
+                softly.assertThat(extract.jsonPath().getBoolean("notificationSettings.notifyReplies")).isFalse();
+            });
+        }
+
+        @Test
+        void 토글을_건드린_글은_저장된_설정이_내려온다() {
+            Long postId = communityPostRepository.save(POST(user.getId())).getId();
+            communityPostNotificationSettingRepository.save(
+                    CommunityPostNotificationSetting.createSetting(user.getId(), postId, false, true));
+
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .when()
+                    .get(POST_API_URL + "/" + postId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.jsonPath().getBoolean("notificationSettings.notifyComments")).isFalse();
+                softly.assertThat(extract.jsonPath().getBoolean("notificationSettings.notifyReplies")).isTrue();
             });
         }
 

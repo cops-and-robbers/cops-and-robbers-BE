@@ -11,9 +11,11 @@ import com.team.cops_and_robbers.community.application.dto.command.CommunityPost
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostStatusCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostUpdateCommand;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityPostCursorResult;
+import com.team.cops_and_robbers.community.application.dto.result.CommunityPostNotificationSettingResult;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityPostResult;
 import com.team.cops_and_robbers.community.domain.CommunityChatMember;
 import com.team.cops_and_robbers.community.domain.CommunityPost;
+import com.team.cops_and_robbers.community.domain.CommunityPostNotificationRole;
 import com.team.cops_and_robbers.community.domain.CommunityPostSort;
 import com.team.cops_and_robbers.community.domain.PostAddress;
 import com.team.cops_and_robbers.community.exception.CommunityPostException;
@@ -22,7 +24,9 @@ import com.team.cops_and_robbers.community.infrastructure.GeocodingResult;
 import com.team.cops_and_robbers.community.repository.CommunityChatMemberRepository;
 import com.team.cops_and_robbers.community.repository.CommunityChatMessageRepository;
 import com.team.cops_and_robbers.community.repository.CommunityCommentRepository;
+import com.team.cops_and_robbers.community.repository.CommunityNotificationRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostLikeRepository;
+import com.team.cops_and_robbers.community.repository.CommunityPostNotificationSettingRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostScrapRepository;
 import com.team.cops_and_robbers.user.domain.User;
@@ -49,6 +53,8 @@ public class CommunityPostService {
     private final CommunityCommentRepository communityCommentRepository;
     private final CommunityPostLikeRepository communityPostLikeRepository;
     private final CommunityPostScrapRepository communityPostScrapRepository;
+    private final CommunityNotificationRepository communityNotificationRepository;
+    private final CommunityPostNotificationSettingRepository communityPostNotificationSettingRepository;
     private final UserRepository userRepository;
     private final GeocodingClient geocodingClient;
 
@@ -89,7 +95,8 @@ public class CommunityPostService {
         CommunityPost post = communityPostRepository.getByPostId(postId);
         boolean chatJoined = requesterId != null
                 && communityChatMemberRepository.existsByCommunityPostIdAndUserId(postId, requesterId);
-        return CommunityPostResult.from(post, findWriter(post.getWriterId()), chatJoined);
+        return CommunityPostResult.of(
+                post, findWriter(post.getWriterId()), chatJoined, findNotificationSettings(post, requesterId));
     }
 
     @Transactional
@@ -115,6 +122,8 @@ public class CommunityPostService {
         communityCommentRepository.deleteAllByCommunityPostId(command.postId());
         communityPostLikeRepository.deleteAllByCommunityPostId(command.postId());
         communityPostScrapRepository.deleteAllByCommunityPostId(command.postId());
+        communityNotificationRepository.deleteAllByCommunityPostId(command.postId());
+        communityPostNotificationSettingRepository.deleteAllByCommunityPostId(command.postId());
         communityPostRepository.deleteByPostId(command.postId());
     }
 
@@ -124,6 +133,23 @@ public class CommunityPostService {
         validateAuthor(post, command.writerId());
         post.updateStatus(command.status());
         return CommunityPostResult.from(post, findWriter(post.getWriterId()), true);
+    }
+
+    /** 비로그인 조회는 보여줄 설정이 없어 null로 내려간다. */
+    private CommunityPostNotificationSettingResult findNotificationSettings(CommunityPost post, Long requesterId) {
+        if (requesterId == null) {
+            return null;
+        }
+        return communityPostNotificationSettingRepository
+                .findByCommunityPostIdAndUserId(post.getId(), requesterId)
+                .map(CommunityPostNotificationSettingResult::from)
+                .orElseGet(() -> CommunityPostNotificationSettingResult.from(roleOf(post, requesterId)));
+    }
+
+    private CommunityPostNotificationRole roleOf(CommunityPost post, Long userId) {
+        return post.getWriterId().equals(userId)
+                ? CommunityPostNotificationRole.POST_WRITER
+                : CommunityPostNotificationRole.OTHER;
     }
 
     private void validateAuthor(CommunityPost post, Long writerId) {
