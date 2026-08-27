@@ -34,7 +34,7 @@ class CommunityChatQueryControllerTest extends ControllerTest {
     private CommunityChatMessage givenMessage(CommunityPost post, User sender, String message) {
         return communityChatMessageRepository.save(CommunityChatMessage.createMessage(
                 UUID.randomUUID().toString(), post.getId(), sender.getId(), sender.getNickname(),
-                message, CommunityChatMessageType.TEXT));
+                sender.getProfileIcon(), message, CommunityChatMessageType.TEXT));
     }
 
     @Nested
@@ -58,6 +58,7 @@ class CommunityChatQueryControllerTest extends ControllerTest {
             List<Map<String, Object>> messages = extractMessages(firstPage);
             assertThat(messages).hasSize(3);
             assertThat(messages.get(0).get("message")).isEqualTo("메시지5");
+            assertThat(messages.get(0).get("senderProfileIcon")).isEqualTo(member.getProfileIcon());
             assertThat(messages.get(2).get("message")).isEqualTo("메시지3");
             assertThat(firstPage.get("hasNext")).isEqualTo(true);
 
@@ -89,6 +90,23 @@ class CommunityChatQueryControllerTest extends ControllerTest {
                     .extract().as(new TypeRef<>() {});
 
             assertThat(extractMessages(response).get(0).get("senderNickname")).isEqualTo("변경후");
+        }
+
+        @Test
+        void 프로필_아이콘을_바꾸면_과거_메시지도_새_아이콘으로_조회된다() {
+            User member = givenUser("member");
+            CommunityPost post = givenChatRoom(member);
+            givenMessage(post, member, "안녕하세요");
+
+            member.updateProfileIcon(2);
+            userRepository.save(member);
+
+            Map<String, Object> response = authenticated(givenAccessToken(member))
+                    .get(HISTORY_PATH, post.getId())
+                    .then().statusCode(200)
+                    .extract().as(new TypeRef<>() {});
+
+            assertThat(extractMessages(response).get(0).get("senderProfileIcon")).isEqualTo(2);
         }
 
         @Test
@@ -141,7 +159,10 @@ class CommunityChatQueryControllerTest extends ControllerTest {
             List<Map<String, Object>> rooms = extractRooms(response);
             assertThat(rooms).hasSize(2);
             assertThat(rooms.get(0).get("postId")).isEqualTo(newer.getId().intValue());
-            assertThat(extractLastMessage(rooms.get(0)).get("message")).isEqualTo("최근 대화");
+            Map<String, Object> lastMessage = extractLastMessage(rooms.get(0));
+            assertThat(lastMessage.get("message")).isEqualTo("최근 대화");
+            assertThat(lastMessage.get("senderNickname")).isEqualTo("member");
+            assertThat(lastMessage.get("senderProfileIcon")).isEqualTo(member.getProfileIcon());
             assertThat(rooms.get(1).get("postId")).isEqualTo(older.getId().intValue());
         }
 

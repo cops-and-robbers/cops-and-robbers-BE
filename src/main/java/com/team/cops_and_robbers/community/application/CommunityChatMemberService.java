@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.community.application;
 
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.community.application.dto.CommunityChatRoomListContext;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatJoinCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatKickCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatLeaveCommand;
@@ -16,15 +17,18 @@ import com.team.cops_and_robbers.community.repository.CommunityChatMemberReposit
 import com.team.cops_and_robbers.community.repository.CommunityChatMessageRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.user.domain.User;
+import com.team.cops_and_robbers.user.repository.UserProfileProjection;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -96,10 +100,11 @@ public class CommunityChatMemberService {
 
         User targetUser = userRepository.findById(command.targetUserId()).orElse(null);
         String targetNickname = (targetUser != null) ? targetUser.getNickname() : User.UNKNOWN_NICKNAME;
+        int targetProfileIcon = (targetUser != null) ? targetUser.getProfileIcon() : User.DEFAULT_PROFILE_ICON;
 
         CommunityChatMessage systemMessage = communityChatMessageRepository.save(
                 communityChatSystemMessageFactory.createKickMessage(
-                        command.postId(), command.targetUserId(), targetNickname));
+                        command.postId(), command.targetUserId(), targetNickname, targetProfileIcon));
 
         communityChatMemberRepository.delete(target);
 
@@ -116,16 +121,26 @@ public class CommunityChatMemberService {
             return List.of();
         }
 
-        Map<Long, Long> memberCounts = findMemberCounts(postIds);
         Map<Long, CommunityChatMessage> lastMessages = findLastMessages(postIds);
+        CommunityChatRoomListContext context = CommunityChatRoomListContext.of(
+                findMemberCounts(postIds),
+                lastMessages,
+                findCurrentSenderProfiles(lastMessages.values())
+        );
 
         return communityPostRepository.findAllById(postIds).stream()
-                .map(post -> CommunityChatRoomResult.of(
-                        post,
-                        memberCounts.getOrDefault(post.getId(), 0L),
-                        lastMessages.get(post.getId())))
+                .map(post -> toRoomResult(post, context))
                 .sorted(RECENT_CHAT_FIRST)
                 .toList();
+    }
+
+    private CommunityChatRoomResult toRoomResult(CommunityPost post, CommunityChatRoomListContext context) {
+        CommunityChatMessage lastMessage = context.lastMessages().get(post.getId());
+        UserProfileProjection senderProfile =
+                (lastMessage == null) ? null : context.senderProfiles().get(lastMessage.getSenderId());
+
+        return CommunityChatRoomResult.of(
+                post, context.memberCounts().getOrDefault(post.getId(), 0L), lastMessage, senderProfile);
     }
 
     public CommunityChatMemberListResult getMembers(Long postId, Long requesterId) {
@@ -166,6 +181,19 @@ public class CommunityChatMemberService {
                 .collect(Collectors.toMap(
                         CommunityChatMessage::getCommunityPostId,
                         Function.identity()));
+    }
+
+    private Map<Long, UserProfileProjection> findCurrentSenderProfiles(Collection<CommunityChatMessage> lastMessages) {
+        Set<Long> senderIds = lastMessages.stream()
+                .map(CommunityChatMessage::getSenderId)
+                .collect(Collectors.toSet());
+
+        if (senderIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return userRepository.findProfilesByIds(senderIds).stream()
+                .collect(Collectors.toMap(UserProfileProjection::userId, Function.identity()));
     }
 
     /**

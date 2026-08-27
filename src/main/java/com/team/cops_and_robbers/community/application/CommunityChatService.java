@@ -14,7 +14,8 @@ import com.team.cops_and_robbers.community.domain.CommunityChatMessageType;
 import com.team.cops_and_robbers.community.exception.CommunityChatException;
 import com.team.cops_and_robbers.community.repository.CommunityChatMemberRepository;
 import com.team.cops_and_robbers.community.repository.CommunityChatMessageRepository;
-import com.team.cops_and_robbers.user.repository.UserNicknameProjection;
+import com.team.cops_and_robbers.community.repository.CommunityChatSenderProfileProjection;
+import com.team.cops_and_robbers.user.repository.UserProfileProjection;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -48,15 +50,16 @@ public class CommunityChatService {
         String body = resolveBody(command);
         String messageKey = resolveMessageKey(command.messageKey());
 
-        String senderNickname = communityChatMemberRepository
-                .findNicknameByPostIdAndUserId(command.postId(), command.userId())
+        CommunityChatSenderProfileProjection sender = communityChatMemberRepository
+                .findSenderProfileByPostIdAndUserId(command.postId(), command.userId())
                 .orElseThrow(() -> new ApplicationException(CommunityChatException.NOT_A_CHAT_MEMBER));
 
         CommunityChatMessage saved = communityChatMessageRepository.save(CommunityChatMessage.createMessage(
                 messageKey,
                 command.postId(),
                 command.userId(),
-                senderNickname,
+                sender.nickname(),
+                sender.profileIcon(),
                 body,
                 command.messageType()
         ));
@@ -75,10 +78,10 @@ public class CommunityChatService {
 
         boolean hasNext = found.size() > command.size();
         List<CommunityChatMessage> messages = trimToRequestedSize(found, command.size());
-        Map<Long, String> currentNicknames = findCurrentNicknames(messages);
+        Map<Long, UserProfileProjection> currentProfiles = findCurrentProfiles(messages);
 
         List<CommunityChatMessageResult> results = messages.stream()
-                .map(message -> CommunityChatMessageResult.of(message, currentNicknames.get(message.getSenderId())))
+                .map(message -> CommunityChatMessageResult.of(message, currentProfiles.get(message.getSenderId())))
                 .toList();
 
         return CommunityChatHistoryResult.of(results, hasNext);
@@ -96,7 +99,7 @@ public class CommunityChatService {
         return found.subList(0, requestedSize);
     }
 
-    private Map<Long, String> findCurrentNicknames(List<CommunityChatMessage> messages) {
+    private Map<Long, UserProfileProjection> findCurrentProfiles(List<CommunityChatMessage> messages) {
         Set<Long> senderIds = messages.stream()
                 .map(CommunityChatMessage::getSenderId)
                 .collect(Collectors.toSet());
@@ -104,8 +107,8 @@ public class CommunityChatService {
         if (senderIds.isEmpty()) {
             return Map.of();
         }
-        return userRepository.findNicknamesByIds(senderIds).stream()
-                .collect(Collectors.toMap(UserNicknameProjection::userId, UserNicknameProjection::nickname));
+        return userRepository.findProfilesByIds(senderIds).stream()
+                .collect(Collectors.toMap(UserProfileProjection::userId, Function.identity()));
     }
 
     private void validateChatMember(Long postId, Long userId) {

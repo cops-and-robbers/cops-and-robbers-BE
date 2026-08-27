@@ -60,7 +60,7 @@ class CommunityChatMemberServiceTest extends ServiceUnitTest {
 
     private CommunityChatMessage givenSystemMessage(String eventJson) {
         return CommunityChatMessage.createMessage("key-1", POST_ID, JOINER_ID, USER().getNickname(),
-                eventJson, CommunityChatMessageType.SYSTEM);
+                USER().getProfileIcon(), eventJson, CommunityChatMessageType.SYSTEM);
     }
 
     @Nested
@@ -206,7 +206,8 @@ class CommunityChatMemberServiceTest extends ServiceUnitTest {
             given(communityChatMemberRepository.findByCommunityPostIdAndUserId(POST_ID, JOINER_ID))
                     .willReturn(Optional.of(target));
             given(userRepository.findById(JOINER_ID)).willReturn(Optional.of(USER("참여자")));
-            given(communityChatSystemMessageFactory.createKickMessage(POST_ID, JOINER_ID, "참여자"))
+            given(communityChatSystemMessageFactory.createKickMessage(
+                    POST_ID, JOINER_ID, "참여자", User.DEFAULT_PROFILE_ICON))
                     .willReturn(kickMessage);
 
             communityChatMemberService.kick(CommunityChatKickCommand.of(AUTHOR_ID, POST_ID, JOINER_ID));
@@ -260,7 +261,8 @@ class CommunityChatMemberServiceTest extends ServiceUnitTest {
             given(communityChatMemberRepository.findByCommunityPostIdAndUserId(POST_ID, JOINER_ID))
                     .willReturn(Optional.of(target));
             given(userRepository.findById(JOINER_ID)).willReturn(Optional.empty());
-            given(communityChatSystemMessageFactory.createKickMessage(POST_ID, JOINER_ID, User.UNKNOWN_NICKNAME))
+            given(communityChatSystemMessageFactory.createKickMessage(
+                    POST_ID, JOINER_ID, User.UNKNOWN_NICKNAME, User.DEFAULT_PROFILE_ICON))
                     .willReturn(kickMessage);
 
             communityChatMemberService.kick(CommunityChatKickCommand.of(AUTHOR_ID, POST_ID, JOINER_ID));

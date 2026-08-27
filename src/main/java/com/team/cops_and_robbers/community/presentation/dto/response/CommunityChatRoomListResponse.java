@@ -40,6 +40,10 @@ public record CommunityChatRoomListResponse(
     public record LastMessageResponse(
             @Schema(description = "메시지 ID", example = "1234")
             Long id,
+            @Schema(description = "발신자 닉네임 (탈퇴 시 발신 시점 닉네임)", example = "홍길동")
+            String senderNickname,
+            @Schema(description = "발신자 프로필 아이콘 번호 (탈퇴 시 발신 시점 아이콘 번호)", example = "1")
+            int senderProfileIcon,
             @Schema(description = "본문. SYSTEM / GAME_INVITE는 JSON 문자열", example = "다들 고생하셨어요")
             String message,
             @Schema(description = "메시지 타입", example = "TEXT")
@@ -51,7 +55,13 @@ public record CommunityChatRoomListResponse(
             if (result == null) {
                 return null;
             }
-            return new LastMessageResponse(result.id(), result.message(), result.messageType(), result.createdAt());
+            return new LastMessageResponse(
+                    result.id(),
+                    result.senderNickname(),
+                    result.senderProfileIcon(),
+                    result.message(),
+                    result.messageType(),
+                    result.createdAt());
         }
     }
 

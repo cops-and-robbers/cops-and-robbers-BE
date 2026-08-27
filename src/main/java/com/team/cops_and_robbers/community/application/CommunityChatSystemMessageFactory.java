@@ -21,27 +21,32 @@ public class CommunityChatSystemMessageFactory {
     private final ObjectMapper objectMapper;
 
     public CommunityChatMessage createJoinMessage(Long postId, User user) {
-        return createSystemMessage(postId, user.getId(), user.getNickname(), CommunityChatSystemEventType.JOIN);
+        return createSystemMessage(
+                postId, user.getId(), user.getNickname(), user.getProfileIcon(), CommunityChatSystemEventType.JOIN);
     }
 
     public CommunityChatMessage createLeaveMessage(Long postId, User user) {
-        return createSystemMessage(postId, user.getId(), user.getNickname(), CommunityChatSystemEventType.LEAVE);
+        return createSystemMessage(
+                postId, user.getId(), user.getNickname(), user.getProfileIcon(), CommunityChatSystemEventType.LEAVE);
     }
 
     /**
-     * 강퇴 대상은 이미 탈퇴해 User 행이 없을 수 있어 User 대신 userId·nickname을 직접 받기로 함
+     * 강퇴 대상은 이미 탈퇴해 User 행이 없을 수 있어 User 대신 userId·nickname·아이콘을 직접 받기로 함
      */
-    public CommunityChatMessage createKickMessage(Long postId, Long targetUserId, String targetNickname) {
-        return createSystemMessage(postId, targetUserId, targetNickname, CommunityChatSystemEventType.KICK);
+    public CommunityChatMessage createKickMessage(
+            Long postId, Long targetUserId, String targetNickname, int targetProfileIcon) {
+        return createSystemMessage(
+                postId, targetUserId, targetNickname, targetProfileIcon, CommunityChatSystemEventType.KICK);
     }
 
     private CommunityChatMessage createSystemMessage(
-            Long postId, Long userId, String nickname, CommunityChatSystemEventType event) {
+            Long postId, Long userId, String nickname, int profileIcon, CommunityChatSystemEventType event) {
         return CommunityChatMessage.createMessage(
                 UUID.randomUUID().toString(),
                 postId,
                 userId,
                 nickname,
+                profileIcon,
                 serialize(event),
                 CommunityChatMessageType.SYSTEM
         );

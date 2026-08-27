@@ -23,11 +23,15 @@ public interface CommunityChatMemberRepository extends JpaRepository<CommunityCh
     int countByUserId(Long userId);
 
     @Query("""
-            select u.nickname from CommunityChatMember m
+            select new com.team.cops_and_robbers.community.repository.CommunityChatSenderProfileProjection(
+                u.nickname, u.profileIcon
+            )
+            from CommunityChatMember m
             join User u on u.id = m.userId
             where m.communityPostId = :postId and m.userId = :userId
             """)
-    Optional<String> findNicknameByPostIdAndUserId(@Param("postId") Long postId, @Param("userId") Long userId);
+    Optional<CommunityChatSenderProfileProjection> findSenderProfileByPostIdAndUserId(
+            @Param("postId") Long postId, @Param("userId") Long userId);
 
     @Query("select m.communityPostId from CommunityChatMember m where m.userId = :userId")
     List<Long> findPostIdsByUserId(@Param("userId") Long userId);

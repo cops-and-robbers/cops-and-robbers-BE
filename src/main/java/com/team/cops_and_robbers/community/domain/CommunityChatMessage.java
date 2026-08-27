@@ -39,6 +39,9 @@ public class CommunityChatMessage extends BaseTimeEntity {
     @Column(name = "sender_nickname", nullable = false, length = 30)
     private String senderNickname;
 
+    @Column(name = "sender_profile_icon", nullable = false)
+    private int senderProfileIcon;
+
     @Column(nullable = false, length = 500)
     private String message;
 
@@ -51,6 +54,7 @@ public class CommunityChatMessage extends BaseTimeEntity {
             Long communityPostId,
             Long senderId,
             String senderNickname,
+            int senderProfileIcon,
             String message,
             CommunityChatMessageType messageType
     ) {
@@ -59,6 +63,7 @@ public class CommunityChatMessage extends BaseTimeEntity {
                 .communityPostId(communityPostId)
                 .senderId(senderId)
                 .senderNickname(senderNickname)
+                .senderProfileIcon(senderProfileIcon)
                 .message(message)
                 .messageType(messageType)
                 .build();
