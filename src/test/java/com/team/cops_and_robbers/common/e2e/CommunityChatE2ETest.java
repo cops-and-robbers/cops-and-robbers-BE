@@ -58,6 +58,7 @@ class CommunityChatE2ETest extends WebSocketE2ETest {
         assertThat(received.message()).isEqualTo("{\"event\":\"JOIN\"}");
         assertThat(received.senderId()).isEqualTo(joiner.getId());
         assertThat(received.senderNickname()).isEqualTo(joiner.getNickname());
+        assertThat(received.senderProfileIcon()).isEqualTo(joiner.getProfileIcon());
         assertThat(received.id()).isNotNull();
         assertThat(received.communityPostId()).isEqualTo(setup.post().getId());
     }
@@ -104,6 +105,7 @@ class CommunityChatE2ETest extends WebSocketE2ETest {
         assertThat(received.messageKey()).isEqualTo("key-1");
         assertThat(received.senderId()).isEqualTo(sender.getId());
         assertThat(received.senderNickname()).isEqualTo(sender.getNickname());
+        assertThat(received.senderProfileIcon()).isEqualTo(sender.getProfileIcon());
         assertThat(received.id()).as("즉시 INSERT라 발행 시점에 id가 확정된다").isNotNull();
     }
 
