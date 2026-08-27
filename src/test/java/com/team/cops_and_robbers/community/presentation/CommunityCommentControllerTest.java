@@ -22,6 +22,7 @@ class CommunityCommentControllerTest extends ControllerTest {
 
     private static final String COMMENTS_PATH = "/api/community-posts/{postId}/comments";
     private static final String COMMENT_PATH = "/api/community-posts/comments/{commentId}";
+    private static final String COMMENT_NOTIFICATION_PATH = COMMENT_PATH + "/notification";
 
     private CommunityPost givenPost(User writer) {
         return communityPostRepository.save(CommunityPostFixture.POST(writer.getId()));
@@ -283,6 +284,89 @@ class CommunityCommentControllerTest extends ControllerTest {
             unauthenticated()
                     .delete(COMMENT_PATH, 1)
                     .then().statusCode(401);
+        }
+    }
+
+    @Nested
+    @DisplayName("댓글별 답글 알림 설정")
+    class UpdateCommentNotification {
+
+        @Test
+        void 기본값은_알림_받음이다() {
+            User writer = givenUser("작성자");
+            CommunityPost post = givenPost(writer);
+            CommunityComment comment = givenComment(post, writer, "댓글");
+
+            assertThat(communityCommentRepository.getByCommentId(comment.getId()).isNotifyReplies()).isTrue();
+        }
+
+        @Test
+        void 끄면_저장되고_목록에도_반영된다() {
+            User writer = givenUser("작성자");
+            CommunityPost post = givenPost(writer);
+            CommunityComment comment = givenComment(post, writer, "댓글");
+
+            authenticated(givenAccessToken(writer))
+                    .body(Map.of("notifyReplies", false))
+                    .put(COMMENT_NOTIFICATION_PATH, comment.getId())
+                    .then().statusCode(204);
+
+            Map<String, Object> response = authenticated(givenAccessToken(writer))
+                    .get(COMMENTS_PATH, post.getId())
+                    .then().statusCode(200)
+                    .extract().as(new TypeRef<>() {});
+            List<Map<String, Object>> content = extractContent(response);
+            assertThat(content.getFirst().get("notifyReplies")).isEqualTo(false);
+        }
+
+        @Test
+        void 남의_댓글은_설정할_수_없다() {
+            User writer = givenUser("작성자");
+            User other = givenUser("다른유저");
+            CommunityPost post = givenPost(writer);
+            CommunityComment comment = givenComment(post, writer, "댓글");
+
+            authenticated(givenAccessToken(other))
+                    .body(Map.of("notifyReplies", false))
+                    .put(COMMENT_NOTIFICATION_PATH, comment.getId())
+                    .then()
+                    .statusCode(CommunityCommentException.FORBIDDEN_NOT_COMMENT_AUTHOR.getHttpStatus().value());
+        }
+
+        @Test
+        void 존재하지_않는_댓글이면_404를_응답한다() {
+            User writer = givenUser("작성자");
+
+            authenticated(givenAccessToken(writer))
+                    .body(Map.of("notifyReplies", false))
+                    .put(COMMENT_NOTIFICATION_PATH, 999)
+                    .then()
+                    .statusCode(CommunityCommentException.COMMENT_NOT_FOUND.getHttpStatus().value());
+        }
+
+        @Test
+        void 수신_여부가_빠지면_400을_응답한다() {
+            User writer = givenUser("작성자");
+            CommunityPost post = givenPost(writer);
+            CommunityComment comment = givenComment(post, writer, "댓글");
+
+            authenticated(givenAccessToken(writer))
+                    .body(Map.of())
+                    .put(COMMENT_NOTIFICATION_PATH, comment.getId())
+                    .then().statusCode(400);
+        }
+
+        @Test
+        void 토큰_없이_요청하면_401을_응답한다() {
+            unauthenticated()
+                    .body(Map.of("notifyReplies", false))
+                    .put(COMMENT_NOTIFICATION_PATH, 1)
+                    .then().statusCode(401);
+        }
+
+        @SuppressWarnings("unchecked")
+        private List<Map<String, Object>> extractContent(Map<String, Object> response) {
+            return (List<Map<String, Object>>) response.get("content");
         }
     }
 }

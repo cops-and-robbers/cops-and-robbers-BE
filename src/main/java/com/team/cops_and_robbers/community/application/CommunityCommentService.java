@@ -4,6 +4,7 @@ import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityCommentCreateCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityCommentDeleteCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityCommentListCommand;
+import com.team.cops_and_robbers.community.application.dto.command.CommunityCommentNotificationCommand;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityCommentListResult;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityCommentResult;
 import com.team.cops_and_robbers.community.application.event.CommunityCommentCreatedEvent;
@@ -82,6 +83,15 @@ public class CommunityCommentService {
         Long nextCursor = hasNext ? roots.getLast().getId() : null;
 
         return new CommunityCommentListResult(content, nextCursor, hasNext);
+    }
+
+    @Transactional
+    public void updateNotifyReplies(CommunityCommentNotificationCommand command) {
+        CommunityComment comment = communityCommentRepository.getByCommentId(command.commentId());
+        if (!comment.isWrittenBy(command.writerId())) {
+            throw new ApplicationException(CommunityCommentException.FORBIDDEN_NOT_COMMENT_AUTHOR);
+        }
+        comment.updateNotifyReplies(command.notifyReplies());
     }
 
     @Transactional

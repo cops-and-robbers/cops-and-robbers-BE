@@ -14,6 +14,7 @@ public record CommunityCommentResult(
         Integer writerProfileIcon,
         String content,
         boolean deleted,
+        boolean notifyReplies,
         String createdAt,
         String updatedAt,
         List<CommunityCommentResult> replies
@@ -32,6 +33,7 @@ public record CommunityCommentResult(
                 deleted ? null : (writer != null ? writer.getProfileIcon() : User.DEFAULT_PROFILE_ICON),
                 deleted ? null : comment.getContent(),
                 deleted,
+                comment.isNotifyReplies(),
                 TimestampUtil.toIsoString(comment.getCreatedAt()),
                 TimestampUtil.toIsoString(comment.getUpdatedAt()),
                 replies

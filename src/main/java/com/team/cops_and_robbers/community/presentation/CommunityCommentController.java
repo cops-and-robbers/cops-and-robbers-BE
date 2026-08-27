@@ -9,6 +9,7 @@ import com.team.cops_and_robbers.community.application.dto.command.CommunityComm
 import com.team.cops_and_robbers.community.application.dto.result.CommunityCommentListResult;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityCommentResult;
 import com.team.cops_and_robbers.community.presentation.dto.request.CommunityCommentCreateRequest;
+import com.team.cops_and_robbers.community.presentation.dto.request.CommunityCommentNotificationRequest;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityCommentListResponse;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityCommentResponse;
 import jakarta.validation.Valid;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -52,6 +54,16 @@ public class CommunityCommentController implements CommunityCommentControllerDoc
         CommunityCommentResult result =
                 communityCommentService.createComment(request.toCommand(loginUser.userId(), postId));
         return ResponseEntity.status(HttpStatus.CREATED).body(CommunityCommentResponse.from(result));
+    }
+
+    @PutMapping("/comments/{commentId}/notification")
+    public ResponseEntity<Void> updateCommentNotification(
+            @AuthUser LoginUser loginUser,
+            @PathVariable Long commentId,
+            @RequestBody @Valid CommunityCommentNotificationRequest request
+    ) {
+        communityCommentService.updateNotifyReplies(request.toCommand(loginUser.userId(), commentId));
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/comments/{commentId}")
