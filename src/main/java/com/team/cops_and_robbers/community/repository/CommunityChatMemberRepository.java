@@ -36,6 +36,8 @@ public interface CommunityChatMemberRepository extends JpaRepository<CommunityCh
     @Query("select m.communityPostId from CommunityChatMember m where m.userId = :userId")
     List<Long> findPostIdsByUserId(@Param("userId") Long userId);
 
+    List<CommunityChatMember> findAllByUserId(Long userId);
+
     @Query("""
             select new com.team.cops_and_robbers.community.repository.CommunityChatMemberCountProjection(
                 m.communityPostId, count(m)
@@ -45,6 +47,29 @@ public interface CommunityChatMemberRepository extends JpaRepository<CommunityCh
             group by m.communityPostId
             """)
     List<CommunityChatMemberCountProjection> countByPostIdIn(@Param("postIds") Collection<Long> postIds);
+
+    @Query("""
+            select new com.team.cops_and_robbers.community.repository.CommunityChatMemberCountProjection(
+                mem.communityPostId, count(msg)
+            )
+            from CommunityChatMember mem
+            left join CommunityChatMessage msg
+                 on msg.communityPostId = mem.communityPostId
+                and (mem.lastReadMessageId is null or msg.id > mem.lastReadMessageId)
+                and msg.senderId <> mem.userId
+                and msg.messageType <> com.team.cops_and_robbers.community.domain.CommunityChatMessageType.SYSTEM
+            where mem.userId = :userId
+            group by mem.communityPostId
+            """)
+    List<CommunityChatMemberCountProjection> countUnreadByUserId(@Param("userId") Long userId);
+
+    @Query("""
+            select m.userId from CommunityChatMember m
+            where m.communityPostId = :postId
+              and m.userId <> :senderId
+              and m.allowNotification = true
+            """)
+    List<Long> findPushTargetUserIds(@Param("postId") Long postId, @Param("senderId") Long senderId);
 
     @Modifying(clearAutomatically = true)
     @Query("delete from CommunityChatMember m where m.communityPostId = :postId")
