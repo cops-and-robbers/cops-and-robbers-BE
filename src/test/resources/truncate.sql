@@ -1,4 +1,6 @@
 TRUNCATE TABLE
+    community_notifications,
+    community_post_notification_settings,
     community_comments,
     community_post_likes,
     community_post_scraps,

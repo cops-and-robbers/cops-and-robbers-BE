@@ -49,6 +49,12 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean allowMarketingPush;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean allowCommunityPush = true;
+
+    private LocalDateTime communityNotificationReadAt;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
@@ -128,5 +134,13 @@ public class User extends BaseTimeEntity {
 
     public void updateProfileIcon(int profileIcon) {
         this.profileIcon = profileIcon;
+    }
+
+    public void updateCommunityPush(boolean allowCommunityPush) {
+        this.allowCommunityPush = allowCommunityPush;
+    }
+
+    public void readCommunityNotifications(LocalDateTime now) {
+        this.communityNotificationReadAt = now;
     }
 }
