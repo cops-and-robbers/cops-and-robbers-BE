@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.community.presentation;
 
 import com.team.cops_and_robbers.common.ControllerTest;
 import com.team.cops_and_robbers.common.fixture.CommunityPostFixture;
+import com.team.cops_and_robbers.community.domain.CommunityChatMember;
 import com.team.cops_and_robbers.community.domain.CommunityPost;
 import com.team.cops_and_robbers.community.domain.CommunityPostLike;
 import com.team.cops_and_robbers.community.domain.CommunityPostScrap;
@@ -275,6 +276,29 @@ class CommunityPostReactionControllerTest extends ControllerTest {
             unauthenticated()
                     .get(MY_SCRAPS_PATH)
                     .then().statusCode(401);
+        }
+
+        @Test
+        void 채팅방_참여_여부가_스크랩한_게시글마다_반영된다() {
+            User user = givenUser("유저");
+            CommunityPost joined = givenPost(user);
+            CommunityPost notJoined = givenPost(user);
+            givenScrapped(joined, user);
+            givenScrapped(notJoined, user);
+            communityChatMemberRepository.save(CommunityChatMember.createMember(joined.getId(), user.getId()));
+
+            Map<String, Object> response = authenticated(givenAccessToken(user))
+                    .get(MY_SCRAPS_PATH)
+                    .then().statusCode(200)
+                    .extract().as(new TypeRef<>() {});
+
+            List<Map<String, Object>> content = extractContent(response);
+            Map<String, Object> joinedResult = content.stream()
+                    .filter(post -> post.get("id").equals(joined.getId().intValue())).findFirst().orElseThrow();
+            Map<String, Object> notJoinedResult = content.stream()
+                    .filter(post -> post.get("id").equals(notJoined.getId().intValue())).findFirst().orElseThrow();
+            assertThat(joinedResult.get("chatJoined")).isEqualTo(true);
+            assertThat(notJoinedResult.get("chatJoined")).isEqualTo(false);
         }
 
         @SuppressWarnings("unchecked")
