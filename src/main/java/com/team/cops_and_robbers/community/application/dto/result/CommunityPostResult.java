@@ -17,10 +17,9 @@ public record CommunityPostResult(
         Integer maxParticipants,
         RecruitmentStatus status,
         String createdAt,
-        String updatedAt
+        String updatedAt,
+        boolean chatJoined
 ) {
-
-    private static final String UNKNOWN_USER = "알수없음";
 
     public record LocationResult(
             Double latitude,
@@ -35,12 +34,13 @@ public record CommunityPostResult(
     /**
      * 탈퇴한 작성자는 writer가 null로 들어온다.
      * 닉네임은 "알수없음"으로, 프로필 아이콘은 기본 아이콘 번호로 내려준다.
+     * chatJoined는 호출부에서 요청자 기준으로 계산해 넘긴다. 비로그인 조회는 false로 넘어온다.
      */
-    public static CommunityPostResult from(CommunityPost post, User writer) {
+    public static CommunityPostResult from(CommunityPost post, User writer, boolean chatJoined) {
         return new CommunityPostResult(
                 post.getId(),
                 post.getWriterId(),
-                writer != null ? writer.getNickname() : UNKNOWN_USER,
+                writer != null ? writer.getNickname() : User.UNKNOWN_NICKNAME,
                 writer != null ? writer.getProfileIcon() : User.DEFAULT_PROFILE_ICON,
                 post.getTitle(),
                 post.getContent(),
@@ -55,7 +55,8 @@ public record CommunityPostResult(
                 post.getMaxParticipants(),
                 post.currentStatus(),
                 TimestampUtil.toIsoString(post.getCreatedAt()),
-                TimestampUtil.toIsoString(post.getUpdatedAt())
+                TimestampUtil.toIsoString(post.getUpdatedAt()),
+                chatJoined
         );
     }
 }

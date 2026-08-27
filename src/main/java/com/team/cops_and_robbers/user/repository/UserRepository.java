@@ -44,13 +44,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByCreatedAtGreaterThanEqual(LocalDateTime since);
 
     @Query("""
-            select new com.team.cops_and_robbers.user.repository.UserNicknameProjection(
-                u.id, u.nickname
+            select new com.team.cops_and_robbers.user.repository.UserProfileProjection(
+                u.id, u.nickname, u.profileIcon
             )
             from User u
             where u.id in :userIds
             """)
-    List<UserNicknameProjection> findNicknamesByIds(@Param("userIds") Collection<Long> userIds);
+    List<UserProfileProjection> findProfilesByIds(@Param("userIds") Collection<Long> userIds);
 
     default User getByUserId(Long userId) {
         return findById(userId)

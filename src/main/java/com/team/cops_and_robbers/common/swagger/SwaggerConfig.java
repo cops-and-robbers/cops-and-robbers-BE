@@ -30,8 +30,24 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.24.0")
+                .version("2.25.0")
                 .description("""
+                        ## v2.25.0 업데이트 내역
+
+                        ### ✨ 신규 — 커뮤니티 채팅 멤버 관리
+                        - GET /api/community-posts/{postId}/chat/members — 채팅방 멤버 목록 조회
+                          - userId, nickname, profileIcon, isAuthor(작성자=방장 여부)
+                          - 해당 방 멤버만 조회 가능, 아니면 403(NOT_A_CHAT_MEMBER)
+                        - DELETE /api/community-posts/{postId}/chat/members/{userId} — 채팅방 멤버 강퇴
+                          - 방장만 가능. 자기 자신 강퇴 시 400(CANNOT_KICK_SELF), 대상이 멤버 아니면 404(CHAT_MEMBER_NOT_FOUND), 방장 아니면 403(FORBIDDEN_NOT_CHAT_HOST)
+                          - 강퇴된 유저는 재입장 제한 없음
+                          - 서버는 웹소켓 세션을 강제로 끊지 않는다. KICK 시스템 메시지를 브로드캐스트하며, 앱이 자기 자신 대상 메시지를 받으면 스스로 구독을 해제해야 한다
+                        - 게시글 응답(목록·단건·생성·수정·내 스크랩 목록)에 chatJoined(boolean) 추가 — 내가 그 게시글 채팅방에 참여 중인지
+                          - 단건 조회는 여전히 로그인 없이 호출 가능하며, 비로그인 조회는 chatJoined가 항상 false
+                        - 채팅 메시지 응답(내역 조회·목록의 lastMessage)에 발신자 프로필 아이콘 senderProfileIcon 추가
+                          - lastMessage에 senderNickname도 함께 추가
+                          - 닉네임과 같은 규칙: 조회 시점 현재 값을 우선하고, 탈퇴 시 발신 시점 값으로 대체
+
                         ## v2.24.0 업데이트 내역
 
                         ### ✨ 신규 — 프로필 아이콘

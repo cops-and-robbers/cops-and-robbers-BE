@@ -8,6 +8,7 @@ import com.team.cops_and_robbers.community.domain.CommunityChatGameInviteData;
 import com.team.cops_and_robbers.community.domain.CommunityChatMessage;
 import com.team.cops_and_robbers.community.domain.CommunityChatMessageType;
 import com.team.cops_and_robbers.community.exception.CommunityChatException;
+import com.team.cops_and_robbers.community.repository.CommunityChatSenderProfileProjection;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,7 @@ class CommunityChatServiceTest extends ServiceUnitTest {
     private static final Long POST_ID = 1L;
     private static final Long SENDER_ID = 2L;
     private static final String NICKNAME = "홍길동";
+    private static final int PROFILE_ICON = 2;
 
     @InjectMocks
     private CommunityChatService communityChatService;
@@ -42,8 +44,8 @@ class CommunityChatServiceTest extends ServiceUnitTest {
     private ObjectMapper objectMapper = new ObjectMapper();
 
     private void givenChatMember() {
-        given(communityChatMemberRepository.findNicknameByPostIdAndUserId(POST_ID, SENDER_ID))
-                .willReturn(Optional.of(NICKNAME));
+        given(communityChatMemberRepository.findSenderProfileByPostIdAndUserId(POST_ID, SENDER_ID))
+                .willReturn(Optional.of(new CommunityChatSenderProfileProjection(NICKNAME, PROFILE_ICON)));
     }
 
     private CommunityChatSendCommand textCommand(String messageKey, String message) {
@@ -70,13 +72,14 @@ class CommunityChatServiceTest extends ServiceUnitTest {
             CommunityChatMessage saved = captureSavedMessage();
             assertThat(saved.getMessage()).isEqualTo("안녕하세요");
             assertThat(saved.getSenderNickname()).isEqualTo(NICKNAME);
+            assertThat(saved.getSenderProfileIcon()).isEqualTo(PROFILE_ICON);
             assertThat(saved.getMessageKey()).isEqualTo("key-1");
             then(eventPublisher).should().publishEvent(any(Object.class));
         }
 
         @Test
         void 멤버가_아니면_전송할_수_없다() {
-            given(communityChatMemberRepository.findNicknameByPostIdAndUserId(POST_ID, SENDER_ID))
+            given(communityChatMemberRepository.findSenderProfileByPostIdAndUserId(POST_ID, SENDER_ID))
                     .willReturn(Optional.empty());
 
             assertThatThrownBy(() -> communityChatService.send(textCommand("key-1", "안녕하세요")))
@@ -139,7 +142,7 @@ class CommunityChatServiceTest extends ServiceUnitTest {
                     .isInstanceOf(ApplicationException.class);
 
             then(communityChatMemberRepository).should(never())
-                    .findNicknameByPostIdAndUserId(any(), any());
+                    .findSenderProfileByPostIdAndUserId(any(), any());
         }
     }
 

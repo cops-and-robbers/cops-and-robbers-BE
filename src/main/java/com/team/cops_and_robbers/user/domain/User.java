@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
 public class User extends BaseTimeEntity {
 
     public static final int DEFAULT_PROFILE_ICON = 1;
+    public static final String UNKNOWN_NICKNAME = "알수없음";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

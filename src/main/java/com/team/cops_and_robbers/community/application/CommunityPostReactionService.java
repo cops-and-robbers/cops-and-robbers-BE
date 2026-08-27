@@ -8,6 +8,7 @@ import com.team.cops_and_robbers.community.domain.CommunityPost;
 import com.team.cops_and_robbers.community.domain.CommunityPostLike;
 import com.team.cops_and_robbers.community.domain.CommunityPostScrap;
 import com.team.cops_and_robbers.community.exception.CommunityPostReactionException;
+import com.team.cops_and_robbers.community.repository.CommunityChatMemberRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostLikeRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostScrapRepository;
@@ -22,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -33,6 +35,7 @@ public class CommunityPostReactionService {
     private final CommunityPostLikeRepository communityPostLikeRepository;
     private final CommunityPostScrapRepository communityPostScrapRepository;
     private final CommunityPostRepository communityPostRepository;
+    private final CommunityChatMemberRepository communityChatMemberRepository;
     private final UserRepository userRepository;
 
     @Transactional
@@ -86,11 +89,13 @@ public class CommunityPostReactionService {
 
         Map<Long, CommunityPost> postsById = findPostsById(scraps);
         Map<Long, User> writers = findWriters(postsById.values());
+        Set<Long> joinedPostIds = Set.copyOf(communityChatMemberRepository.findPostIdsByUserId(command.userId()));
 
         List<CommunityPostResult> content = scraps.stream()
                 .map(scrap -> postsById.get(scrap.getCommunityPostId()))
                 .filter(Objects::nonNull)
-                .map(post -> CommunityPostResult.from(post, writers.get(post.getWriterId())))
+                .map(post -> CommunityPostResult.from(
+                        post, writers.get(post.getWriterId()), joinedPostIds.contains(post.getId())))
                 .toList();
         Long nextCursor = hasNext ? scraps.getLast().getId() : null;
 

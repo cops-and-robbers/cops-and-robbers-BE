@@ -99,12 +99,15 @@ public interface CommunityPostControllerDocs {
             description = "특정 모집 게시글을 조회합니다.\n\n"
                     + "location.region은 동 단위(예: 서울특별시 광진구 군자동), "
                     + "location.address는 번지까지 포함한 지번 주소입니다(예: 서울특별시 광진구 군자동 98). "
-                    + "화면에는 region을 쓰고 주소 복사에는 address를 쓰세요.")
+                    + "화면에는 region을 쓰고 주소 복사에는 address를 쓰세요.\n\n"
+                    + "토큰을 보내면 chatJoined에 내가 이 게시글 채팅방에 참여 중인지 반영한다. "
+                    + "토큰 없이 조회하면 chatJoined는 항상 false.")
     @ApiErrorCode(value = CommunityPostException.class, codes = {"POST_NOT_FOUND"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     ResponseEntity<CommunityPostResponse> getPost(
+            @Parameter(hidden = true) LoginUser loginUser,
             @PathVariable Long postId
     );
 

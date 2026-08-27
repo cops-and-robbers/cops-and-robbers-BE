@@ -227,7 +227,7 @@ class ReportServiceTest extends ServiceUnitTest {
 
         private CommunityChatMessage message(Long senderId) {
             CommunityChatMessage message = CommunityChatMessage.createMessage(
-                    "key-1", 5L, senderId, "닉네임", "나쁜 말", CommunityChatMessageType.TEXT);
+                    "key-1", 5L, senderId, "닉네임", 1, "나쁜 말", CommunityChatMessageType.TEXT);
             ReflectionTestUtils.setField(message, "id", 42L);
             return message;
         }

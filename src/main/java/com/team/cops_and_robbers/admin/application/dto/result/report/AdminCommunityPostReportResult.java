@@ -4,6 +4,7 @@ import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.report.domain.CommunityPostReport;
 import com.team.cops_and_robbers.report.domain.ReportStatus;
 import com.team.cops_and_robbers.report.domain.ReportType;
+import com.team.cops_and_robbers.user.domain.User;
 
 public record AdminCommunityPostReportResult(
         Long id,
@@ -21,8 +22,6 @@ public record AdminCommunityPostReportResult(
         String createdAt
 ) {
 
-    private static final String UNKNOWN_USER = "알수없음";
-
     public static AdminCommunityPostReportResult of(CommunityPostReport report, String reporterNickname, String reportedNickname) {
         return new AdminCommunityPostReportResult(
                 report.getId(),
@@ -30,9 +29,9 @@ public record AdminCommunityPostReportResult(
                 report.getPostTitle(),
                 report.getPostContent(),
                 report.getReporterUserId(),
-                reporterNickname != null ? reporterNickname : UNKNOWN_USER,
+                reporterNickname != null ? reporterNickname : User.UNKNOWN_NICKNAME,
                 report.getReportedUserId(),
-                reportedNickname != null ? reportedNickname : UNKNOWN_USER,
+                reportedNickname != null ? reportedNickname : User.UNKNOWN_NICKNAME,
                 report.getReportType(),
                 report.getEtcReason(),
                 report.getStatus(),

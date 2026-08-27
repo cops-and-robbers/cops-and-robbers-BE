@@ -24,6 +24,8 @@ public record CommunityChatHistoryResponse(
             Long senderId,
             @Schema(description = "발신자 닉네임 (탈퇴 시 발신 시점 닉네임)", example = "홍길동")
             String senderNickname,
+            @Schema(description = "발신자 프로필 아이콘 번호 (탈퇴 시 발신 시점 아이콘 번호)", example = "1")
+            int senderProfileIcon,
             @Schema(description = "본문. SYSTEM / GAME_INVITE는 JSON 문자열", example = "안녕하세요!")
             String message,
             @Schema(description = "메시지 타입", example = "TEXT")
@@ -37,6 +39,7 @@ public record CommunityChatHistoryResponse(
                     result.messageKey(),
                     result.senderId(),
                     result.senderNickname(),
+                    result.senderProfileIcon(),
                     result.message(),
                     result.messageType(),
                     result.createdAt()
