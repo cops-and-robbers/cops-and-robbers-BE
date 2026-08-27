@@ -8,6 +8,7 @@ public record CommunityChatPayload(
         Long communityPostId,
         Long senderId,
         String senderNickname,
+        int senderProfileIcon,
         String message,
         CommunityChatMessageType messageType,
         String createdAt
@@ -19,6 +20,7 @@ public record CommunityChatPayload(
                 message.getCommunityPostId(),
                 message.getSenderId(),
                 message.getSenderNickname(),
+                message.getSenderProfileIcon(),
                 message.getMessage(),
                 message.getMessageType(),
                 TimestampUtil.toIsoString(message.getCreatedAt())
