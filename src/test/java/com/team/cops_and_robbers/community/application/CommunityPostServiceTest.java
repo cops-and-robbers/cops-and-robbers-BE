@@ -41,6 +41,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
 class CommunityPostServiceTest extends ServiceUnitTest {
 
@@ -287,9 +288,45 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             setId(post, 1L);
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
 
-            CommunityPostResult result = communityPostService.getPost(1L);
+            CommunityPostResult result = communityPostService.getPost(1L, 2L);
 
             assertThat(result.id()).isEqualTo(1L);
+        }
+
+        @Test
+        void 비로그인_조회는_chatJoined가_false다() {
+            CommunityPost post = POST(1L);
+            setId(post, 1L);
+            given(communityPostRepository.getByPostId(1L)).willReturn(post);
+
+            CommunityPostResult result = communityPostService.getPost(1L, null);
+
+            assertThat(result.chatJoined()).isFalse();
+            then(communityChatMemberRepository).should(never()).existsByCommunityPostIdAndUserId(any(), any());
+        }
+
+        @Test
+        void 로그인했고_채팅방_멤버면_chatJoined가_true다() {
+            CommunityPost post = POST(1L);
+            setId(post, 1L);
+            given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(communityChatMemberRepository.existsByCommunityPostIdAndUserId(1L, 2L)).willReturn(true);
+
+            CommunityPostResult result = communityPostService.getPost(1L, 2L);
+
+            assertThat(result.chatJoined()).isTrue();
+        }
+
+        @Test
+        void 로그인했지만_채팅방_멤버가_아니면_chatJoined가_false다() {
+            CommunityPost post = POST(1L);
+            setId(post, 1L);
+            given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(communityChatMemberRepository.existsByCommunityPostIdAndUserId(1L, 2L)).willReturn(false);
+
+            CommunityPostResult result = communityPostService.getPost(1L, 2L);
+
+            assertThat(result.chatJoined()).isFalse();
         }
 
         @Test
@@ -297,7 +334,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             given(communityPostRepository.getByPostId(999L))
                     .willThrow(new ApplicationException(CommunityPostException.POST_NOT_FOUND));
 
-            assertThatThrownBy(() -> communityPostService.getPost(999L))
+            assertThatThrownBy(() -> communityPostService.getPost(999L, 1L))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.POST_NOT_FOUND.getDetail());
         }

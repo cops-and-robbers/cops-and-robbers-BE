@@ -60,7 +60,7 @@ public class CommunityPostService {
         User writer = userRepository.getByUserId(command.writerId());
         CommunityPost post = communityPostRepository.save(CommunityPost.createPost(command, postAddress));
         communityChatMemberRepository.save(CommunityChatMember.createMember(post.getId(), command.writerId()));
-        return CommunityPostResult.from(post, writer);
+        return CommunityPostResult.from(post, writer, true);
     }
 
     public CommunityPostCursorResult getPostList(CommunityPostListCommand command) {
@@ -82,9 +82,14 @@ public class CommunityPostService {
     }
 
 
-    public CommunityPostResult getPost(Long postId) {
+    /**
+     * requesterId는 비로그인 조회면 null로 들어오고, chatJoined는 항상 false다.
+     */
+    public CommunityPostResult getPost(Long postId, Long requesterId) {
         CommunityPost post = communityPostRepository.getByPostId(postId);
-        return CommunityPostResult.from(post, findWriter(post.getWriterId()));
+        boolean chatJoined = requesterId != null
+                && communityChatMemberRepository.existsByCommunityPostIdAndUserId(postId, requesterId);
+        return CommunityPostResult.from(post, findWriter(post.getWriterId()), chatJoined);
     }
 
     @Transactional
@@ -94,7 +99,7 @@ public class CommunityPostService {
         validateMeetingDate(command.meetingAt());
         PostAddress postAddress = resolveUpdatedAddress(post, command);
         post.updatePost(command, postAddress);
-        return CommunityPostResult.from(post, findWriter(post.getWriterId()));
+        return CommunityPostResult.from(post, findWriter(post.getWriterId()), true);
     }
 
     /**
@@ -118,7 +123,7 @@ public class CommunityPostService {
         CommunityPost post = communityPostRepository.getByPostId(command.postId());
         validateAuthor(post, command.writerId());
         post.updateStatus(command.status());
-        return CommunityPostResult.from(post, findWriter(post.getWriterId()));
+        return CommunityPostResult.from(post, findWriter(post.getWriterId()), true);
     }
 
     private void validateAuthor(CommunityPost post, Long writerId) {
@@ -161,10 +166,13 @@ public class CommunityPostService {
         return userRepository.findById(writerId).orElse(null);
     }
 
+    /**
+     * 목록 조회는 로그인 여부와 무관하게 요청자 컨텍스트가 없어 chatJoined를 항상 false로 내려준다.
+     */
     private List<CommunityPostResult> toResults(List<CommunityPost> posts) {
         Map<Long, User> writers = findWriters(posts);
         return posts.stream()
-                .map(post -> CommunityPostResult.from(post, writers.get(post.getWriterId())))
+                .map(post -> CommunityPostResult.from(post, writers.get(post.getWriterId()), false))
                 .toList();
     }
 

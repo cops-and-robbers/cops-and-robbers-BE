@@ -222,6 +222,7 @@ class CommunityPostControllerTest extends ControllerTest {
                 softly.assertThat(extract.jsonPath().getString("content")).isEqualTo("강남역 근처에서 5명 모집합니다.");
                 softly.assertThat(extract.jsonPath().getInt("maxParticipants")).isEqualTo(6);
                 softly.assertThat(extract.jsonPath().getString("status")).isEqualTo("RECRUITING");
+                softly.assertThat(extract.jsonPath().getBoolean("chatJoined")).isTrue();
             });
         }
 
@@ -1114,6 +1115,56 @@ class CommunityPostControllerTest extends ControllerTest {
 
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
+            });
+        }
+
+        @Test
+        void 토큰_없이_요청하면_chatJoined는_false다() {
+            Long postId = communityPostRepository.save(POST(user.getId())).getId();
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .when()
+                    .get(POST_API_URL + "/" + postId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getBoolean("chatJoined")).isFalse();
+            });
+        }
+
+        @Test
+        void 채팅방에_참여한_로그인_사용자가_조회하면_chatJoined는_true다() {
+            Long postId = communityPostRepository.save(POST(user.getId())).getId();
+            communityChatMemberRepository.save(CommunityChatMember.createMember(postId, user.getId()));
+
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .when()
+                    .get(POST_API_URL + "/" + postId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getBoolean("chatJoined")).isTrue();
+            });
+        }
+
+        @Test
+        void 채팅방에_참여하지_않은_로그인_사용자가_조회하면_chatJoined는_false다() {
+            User writer = givenUser("작성자");
+            Long postId = communityPostRepository.save(POST(writer.getId())).getId();
+
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .when()
+                    .get(POST_API_URL + "/" + postId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getBoolean("chatJoined")).isFalse();
             });
         }
     }

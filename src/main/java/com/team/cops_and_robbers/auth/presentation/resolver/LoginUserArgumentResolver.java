@@ -14,6 +14,8 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
+import java.util.Optional;
+
 @Component
 @RequiredArgsConstructor
 public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver {
@@ -36,13 +38,23 @@ public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver 
             return loginUser;
         }
 
-        return getLoginUserFromAccessToken(request);
+        boolean required = parameter.getParameterAnnotation(AuthUser.class).required();
+        return getLoginUserFromAccessToken(request, required);
     }
 
-    private LoginUser getLoginUserFromAccessToken(HttpServletRequest request) {
-        String accessToken = AuthorizationExtractor.extractToken(request)
-                .orElseThrow(() -> new ApplicationException(AuthException.UNAUTHENTICATED_REQUEST));
-        Long loginUserId = jwtTokenProvider.getUserIdFromAccessToken(accessToken);
+    /**
+     * required가 false면 토큰이 아예 없을 때만 null을 반환한다.
+     * 토큰이 있는데 유효하지 않으면 required 여부와 무관하게 그대로 예외를 던진다.
+     */
+    private LoginUser getLoginUserFromAccessToken(HttpServletRequest request, boolean required) {
+        Optional<String> accessToken = AuthorizationExtractor.extractToken(request);
+        if (accessToken.isEmpty()) {
+            if (required) {
+                throw new ApplicationException(AuthException.UNAUTHENTICATED_REQUEST);
+            }
+            return null;
+        }
+        Long loginUserId = jwtTokenProvider.getUserIdFromAccessToken(accessToken.get());
         return new LoginUser(loginUserId);
     }
 

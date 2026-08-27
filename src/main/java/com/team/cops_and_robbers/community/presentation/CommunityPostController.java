@@ -95,9 +95,11 @@ public class CommunityPostController implements CommunityPostControllerDocs {
 
     @GetMapping("/{postId}")
     public ResponseEntity<CommunityPostResponse> getPost(
+            @AuthUser(required = false) LoginUser loginUser,
             @PathVariable Long postId
     ) {
-        CommunityPostResult result = communityPostService.getPost(postId);
+        Long requesterId = (loginUser == null) ? null : loginUser.userId();
+        CommunityPostResult result = communityPostService.getPost(postId, requesterId);
         CommunityPostResponse response = CommunityPostResponse.from(result);
         return ResponseEntity.ok(response);
     }

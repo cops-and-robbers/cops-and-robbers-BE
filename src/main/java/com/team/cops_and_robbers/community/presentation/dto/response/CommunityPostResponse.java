@@ -28,7 +28,9 @@ public record CommunityPostResponse(
         @Schema(description = "생성일시", example = "2026-08-07T12:00:00+09:00")
         String createdAt,
         @Schema(description = "수정일시", example = "2026-08-07T12:00:00+09:00")
-        String updatedAt
+        String updatedAt,
+        @Schema(description = "내가 이 게시글의 채팅방에 참여 중인지 여부. 비로그인 조회는 false", example = "false")
+        boolean chatJoined
 ) {
     public record LocationResponse(
             @Schema(description = "위도", example = "37.4979")
@@ -68,7 +70,8 @@ public record CommunityPostResponse(
                 result.maxParticipants(),
                 result.status(),
                 result.createdAt(),
-                result.updatedAt()
+                result.updatedAt(),
+                result.chatJoined()
         );
     }
 }
