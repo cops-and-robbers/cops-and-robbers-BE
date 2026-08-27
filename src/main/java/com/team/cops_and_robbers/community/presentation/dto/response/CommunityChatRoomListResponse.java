@@ -23,7 +23,12 @@ public record CommunityChatRoomListResponse(
             @Schema(description = "참여 인원", example = "8")
             Long memberCount,
             @Schema(description = "마지막 메시지 (대화가 없으면 null)")
-            LastMessageResponse lastMessage
+            LastMessageResponse lastMessage,
+            @Schema(description = "안 읽은 메시지 수. 내가 보낸 메시지와 입장·퇴장 안내는 세지 않는다",
+                    example = "3")
+            long unreadCount,
+            @Schema(description = "이 방의 푸시 알림 수신 여부 (기본 true)", example = "true")
+            boolean notificationEnabled
     ) {
         public static ChatRoomResponse from(CommunityChatRoomResult result) {
             return new ChatRoomResponse(
@@ -32,7 +37,9 @@ public record CommunityChatRoomListResponse(
                     result.status(),
                     result.meetingAt(),
                     result.memberCount(),
-                    LastMessageResponse.from(result.lastMessage())
+                    LastMessageResponse.from(result.lastMessage()),
+                    result.unreadCount(),
+                    result.notificationEnabled()
             );
         }
     }

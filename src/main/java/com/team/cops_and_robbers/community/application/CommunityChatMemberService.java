@@ -5,6 +5,8 @@ import com.team.cops_and_robbers.community.application.dto.CommunityChatRoomList
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatJoinCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatKickCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatLeaveCommand;
+import com.team.cops_and_robbers.community.application.dto.command.CommunityChatNotificationCommand;
+import com.team.cops_and_robbers.community.application.dto.command.CommunityChatReadCommand;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityChatMemberListResult;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityChatRoomResult;
 import com.team.cops_and_robbers.community.application.event.CommunityChatMessageSavedEvent;
@@ -116,16 +118,19 @@ public class CommunityChatMemberService {
      * 마지막 대화가 최근인 방부터, 대화가 없는 방은 뒤로 보낸다.
      */
     public List<CommunityChatRoomResult> getChatRooms(Long userId) {
-        List<Long> postIds = communityChatMemberRepository.findPostIdsByUserId(userId);
-        if (postIds.isEmpty()) {
+        List<CommunityChatMember> members = communityChatMemberRepository.findAllByUserId(userId);
+        if (members.isEmpty()) {
             return List.of();
         }
 
+        List<Long> postIds = members.stream().map(CommunityChatMember::getCommunityPostId).toList();
         Map<Long, CommunityChatMessage> lastMessages = findLastMessages(postIds);
         CommunityChatRoomListContext context = CommunityChatRoomListContext.of(
                 findMemberCounts(postIds),
                 lastMessages,
-                findCurrentSenderProfiles(lastMessages.values())
+                findCurrentSenderProfiles(lastMessages.values()),
+                findUnreadCounts(userId),
+                findNotificationEnabled(members)
         );
 
         return communityPostRepository.findAllById(postIds).stream()
@@ -140,7 +145,12 @@ public class CommunityChatMemberService {
                 (lastMessage == null) ? null : context.senderProfiles().get(lastMessage.getSenderId());
 
         return CommunityChatRoomResult.of(
-                post, context.memberCounts().getOrDefault(post.getId(), 0L), lastMessage, senderProfile);
+                post,
+                context.memberCounts().getOrDefault(post.getId(), 0L),
+                lastMessage,
+                senderProfile,
+                context.unreadCounts().getOrDefault(post.getId(), 0L),
+                context.notificationEnabled().getOrDefault(post.getId(), true));
     }
 
     public CommunityChatMemberListResult getMembers(Long postId, Long requesterId) {
@@ -169,8 +179,44 @@ public class CommunityChatMemberService {
                 .collect(Collectors.toMap(User::getId, Function.identity()));
     }
 
+    @Transactional
+    public void updateNotification(CommunityChatNotificationCommand command) {
+        getMember(command.postId(), command.userId()).updateNotification(command.allowNotification());
+    }
+
+    /**
+     * 읽음 위치는 앞으로만 간다. 오래된 메시지 id가 뒤늦게 들어와도 뒤로 밀지 않는다.
+     */
+    @Transactional
+    public void read(CommunityChatReadCommand command) {
+        CommunityChatMember member = getMember(command.postId(), command.userId());
+        if (member.hasReadUpTo(command.lastReadMessageId())) {
+            return;
+        }
+        member.readUntil(command.lastReadMessageId());
+    }
+
+    private CommunityChatMember getMember(Long postId, Long userId) {
+        return communityChatMemberRepository.findByCommunityPostIdAndUserId(postId, userId)
+                .orElseThrow(() -> new ApplicationException(CommunityChatException.NOT_A_CHAT_MEMBER));
+    }
+
+    private Map<Long, Boolean> findNotificationEnabled(List<CommunityChatMember> members) {
+        return members.stream()
+                .collect(Collectors.toMap(
+                        CommunityChatMember::getCommunityPostId,
+                        CommunityChatMember::isAllowNotification));
+    }
+
     private Map<Long, Long> findMemberCounts(List<Long> postIds) {
         return communityChatMemberRepository.countByPostIdIn(postIds).stream()
+                .collect(Collectors.toMap(
+                        CommunityChatMemberCountProjection::postId,
+                        CommunityChatMemberCountProjection::count));
+    }
+
+    private Map<Long, Long> findUnreadCounts(Long userId) {
+        return communityChatMemberRepository.countUnreadByUserId(userId).stream()
                 .collect(Collectors.toMap(
                         CommunityChatMemberCountProjection::postId,
                         CommunityChatMemberCountProjection::count));

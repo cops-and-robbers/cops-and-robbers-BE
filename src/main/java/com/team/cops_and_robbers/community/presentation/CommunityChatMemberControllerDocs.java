@@ -4,6 +4,8 @@ import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.common.swagger.ApiErrorCode;
 import com.team.cops_and_robbers.community.exception.CommunityChatException;
 import com.team.cops_and_robbers.community.exception.CommunityPostException;
+import com.team.cops_and_robbers.community.presentation.dto.request.CommunityChatNotificationRequest;
+import com.team.cops_and_robbers.community.presentation.dto.request.CommunityChatReadRequest;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityChatHistoryResponse;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityChatMemberListResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -80,5 +82,38 @@ public interface CommunityChatMemberControllerDocs {
             @Parameter(description = "게시글 ID", example = "1") @PathVariable Long postId,
             @Parameter(description = "이전 응답의 nextCursor", example = "1200") @RequestParam(required = false) Long cursor,
             @Parameter(description = "조회 개수 (1~50)", example = "20") @RequestParam(defaultValue = "20") int size
+    );
+
+    @Operation(summary = "채팅방 알림 켜기/끄기",
+            description = """
+                    이 채팅방의 푸시 알림을 받을지 정합니다. 기본값은 받음입니다.
+
+                    끄면 푸시만 오지 않고 메시지는 그대로 저장되며 안 읽은 개수도 그대로 올라갑니다. 읽음 처리와는 관계가 없습니다.
+                    현재 상태는 채팅방 목록 응답의 `notificationEnabled`로 내려가므로 따로 조회할 필요가 없습니다.
+                    """)
+    @ApiErrorCode(value = CommunityChatException.class, codes = {"NOT_A_CHAT_MEMBER"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "설정 성공")
+    })
+    ResponseEntity<Void> updateNotification(
+            @Parameter(hidden = true) LoginUser loginUser,
+            @Parameter(description = "게시글 ID", example = "1") @PathVariable Long postId,
+            CommunityChatNotificationRequest request
+    );
+
+    @Operation(summary = "채팅방 읽음 처리",
+            description = """
+                    이 방을 어디까지 읽었는지 기록합니다. 화면에 보인 가장 최신 메시지의 id를 보내주세요.
+
+                    채팅 내역 조회(GET)만으로는 읽음 처리되지 않습니다. 읽은 위치는 앞으로만 이동하므로 과거 id를 보내도 뒤로 밀리지 않습니다.
+                    """)
+    @ApiErrorCode(value = CommunityChatException.class, codes = {"NOT_A_CHAT_MEMBER"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "읽음 처리 성공")
+    })
+    ResponseEntity<Void> read(
+            @Parameter(hidden = true) LoginUser loginUser,
+            @Parameter(description = "게시글 ID", example = "1") @PathVariable Long postId,
+            CommunityChatReadRequest request
     );
 }

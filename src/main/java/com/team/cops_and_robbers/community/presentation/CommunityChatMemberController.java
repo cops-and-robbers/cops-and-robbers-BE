@@ -9,8 +9,11 @@ import com.team.cops_and_robbers.community.application.dto.command.CommunityChat
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatKickCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatLeaveCommand;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityChatMemberListResult;
+import com.team.cops_and_robbers.community.presentation.dto.request.CommunityChatNotificationRequest;
+import com.team.cops_and_robbers.community.presentation.dto.request.CommunityChatReadRequest;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityChatHistoryResponse;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityChatMemberListResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +21,8 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -79,5 +84,25 @@ public class CommunityChatMemberController implements CommunityChatMemberControl
         CommunityChatHistoryResponse response =
                 CommunityChatHistoryResponse.from(communityChatService.getHistory(command));
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/notification")
+    public ResponseEntity<Void> updateNotification(
+            @AuthUser LoginUser loginUser,
+            @PathVariable Long postId,
+            @RequestBody @Valid CommunityChatNotificationRequest request
+    ) {
+        communityChatMemberService.updateNotification(request.toCommand(loginUser.userId(), postId));
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/read")
+    public ResponseEntity<Void> read(
+            @AuthUser LoginUser loginUser,
+            @PathVariable Long postId,
+            @RequestBody @Valid CommunityChatReadRequest request
+    ) {
+        communityChatMemberService.read(request.toCommand(loginUser.userId(), postId));
+        return ResponseEntity.noContent().build();
     }
 }
