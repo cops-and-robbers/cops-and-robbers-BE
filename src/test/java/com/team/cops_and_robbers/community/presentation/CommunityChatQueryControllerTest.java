@@ -253,4 +253,55 @@ class CommunityChatQueryControllerTest extends ControllerTest {
             return (List<Map<String, Object>>) response.get("members");
         }
     }
+
+    @Nested
+    @DisplayName("채팅방 멤버 강퇴")
+    class Kick {
+
+        private static final String KICK_PATH = "/api/community-posts/{postId}/chat/members/{userId}";
+
+        @Test
+        void 방장이_멤버를_강퇴하면_204를_응답한다() {
+            User author = givenUser("author");
+            CommunityPost post = communityPostRepository.save(CommunityPostFixture.POST(author.getId()));
+            communityChatMemberRepository.save(CommunityChatMember.createMember(post.getId(), author.getId()));
+            User target = givenUser("target");
+            communityChatMemberRepository.save(CommunityChatMember.createMember(post.getId(), target.getId()));
+
+            authenticated(givenAccessToken(author))
+                    .delete(KICK_PATH, post.getId(), target.getId())
+                    .then().statusCode(204);
+
+            assertThat(communityChatMemberRepository
+                    .existsByCommunityPostIdAndUserId(post.getId(), target.getId())).isFalse();
+        }
+
+        @Test
+        void 방장이_아니면_강퇴할_수_없다() {
+            User author = givenUser("author");
+            CommunityPost post = communityPostRepository.save(CommunityPostFixture.POST(author.getId()));
+            communityChatMemberRepository.save(CommunityChatMember.createMember(post.getId(), author.getId()));
+            User member = givenUser("member");
+            communityChatMemberRepository.save(CommunityChatMember.createMember(post.getId(), member.getId()));
+            User other = givenUser("other");
+            communityChatMemberRepository.save(CommunityChatMember.createMember(post.getId(), other.getId()));
+
+            authenticated(givenAccessToken(other))
+                    .delete(KICK_PATH, post.getId(), member.getId())
+                    .then()
+                    .statusCode(CommunityChatException.FORBIDDEN_NOT_CHAT_HOST.getHttpStatus().value());
+        }
+
+        @Test
+        void 자기_자신은_강퇴할_수_없다() {
+            User author = givenUser("author");
+            CommunityPost post = communityPostRepository.save(CommunityPostFixture.POST(author.getId()));
+            communityChatMemberRepository.save(CommunityChatMember.createMember(post.getId(), author.getId()));
+
+            authenticated(givenAccessToken(author))
+                    .delete(KICK_PATH, post.getId(), author.getId())
+                    .then()
+                    .statusCode(CommunityChatException.CANNOT_KICK_SELF.getHttpStatus().value());
+        }
+    }
 }

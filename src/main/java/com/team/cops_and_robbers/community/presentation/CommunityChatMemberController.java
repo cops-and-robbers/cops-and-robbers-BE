@@ -6,6 +6,7 @@ import com.team.cops_and_robbers.community.application.CommunityChatMemberServic
 import com.team.cops_and_robbers.community.application.CommunityChatService;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatHistoryCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatJoinCommand;
+import com.team.cops_and_robbers.community.application.dto.command.CommunityChatKickCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatLeaveCommand;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityChatMemberListResult;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityChatHistoryResponse;
@@ -54,6 +55,16 @@ public class CommunityChatMemberController implements CommunityChatMemberControl
     ) {
         CommunityChatMemberListResult result = communityChatMemberService.getMembers(postId, loginUser.userId());
         return ResponseEntity.ok(CommunityChatMemberListResponse.from(result));
+    }
+
+    @DeleteMapping("/members/{userId}")
+    public ResponseEntity<Void> kick(
+            @AuthUser LoginUser loginUser,
+            @PathVariable Long postId,
+            @PathVariable Long userId
+    ) {
+        communityChatMemberService.kick(CommunityChatKickCommand.of(loginUser.userId(), postId, userId));
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/messages")

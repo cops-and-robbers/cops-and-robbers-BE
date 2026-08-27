@@ -53,6 +53,21 @@ public interface CommunityChatMemberControllerDocs {
             @Parameter(description = "게시글 ID", example = "1") @PathVariable Long postId
     );
 
+    @Operation(summary = "채팅방 멤버 강퇴",
+            description = "방장이 특정 멤버를 채팅방에서 내보냅니다. 강퇴된 유저는 다시 참여할 수 있습니다(재입장 제한 없음). "
+                    + "서버가 웹소켓 세션을 직접 끊지는 않으며, 강퇴 시스템 메시지를 받은 앱이 스스로 구독을 해제해야 합니다.")
+    @ApiErrorCode(value = CommunityPostException.class, codes = {"POST_NOT_FOUND"})
+    @ApiErrorCode(value = CommunityChatException.class,
+            codes = {"FORBIDDEN_NOT_CHAT_HOST", "CANNOT_KICK_SELF", "CHAT_MEMBER_NOT_FOUND"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "강퇴 성공")
+    })
+    ResponseEntity<Void> kick(
+            @Parameter(hidden = true) LoginUser loginUser,
+            @Parameter(description = "게시글 ID", example = "1") @PathVariable Long postId,
+            @Parameter(description = "강퇴할 유저 ID", example = "7") @PathVariable Long userId
+    );
+
     @Operation(summary = "채팅 내역 조회",
             description = "커서 기반으로 최신 메시지부터 조회합니다. cursor를 생략하면 가장 최근부터 조회합니다.")
     @ApiErrorCode(value = CommunityChatException.class, codes = {"NOT_A_CHAT_MEMBER"})

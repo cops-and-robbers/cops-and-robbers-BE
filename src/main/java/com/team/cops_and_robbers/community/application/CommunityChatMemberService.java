@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.community.application;
 
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatJoinCommand;
+import com.team.cops_and_robbers.community.application.dto.command.CommunityChatKickCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatLeaveCommand;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityChatMemberListResult;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityChatRoomResult;
@@ -76,6 +77,31 @@ public class CommunityChatMemberService {
         CommunityChatMessage systemMessage = communityChatMessageRepository.save(
                 communityChatSystemMessageFactory.createLeaveMessage(command.postId(), user));
         communityChatMemberRepository.delete(member);
+
+        eventPublisher.publishEvent(new CommunityChatMessageSavedEvent(systemMessage));
+    }
+
+    /**
+     * 방장만 멤버를 강퇴할 수 있다. 강퇴된 유저는 재입장 제한 없이 다시 참여할 수 있다.
+     */
+    @Transactional
+    public void kick(CommunityChatKickCommand command) {
+        CommunityPost post = communityPostRepository.getByPostId(command.postId());
+        validateHost(post, command.hostId());
+        validateNotSelf(command.hostId(), command.targetUserId());
+
+        CommunityChatMember target = communityChatMemberRepository
+                .findByCommunityPostIdAndUserId(command.postId(), command.targetUserId())
+                .orElseThrow(() -> new ApplicationException(CommunityChatException.CHAT_MEMBER_NOT_FOUND));
+
+        User targetUser = userRepository.findById(command.targetUserId()).orElse(null);
+        String targetNickname = (targetUser != null) ? targetUser.getNickname() : User.UNKNOWN_NICKNAME;
+
+        CommunityChatMessage systemMessage = communityChatMessageRepository.save(
+                communityChatSystemMessageFactory.createKickMessage(
+                        command.postId(), command.targetUserId(), targetNickname));
+
+        communityChatMemberRepository.delete(target);
 
         eventPublisher.publishEvent(new CommunityChatMessageSavedEvent(systemMessage));
     }
@@ -181,6 +207,18 @@ public class CommunityChatMemberService {
     private void validateNotAuthor(CommunityPost post, Long userId) {
         if (post.getWriterId().equals(userId)) {
             throw new ApplicationException(CommunityChatException.AUTHOR_CANNOT_LEAVE);
+        }
+    }
+
+    private void validateHost(CommunityPost post, Long userId) {
+        if (!post.getWriterId().equals(userId)) {
+            throw new ApplicationException(CommunityChatException.FORBIDDEN_NOT_CHAT_HOST);
+        }
+    }
+
+    private void validateNotSelf(Long hostId, Long targetUserId) {
+        if (hostId.equals(targetUserId)) {
+            throw new ApplicationException(CommunityChatException.CANNOT_KICK_SELF);
         }
     }
 }

@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.community.application;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatJoinCommand;
+import com.team.cops_and_robbers.community.application.dto.command.CommunityChatKickCommand;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityChatLeaveCommand;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityChatMemberListResult;
 import com.team.cops_and_robbers.community.domain.CommunityChatMember;
@@ -190,6 +191,81 @@ class CommunityChatMemberServiceTest extends ServiceUnitTest {
             assertThatThrownBy(() -> communityChatMemberService.leave(CommunityChatLeaveCommand.of(JOINER_ID, POST_ID)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityChatException.NOT_A_CHAT_MEMBER.getDetail());
+        }
+    }
+
+    @Nested
+    @DisplayName("채팅방 멤버 강퇴")
+    class Kick {
+
+        @Test
+        void 방장이_멤버를_강퇴하면_강퇴_시스템_메시지_저장_후_멤버가_삭제된다() {
+            CommunityChatMember target = CommunityChatMember.createMember(POST_ID, JOINER_ID);
+            CommunityChatMessage kickMessage = givenSystemMessage("{\"event\":\"KICK\"}");
+            given(communityPostRepository.getByPostId(POST_ID)).willReturn(givenPost());
+            given(communityChatMemberRepository.findByCommunityPostIdAndUserId(POST_ID, JOINER_ID))
+                    .willReturn(Optional.of(target));
+            given(userRepository.findById(JOINER_ID)).willReturn(Optional.of(USER("참여자")));
+            given(communityChatSystemMessageFactory.createKickMessage(POST_ID, JOINER_ID, "참여자"))
+                    .willReturn(kickMessage);
+
+            communityChatMemberService.kick(CommunityChatKickCommand.of(AUTHOR_ID, POST_ID, JOINER_ID));
+
+            then(communityChatMessageRepository).should().save(kickMessage);
+            then(communityChatMemberRepository).should().delete(target);
+            then(eventPublisher).should().publishEvent(any(Object.class));
+        }
+
+        @Test
+        void 방장이_아니면_강퇴할_수_없다() {
+            given(communityPostRepository.getByPostId(POST_ID)).willReturn(givenPost());
+
+            assertThatThrownBy(() -> communityChatMemberService.kick(
+                    CommunityChatKickCommand.of(JOINER_ID, POST_ID, AUTHOR_ID)))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(CommunityChatException.FORBIDDEN_NOT_CHAT_HOST.getDetail());
+
+            then(communityChatMemberRepository).should(never()).delete(any());
+        }
+
+        @Test
+        void 자기_자신은_강퇴할_수_없다() {
+            given(communityPostRepository.getByPostId(POST_ID)).willReturn(givenPost());
+
+            assertThatThrownBy(() -> communityChatMemberService.kick(
+                    CommunityChatKickCommand.of(AUTHOR_ID, POST_ID, AUTHOR_ID)))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(CommunityChatException.CANNOT_KICK_SELF.getDetail());
+
+            then(communityChatMemberRepository).should(never()).delete(any());
+        }
+
+        @Test
+        void 대상이_멤버가_아니면_강퇴할_수_없다() {
+            given(communityPostRepository.getByPostId(POST_ID)).willReturn(givenPost());
+            given(communityChatMemberRepository.findByCommunityPostIdAndUserId(POST_ID, JOINER_ID))
+                    .willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> communityChatMemberService.kick(
+                    CommunityChatKickCommand.of(AUTHOR_ID, POST_ID, JOINER_ID)))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(CommunityChatException.CHAT_MEMBER_NOT_FOUND.getDetail());
+        }
+
+        @Test
+        void 탈퇴한_유저도_알수없음_닉네임으로_강퇴할_수_있다() {
+            CommunityChatMember target = CommunityChatMember.createMember(POST_ID, JOINER_ID);
+            CommunityChatMessage kickMessage = givenSystemMessage("{\"event\":\"KICK\"}");
+            given(communityPostRepository.getByPostId(POST_ID)).willReturn(givenPost());
+            given(communityChatMemberRepository.findByCommunityPostIdAndUserId(POST_ID, JOINER_ID))
+                    .willReturn(Optional.of(target));
+            given(userRepository.findById(JOINER_ID)).willReturn(Optional.empty());
+            given(communityChatSystemMessageFactory.createKickMessage(POST_ID, JOINER_ID, User.UNKNOWN_NICKNAME))
+                    .willReturn(kickMessage);
+
+            communityChatMemberService.kick(CommunityChatKickCommand.of(AUTHOR_ID, POST_ID, JOINER_ID));
+
+            then(communityChatMemberRepository).should().delete(target);
         }
     }
 
