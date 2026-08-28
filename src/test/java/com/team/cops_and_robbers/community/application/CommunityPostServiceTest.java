@@ -116,9 +116,6 @@ class CommunityPostServiceTest extends ServiceUnitTest {
 
         @Test
         void 필수_약관에_동의하지_않았으면_게시글을_만들_수_없다() {
-            given(geocodingClient.reverseGeocode(37.4979, 127.0276))
-                    .willReturn(GeocodingResult.resolved(
-                            PostAddress.of("서울 강남구 역삼동", "서울 강남구 테헤란로 152", null, "서울 강남구 역삼동", "KR")));
             given(userRepository.getByUserId(1L)).willReturn(USER_WITHOUT_TERMS("미동의유저"));
 
             assertThatThrownBy(() -> communityPostService.createPost(
@@ -127,11 +124,13 @@ class CommunityPostServiceTest extends ServiceUnitTest {
                     .isInstanceOf(ApplicationException.class)
                     .hasMessage(UserException.REQUIRED_TERMS_NOT_AGREED.getDetail());
 
+            then(geocodingClient).shouldHaveNoInteractions();
             then(communityPostRepository).should(never()).save(any());
         }
 
         @Test
         void 역지오코딩이_실패하면_게시글을_만들지_않는다() {
+            given(userRepository.getByUserId(1L)).willReturn(USER());
             given(geocodingClient.reverseGeocode(37.4979, 127.0276)).willReturn(GeocodingResult.failed());
 
             assertThatThrownBy(() -> communityPostService.createPost(
@@ -144,6 +143,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
 
         @Test
         void 주소를_찾을_수_없는_위치면_ADDRESS_NOT_FOUND_예외가_발생한다() {
+            given(userRepository.getByUserId(1L)).willReturn(USER());
             given(geocodingClient.reverseGeocode(37.4979, 127.0276)).willReturn(GeocodingResult.notFound());
 
             assertThatThrownBy(() -> communityPostService.createPost(
@@ -151,7 +151,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
                             LocalDateTime.now().plusDays(3), 37.4979, 127.0276, "만나는곳", 6)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.ADDRESS_NOT_FOUND.getDetail());
-            then(userRepository).shouldHaveNoInteractions();
+            then(communityPostRepository).should(never()).save(any());
         }
 
         @Test

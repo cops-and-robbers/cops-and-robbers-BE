@@ -65,13 +65,12 @@ public class CommunityPostService {
     @Transactional
     public CommunityPostResult createPost(CommunityPostCreateCommand command) {
         validateMeetingDate(command.meetingAt());
-        PostAddress postAddress = resolveAddress(command.latitude(), command.longitude());
-
         User writer = userRepository.getByUserId(command.writerId());
         if (!writer.hasAgreedRequiredTerms()) {
             throw new ApplicationException(UserException.REQUIRED_TERMS_NOT_AGREED);
         }
 
+        PostAddress postAddress = resolveAddress(command.latitude(), command.longitude());
         CommunityPost post = communityPostRepository.save(CommunityPost.createPost(command, postAddress));
         communityChatMemberRepository.save(CommunityChatMember.createMember(post.getId(), command.writerId()));
         return CommunityPostResult.from(post, writer, true, CommunityPostReactionCounts.EMPTY);
