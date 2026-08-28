@@ -260,6 +260,24 @@ class CommunityChatNotificationControllerTest extends ControllerTest {
         }
 
         @Test
+        void 방의_마지막_메시지보다_큰_id를_보내도_이후_메시지는_안_읽음으로_남는다() {
+            User writer = givenUser("작성자");
+            User other = givenUser("참여자");
+            CommunityPost post = givenChatRoom(writer);
+            givenMember(post, other);
+            givenMessage(post, other, CommunityChatMessageType.TEXT);
+
+            authenticated(givenAccessToken(writer))
+                    .body(Map.of("lastReadMessageId", Long.MAX_VALUE))
+                    .post(READ_PATH, post.getId())
+                    .then().statusCode(204);
+
+            givenMessage(post, other, CommunityChatMessageType.TEXT);
+
+            assertThat(findRoom(writer, post).get("unreadCount")).isEqualTo(1);
+        }
+
+        @Test
         void 참여하지_않은_방은_읽음_처리할_수_없다() {
             User writer = givenUser("작성자");
             User stranger = givenUser("남");

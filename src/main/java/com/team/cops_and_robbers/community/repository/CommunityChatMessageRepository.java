@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.List;
 
 public interface CommunityChatMessageRepository extends JpaRepository<CommunityChatMessage, Long> {
@@ -49,6 +50,9 @@ public interface CommunityChatMessageRepository extends JpaRepository<CommunityC
             )
             """)
     List<CommunityChatMessage> findLatestByPostIdIn(@Param("postIds") Collection<Long> postIds);
+
+    @Query("select max(m.id) from CommunityChatMessage m where m.communityPostId = :postId")
+    Optional<Long> findLatestMessageIdByPostId(@Param("postId") Long postId);
 
     @Modifying(clearAutomatically = true)
     @Query("delete from CommunityChatMessage m where m.communityPostId = :postId")

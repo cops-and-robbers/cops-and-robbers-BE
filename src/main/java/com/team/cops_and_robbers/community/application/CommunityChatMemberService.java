@@ -185,15 +185,24 @@ public class CommunityChatMemberService {
     }
 
     /**
-     * 읽음 위치는 앞으로만 간다. 오래된 메시지 id가 뒤늦게 들어와도 뒤로 밀지 않는다.
+     * 읽음 위치는 앞으로만 가고, 방의 마지막 메시지를 넘지 않는다.
+     * 오래된 id는 뒤로 밀지 않고, 더 큰 id는 앞으로 올 메시지까지 읽은 것이 되어 미읽음이 0에서 움직이지 않는다.
      */
     @Transactional
     public void read(CommunityChatReadCommand command) {
         CommunityChatMember member = getMember(command.postId(), command.userId());
-        if (member.hasReadUpTo(command.lastReadMessageId())) {
+        Long latestMessageId = communityChatMessageRepository
+                .findLatestMessageIdByPostId(command.postId())
+                .orElse(null);
+        if (latestMessageId == null) {
             return;
         }
-        member.readUntil(command.lastReadMessageId());
+
+        Long readUpTo = Math.min(command.lastReadMessageId(), latestMessageId);
+        if (member.hasReadUpTo(readUpTo)) {
+            return;
+        }
+        member.readUntil(readUpTo);
     }
 
     private CommunityChatMember getMember(Long postId, Long userId) {
