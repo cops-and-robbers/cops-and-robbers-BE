@@ -65,7 +65,7 @@ public class CommunityNotification extends BaseTimeEntity {
                 .build();
     }
 
-    public boolean isUnread(LocalDateTime readAt) {
-        return readAt == null || getCreatedAt().isAfter(readAt);
+    public boolean isRead(LocalDateTime readAt) {
+        return readAt != null && !getCreatedAt().isAfter(readAt);
     }
 }

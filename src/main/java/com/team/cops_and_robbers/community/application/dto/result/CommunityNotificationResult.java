@@ -22,7 +22,7 @@ public record CommunityNotificationResult(
                 notification.getCommunityPostId(),
                 notification.getPostTitle(),
                 notification.getContent(),
-                !notification.isUnread(readAt),
+                notification.isRead(readAt),
                 TimestampUtil.toIsoString(notification.getCreatedAt())
         );
     }
