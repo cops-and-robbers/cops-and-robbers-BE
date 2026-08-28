@@ -26,6 +26,7 @@ class CommunityChatNotificationControllerTest extends ControllerTest {
     private static final String ROOMS_PATH = "/api/community-posts/chat/rooms";
     private static final String NOTIFICATION_PATH = "/api/community-posts/{postId}/chat/notification";
     private static final String READ_PATH = "/api/community-posts/{postId}/chat/read";
+    private static final String MEMBERS_PATH = "/api/community-posts/{postId}/chat/members";
 
     private CommunityPost givenChatRoom(User writer) {
         CommunityPost post = communityPostRepository.save(CommunityPostFixture.POST(writer.getId()));
@@ -41,6 +42,13 @@ class CommunityChatNotificationControllerTest extends ControllerTest {
         return communityChatMessageRepository.save(CommunityChatMessage.createMessage(
                 UUID.randomUUID().toString(), post.getId(), sender.getId(), sender.getNickname(),
                 sender.getProfileIcon(), "다들 오셨나요", type));
+    }
+
+    private boolean notificationEnabledOf(User user, CommunityPost post) {
+        return authenticated(givenAccessToken(user))
+                .get(MEMBERS_PATH, post.getId())
+                .then().statusCode(200)
+                .extract().jsonPath().getBoolean("notificationEnabled");
     }
 
     private Map<String, Object> findRoom(User user, CommunityPost post) {
@@ -74,12 +82,12 @@ class CommunityChatNotificationControllerTest extends ControllerTest {
 
             assertSoftly(softly -> {
                 softly.assertThat(allowNotificationOf(post, writer)).isTrue();
-                softly.assertThat(findRoom(writer, post).get("notificationEnabled")).isEqualTo(true);
+                softly.assertThat(notificationEnabledOf(writer, post)).isTrue();
             });
         }
 
         @Test
-        void 끄면_목록에도_반영된다() {
+        void 끄면_멤버_조회에도_반영된다() {
             User writer = givenUser("작성자");
             CommunityPost post = givenChatRoom(writer);
 
@@ -90,7 +98,7 @@ class CommunityChatNotificationControllerTest extends ControllerTest {
 
             assertSoftly(softly -> {
                 softly.assertThat(allowNotificationOf(post, writer)).isFalse();
-                softly.assertThat(findRoom(writer, post).get("notificationEnabled")).isEqualTo(false);
+                softly.assertThat(notificationEnabledOf(writer, post)).isFalse();
             });
         }
 
@@ -195,7 +203,7 @@ class CommunityChatNotificationControllerTest extends ControllerTest {
 
             Map<String, Object> room = findRoom(writer, post);
             assertSoftly(softly -> {
-                softly.assertThat(room.get("notificationEnabled")).isEqualTo(false);
+                softly.assertThat(notificationEnabledOf(writer, post)).isFalse();
                 softly.assertThat(room.get("unreadCount")).isEqualTo(1);
             });
         }

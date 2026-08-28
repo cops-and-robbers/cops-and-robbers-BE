@@ -5,6 +5,7 @@ import com.team.cops_and_robbers.user.domain.User;
 import java.util.List;
 
 public record CommunityChatMemberListResult(
+        boolean notificationEnabled,
         List<Member> members
 ) {
     /**

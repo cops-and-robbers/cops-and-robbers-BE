@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
 public record CommunityChatMemberListResponse(
+        @Schema(description = "이 방의 푸시 알림 수신 여부 (기본 true)", example = "true")
+        boolean notificationEnabled,
         @Schema(description = "채팅방 멤버 목록")
         List<MemberResponse> members
 ) {
@@ -26,6 +28,7 @@ public record CommunityChatMemberListResponse(
 
     public static CommunityChatMemberListResponse from(CommunityChatMemberListResult result) {
         return new CommunityChatMemberListResponse(
+                result.notificationEnabled(),
                 result.members().stream().map(MemberResponse::from).toList());
     }
 }

@@ -129,8 +129,7 @@ public class CommunityChatMemberService {
                 findMemberCounts(postIds),
                 lastMessages,
                 findCurrentSenderProfiles(lastMessages.values()),
-                findUnreadCounts(userId),
-                findNotificationEnabled(members)
+                findUnreadCounts(userId)
         );
 
         return communityPostRepository.findAllById(postIds).stream()
@@ -149,8 +148,7 @@ public class CommunityChatMemberService {
                 context.memberCounts().getOrDefault(post.getId(), 0L),
                 lastMessage,
                 senderProfile,
-                context.unreadCounts().getOrDefault(post.getId(), 0L),
-                context.notificationEnabled().getOrDefault(post.getId(), true));
+                context.unreadCounts().getOrDefault(post.getId(), 0L));
     }
 
     public CommunityChatMemberListResult getMembers(Long postId, Long requesterId) {
@@ -164,7 +162,15 @@ public class CommunityChatMemberService {
                 .map(member -> CommunityChatMemberListResult.Member.of(
                                 member.getUserId(), users.get(member.getUserId()), writerId))
                 .toList();
-        return new CommunityChatMemberListResult(results);
+        return new CommunityChatMemberListResult(notificationEnabled(members, requesterId), results);
+    }
+
+    private boolean notificationEnabled(List<CommunityChatMember> members, Long requesterId) {
+        return members.stream()
+                .filter(member -> member.getUserId().equals(requesterId))
+                .findFirst()
+                .map(CommunityChatMember::isAllowNotification)
+                .orElse(true);
     }
 
     private void validateChatMember(Long postId, Long userId) {
@@ -208,13 +214,6 @@ public class CommunityChatMemberService {
     private CommunityChatMember getMember(Long postId, Long userId) {
         return communityChatMemberRepository.findByCommunityPostIdAndUserId(postId, userId)
                 .orElseThrow(() -> new ApplicationException(CommunityChatException.NOT_A_CHAT_MEMBER));
-    }
-
-    private Map<Long, Boolean> findNotificationEnabled(List<CommunityChatMember> members) {
-        return members.stream()
-                .collect(Collectors.toMap(
-                        CommunityChatMember::getCommunityPostId,
-                        CommunityChatMember::isAllowNotification));
     }
 
     private Map<Long, Long> findMemberCounts(List<Long> postIds) {

@@ -46,7 +46,8 @@ public interface CommunityChatMemberControllerDocs {
     @Operation(summary = "채팅방 멤버 목록 조회",
             description = "채팅방 사이드바용 멤버 목록을 조회합니다. 해당 방 멤버만 조회할 수 있습니다. "
                     + "닉네임·프로필 아이콘은 조회 시점 현재 값을 내려주며, 탈퇴한 유저는 닉네임 \"알수없음\"과 기본 아이콘 번호로 내려줍니다. "
-                    + "채팅 내역과 달리 발신 시점 스냅샷은 없습니다.")
+                    + "채팅 내역과 달리 발신 시점 스냅샷은 없습니다. "
+                    + "notificationEnabled는 요청한 사용자 본인의 이 방 알림 수신 여부입니다.")
     @ApiErrorCode(value = CommunityChatException.class, codes = {"NOT_A_CHAT_MEMBER"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공")
@@ -89,7 +90,7 @@ public interface CommunityChatMemberControllerDocs {
                     이 채팅방의 푸시 알림을 받을지 정합니다. 기본값은 받음입니다.
 
                     끄면 푸시만 오지 않고 메시지는 그대로 저장되며 안 읽은 개수도 그대로 올라갑니다. 읽음 처리와는 관계가 없습니다.
-                    현재 상태는 채팅방 목록 응답의 `notificationEnabled`로 내려가므로 따로 조회할 필요가 없습니다.
+                    현재 상태는 멤버 목록 응답의 `notificationEnabled`로 내려가므로 따로 조회할 필요가 없습니다.
                     """)
     @ApiErrorCode(value = CommunityChatException.class, codes = {"NOT_A_CHAT_MEMBER"})
     @ApiResponses(value = {

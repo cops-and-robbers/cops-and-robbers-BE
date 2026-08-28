@@ -75,7 +75,7 @@ public class SwaggerConfig {
                           - 끄면 푸시만 막고 메시지 저장과 안 읽은 개수는 그대로다
                         - POST /api/community-posts/{postId}/chat/read — 방별 읽음 처리
                           - 채팅 내역 조회(GET)는 읽음 처리하지 않는다. 읽은 위치는 앞으로만 이동한다
-                        - 채팅방 목록 응답에 unreadCount, notificationEnabled 추가
+                        - 채팅방 목록 응답에 unreadCount 추가, 멤버 목록 응답에 notificationEnabled 추가
                           - unreadCount는 내가 보낸 메시지와 입장·퇴장 안내를 세지 않는다
                         - 커뮤니티 푸시 수신 동의(allowCommunityPush)는 댓글과 채팅에 모두 적용된다
                         - 지금 그 방을 보고 있는 사람도 푸시를 받는다. 앱이 포그라운드에서 현재 방이면 표시하지 않는 쪽으로 처리한다

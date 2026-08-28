@@ -14,8 +14,7 @@ public record CommunityChatRoomResult(
         String meetingAt,
         Long memberCount,
         LastMessageResult lastMessage,
-        long unreadCount,
-        boolean notificationEnabled
+        long unreadCount
 ) {
     public record LastMessageResult(
             Long id,
@@ -49,8 +48,7 @@ public record CommunityChatRoomResult(
             long memberCount,
             CommunityChatMessage lastMessage,
             UserProfileProjection senderProfile,
-            long unreadCount,
-            boolean notificationEnabled
+            long unreadCount
     ) {
         return new CommunityChatRoomResult(
                 post.getId(),
@@ -59,8 +57,7 @@ public record CommunityChatRoomResult(
                 TimestampUtil.toIsoString(post.getMeetingAt()),
                 memberCount,
                 lastMessage == null ? null : LastMessageResult.from(lastMessage, senderProfile),
-                unreadCount,
-                notificationEnabled
+                unreadCount
         );
     }
 }
