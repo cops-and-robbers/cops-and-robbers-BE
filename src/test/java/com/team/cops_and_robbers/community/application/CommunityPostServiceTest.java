@@ -22,6 +22,7 @@ import com.team.cops_and_robbers.community.exception.CommunityPostException;
 import com.team.cops_and_robbers.community.infrastructure.GeocodingResult;
 import com.team.cops_and_robbers.community.repository.CommunityPostCountProjection;
 import com.team.cops_and_robbers.user.domain.User;
+import com.team.cops_and_robbers.user.exception.UserException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -36,6 +37,7 @@ import java.util.List;
 
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
+import static com.team.cops_and_robbers.common.fixture.UserFixture.USER_WITHOUT_TERMS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -110,6 +112,22 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             assertThat(captor.getValue().getAddress()).isEqualTo("서울 강남구 역삼동");
             assertThat(captor.getValue().getRoadAddress()).isEqualTo("서울 강남구 테헤란로 152");
             assertThat(captor.getValue().getBuildingName()).isEqualTo("강남파이낸스센터");
+        }
+
+        @Test
+        void 필수_약관에_동의하지_않았으면_게시글을_만들_수_없다() {
+            given(geocodingClient.reverseGeocode(37.4979, 127.0276))
+                    .willReturn(GeocodingResult.resolved(
+                            PostAddress.of("서울 강남구 역삼동", "서울 강남구 테헤란로 152", null, "서울 강남구 역삼동", "KR")));
+            given(userRepository.getByUserId(1L)).willReturn(USER_WITHOUT_TERMS("미동의유저"));
+
+            assertThatThrownBy(() -> communityPostService.createPost(
+                    new CommunityPostCreateCommand(1L, "제목", "내용",
+                            LocalDateTime.now().plusDays(3), 37.4979, 127.0276, "만나는곳", 6)))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessage(UserException.REQUIRED_TERMS_NOT_AGREED.getDetail());
+
+            then(communityPostRepository).should(never()).save(any());
         }
 
         @Test
@@ -452,10 +470,25 @@ class CommunityPostServiceTest extends ServiceUnitTest {
     class Update {
 
         @Test
+        void 필수_약관에_동의하지_않았으면_게시글을_수정할_수_없다() {
+            CommunityPost post = POST(1L);
+            setId(post, 1L);
+            given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(userRepository.getByUserId(1L)).willReturn(USER_WITHOUT_TERMS("미동의유저"));
+
+            assertThatThrownBy(() -> communityPostService.updatePost(
+                    new CommunityPostUpdateCommand(1L, 1L, "수정된 제목", "수정된 내용",
+                            LocalDateTime.now().plusDays(5), 37.5665, 126.9780, "만나는곳", 8)))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessage(UserException.REQUIRED_TERMS_NOT_AGREED.getDetail());
+        }
+
+        @Test
         void 작성자가_게시글을_수정하고_변경된_값을_반환한다() {
             CommunityPost post = POST(1L);
             setId(post, 1L);
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(userRepository.getByUserId(1L)).willReturn(USER());
             given(geocodingClient.reverseGeocode(37.5665, 126.9780)).willReturn(GeocodingResult.resolved(PostAddress.of(
                             "서울특별시 광진구 화양동 1-20", "서울특별시 광진구 능동로 216", null,
                             "서울특별시 광진구 화양동", "KR")));
@@ -474,6 +507,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             CommunityPost post = POST(1L);
             setId(post, 1L);
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(userRepository.getByUserId(1L)).willReturn(USER());
             given(geocodingClient.reverseGeocode(37.5665, 126.9780))
                     .willReturn(GeocodingResult.resolved(
                             PostAddress.of("서울 중구 태평로1가", "서울특별시 중구 세종대로 110", "서울시청", "서울 중구 태평로1가", "KR")));
@@ -491,6 +525,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             CommunityPost post = POST(1L, "서울 강남구 역삼동");
             setId(post, 1L);
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(userRepository.getByUserId(1L)).willReturn(USER());
             given(geocodingClient.reverseGeocode(37.5665, 126.9780)).willReturn(GeocodingResult.failed());
 
             assertThatThrownBy(() -> communityPostService.updatePost(new CommunityPostUpdateCommand(
@@ -503,6 +538,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             CommunityPost post = POST(1L, "서울 강남구 역삼동");
             setId(post, 1L);
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(userRepository.getByUserId(1L)).willReturn(USER());
 
             communityPostService.updatePost(new CommunityPostUpdateCommand(
                     1L, 1L, "새 제목", "새 내용", LocalDateTime.now().plusDays(3), 37.4979, 127.0276, "만나는곳", 6));
@@ -516,6 +552,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             setId(post, 1L);
             ReflectionTestUtils.setField(post, "countryCode", null);
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(userRepository.getByUserId(1L)).willReturn(USER());
             given(geocodingClient.reverseGeocode(37.4979, 127.0276))
                     .willReturn(GeocodingResult.resolved(
                             PostAddress.of("서울 강남구 역삼동", "서울 강남구 테헤란로 152", "강남파이낸스센터", "서울 강남구 역삼동", "KR")));
@@ -531,6 +568,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             CommunityPost post = POST(1L, "서울 강남구 역삼동");
             setId(post, 1L);
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(userRepository.getByUserId(1L)).willReturn(USER());
             given(geocodingClient.reverseGeocode(37.5665, 126.9780)).willReturn(GeocodingResult.notFound());
 
             assertThatThrownBy(() -> communityPostService.updatePost(new CommunityPostUpdateCommand(
