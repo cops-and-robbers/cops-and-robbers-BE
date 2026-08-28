@@ -52,6 +52,10 @@ public class StompTestClient {
         session.send(destination, payload);
     }
 
+    public boolean isConnected() {
+        return session.isConnected();
+    }
+
     public void disconnect() {
         if (session.isConnected()) {
             session.disconnect();

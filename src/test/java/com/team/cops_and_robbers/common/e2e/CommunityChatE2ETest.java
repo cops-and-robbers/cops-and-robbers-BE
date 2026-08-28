@@ -261,5 +261,8 @@ class CommunityChatE2ETest extends WebSocketE2ETest {
         assertThat(strangerClient.<CommunityChatPayload>waitForMessage(authorChannel, 1))
                 .as("남의 채널은 구독이 거부되어 수신하지 못한다")
                 .isNull();
+        assertThat(strangerClient.isConnected())
+                .as("구독만 거부하고 연결은 끊지 않는다")
+                .isTrue();
     }
 }
