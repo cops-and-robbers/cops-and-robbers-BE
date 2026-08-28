@@ -15,6 +15,7 @@ import com.team.cops_and_robbers.community.exception.CommunityChatException;
 import com.team.cops_and_robbers.community.repository.CommunityChatMemberRepository;
 import com.team.cops_and_robbers.community.repository.CommunityChatMessageRepository;
 import com.team.cops_and_robbers.community.repository.CommunityChatSenderProfileProjection;
+import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.repository.UserProfileProjection;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -53,6 +54,9 @@ public class CommunityChatService {
         CommunityChatSenderProfileProjection sender = communityChatMemberRepository
                 .findSenderProfileByPostIdAndUserId(command.postId(), command.userId())
                 .orElseThrow(() -> new ApplicationException(CommunityChatException.NOT_A_CHAT_MEMBER));
+        if (!sender.requiredTermsAgreed()) {
+            throw new ApplicationException(UserException.REQUIRED_TERMS_NOT_AGREED);
+        }
 
         CommunityChatMessage saved = communityChatMessageRepository.save(CommunityChatMessage.createMessage(
                 messageKey,

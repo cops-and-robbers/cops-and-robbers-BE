@@ -24,7 +24,9 @@ public interface CommunityChatMemberRepository extends JpaRepository<CommunityCh
 
     @Query("""
             select new com.team.cops_and_robbers.community.repository.CommunityChatSenderProfileProjection(
-                u.nickname, u.profileIcon
+                u.nickname, u.profileIcon,
+                case when u.termsOfServiceAgreed = true and u.privacyPolicyAgreed = true
+                    and u.locationTermsAgreed = true then true else false end
             )
             from CommunityChatMember m
             join User u on u.id = m.userId
