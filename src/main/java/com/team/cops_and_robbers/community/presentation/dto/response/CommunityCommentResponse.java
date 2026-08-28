@@ -24,7 +24,7 @@ public record CommunityCommentResponse(
                 + "'삭제된 댓글입니다'로 표시한다", example = "false")
         boolean deleted,
         @Schema(description = "이 댓글에 달리는 답글 알림 수신 여부. 내가 쓴 댓글에만 의미가 있다", example = "true")
-        boolean notifyReplies,
+        boolean replyNotificationsEnabled,
         @Schema(description = "작성일시", example = "2026-08-22T12:00:00+09:00")
         String createdAt,
         @Schema(description = "수정일시", example = "2026-08-22T12:00:00+09:00")
@@ -41,7 +41,7 @@ public record CommunityCommentResponse(
                 result.writerProfileIcon(),
                 result.content(),
                 result.deleted(),
-                result.notifyReplies(),
+                result.replyNotificationsEnabled(),
                 result.createdAt(),
                 result.updatedAt(),
                 result.replies().stream().map(CommunityCommentResponse::from).toList()

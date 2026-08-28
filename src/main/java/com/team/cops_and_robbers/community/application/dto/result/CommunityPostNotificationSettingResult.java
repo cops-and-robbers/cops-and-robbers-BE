@@ -4,16 +4,16 @@ import com.team.cops_and_robbers.community.domain.CommunityPostNotificationRole;
 import com.team.cops_and_robbers.community.domain.CommunityPostNotificationSetting;
 
 public record CommunityPostNotificationSettingResult(
-        boolean notifyComments,
-        boolean notifyReplies
+        boolean commentNotificationsEnabled,
+        boolean replyNotificationsEnabled
 ) {
     public static CommunityPostNotificationSettingResult from(CommunityPostNotificationSetting setting) {
         return new CommunityPostNotificationSettingResult(
-                setting.isNotifyComments(), setting.isNotifyReplies());
+                setting.isCommentNotificationsEnabled(), setting.isReplyNotificationsEnabled());
     }
 
     public static CommunityPostNotificationSettingResult from(CommunityPostNotificationRole role) {
         return new CommunityPostNotificationSettingResult(
-                role.isNotifyComments(), role.isNotifyReplies());
+                role.isCommentNotificationsEnabled(), role.isReplyNotificationsEnabled());
     }
 }

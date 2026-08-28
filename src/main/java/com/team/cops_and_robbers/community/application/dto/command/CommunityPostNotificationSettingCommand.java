@@ -3,15 +3,15 @@ package com.team.cops_and_robbers.community.application.dto.command;
 public record CommunityPostNotificationSettingCommand(
         Long userId,
         Long postId,
-        boolean notifyComments,
-        boolean notifyReplies
+        boolean commentNotificationsEnabled,
+        boolean replyNotificationsEnabled
 ) {
     public static CommunityPostNotificationSettingCommand of(
             Long userId,
             Long postId,
-            boolean notifyComments,
-            boolean notifyReplies
+            boolean commentNotificationsEnabled,
+            boolean replyNotificationsEnabled
     ) {
-        return new CommunityPostNotificationSettingCommand(userId, postId, notifyComments, notifyReplies);
+        return new CommunityPostNotificationSettingCommand(userId, postId, commentNotificationsEnabled, replyNotificationsEnabled);
     }
 }

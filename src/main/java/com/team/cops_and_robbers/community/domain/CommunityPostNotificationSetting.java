@@ -41,32 +41,32 @@ public class CommunityPostNotificationSetting extends BaseTimeEntity {
     @Column(name = "community_post_id", nullable = false)
     private Long communityPostId;
 
-    @Column(nullable = false)
-    private boolean notifyComments;
+    @Column(name = "notify_comments", nullable = false)
+    private boolean commentNotificationsEnabled;
 
-    @Column(nullable = false)
-    private boolean notifyReplies;
+    @Column(name = "notify_replies", nullable = false)
+    private boolean replyNotificationsEnabled;
 
     public static CommunityPostNotificationSetting createSetting(
             Long userId,
             Long communityPostId,
-            boolean notifyComments,
-            boolean notifyReplies
+            boolean commentNotificationsEnabled,
+            boolean replyNotificationsEnabled
     ) {
         return CommunityPostNotificationSetting.builder()
                 .userId(userId)
                 .communityPostId(communityPostId)
-                .notifyComments(notifyComments)
-                .notifyReplies(notifyReplies)
+                .commentNotificationsEnabled(commentNotificationsEnabled)
+                .replyNotificationsEnabled(replyNotificationsEnabled)
                 .build();
     }
 
-    public void updateSetting(boolean notifyComments, boolean notifyReplies) {
-        this.notifyComments = notifyComments;
-        this.notifyReplies = notifyReplies;
+    public void updateSetting(boolean commentNotificationsEnabled, boolean replyNotificationsEnabled) {
+        this.commentNotificationsEnabled = commentNotificationsEnabled;
+        this.replyNotificationsEnabled = replyNotificationsEnabled;
     }
 
     public boolean allows(CommunityNotificationType type) {
-        return type == CommunityNotificationType.REPLY ? notifyReplies : notifyComments;
+        return type == CommunityNotificationType.REPLY ? replyNotificationsEnabled : commentNotificationsEnabled;
     }
 }

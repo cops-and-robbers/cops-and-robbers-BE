@@ -86,12 +86,12 @@ public class CommunityCommentService {
     }
 
     @Transactional
-    public void updateNotifyReplies(CommunityCommentNotificationCommand command) {
+    public void updateReplyNotificationsEnabled(CommunityCommentNotificationCommand command) {
         CommunityComment comment = communityCommentRepository.getByCommentId(command.commentId());
         if (!comment.isWrittenBy(command.writerId())) {
             throw new ApplicationException(CommunityCommentException.FORBIDDEN_NOT_COMMENT_AUTHOR);
         }
-        comment.updateNotifyReplies(command.notifyReplies());
+        comment.updateReplyNotificationsEnabled(command.replyNotificationsEnabled());
     }
 
     @Transactional

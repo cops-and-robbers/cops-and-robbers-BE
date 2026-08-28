@@ -7,12 +7,12 @@ import jakarta.validation.constraints.NotNull;
 public record CommunityPostNotificationSettingRequest(
         @Schema(description = "이 글에 달리는 댓글 알림을 받을지 여부", example = "true")
         @NotNull(message = "댓글 알림 수신 여부는 필수 입력 항목입니다.")
-        Boolean notifyComments,
+        Boolean commentNotificationsEnabled,
         @Schema(description = "이 글에 달리는 답글 알림을 받을지 여부", example = "false")
         @NotNull(message = "답글 알림 수신 여부는 필수 입력 항목입니다.")
-        Boolean notifyReplies
+        Boolean replyNotificationsEnabled
 ) {
     public CommunityPostNotificationSettingCommand toCommand(Long userId, Long postId) {
-        return CommunityPostNotificationSettingCommand.of(userId, postId, notifyComments, notifyReplies);
+        return CommunityPostNotificationSettingCommand.of(userId, postId, commentNotificationsEnabled, replyNotificationsEnabled);
     }
 }

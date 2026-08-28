@@ -18,7 +18,7 @@ public interface CommunityPostNotificationSettingControllerDocs {
             description = """
                     이 글에서 알림을 받을지 여부를 저장합니다. 토글을 건드린 글만 설정이 남고, 건드리지 않은 글은 아래 기본값을 따릅니다.
 
-                    | 상황 | notifyComments | notifyReplies |
+                    | 상황 | commentNotificationsEnabled | replyNotificationsEnabled |
                     |---|---|---|
                     | 내가 쓴 글 | true | false |
                     | 내가 답글의 부모 댓글을 쓴 글 | true | true |

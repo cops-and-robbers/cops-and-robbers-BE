@@ -40,14 +40,14 @@ class CommunityPostNotificationSettingControllerTest extends ControllerTest {
             CommunityPost post = givenPost(user);
 
             authenticated(givenAccessToken(user))
-                    .body(Map.of("notifyComments", false, "notifyReplies", true))
+                    .body(Map.of("commentNotificationsEnabled", false, "replyNotificationsEnabled", true))
                     .put(SETTING_PATH, post.getId())
                     .then().statusCode(204);
 
             CommunityPostNotificationSetting setting = findSetting(post, user);
             assertSoftly(softly -> {
-                softly.assertThat(setting.isNotifyComments()).isFalse();
-                softly.assertThat(setting.isNotifyReplies()).isTrue();
+                softly.assertThat(setting.isCommentNotificationsEnabled()).isFalse();
+                softly.assertThat(setting.isReplyNotificationsEnabled()).isTrue();
             });
         }
 
@@ -57,18 +57,18 @@ class CommunityPostNotificationSettingControllerTest extends ControllerTest {
             CommunityPost post = givenPost(user);
 
             authenticated(givenAccessToken(user))
-                    .body(Map.of("notifyComments", false, "notifyReplies", true))
+                    .body(Map.of("commentNotificationsEnabled", false, "replyNotificationsEnabled", true))
                     .put(SETTING_PATH, post.getId())
                     .then().statusCode(204);
             authenticated(givenAccessToken(user))
-                    .body(Map.of("notifyComments", true, "notifyReplies", false))
+                    .body(Map.of("commentNotificationsEnabled", true, "replyNotificationsEnabled", false))
                     .put(SETTING_PATH, post.getId())
                     .then().statusCode(204);
 
             assertSoftly(softly -> {
                 softly.assertThat(communityPostNotificationSettingRepository.count()).isEqualTo(1);
-                softly.assertThat(findSetting(post, user).isNotifyComments()).isTrue();
-                softly.assertThat(findSetting(post, user).isNotifyReplies()).isFalse();
+                softly.assertThat(findSetting(post, user).isCommentNotificationsEnabled()).isTrue();
+                softly.assertThat(findSetting(post, user).isReplyNotificationsEnabled()).isFalse();
             });
         }
 
@@ -79,11 +79,11 @@ class CommunityPostNotificationSettingControllerTest extends ControllerTest {
             CommunityPost post = givenPost(writer);
 
             authenticated(givenAccessToken(reader))
-                    .body(Map.of("notifyComments", true, "notifyReplies", true))
+                    .body(Map.of("commentNotificationsEnabled", true, "replyNotificationsEnabled", true))
                     .put(SETTING_PATH, post.getId())
                     .then().statusCode(204);
 
-            assertThat(findSetting(post, reader).isNotifyComments()).isTrue();
+            assertThat(findSetting(post, reader).isCommentNotificationsEnabled()).isTrue();
         }
 
         @Test
@@ -91,7 +91,7 @@ class CommunityPostNotificationSettingControllerTest extends ControllerTest {
             User user = givenUser("유저");
 
             authenticated(givenAccessToken(user))
-                    .body(Map.of("notifyComments", true, "notifyReplies", true))
+                    .body(Map.of("commentNotificationsEnabled", true, "replyNotificationsEnabled", true))
                     .put(SETTING_PATH, 999)
                     .then()
                     .statusCode(CommunityPostException.POST_NOT_FOUND.getHttpStatus().value());
@@ -103,7 +103,7 @@ class CommunityPostNotificationSettingControllerTest extends ControllerTest {
             CommunityPost post = givenPost(user);
 
             authenticated(givenAccessToken(user))
-                    .body(Map.of("notifyComments", true))
+                    .body(Map.of("commentNotificationsEnabled", true))
                     .put(SETTING_PATH, post.getId())
                     .then().statusCode(400);
         }
@@ -111,7 +111,7 @@ class CommunityPostNotificationSettingControllerTest extends ControllerTest {
         @Test
         void 토큰_없이_요청하면_401을_응답한다() {
             unauthenticated()
-                    .body(Map.of("notifyComments", true, "notifyReplies", true))
+                    .body(Map.of("commentNotificationsEnabled", true, "replyNotificationsEnabled", true))
                     .put(SETTING_PATH, 1)
                     .then().statusCode(401);
         }

@@ -11,10 +11,10 @@ public enum CommunityPostNotificationRole {
     POST_WRITER(true, false),
     OTHER(false, false);
 
-    private final boolean notifyComments;
-    private final boolean notifyReplies;
+    private final boolean commentNotificationsEnabled;
+    private final boolean replyNotificationsEnabled;
 
     public boolean allows(CommunityNotificationType type) {
-        return type == CommunityNotificationType.REPLY ? notifyReplies : notifyComments;
+        return type == CommunityNotificationType.REPLY ? replyNotificationsEnabled : commentNotificationsEnabled;
     }
 }

@@ -62,7 +62,7 @@ public class CommunityCommentController implements CommunityCommentControllerDoc
             @PathVariable Long commentId,
             @RequestBody @Valid CommunityCommentNotificationRequest request
     ) {
-        communityCommentService.updateNotifyReplies(request.toCommand(loginUser.userId(), commentId));
+        communityCommentService.updateReplyNotificationsEnabled(request.toCommand(loginUser.userId(), commentId));
         return ResponseEntity.noContent().build();
     }
 

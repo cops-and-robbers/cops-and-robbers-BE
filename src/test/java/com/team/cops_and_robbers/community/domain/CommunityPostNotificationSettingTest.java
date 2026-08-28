@@ -21,8 +21,8 @@ class CommunityPostNotificationSettingTest {
             assertSoftly(softly -> {
                 softly.assertThat(setting.getUserId()).isEqualTo(1L);
                 softly.assertThat(setting.getCommunityPostId()).isEqualTo(10L);
-                softly.assertThat(setting.isNotifyComments()).isTrue();
-                softly.assertThat(setting.isNotifyReplies()).isFalse();
+                softly.assertThat(setting.isCommentNotificationsEnabled()).isTrue();
+                softly.assertThat(setting.isReplyNotificationsEnabled()).isFalse();
             });
         }
     }
@@ -39,8 +39,8 @@ class CommunityPostNotificationSettingTest {
             setting.updateSetting(false, true);
 
             assertSoftly(softly -> {
-                softly.assertThat(setting.isNotifyComments()).isFalse();
-                softly.assertThat(setting.isNotifyReplies()).isTrue();
+                softly.assertThat(setting.isCommentNotificationsEnabled()).isFalse();
+                softly.assertThat(setting.isReplyNotificationsEnabled()).isTrue();
             });
         }
     }

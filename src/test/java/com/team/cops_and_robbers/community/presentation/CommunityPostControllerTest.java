@@ -1162,8 +1162,8 @@ class CommunityPostControllerTest extends ControllerTest {
                     .extract();
 
             assertSoftly(softly -> {
-                softly.assertThat(extract.jsonPath().getBoolean("notificationSettings.notifyComments")).isTrue();
-                softly.assertThat(extract.jsonPath().getBoolean("notificationSettings.notifyReplies")).isFalse();
+                softly.assertThat(extract.jsonPath().getBoolean("notificationSettings.commentNotificationsEnabled")).isTrue();
+                softly.assertThat(extract.jsonPath().getBoolean("notificationSettings.replyNotificationsEnabled")).isFalse();
             });
         }
 
@@ -1179,8 +1179,8 @@ class CommunityPostControllerTest extends ControllerTest {
                     .extract();
 
             assertSoftly(softly -> {
-                softly.assertThat(extract.jsonPath().getBoolean("notificationSettings.notifyComments")).isFalse();
-                softly.assertThat(extract.jsonPath().getBoolean("notificationSettings.notifyReplies")).isFalse();
+                softly.assertThat(extract.jsonPath().getBoolean("notificationSettings.commentNotificationsEnabled")).isFalse();
+                softly.assertThat(extract.jsonPath().getBoolean("notificationSettings.replyNotificationsEnabled")).isFalse();
             });
         }
 
@@ -1197,8 +1197,8 @@ class CommunityPostControllerTest extends ControllerTest {
                     .extract();
 
             assertSoftly(softly -> {
-                softly.assertThat(extract.jsonPath().getBoolean("notificationSettings.notifyComments")).isFalse();
-                softly.assertThat(extract.jsonPath().getBoolean("notificationSettings.notifyReplies")).isTrue();
+                softly.assertThat(extract.jsonPath().getBoolean("notificationSettings.commentNotificationsEnabled")).isFalse();
+                softly.assertThat(extract.jsonPath().getBoolean("notificationSettings.replyNotificationsEnabled")).isTrue();
             });
         }
 

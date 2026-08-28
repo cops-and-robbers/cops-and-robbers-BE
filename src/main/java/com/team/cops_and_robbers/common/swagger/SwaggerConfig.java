@@ -45,7 +45,7 @@ public class SwaggerConfig {
                           - 목록 조회(GET)는 읽음 처리하지 않는다. 이 API를 따로 호출해야 한다
 
                         ### ✨ 신규 — 게시글별 알림 켜기/끄기
-                        - PUT /api/community-posts/{postId}/notification-settings — 설정 변경 (notifyComments, notifyReplies)
+                        - PUT /api/community-posts/{postId}/notification-settings — 설정 변경 (commentNotificationsEnabled, replyNotificationsEnabled)
                         - 현재 설정은 게시글 단건 조회 응답의 notificationSettings로 내려간다 (별도 조회 API 없음)
                           - 목록·비로그인 조회는 null
                         - 토글을 건드린 글만 설정이 저장되고, 건드리지 않은 글은 기본값을 따른다
@@ -54,9 +54,9 @@ public class SwaggerConfig {
                         - 좋아요·스크랩은 알림을 보내지 않는다
 
                         ### ✨ 신규 — 댓글별 답글 알림 켜기/끄기
-                        - PUT /api/community-posts/comments/{commentId}/notification — 설정 변경 (notifyReplies, 기본 true)
+                        - PUT /api/community-posts/comments/{commentId}/notification — 설정 변경 (replyNotificationsEnabled, 기본 true)
                           - 작성자만 바꿀 수 있다. 남의 댓글이면 403(FORBIDDEN_NOT_COMMENT_AUTHOR)
-                        - 현재 상태는 댓글 목록 응답의 notifyReplies로 내려간다
+                        - 현재 상태는 댓글 목록 응답의 replyNotificationsEnabled로 내려간다
                         - "내 댓글에 달린 답글" 알림은 게시글 설정과 독립이다
                           - 그 글의 알림을 꺼도 내 댓글의 답글 알림은 이 값만 따른다
                           - 남의 글에 댓글을 여러 개 썼다면 시끄러운 댓글 하나만 끌 수 있다

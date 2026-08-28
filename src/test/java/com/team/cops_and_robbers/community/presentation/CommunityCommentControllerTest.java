@@ -297,7 +297,7 @@ class CommunityCommentControllerTest extends ControllerTest {
             CommunityPost post = givenPost(writer);
             CommunityComment comment = givenComment(post, writer, "댓글");
 
-            assertThat(communityCommentRepository.getByCommentId(comment.getId()).isNotifyReplies()).isTrue();
+            assertThat(communityCommentRepository.getByCommentId(comment.getId()).isReplyNotificationsEnabled()).isTrue();
         }
 
         @Test
@@ -307,7 +307,7 @@ class CommunityCommentControllerTest extends ControllerTest {
             CommunityComment comment = givenComment(post, writer, "댓글");
 
             authenticated(givenAccessToken(writer))
-                    .body(Map.of("notifyReplies", false))
+                    .body(Map.of("replyNotificationsEnabled", false))
                     .put(COMMENT_NOTIFICATION_PATH, comment.getId())
                     .then().statusCode(204);
 
@@ -316,7 +316,7 @@ class CommunityCommentControllerTest extends ControllerTest {
                     .then().statusCode(200)
                     .extract().as(new TypeRef<>() {});
             List<Map<String, Object>> content = extractContent(response);
-            assertThat(content.getFirst().get("notifyReplies")).isEqualTo(false);
+            assertThat(content.getFirst().get("replyNotificationsEnabled")).isEqualTo(false);
         }
 
         @Test
@@ -327,7 +327,7 @@ class CommunityCommentControllerTest extends ControllerTest {
             CommunityComment comment = givenComment(post, writer, "댓글");
 
             authenticated(givenAccessToken(other))
-                    .body(Map.of("notifyReplies", false))
+                    .body(Map.of("replyNotificationsEnabled", false))
                     .put(COMMENT_NOTIFICATION_PATH, comment.getId())
                     .then()
                     .statusCode(CommunityCommentException.FORBIDDEN_NOT_COMMENT_AUTHOR.getHttpStatus().value());
@@ -338,7 +338,7 @@ class CommunityCommentControllerTest extends ControllerTest {
             User writer = givenUser("작성자");
 
             authenticated(givenAccessToken(writer))
-                    .body(Map.of("notifyReplies", false))
+                    .body(Map.of("replyNotificationsEnabled", false))
                     .put(COMMENT_NOTIFICATION_PATH, 999)
                     .then()
                     .statusCode(CommunityCommentException.COMMENT_NOT_FOUND.getHttpStatus().value());
@@ -359,7 +359,7 @@ class CommunityCommentControllerTest extends ControllerTest {
         @Test
         void 토큰_없이_요청하면_401을_응답한다() {
             unauthenticated()
-                    .body(Map.of("notifyReplies", false))
+                    .body(Map.of("replyNotificationsEnabled", false))
                     .put(COMMENT_NOTIFICATION_PATH, 1)
                     .then().statusCode(401);
         }

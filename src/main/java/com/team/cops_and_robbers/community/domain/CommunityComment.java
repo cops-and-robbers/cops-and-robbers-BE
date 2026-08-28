@@ -48,7 +48,7 @@ public class CommunityComment extends BaseTimeEntity {
     /** 게시글 단위 알림 설정과 독립이다. 글 알림을 꺼도 내 댓글의 답글은 이 값만 본다. */
     @Column(name = "notify_replies", nullable = false)
     @Builder.Default
-    private boolean notifyReplies = true;
+    private boolean replyNotificationsEnabled = true;
 
     public static CommunityComment createComment(Long communityPostId, Long parentId, Long writerId, String content) {
         return CommunityComment.builder()
@@ -71,7 +71,7 @@ public class CommunityComment extends BaseTimeEntity {
         this.deleted = true;
     }
 
-    public void updateNotifyReplies(boolean notifyReplies) {
-        this.notifyReplies = notifyReplies;
+    public void updateReplyNotificationsEnabled(boolean replyNotificationsEnabled) {
+        this.replyNotificationsEnabled = replyNotificationsEnabled;
     }
 }

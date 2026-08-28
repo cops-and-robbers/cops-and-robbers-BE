@@ -57,7 +57,7 @@ public interface CommunityCommentControllerDocs {
                     내가 쓴 댓글에 답글이 달렸을 때 알림을 받을지 정합니다. 기본값은 받음입니다.
 
                     게시글 알림 설정과 독립입니다. 그 글의 알림을 꺼도 내 댓글의 답글 알림은 이 값만 따릅니다.
-                    현재 상태는 댓글 목록 응답의 `notifyReplies`로 내려갑니다.
+                    현재 상태는 댓글 목록 응답의 `replyNotificationsEnabled`로 내려갑니다.
                     """)
     @ApiErrorCode(value = CommunityCommentException.class,
             codes = {"COMMENT_NOT_FOUND", "FORBIDDEN_NOT_COMMENT_AUTHOR"})
