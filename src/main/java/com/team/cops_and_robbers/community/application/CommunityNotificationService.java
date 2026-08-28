@@ -81,16 +81,16 @@ public class CommunityNotificationService {
 
     @Transactional
     public void updateSetting(CommunityPostNotificationSettingCommand command) {
-        communityPostRepository.getByPostId(command.postId());
+        communityPostRepository.getByPostIdForUpdate(command.postId());
 
         CommunityPostNotificationSetting setting = communityPostNotificationSettingRepository
                 .findByCommunityPostIdAndUserId(command.postId(), command.userId())
                 .orElseGet(() -> communityPostNotificationSettingRepository.save(
                         CommunityPostNotificationSetting.createSetting(
                                 command.userId(), command.postId(),
-                                command.notifyComments(), command.notifyReplies())));
+                                command.commentNotificationsEnabled(), command.replyNotificationsEnabled())));
 
-        setting.updateSetting(command.notifyComments(), command.notifyReplies());
+        setting.updateSetting(command.commentNotificationsEnabled(), command.replyNotificationsEnabled());
     }
 
     /**
@@ -131,7 +131,7 @@ public class CommunityNotificationService {
             return Optional.empty();
         }
         CommunityComment parent = communityCommentRepository.getByCommentId(comment.getParentId());
-        return parent.isNotifyReplies() ? Optional.of(parent.getWriterId()) : Optional.empty();
+        return parent.isReplyNotificationsEnabled() ? Optional.of(parent.getWriterId()) : Optional.empty();
     }
 
     /** 제3자는 그 글을 명시적으로 켠 사람만 대상이라 설정 행이 있는 경우뿐이다. */

@@ -103,9 +103,9 @@ class CommunityNotificationServiceTest extends ServiceUnitTest {
         givenParentComment(parentId, writerId, true);
     }
 
-    private void givenParentComment(Long parentId, Long writerId, boolean notifyReplies) {
+    private void givenParentComment(Long parentId, Long writerId, boolean replyNotificationsEnabled) {
         CommunityComment parent = comment(parentId, null, writerId);
-        parent.updateNotifyReplies(notifyReplies);
+        parent.updateReplyNotificationsEnabled(replyNotificationsEnabled);
         given(communityCommentRepository.getByCommentId(parentId)).willReturn(parent);
     }
 
@@ -114,8 +114,10 @@ class CommunityNotificationServiceTest extends ServiceUnitTest {
                 .willReturn(List.of(settings));
     }
 
-    private CommunityPostNotificationSetting setting(Long userId, boolean notifyComments, boolean notifyReplies) {
-        return CommunityPostNotificationSetting.createSetting(userId, POST_ID, notifyComments, notifyReplies);
+    private CommunityPostNotificationSetting setting(
+            Long userId, boolean commentNotificationsEnabled, boolean replyNotificationsEnabled) {
+        return CommunityPostNotificationSetting.createSetting(
+                userId, POST_ID, commentNotificationsEnabled, replyNotificationsEnabled);
     }
 
     private List<Long> createRecipients(CommunityComment comment) {
@@ -251,7 +253,7 @@ class CommunityNotificationServiceTest extends ServiceUnitTest {
 
         @Test
         void 토글을_처음_건드리면_행을_만든다() {
-            given(communityPostRepository.getByPostId(POST_ID)).willReturn(POST(USER_ID));
+            given(communityPostRepository.getByPostIdForUpdate(POST_ID)).willReturn(POST(USER_ID));
             given(communityPostNotificationSettingRepository.findByCommunityPostIdAndUserId(POST_ID, USER_ID))
                     .willReturn(Optional.empty());
             given(communityPostNotificationSettingRepository.save(any()))
@@ -266,8 +268,8 @@ class CommunityNotificationServiceTest extends ServiceUnitTest {
             assertSoftly(softly -> {
                 softly.assertThat(captor.getValue().getUserId()).isEqualTo(USER_ID);
                 softly.assertThat(captor.getValue().getCommunityPostId()).isEqualTo(POST_ID);
-                softly.assertThat(captor.getValue().isNotifyComments()).isFalse();
-                softly.assertThat(captor.getValue().isNotifyReplies()).isTrue();
+                softly.assertThat(captor.getValue().isCommentNotificationsEnabled()).isFalse();
+                softly.assertThat(captor.getValue().isReplyNotificationsEnabled()).isTrue();
             });
         }
 
@@ -275,7 +277,7 @@ class CommunityNotificationServiceTest extends ServiceUnitTest {
         void 이미_행이_있으면_새로_만들지_않고_값만_바꾼다() {
             CommunityPostNotificationSetting setting =
                     CommunityPostNotificationSetting.createSetting(USER_ID, POST_ID, true, false);
-            given(communityPostRepository.getByPostId(POST_ID)).willReturn(POST(USER_ID));
+            given(communityPostRepository.getByPostIdForUpdate(POST_ID)).willReturn(POST(USER_ID));
             given(communityPostNotificationSettingRepository.findByCommunityPostIdAndUserId(POST_ID, USER_ID))
                     .willReturn(Optional.of(setting));
 
@@ -284,14 +286,14 @@ class CommunityNotificationServiceTest extends ServiceUnitTest {
 
             then(communityPostNotificationSettingRepository).should(never()).save(any());
             assertSoftly(softly -> {
-                softly.assertThat(setting.isNotifyComments()).isFalse();
-                softly.assertThat(setting.isNotifyReplies()).isTrue();
+                softly.assertThat(setting.isCommentNotificationsEnabled()).isFalse();
+                softly.assertThat(setting.isReplyNotificationsEnabled()).isTrue();
             });
         }
 
         @Test
         void 존재하지_않는_게시글이면_설정을_바꿀_수_없다() {
-            given(communityPostRepository.getByPostId(POST_ID))
+            given(communityPostRepository.getByPostIdForUpdate(POST_ID))
                     .willThrow(new ApplicationException(CommunityPostException.POST_NOT_FOUND));
 
             assertThatThrownBy(() -> communityNotificationService.updateSetting(
