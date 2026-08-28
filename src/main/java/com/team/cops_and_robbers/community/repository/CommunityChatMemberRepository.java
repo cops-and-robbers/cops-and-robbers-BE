@@ -36,6 +36,12 @@ public interface CommunityChatMemberRepository extends JpaRepository<CommunityCh
     @Query("select m.communityPostId from CommunityChatMember m where m.userId = :userId")
     List<Long> findPostIdsByUserId(@Param("userId") Long userId);
 
+    /**
+     * 목록 갱신은 음소거와 무관하게 방의 전원에게 가야 하므로 findPushTargetUserIds를 쓰지 않는다.
+     */
+    @Query("select m.userId from CommunityChatMember m where m.communityPostId = :postId")
+    List<Long> findUserIdsByCommunityPostId(@Param("postId") Long postId);
+
     List<CommunityChatMember> findAllByUserId(Long userId);
 
     @Query("""

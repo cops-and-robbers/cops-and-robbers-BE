@@ -49,10 +49,30 @@ public class CommunityStompInterceptor implements ChannelInterceptor {
      */
     private void handleSubscribe(StompHeaderAccessor accessor) {
         Long userId = getUserIdFromSession(accessor);
-        Long postId = getPostIdFromPath(accessor);
 
+        if (StompPathUtil.isUserPath(accessor.getDestination())) {
+            validateOwnChannel(accessor, userId);
+            return;
+        }
+
+        Long postId = getPostIdFromPath(accessor);
         validateChatMember(postId, userId);
         log.info("[CommunityChat] SUBSCRIBE success: postId={}, userId={}", postId, userId);
+    }
+
+    /**
+     * 유저 단위 채널은 내 모든 방의 메시지가 흐르므로, 남의 채널을 구독하면 대화가 통째로 새어 나간다.
+     * 채팅방 멤버 여부가 아니라 채널 주인이 본인인지로 검증한다.
+     */
+    private void validateOwnChannel(StompHeaderAccessor accessor, Long userId) {
+        Long channelOwnerId = StompPathUtil.getUserId(accessor.getDestination())
+                .orElseThrow(() -> new ApplicationException(CommonException.INVALID_DESTINATION));
+
+        if (!channelOwnerId.equals(userId)) {
+            log.warn("[CommunityChat] Unauthorized channel access. ownerId={}, userId={}", channelOwnerId, userId);
+            throw new ApplicationException(CommunityChatException.FORBIDDEN_OTHER_USER_CHANNEL);
+        }
+        log.info("[CommunityChat] SUBSCRIBE success: userChannel={}", userId);
     }
 
     /**

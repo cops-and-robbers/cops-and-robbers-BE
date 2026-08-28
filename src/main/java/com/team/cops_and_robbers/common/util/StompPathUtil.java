@@ -22,6 +22,11 @@ public class StompPathUtil {
             "/subscribe/community/{"+ POST_ID +"}/**"
     );
 
+    private static final String USER_ID = "userId";
+    private static final List<String> USER_PATH_PATTERNS = List.of(
+            "/subscribe/user/{"+ USER_ID +"}/**"
+    );
+
     private static final AntPathMatcher matcher = new AntPathMatcher();
 
 
@@ -33,6 +38,10 @@ public class StompPathUtil {
         return extractId(COMMUNITY_PATH_PATTERNS, POST_ID, destination);
     }
 
+    public static Optional<Long> getUserId(String destination) {
+        return extractId(USER_PATH_PATTERNS, USER_ID, destination);
+    }
+
     /**
      * id 파싱 성공 여부와 무관하게 커뮤니티 경로인지만 판별한다.
      * 라우팅 단계에서 쓰이며, id가 깨진 커뮤니티 경로가 게임 인터셉터로 새는 것을 막는다.
@@ -41,6 +50,17 @@ public class StompPathUtil {
         if (destination == null) return false;
 
         return COMMUNITY_PATH_PATTERNS.stream()
+                .anyMatch(pattern -> matcher.match(pattern, destination));
+    }
+
+    /**
+     * 채팅방 목록 화면이 구독하는 유저 단위 채널인지 판별한다.
+     * 게시글이 아니라 유저를 가리키므로 커뮤니티 경로와 패턴이 다르다.
+     */
+    public static boolean isUserPath(String destination) {
+        if (destination == null) return false;
+
+        return USER_PATH_PATTERNS.stream()
                 .anyMatch(pattern -> matcher.match(pattern, destination));
     }
 
