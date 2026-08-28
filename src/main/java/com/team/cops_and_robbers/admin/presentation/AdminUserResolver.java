@@ -2,18 +2,23 @@ package com.team.cops_and_robbers.admin.presentation;
 
 import com.team.cops_and_robbers.admin.application.AdminUserService;
 import com.team.cops_and_robbers.admin.application.dto.SortDirection;
+import com.team.cops_and_robbers.admin.application.dto.command.user.AdminTermsResetCommand;
 import com.team.cops_and_robbers.admin.application.dto.command.user.AdminUserListCommand;
+import com.team.cops_and_robbers.admin.application.dto.result.user.AdminTermsResetPreviewResult;
+import com.team.cops_and_robbers.admin.application.dto.result.user.AdminTermsResetResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.AdminUserPageResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.AdminUserResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.GameParticipationResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.UserDeviceResult;
 import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.user.domain.SocialType;
+import com.team.cops_and_robbers.user.domain.TermsType;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.BatchMapping;
+import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
@@ -50,6 +55,16 @@ public class AdminUserResolver {
     @QueryMapping
     public AdminUserResult adminUser(@Argument Long id) {
         return adminUserService.getUser(id);
+    }
+
+    @QueryMapping
+    public AdminTermsResetPreviewResult termsResetPreview(@Argument List<TermsType> types) {
+        return adminUserService.getTermsResetPreview(AdminTermsResetCommand.of(types));
+    }
+
+    @MutationMapping
+    public AdminTermsResetResult resetTermsAgreement(@Argument List<TermsType> types) {
+        return adminUserService.resetTermsAgreement(AdminTermsResetCommand.of(types));
     }
 
     @BatchMapping(typeName = "AdminUser", field = "device")

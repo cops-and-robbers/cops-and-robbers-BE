@@ -11,6 +11,13 @@ extend type Query {
   ): AdminUserPage!
 
   adminUser(id: ID!): AdminUser!
+
+  termsResetPreview(types: [TermsType!]!): TermsResetPreview!
+}
+
+# ─── 유저 뮤테이션 ───────────────────────────────────────────
+extend type Mutation {
+  resetTermsAgreement(types: [TermsType!]!): ResetTermsAgreementResult!
 }
 
 # ─── 유저 타입 ───────────────────────────────────────────────
@@ -30,9 +37,25 @@ type AdminUser {
   termsOfServiceAgreed: Boolean!
   privacyPolicyAgreed: Boolean!
   locationTermsAgreed: Boolean!
+  allowMarketingPush: Boolean!
   createdAt: String!
   device: UserDevice
   participations: [GameParticipation!]!
+}
+
+enum TermsType {
+  TERMS_OF_SERVICE
+  PRIVACY_POLICY
+  LOCATION_TERMS
+  MARKETING
+}
+
+type TermsResetPreview {
+  affectedUsers: Int!
+}
+
+type ResetTermsAgreementResult {
+  affectedUsers: Int!
 }
 
 type UserDevice {

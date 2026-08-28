@@ -1,6 +1,9 @@
 package com.team.cops_and_robbers.admin.application;
 
+import com.team.cops_and_robbers.admin.application.dto.command.user.AdminTermsResetCommand;
 import com.team.cops_and_robbers.admin.application.dto.command.user.AdminUserListCommand;
+import com.team.cops_and_robbers.admin.application.dto.result.user.AdminTermsResetPreviewResult;
+import com.team.cops_and_robbers.admin.application.dto.result.user.AdminTermsResetResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.AdminUserPageResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.AdminUserResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.GameParticipationResult;
@@ -37,6 +40,17 @@ public class AdminUserService {
     public AdminUserResult getUser(Long userId) {
         User user = userRepository.getByUserId(userId);
         return AdminUserResult.from(user);
+    }
+
+    public AdminTermsResetPreviewResult getTermsResetPreview(AdminTermsResetCommand command) {
+        long affectedUsers = userRepository.countTermsResetTargets(command.types());
+        return new AdminTermsResetPreviewResult(Math.toIntExact(affectedUsers));
+    }
+
+    @Transactional
+    public AdminTermsResetResult resetTermsAgreement(AdminTermsResetCommand command) {
+        long affectedUsers = userRepository.resetTermsAgreement(command.types());
+        return new AdminTermsResetResult(Math.toIntExact(affectedUsers));
     }
 
     public Map<AdminUserResult, UserDeviceResult> getDevicesByUsers(List<AdminUserResult> users) {
