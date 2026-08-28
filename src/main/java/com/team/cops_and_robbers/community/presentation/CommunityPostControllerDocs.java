@@ -12,6 +12,7 @@ import com.team.cops_and_robbers.community.presentation.dto.response.AddressResp
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityPostListResponse;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityPostResponse;
 import com.team.cops_and_robbers.community.presentation.dto.response.CountryResponse;
+import com.team.cops_and_robbers.user.exception.UserException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -54,6 +55,7 @@ public interface CommunityPostControllerDocs {
 
     @Operation(summary = "게시글 생성", description = "새로운 모집 게시글을 생성합니다. 좌표는 서버에서 동 단위 지역으로 변환해 저장하며, 주소를 찾을 수 없는 위치는 400을 반환합니다. 만나는 곳(placeName)은 작성자가 직접 입력합니다.")
     @ApiErrorCode(value = CommunityPostException.class, codes = {"INVALID_MEETING_DATE", "ADDRESS_NOT_FOUND", "ADDRESS_LOOKUP_FAILED"})
+    @ApiErrorCode(value = UserException.class, codes = {"REQUIRED_TERMS_NOT_AGREED"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "생성 성공")
     })
@@ -117,6 +119,7 @@ public interface CommunityPostControllerDocs {
     @Operation(summary = "게시글 수정", description = "특정 모집 게시글을 수정합니다. 좌표가 바뀌었거나 지역 정보가 비어 있으면 주소를 다시 변환합니다.")
     @ApiErrorCode(value = CommunityPostException.class, codes = {"POST_NOT_FOUND", "FORBIDDEN_NOT_AUTHOR", "INVALID_MEETING_DATE",
             "ADDRESS_NOT_FOUND", "ADDRESS_LOOKUP_FAILED"})
+    @ApiErrorCode(value = UserException.class, codes = {"REQUIRED_TERMS_NOT_AGREED"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "수정 성공")
     })
