@@ -30,8 +30,26 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.27.0")
+                .version("2.28.0")
                 .description("""
+                        ## v2.28.0 업데이트 내역
+
+                        ### ✨ 신규 — 약관 재동의 (어드민)
+                        - 약관이 개정되면 어드민에서 동의 플래그를 일괄 해제해 재동의를 받는다
+                          - Query termsResetPreview(types) — 실행 전 영향 인원 확인
+                          - Mutation resetTermsAgreement(types) — 선택한 약관 일괄 해제
+                          - types: TERMS_OF_SERVICE | PRIVACY_POLICY | LOCATION_TERMS | MARKETING
+                        - 필수 3종 중 하나만 해제해도 앱은 약관 동의 화면 외 경로를 막는다
+                        - MARKETING은 선택 약관이라 해제해도 앱이 다시 묻지 않는다
+                        - AdminUser에 allowMarketingPush 추가
+                        - 재동의하면 terms_agreed_at을 갱신한다 (기존에는 최초 동의 시각에서 멈춰 있었다)
+
+                        ### 🛠 변경 — 커뮤니티 쓰기에 필수 약관 검증
+                        - 게시글 작성·수정, 댓글 작성, 채팅 전송에서 필수 약관 미동의면 REQUIRED_TERMS_NOT_AGREED
+                          - 기존에는 게임 생성·참가에서만 검증했다
+                          - 조회는 비로그인 공개라 검증하지 않는다
+                          - 삭제와 신고는 막지 않는다
+
                         ## v2.27.0 업데이트 내역
 
                         ### ✨ 신규 — 커뮤니티 좋아요·스크랩 응답 필드
@@ -43,7 +61,6 @@ public class SwaggerConfig {
                           - 단건 조회의 chatJoined와 같은 방식이다. 토큰 없이도 여전히 호출 가능하다
                         - 새 엔드포인트는 없다. GET /{postId}/reactions 같은 별도 조회는 추가하지 않았다
                         - 목록·단건·내 스크랩 목록은 요청자에 따라 응답이 달라지므로 Cache-Control: no-store를 내려 캐시되지 않게 함
-
                         ## v2.26.0 업데이트 내역
 
                         ### ✨ 신규 — 커뮤니티 알림함
