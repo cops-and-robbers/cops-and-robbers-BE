@@ -7,7 +7,6 @@ import com.team.cops_and_robbers.community.application.dto.command.CommunityPost
 import com.team.cops_and_robbers.community.application.dto.result.CommunityNotificationListResult;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityNotificationResult;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityNotificationUnreadCountResult;
-import com.team.cops_and_robbers.community.application.dto.result.CommunityPostNotificationSettingResult;
 import com.team.cops_and_robbers.community.domain.CommunityComment;
 import com.team.cops_and_robbers.community.domain.CommunityNotification;
 import com.team.cops_and_robbers.community.domain.CommunityNotificationType;
@@ -81,7 +80,7 @@ public class CommunityNotificationService {
     }
 
     @Transactional
-    public CommunityPostNotificationSettingResult updateSetting(CommunityPostNotificationSettingCommand command) {
+    public void updateSetting(CommunityPostNotificationSettingCommand command) {
         communityPostRepository.getByPostId(command.postId());
 
         CommunityPostNotificationSetting setting = communityPostNotificationSettingRepository
@@ -92,7 +91,6 @@ public class CommunityNotificationService {
                                 command.notifyComments(), command.notifyReplies())));
 
         setting.updateSetting(command.notifyComments(), command.notifyReplies());
-        return CommunityPostNotificationSettingResult.from(setting);
     }
 
     /**

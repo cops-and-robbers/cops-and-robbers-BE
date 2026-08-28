@@ -4,7 +4,6 @@ import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.common.swagger.ApiErrorCode;
 import com.team.cops_and_robbers.community.exception.CommunityPostException;
 import com.team.cops_and_robbers.community.presentation.dto.request.CommunityPostNotificationSettingRequest;
-import com.team.cops_and_robbers.community.presentation.dto.response.CommunityPostNotificationSettingResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -28,8 +27,8 @@ public interface CommunityPostNotificationSettingControllerDocs {
                     이미 쌓인 알림에는 영향을 주지 않습니다. 켜더라도 켜기 전에 달린 댓글이 알림함에 소급되지 않습니다.
                     """)
     @ApiErrorCode(value = CommunityPostException.class, codes = {"POST_NOT_FOUND"})
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "설정 성공")})
-    ResponseEntity<CommunityPostNotificationSettingResponse> updateNotificationSetting(
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "설정 성공 (응답 본문 없음)")})
+    ResponseEntity<Void> updateNotificationSetting(
             @Parameter(hidden = true) LoginUser loginUser,
             @Parameter(description = "게시글 ID", example = "1") Long postId,
             CommunityPostNotificationSettingRequest request

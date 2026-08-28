@@ -6,7 +6,6 @@ import com.team.cops_and_robbers.community.application.dto.command.CommunityNoti
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostNotificationSettingCommand;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityNotificationListResult;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityNotificationUnreadCountResult;
-import com.team.cops_and_robbers.community.application.dto.result.CommunityPostNotificationSettingResult;
 import com.team.cops_and_robbers.community.domain.CommunityComment;
 import com.team.cops_and_robbers.community.domain.CommunityNotification;
 import com.team.cops_and_robbers.community.domain.CommunityNotificationType;
@@ -280,15 +279,13 @@ class CommunityNotificationServiceTest extends ServiceUnitTest {
             given(communityPostNotificationSettingRepository.findByCommunityPostIdAndUserId(POST_ID, USER_ID))
                     .willReturn(Optional.of(setting));
 
-            CommunityPostNotificationSettingResult result = communityNotificationService.updateSetting(
+            communityNotificationService.updateSetting(
                     CommunityPostNotificationSettingCommand.of(USER_ID, POST_ID, false, true));
 
             then(communityPostNotificationSettingRepository).should(never()).save(any());
             assertSoftly(softly -> {
                 softly.assertThat(setting.isNotifyComments()).isFalse();
                 softly.assertThat(setting.isNotifyReplies()).isTrue();
-                softly.assertThat(result.notifyComments()).isFalse();
-                softly.assertThat(result.notifyReplies()).isTrue();
             });
         }
 

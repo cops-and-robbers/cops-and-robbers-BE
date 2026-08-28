@@ -3,9 +3,7 @@ package com.team.cops_and_robbers.community.presentation;
 import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.community.application.CommunityNotificationService;
-import com.team.cops_and_robbers.community.application.dto.result.CommunityPostNotificationSettingResult;
 import com.team.cops_and_robbers.community.presentation.dto.request.CommunityPostNotificationSettingRequest;
-import com.team.cops_and_robbers.community.presentation.dto.response.CommunityPostNotificationSettingResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,13 +21,12 @@ public class CommunityPostNotificationSettingController implements CommunityPost
     private final CommunityNotificationService communityNotificationService;
 
     @PutMapping("/{postId}/notification-settings")
-    public ResponseEntity<CommunityPostNotificationSettingResponse> updateNotificationSetting(
+    public ResponseEntity<Void> updateNotificationSetting(
             @AuthUser LoginUser loginUser,
             @PathVariable Long postId,
             @RequestBody @Valid CommunityPostNotificationSettingRequest request
     ) {
-        CommunityPostNotificationSettingResult result = communityNotificationService.updateSetting(
-                request.toCommand(loginUser.userId(), postId));
-        return ResponseEntity.ok(CommunityPostNotificationSettingResponse.from(result));
+        communityNotificationService.updateSetting(request.toCommand(loginUser.userId(), postId));
+        return ResponseEntity.noContent().build();
     }
 }

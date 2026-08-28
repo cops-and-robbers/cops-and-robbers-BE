@@ -6,7 +6,6 @@ import com.team.cops_and_robbers.community.domain.CommunityPost;
 import com.team.cops_and_robbers.community.domain.CommunityPostNotificationSetting;
 import com.team.cops_and_robbers.community.exception.CommunityPostException;
 import com.team.cops_and_robbers.user.domain.User;
-import io.restassured.common.mapper.TypeRef;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -40,16 +39,13 @@ class CommunityPostNotificationSettingControllerTest extends ControllerTest {
             User user = givenUser("유저");
             CommunityPost post = givenPost(user);
 
-            Map<String, Object> response = authenticated(givenAccessToken(user))
+            authenticated(givenAccessToken(user))
                     .body(Map.of("notifyComments", false, "notifyReplies", true))
                     .put(SETTING_PATH, post.getId())
-                    .then().statusCode(200)
-                    .extract().as(new TypeRef<>() {});
+                    .then().statusCode(204);
 
             CommunityPostNotificationSetting setting = findSetting(post, user);
             assertSoftly(softly -> {
-                softly.assertThat(response.get("notifyComments")).isEqualTo(false);
-                softly.assertThat(response.get("notifyReplies")).isEqualTo(true);
                 softly.assertThat(setting.isNotifyComments()).isFalse();
                 softly.assertThat(setting.isNotifyReplies()).isTrue();
             });
@@ -63,11 +59,11 @@ class CommunityPostNotificationSettingControllerTest extends ControllerTest {
             authenticated(givenAccessToken(user))
                     .body(Map.of("notifyComments", false, "notifyReplies", true))
                     .put(SETTING_PATH, post.getId())
-                    .then().statusCode(200);
+                    .then().statusCode(204);
             authenticated(givenAccessToken(user))
                     .body(Map.of("notifyComments", true, "notifyReplies", false))
                     .put(SETTING_PATH, post.getId())
-                    .then().statusCode(200);
+                    .then().statusCode(204);
 
             assertSoftly(softly -> {
                 softly.assertThat(communityPostNotificationSettingRepository.count()).isEqualTo(1);
@@ -85,7 +81,7 @@ class CommunityPostNotificationSettingControllerTest extends ControllerTest {
             authenticated(givenAccessToken(reader))
                     .body(Map.of("notifyComments", true, "notifyReplies", true))
                     .put(SETTING_PATH, post.getId())
-                    .then().statusCode(200);
+                    .then().statusCode(204);
 
             assertThat(findSetting(post, reader).isNotifyComments()).isTrue();
         }
