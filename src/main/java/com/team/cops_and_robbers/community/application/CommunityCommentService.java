@@ -13,6 +13,7 @@ import com.team.cops_and_robbers.community.exception.CommunityCommentException;
 import com.team.cops_and_robbers.community.repository.CommunityCommentRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.user.domain.User;
+import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -37,6 +38,11 @@ public class CommunityCommentService {
 
     @Transactional
     public CommunityCommentResult createComment(CommunityCommentCreateCommand command) {
+        User writer = userRepository.getByUserId(command.writerId());
+        if (!writer.hasAgreedRequiredTerms()) {
+            throw new ApplicationException(UserException.REQUIRED_TERMS_NOT_AGREED);
+        }
+
         communityPostRepository.getByPostId(command.postId());
         validateParent(command);
 
@@ -50,7 +56,7 @@ public class CommunityCommentService {
         );
         eventPublisher.publishEvent(new CommunityCommentCreatedEvent(saved));
 
-        return CommunityCommentResult.from(saved, findWriter(command.writerId()));
+        return CommunityCommentResult.from(saved, writer);
     }
 
     /**
@@ -173,10 +179,6 @@ public class CommunityCommentService {
                 .map(reply -> CommunityCommentResult.from(reply, writers.get(reply.getWriterId())))
                 .toList();
         return CommunityCommentResult.of(root, writers.get(root.getWriterId()), replies);
-    }
-
-    private User findWriter(Long writerId) {
-        return userRepository.findById(writerId).orElse(null);
     }
 
     private Map<Long, User> findWriters(List<CommunityComment> comments) {

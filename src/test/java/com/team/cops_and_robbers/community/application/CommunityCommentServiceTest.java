@@ -11,6 +11,7 @@ import com.team.cops_and_robbers.community.domain.CommunityComment;
 import com.team.cops_and_robbers.community.exception.CommunityCommentException;
 import com.team.cops_and_robbers.community.exception.CommunityPostException;
 import com.team.cops_and_robbers.user.domain.User;
+import com.team.cops_and_robbers.user.exception.UserException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ import java.util.Optional;
 
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
+import static com.team.cops_and_robbers.common.fixture.UserFixture.USER_WITHOUT_TERMS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -47,6 +49,10 @@ class CommunityCommentServiceTest extends ServiceUnitTest {
 
     private void givenPost() {
         given(communityPostRepository.getByPostId(POST_ID)).willReturn(POST(WRITER_ID));
+    }
+
+    private void givenWriter() {
+        given(userRepository.getByUserId(WRITER_ID)).willReturn(userWithNickname(WRITER_ID, "작성자"));
     }
 
     private User userWithNickname(Long userId, String nickname) {
@@ -81,9 +87,9 @@ class CommunityCommentServiceTest extends ServiceUnitTest {
 
         @Test
         void 댓글을_작성하면_저장하고_생성_이벤트를_발행한다() {
+            givenWriter();
             givenPost();
             given(communityCommentRepository.save(any())).willReturn(comment(10L, null, WRITER_ID, "내용"));
-            given(userRepository.findById(WRITER_ID)).willReturn(Optional.of(userWithNickname(WRITER_ID, "작성자")));
 
             CommunityCommentResult result = communityCommentService.createComment(
                     CommunityCommentCreateCommand.of(WRITER_ID, POST_ID, null, "내용"));
@@ -95,7 +101,20 @@ class CommunityCommentServiceTest extends ServiceUnitTest {
         }
 
         @Test
+        void 필수_약관에_동의하지_않았으면_작성할_수_없다() {
+            given(userRepository.getByUserId(WRITER_ID)).willReturn(USER_WITHOUT_TERMS("미동의유저"));
+
+            assertThatThrownBy(() -> communityCommentService.createComment(
+                    CommunityCommentCreateCommand.of(WRITER_ID, POST_ID, null, "내용")))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessage(UserException.REQUIRED_TERMS_NOT_AGREED.getDetail());
+
+            then(communityCommentRepository).should(never()).save(any());
+        }
+
+        @Test
         void 존재하지_않는_게시글에는_작성할_수_없다() {
+            givenWriter();
             given(communityPostRepository.getByPostId(POST_ID))
                     .willThrow(new ApplicationException(CommunityPostException.POST_NOT_FOUND));
 
@@ -108,9 +127,9 @@ class CommunityCommentServiceTest extends ServiceUnitTest {
 
         @Test
         void parentId가_없으면_1depth_댓글로_저장된다() {
+            givenWriter();
             givenPost();
             given(communityCommentRepository.save(any())).willReturn(comment(10L, null, WRITER_ID, "내용"));
-            given(userRepository.findById(WRITER_ID)).willReturn(Optional.of(userWithNickname(WRITER_ID, "작성자")));
 
             communityCommentService.createComment(
                     CommunityCommentCreateCommand.of(WRITER_ID, POST_ID, null, "내용"));
@@ -120,6 +139,7 @@ class CommunityCommentServiceTest extends ServiceUnitTest {
 
         @Test
         void 존재하지_않는_부모_댓글에는_답글을_달_수_없다() {
+            givenWriter();
             givenPost();
             given(communityCommentRepository.findByCommentIdForUpdate(999L)).willReturn(Optional.empty());
 
@@ -131,6 +151,7 @@ class CommunityCommentServiceTest extends ServiceUnitTest {
 
         @Test
         void 다른_게시글의_댓글에는_답글을_달_수_없다() {
+            givenWriter();
             givenPost();
             given(communityCommentRepository.findByCommentIdForUpdate(50L))
                     .willReturn(Optional.of(CommunityComment.createComment(999L, null, WRITER_ID, "다른 글 댓글")));
@@ -143,6 +164,7 @@ class CommunityCommentServiceTest extends ServiceUnitTest {
 
         @Test
         void 답글에는_답글을_달_수_없다() {
+            givenWriter();
             givenPost();
             CommunityComment reply = CommunityComment.createComment(POST_ID, 10L, WRITER_ID, "답글");
             given(communityCommentRepository.findByCommentIdForUpdate(20L)).willReturn(Optional.of(reply));
@@ -155,6 +177,7 @@ class CommunityCommentServiceTest extends ServiceUnitTest {
 
         @Test
         void 삭제된_댓글에는_답글을_달_수_없다() {
+            givenWriter();
             givenPost();
             CommunityComment deletedParent = CommunityComment.createComment(POST_ID, null, WRITER_ID, "삭제될 댓글");
             deletedParent.markDeleted();
