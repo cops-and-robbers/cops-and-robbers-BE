@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
+import static com.team.cops_and_robbers.common.fixture.UserFixture.USER_WITHOUT_TERMS;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
@@ -116,6 +117,38 @@ class UserServiceTest extends ServiceUnitTest {
             assertThatThrownBy(() -> userService.updateTermsAgreement(command))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessage(UserException.REQUIRED_TERMS_NOT_AGREED.getDetail());
+        }
+
+        @Test
+        void 약관_개정으로_초기화된_뒤_다시_동의하면_동의_시각이_갱신된다() {
+            // given
+            LocalDateTime firstAgreedAt = LocalDateTime.now().minusYears(1);
+            User resetUser = USER_WITHOUT_TERMS("재동의유저");
+            setId(resetUser, TEST_USER_ID);
+            ReflectionTestUtils.setField(resetUser, "termsAgreedAt", firstAgreedAt);
+            AgreementCommand command = AgreementCommand.of(TEST_USER_ID, true, true, true, false);
+            given(userRepository.getByUserId(TEST_USER_ID)).willReturn(resetUser);
+
+            // when
+            userService.updateTermsAgreement(command);
+
+            // then
+            assertThat(resetUser.getTermsAgreedAt()).isAfter(firstAgreedAt);
+        }
+
+        @Test
+        void 이미_필수_약관에_동의한_상태로_재제출하면_최초_동의_시각을_유지한다() {
+            // given
+            LocalDateTime firstAgreedAt = LocalDateTime.now().minusYears(1);
+            user.agreeTerms(false, firstAgreedAt);
+            AgreementCommand command = AgreementCommand.of(TEST_USER_ID, true, true, true, false);
+            given(userRepository.getByUserId(TEST_USER_ID)).willReturn(user);
+
+            // when
+            userService.updateTermsAgreement(command);
+
+            // then
+            assertThat(user.getTermsAgreedAt()).isEqualTo(firstAgreedAt);
         }
     }
 
