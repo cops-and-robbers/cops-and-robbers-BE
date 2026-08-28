@@ -4,17 +4,21 @@ import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.user.application.UserService;
 import com.team.cops_and_robbers.user.application.dto.command.AgreementCommand;
+import com.team.cops_and_robbers.user.application.dto.command.CommunityPushAgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.GamePushAgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
 import com.team.cops_and_robbers.user.application.dto.command.ProfileIconUpdateCommand;
+import com.team.cops_and_robbers.user.application.dto.result.CommunityPushAgreementResult;
 import com.team.cops_and_robbers.user.application.dto.result.GamePushAgreementResult;
 import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.presentation.dto.request.AgreementRequest;
+import com.team.cops_and_robbers.user.presentation.dto.request.CommunityPushAgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.GamePushAgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.ProfileIconUpdateRequest;
 import com.team.cops_and_robbers.user.presentation.dto.response.AgreementResponse;
+import com.team.cops_and_robbers.user.presentation.dto.response.CommunityPushAgreementResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.DeleteAccountResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.GamePushAgreementResponse;
 import com.team.cops_and_robbers.user.presentation.dto.response.MyPageResponse;
@@ -137,7 +141,31 @@ public class UserController implements UserControllerDocs {
     }
 
     /**
-     * 10. 사용자 프로필 아이콘 번호를 변경합니다.
+     * 10. 커뮤니티 푸시 알림 수신 동의 여부를 조회합니다.
+     */
+    @GetMapping("/agreements/community-push")
+    public ResponseEntity<CommunityPushAgreementResponse> getCommunityPushAgreement(@AuthUser LoginUser loginUser) {
+        CommunityPushAgreementResult result = userService.getCommunityPushAgreement(loginUser.userId());
+        CommunityPushAgreementResponse response = CommunityPushAgreementResponse.from(result);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 11. 커뮤니티 푸시 알림 수신 동의 여부를 업데이트합니다.
+     */
+    @PutMapping("/agreements/community-push")
+    public ResponseEntity<Void> updateCommunityPushAgreement(
+            @AuthUser LoginUser loginUser,
+            @RequestBody @Valid CommunityPushAgreementRequest request
+    ) {
+        CommunityPushAgreementCommand command =
+                CommunityPushAgreementCommand.of(loginUser.userId(), request.allowCommunityPush());
+        userService.updateCommunityPushAgreement(command);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 12. 사용자 프로필 아이콘 번호를 변경합니다.
      */
     @PatchMapping("/me/profile-icon")
     public ResponseEntity<Void> updateProfileIcon(

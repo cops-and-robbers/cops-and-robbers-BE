@@ -172,6 +172,45 @@ class GameControllerTest extends ControllerTest {
         }
 
         @Test
+        void 최대_참가_인원이_150명이면_생성된다() {
+            // given
+            GameSettingsRequest settings = new GameSettingsRequest(30, 5, 3, 150);
+            GameCreateRequest request = new GameCreateRequest(createAreaRequest(), settings);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(201);
+                softly.assertThat(response.jsonPath().getInt("maxParticipants")).isEqualTo(150);
+            });
+        }
+
+        @Test
+        void 최대_참가_인원이_151명이면_400_BadRequest를_응답한다() {
+            // given
+            GameSettingsRequest settings = new GameSettingsRequest(30, 5, 3, 151);
+            GameCreateRequest request = new GameCreateRequest(createAreaRequest(), settings);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(400);
+        }
+
+        @Test
         void 이미_다른_활성_게임에_참여_중인_경우_409_Conflict를_응답한다() {
             // given
             authenticated(accessToken)

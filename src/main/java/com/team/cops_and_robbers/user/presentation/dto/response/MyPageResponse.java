@@ -11,10 +11,12 @@ public record MyPageResponse(
         String nickname,
         @Schema(description = "소셜 플랫폼", example = "KAKAO")
         SocialType socialPlatform,
-        @Schema(description = "게임 알림 수신 여부", example = "true")
+        @Schema(description = "게임 푸시 알림 수신 동의 여부", example = "true")
         boolean allowGamePush,
-        @Schema(description = "마케팅 알림 수신 여부", example = "false")
+        @Schema(description = "마케팅 푸시 알림 수신 동의 여부", example = "false")
         boolean allowMarketingPush,
+        @Schema(description = "커뮤니티 푸시 알림 수신 동의 여부", example = "true")
+        boolean allowCommunityPush,
         @Schema(description = "프로필 아이콘 번호", example = "1")
         int profileIcon
 ) {
@@ -25,6 +27,7 @@ public record MyPageResponse(
                 user.getSocialType(),
                 user.isAllowGamePush(),
                 user.isAllowMarketingPush(),
+                user.isAllowCommunityPush(),
                 user.getProfileIcon()
         );
     }

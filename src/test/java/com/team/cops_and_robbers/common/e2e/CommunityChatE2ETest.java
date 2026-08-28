@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CommunityChatE2ETest extends WebSocketE2ETest {
 
     private static final String CHAT_CHANNEL = "/subscribe/community/%d/chat";
+    private static final String USER_CHANNEL = "/subscribe/user/%d/community/chat";
 
     private record ChatSetup(
             CommunityPost post,
@@ -212,5 +213,56 @@ class CommunityChatE2ETest extends WebSocketE2ETest {
         assertThat(outsiderClient.<CommunityChatPayload>waitForMessage(setup.chatChannel(), 1))
                 .as("비멤버는 구독이 거부되어 수신하지 못한다")
                 .isNull();
+    }
+
+    @Test
+    void 목록_채널로_내가_속한_방의_메시지를_받는다() throws Exception {
+        User author = givenUser("author");
+        ChatSetup setup = givenChatRoomWithSubscribedAuthor(author);
+        String userChannel = USER_CHANNEL.formatted(author.getId());
+        setup.authorClient().subscribe(userChannel, CommunityChatPayload.class);
+
+        User sender = givenUser("sender");
+        communityChatMemberRepository.save(CommunityChatMember.createMember(setup.post().getId(), sender.getId()));
+        StompTestClient senderClient = connect(givenAccessToken(sender));
+
+        senderClient.send(
+                "/publish/community/%d/chat".formatted(setup.post().getId()),
+                new CommunityChatRequest("key-1", "안녕하세요!", null, CommunityChatMessageType.TEXT)
+        );
+
+        CommunityChatPayload received = setup.authorClient().waitForMessage(userChannel, 5);
+
+        assertThat(received.communityPostId()).isEqualTo(setup.post().getId());
+        assertThat(received.message()).isEqualTo("안녕하세요!");
+        assertThat(received.senderId()).isEqualTo(sender.getId());
+        assertThat(received.senderProfileIcon()).isEqualTo(sender.getProfileIcon());
+    }
+
+    @Test
+    void 다른_유저의_목록_채널은_구독할_수_없다() throws Exception {
+        User author = givenUser("author");
+        ChatSetup setup = givenChatRoomWithSubscribedAuthor(author);
+        String authorChannel = USER_CHANNEL.formatted(author.getId());
+        setup.authorClient().subscribe(authorChannel, CommunityChatPayload.class);
+
+        User stranger = givenUser("stranger");
+        StompTestClient strangerClient = connect(givenAccessToken(stranger));
+        strangerClient.subscribe(authorChannel, CommunityChatPayload.class);
+
+        setup.authorClient().send(
+                "/publish/community/%d/chat".formatted(setup.post().getId()),
+                new CommunityChatRequest("key-1", "안녕하세요!", null, CommunityChatMessageType.TEXT)
+        );
+
+        assertThat(setup.authorClient().<CommunityChatPayload>waitForMessage(authorChannel, 5))
+                .as("채널 주인은 수신한다")
+                .isNotNull();
+        assertThat(strangerClient.<CommunityChatPayload>waitForMessage(authorChannel, 1))
+                .as("남의 채널은 구독이 거부되어 수신하지 못한다")
+                .isNull();
+        assertThat(strangerClient.isConnected())
+                .as("구독만 거부하고 연결은 끊지 않는다")
+                .isTrue();
     }
 }

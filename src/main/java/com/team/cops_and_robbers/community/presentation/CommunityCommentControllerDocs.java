@@ -5,6 +5,7 @@ import com.team.cops_and_robbers.common.swagger.ApiErrorCode;
 import com.team.cops_and_robbers.community.exception.CommunityCommentException;
 import com.team.cops_and_robbers.community.exception.CommunityPostException;
 import com.team.cops_and_robbers.community.presentation.dto.request.CommunityCommentCreateRequest;
+import com.team.cops_and_robbers.community.presentation.dto.request.CommunityCommentNotificationRequest;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityCommentListResponse;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityCommentResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,6 +50,22 @@ public interface CommunityCommentControllerDocs {
             @Parameter(hidden = true) LoginUser loginUser,
             @Parameter(description = "게시글 ID", example = "1") Long postId,
             CommunityCommentCreateRequest request
+    );
+
+    @Operation(summary = "댓글 알림 켜기/끄기",
+            description = """
+                    내가 쓴 댓글에 답글이 달렸을 때 알림을 받을지 정합니다. 기본값은 받음입니다.
+
+                    게시글 알림 설정과 독립입니다. 그 글의 알림을 꺼도 내 댓글의 답글 알림은 이 값만 따릅니다.
+                    현재 상태는 댓글 목록 응답의 `replyNotificationsEnabled`로 내려갑니다.
+                    """)
+    @ApiErrorCode(value = CommunityCommentException.class,
+            codes = {"COMMENT_NOT_FOUND", "FORBIDDEN_NOT_COMMENT_AUTHOR"})
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "설정 성공")})
+    ResponseEntity<Void> updateCommentNotification(
+            @Parameter(hidden = true) LoginUser loginUser,
+            @Parameter(description = "댓글 ID", example = "1") Long commentId,
+            CommunityCommentNotificationRequest request
     );
 
     @Operation(summary = "댓글 삭제",

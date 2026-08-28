@@ -13,7 +13,8 @@ public record CommunityChatRoomResult(
         RecruitmentStatus status,
         String meetingAt,
         Long memberCount,
-        LastMessageResult lastMessage
+        LastMessageResult lastMessage,
+        long unreadCount
 ) {
     public record LastMessageResult(
             Long id,
@@ -43,14 +44,20 @@ public record CommunityChatRoomResult(
      * lastMessage는 아직 대화가 없는 방에서 null이 된다.
      */
     public static CommunityChatRoomResult of(
-            CommunityPost post, long memberCount, CommunityChatMessage lastMessage, UserProfileProjection senderProfile) {
+            CommunityPost post,
+            long memberCount,
+            CommunityChatMessage lastMessage,
+            UserProfileProjection senderProfile,
+            long unreadCount
+    ) {
         return new CommunityChatRoomResult(
                 post.getId(),
                 post.getTitle(),
                 post.currentStatus(),
                 TimestampUtil.toIsoString(post.getMeetingAt()),
                 memberCount,
-                lastMessage == null ? null : LastMessageResult.from(lastMessage, senderProfile)
+                lastMessage == null ? null : LastMessageResult.from(lastMessage, senderProfile),
+                unreadCount
         );
     }
 }

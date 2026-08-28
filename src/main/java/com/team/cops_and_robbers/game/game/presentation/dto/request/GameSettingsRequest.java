@@ -24,7 +24,7 @@ public record GameSettingsRequest(
 
         @Schema(description = "최대 참가 인원", example = "10")
         @NotNull(message = "최대 참가 인원을 입력해주세요.")
-        @Min(value = 2) @Max(value = 50)
+        @Min(value = 2) @Max(value = 150)
         Integer maxParticipants
 ) {
 

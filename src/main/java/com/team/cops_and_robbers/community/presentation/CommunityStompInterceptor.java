@@ -34,6 +34,10 @@ public class CommunityStompInterceptor implements ChannelInterceptor {
 
         if (stompCommand == null) return message;
 
+        if (stompCommand == StompCommand.SUBSCRIBE && StompPathUtil.isUserPath(accessor.getDestination())) {
+            return isOwnChannel(accessor) ? message : null;
+        }
+
         switch (stompCommand) {
             case SUBSCRIBE -> handleSubscribe(accessor);
             case SEND -> handlePublish(accessor);
@@ -53,6 +57,24 @@ public class CommunityStompInterceptor implements ChannelInterceptor {
 
         validateChatMember(postId, userId);
         log.info("[CommunityChat] SUBSCRIBE success: postId={}, userId={}", postId, userId);
+    }
+
+    /**
+     * 유저 단위 채널은 내 모든 방의 메시지가 흐르므로 채널 주인이 본인인지로 판별한다.
+     * 자격이 없으면 예외 대신 프레임을 버려 구독만 막는다.
+     * 게임과 소켓을 공유하고 있어, ERROR 프레임으로 연결을 닫으면 인게임까지 끊긴다.
+     */
+    private boolean isOwnChannel(StompHeaderAccessor accessor) {
+        Long userId = getUserIdFromSession(accessor);
+        Long channelOwnerId = StompPathUtil.getUserId(accessor.getDestination())
+                .orElseThrow(() -> new ApplicationException(CommonException.INVALID_DESTINATION));
+
+        if (!channelOwnerId.equals(userId)) {
+            log.warn("[CommunityChat] Unauthorized channel access. ownerId={}, userId={}", channelOwnerId, userId);
+            return false;
+        }
+        log.info("[CommunityChat] SUBSCRIBE success: userChannel={}", userId);
+        return true;
     }
 
     /**

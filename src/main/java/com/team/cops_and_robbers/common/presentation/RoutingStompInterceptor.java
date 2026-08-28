@@ -31,7 +31,7 @@ public class RoutingStompInterceptor implements ChannelInterceptor {
             return message;
         }
 
-        if (StompPathUtil.isCommunityPath(destination)) {
+        if (StompPathUtil.isCommunityPath(destination) || StompPathUtil.isUserPath(destination)) {
             return communityStompInterceptor.preSend(message, channel);
         }
         return gameStompInterceptor.preSend(message, channel);

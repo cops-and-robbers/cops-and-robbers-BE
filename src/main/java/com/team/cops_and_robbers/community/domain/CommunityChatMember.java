@@ -31,10 +31,30 @@ public class CommunityChatMember extends BaseTimeEntity {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(name = "allow_notification", nullable = false)
+    @Builder.Default
+    private boolean allowNotification = true;
+
+    /** 아직 한 번도 안 읽었으면 null. 메시지 id가 단조 증가하므로 이 값보다 큰 것이 안 읽은 메시지다. */
+    @Column(name = "last_read_message_id")
+    private Long lastReadMessageId;
+
     public static CommunityChatMember createMember(Long communityPostId, Long userId) {
         return CommunityChatMember.builder()
                 .communityPostId(communityPostId)
                 .userId(userId)
                 .build();
+    }
+
+    public void updateNotification(boolean allowNotification) {
+        this.allowNotification = allowNotification;
+    }
+
+    public void readUntil(Long lastReadMessageId) {
+        this.lastReadMessageId = lastReadMessageId;
+    }
+
+    public boolean hasReadUpTo(Long messageId) {
+        return lastReadMessageId != null && lastReadMessageId >= messageId;
     }
 }

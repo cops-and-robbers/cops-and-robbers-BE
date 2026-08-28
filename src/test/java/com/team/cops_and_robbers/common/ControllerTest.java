@@ -12,13 +12,17 @@ import com.team.cops_and_robbers.common.fcm.FcmService;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.common.fixture.UserDeviceFixture;
 import com.team.cops_and_robbers.common.fixture.UserFixture;
+import com.team.cops_and_robbers.community.application.CommunityChatFcmNotifier;
+import com.team.cops_and_robbers.community.application.CommunityFcmNotifier;
 import com.team.cops_and_robbers.community.domain.PostAddress;
 import com.team.cops_and_robbers.community.infrastructure.GeocodingClient;
 import com.team.cops_and_robbers.community.infrastructure.GeocodingResult;
 import com.team.cops_and_robbers.community.repository.CommunityChatMemberRepository;
 import com.team.cops_and_robbers.community.repository.CommunityChatMessageRepository;
 import com.team.cops_and_robbers.community.repository.CommunityCommentRepository;
+import com.team.cops_and_robbers.community.repository.CommunityNotificationRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostLikeRepository;
+import com.team.cops_and_robbers.community.repository.CommunityPostNotificationSettingRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostScrapRepository;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
@@ -75,6 +79,12 @@ public abstract class ControllerTest {
     protected GameFcmNotifier gameFcmNotifier;
 
     @MockitoBean
+    protected CommunityFcmNotifier communityFcmNotifier;
+
+    @MockitoBean
+    protected CommunityChatFcmNotifier communityChatFcmNotifier;
+
+    @MockitoBean
     protected GeocodingClient geocodingClient;
 
     @Autowired
@@ -124,6 +134,12 @@ public abstract class ControllerTest {
 
     @Autowired
     protected CommunityPostScrapRepository communityPostScrapRepository;
+
+    @Autowired
+    protected CommunityNotificationRepository communityNotificationRepository;
+
+    @Autowired
+    protected CommunityPostNotificationSettingRepository communityPostNotificationSettingRepository;
 
     @Autowired
     protected JwtTokenProvider jwtTokenProvider;

@@ -30,8 +30,70 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.25.0")
+                .version("2.26.0")
                 .description("""
+                        ## v2.26.0 업데이트 내역
+
+                        ### ✨ 신규 — 커뮤니티 알림함
+                        - 알림은 댓글이 달린 시점에 받을 사람을 확정해 저장한다
+                          - 조회 시점에 다시 계산하지 않으므로 알림을 켜기 전 댓글이 소급되지 않는다
+                          - 제목·내용은 그 시점 값을 복사해 두어 원본 댓글이 지워져도 알림함에 남는다
+                        - GET /api/community-posts/notifications — 알림 목록 (최신순 커서, 최근 60일)
+                        - GET /api/community-posts/notifications/unread-count — 배지용 안 읽은 개수
+                        - POST /api/community-posts/notifications/read — 읽음 처리
+                          - 알림마다 읽음 플래그를 두지 않고 유저당 읽음 커서 하나로 판정한다
+                          - 목록 조회(GET)는 읽음 처리하지 않는다. 이 API를 따로 호출해야 한다
+
+                        ### ✨ 신규 — 게시글별 알림 켜기/끄기
+                        - PUT /api/community-posts/{postId}/notification-settings — 설정 변경 (commentNotificationsEnabled, replyNotificationsEnabled)
+                        - 현재 설정은 게시글 단건 조회 응답의 notificationSettings로 내려간다 (별도 조회 API 없음)
+                          - 목록·비로그인 조회는 null
+                        - 토글을 건드린 글만 설정이 저장되고, 건드리지 않은 글은 기본값을 따른다
+                          - 내가 쓴 글 → 댓글 ON / 답글 OFF
+                          - 그 외 → 둘 다 OFF (켠 사람만 받는다)
+                        - 좋아요·스크랩은 알림을 보내지 않는다
+
+                        ### ✨ 신규 — 댓글별 답글 알림 켜기/끄기
+                        - PUT /api/community-posts/comments/{commentId}/notification — 설정 변경 (replyNotificationsEnabled, 기본 true)
+                          - 작성자만 바꿀 수 있다. 남의 댓글이면 403(FORBIDDEN_NOT_COMMENT_AUTHOR)
+                        - 현재 상태는 댓글 목록 응답의 replyNotificationsEnabled로 내려간다
+                        - "내 댓글에 달린 답글" 알림은 게시글 설정과 독립이다
+                          - 그 글의 알림을 꺼도 내 댓글의 답글 알림은 이 값만 따른다
+                          - 남의 글에 댓글을 여러 개 썼다면 시끄러운 댓글 하나만 끌 수 있다
+
+                        ### ✨ 신규 — 커뮤니티 푸시
+                        - GET /api/user/agreements/community-push — 수신 동의 조회
+                        - PUT /api/user/agreements/community-push — 수신 동의 변경 (allowCommunityPush, 기본 true)
+                        - 푸시를 꺼도 알림함에는 그대로 쌓인다. 푸시와 기록은 별개다
+                        - GET /api/user/me 응답에 allowCommunityPush 추가
+
+                        ### ✨ 신규 — 채팅 알림
+                        - 채팅 메시지가 오면 방 참여자에게 FCM 푸시를 보낸다 (보낸 사람 제외)
+                          - 입장·퇴장 안내(SYSTEM)는 보내지 않는다
+                          - 게임 초대(GAME_INVITE)는 본문이 JSON이라 "게임에 초대했습니다" 고정 문구로 보낸다
+                        - PUT /api/community-posts/{postId}/chat/notification — 방별 알림 켜기/끄기 (기본 켜짐)
+                          - 끄면 푸시만 막고 메시지 저장과 안 읽은 개수는 그대로다
+                        - POST /api/community-posts/{postId}/chat/read — 방별 읽음 처리
+                          - 채팅 내역 조회(GET)는 읽음 처리하지 않는다. 읽은 위치는 앞으로만 이동한다
+                        - 채팅방 목록 응답에 unreadCount 추가, 멤버 목록 응답에 notificationEnabled 추가
+                          - unreadCount는 내가 보낸 메시지와 입장·퇴장 안내를 세지 않는다
+                        - 커뮤니티 푸시 수신 동의(allowCommunityPush)는 댓글과 채팅에 모두 적용된다
+                        - 지금 그 방을 보고 있는 사람도 푸시를 받는다. 앱이 포그라운드에서 현재 방이면 표시하지 않는 쪽으로 처리한다
+                        - 댓글·답글 푸시는 제목이 게시글 제목, 본문이 댓글 내용이다. 댓글/답글 구분은 data.type으로 한다
+
+                        ### ✨ 신규 — 채팅방 목록 실시간 갱신
+                        - 구독 /subscribe/user/{userId}/community/chat
+                          - 목록 화면에서 이 채널 하나만 구독하면 내가 속한 모든 방의 새 메시지가 들어온다
+                          - 방마다 구독하지 않아도 되므로 방이 100개여도 구독은 1개다
+                        - 이벤트는 방 채널(/subscribe/community/{postId}/chat)과 같은 형식이다
+                          - 어느 방인지는 communityPostId로 구분한다
+                          - 안 읽은 개수는 담지 않는다. 앱이 senderId가 내가 아니고 SYSTEM이 아닐 때 직접 올린다
+                        - 방을 음소거해도 이 채널로는 온다. 푸시만 막고 목록 갱신은 막지 않는다
+                        - 본인 채널만 구독할 수 있다. 남의 채널은 구독만 무시하고 연결은 끊지 않는다
+
+                        ### 🛠 변경
+                        - 게시글을 삭제하면 그 글의 알림과 알림 설정도 함께 지워진다
+
                         ## v2.25.0 업데이트 내역
 
                         ### ✨ 신규 — 커뮤니티 채팅 멤버 관리
@@ -47,7 +109,6 @@ public class SwaggerConfig {
                         - 채팅 메시지 응답(내역 조회·목록의 lastMessage)에 발신자 프로필 아이콘 senderProfileIcon 추가
                           - lastMessage에 senderNickname도 함께 추가
                           - 닉네임과 같은 규칙: 조회 시점 현재 값을 우선하고, 탈퇴 시 발신 시점 값으로 대체
-
                         ## v2.24.0 업데이트 내역
 
                         ### ✨ 신규 — 프로필 아이콘
