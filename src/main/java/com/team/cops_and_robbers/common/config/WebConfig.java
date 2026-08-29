@@ -54,8 +54,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns(
                         "/api/auth/**",
                         "/api/user/me",
-                        "/api/user/agreements",
-                        "/api/user/check-nickname"
+                        "/api/user/agreements"
                 );
 
         registry.addInterceptor(queryParameterInterceptor)
