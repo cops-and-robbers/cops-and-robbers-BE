@@ -958,6 +958,29 @@ class CommunityPostControllerTest extends ControllerTest {
         }
 
         @Test
+        void 목록_응답은_인증_여부와_무관하게_캐시되지_않는다() {
+            communityPostRepository.save(POST(user.getId()));
+
+            ExtractableResponse<Response> unauthenticatedExtract = unauthenticated()
+                    .queryParam("countryCode", "KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+            ExtractableResponse<Response> authenticatedExtract = authenticated(accessToken)
+                    .queryParam("countryCode", "KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(unauthenticatedExtract.header("Cache-Control")).contains("no-store");
+                softly.assertThat(authenticatedExtract.header("Cache-Control")).contains("no-store");
+            });
+        }
+
+        @Test
         void 잘못된_커서로_요청하면_400을_응답한다() {
             ExtractableResponse<Response> extract = unauthenticated()
                     .queryParam("cursor", "broken-cursor!!")
@@ -1299,6 +1322,27 @@ class CommunityPostControllerTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
                 softly.assertThat(extract.jsonPath().getBoolean("chatJoined")).isFalse();
+            });
+        }
+
+        @Test
+        void 단건_응답은_인증_여부와_무관하게_캐시되지_않는다() {
+            Long postId = communityPostRepository.save(POST(user.getId())).getId();
+
+            ExtractableResponse<Response> unauthenticatedExtract = unauthenticated()
+                    .when()
+                    .get(POST_API_URL + "/" + postId)
+                    .then()
+                    .extract();
+            ExtractableResponse<Response> authenticatedExtract = authenticated(accessToken)
+                    .when()
+                    .get(POST_API_URL + "/" + postId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(unauthenticatedExtract.header("Cache-Control")).contains("no-store");
+                softly.assertThat(authenticatedExtract.header("Cache-Control")).contains("no-store");
             });
         }
 

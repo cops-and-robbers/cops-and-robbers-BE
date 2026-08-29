@@ -8,6 +8,7 @@ import com.team.cops_and_robbers.community.application.dto.command.CommunityPost
 import com.team.cops_and_robbers.community.application.dto.result.CommunityPostScrapListResult;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityPostScrapListResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -70,6 +71,8 @@ public class CommunityPostReactionController implements CommunityPostReactionCon
     ) {
         CommunityPostScrapListResult result = communityPostReactionService.getMyScraps(
                 CommunityPostScrapListCommand.of(loginUser.userId(), cursor, size));
-        return ResponseEntity.ok(CommunityPostScrapListResponse.from(result));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(CommunityPostScrapListResponse.from(result));
     }
 }

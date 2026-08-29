@@ -279,6 +279,18 @@ class CommunityPostReactionControllerTest extends ControllerTest {
         }
 
         @Test
+        void 스크랩_목록_응답은_캐시되지_않는다() {
+            User user = givenUser("유저");
+
+            String cacheControl = authenticated(givenAccessToken(user))
+                    .get(MY_SCRAPS_PATH)
+                    .then().statusCode(200)
+                    .extract().header("Cache-Control");
+
+            assertThat(cacheControl).contains("no-store");
+        }
+
+        @Test
         void 채팅방_참여_여부가_스크랩한_게시글마다_반영된다() {
             User user = givenUser("유저");
             CommunityPost joined = givenPost(user);

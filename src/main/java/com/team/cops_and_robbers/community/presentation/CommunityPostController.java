@@ -21,6 +21,7 @@ import com.team.cops_and_robbers.community.presentation.dto.response.CommunityPo
 import com.team.cops_and_robbers.community.presentation.dto.response.CountryResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -92,7 +93,7 @@ public class CommunityPostController implements CommunityPostControllerDocs {
                 cursor, size, scope, sort, countryCode, latitude, longitude, keyword);
         CommunityPostCursorResult result = communityPostService.getPostList(command, requesterId);
         CommunityPostListResponse response = CommunityPostListResponse.from(result);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(response);
     }
 
     @GetMapping("/{postId}")
@@ -103,7 +104,7 @@ public class CommunityPostController implements CommunityPostControllerDocs {
         Long requesterId = (loginUser == null) ? null : loginUser.userId();
         CommunityPostResult result = communityPostService.getPost(postId, requesterId);
         CommunityPostResponse response = CommunityPostResponse.from(result);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(response);
     }
 
     @PutMapping("/{postId}")
