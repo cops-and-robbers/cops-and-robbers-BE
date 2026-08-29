@@ -3,11 +3,13 @@ package com.team.cops_and_robbers.community.application;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostScrapListCommand;
+import com.team.cops_and_robbers.community.application.dto.result.CommunityPostResult;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityPostScrapListResult;
 import com.team.cops_and_robbers.community.domain.CommunityPost;
 import com.team.cops_and_robbers.community.domain.CommunityPostScrap;
 import com.team.cops_and_robbers.community.exception.CommunityPostException;
 import com.team.cops_and_robbers.community.exception.CommunityPostReactionException;
+import com.team.cops_and_robbers.community.repository.CommunityPostCountProjection;
 import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,7 +24,9 @@ import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
@@ -243,6 +247,38 @@ class CommunityPostReactionServiceTest extends ServiceUnitTest {
                     CommunityPostScrapListCommand.of(USER_ID, null, 10));
 
             assertThat(result.content()).isEmpty();
+        }
+
+        @Test
+        void 스크랩_목록의_각_게시글에_좋아요_스크랩_카운트와_내_반응이_배치로_반영된다() {
+            given(communityPostScrapRepository.findPageByCursor(any(), any(), any()))
+                    .willReturn(List.of(scrap(20L, 2L), scrap(10L, 1L)));
+            given(communityPostRepository.findAllById(anyList()))
+                    .willReturn(List.of(post(1L, 999L), post(2L, 999L)));
+            given(userRepository.findAllById(anyList())).willReturn(List.of(userWithNickname(999L, "작성자")));
+            given(communityPostLikeRepository.countByPostIdIn(anyCollection()))
+                    .willReturn(List.of(new CommunityPostCountProjection(1L, 2L)));
+            given(communityPostScrapRepository.countByPostIdIn(anyCollection()))
+                    .willReturn(List.of(new CommunityPostCountProjection(1L, 1L), new CommunityPostCountProjection(2L, 1L)));
+            given(communityPostLikeRepository.findLikedPostIds(eq(USER_ID), anyCollection())).willReturn(List.of(2L));
+            given(communityPostScrapRepository.findScrappedPostIds(eq(USER_ID), anyCollection()))
+                    .willReturn(List.of(1L, 2L));
+
+            CommunityPostScrapListResult result = communityPostReactionService.getMyScraps(
+                    CommunityPostScrapListCommand.of(USER_ID, null, 10));
+
+            CommunityPostResult postOne = result.content().stream()
+                    .filter(r -> r.id().equals(1L)).findFirst().orElseThrow();
+            CommunityPostResult postTwo = result.content().stream()
+                    .filter(r -> r.id().equals(2L)).findFirst().orElseThrow();
+            assertThat(postOne.likeCount()).isEqualTo(2L);
+            assertThat(postOne.scrapCount()).isEqualTo(1L);
+            assertThat(postOne.isLikedByRequester()).isFalse();
+            assertThat(postOne.isScrappedByRequester()).isTrue();
+            assertThat(postTwo.likeCount()).isZero();
+            assertThat(postTwo.scrapCount()).isEqualTo(1L);
+            assertThat(postTwo.isLikedByRequester()).isTrue();
+            assertThat(postTwo.isScrappedByRequester()).isTrue();
         }
     }
 }

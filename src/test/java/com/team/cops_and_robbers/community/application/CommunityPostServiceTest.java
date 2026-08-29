@@ -20,6 +20,7 @@ import com.team.cops_and_robbers.community.domain.PostAddress;
 import com.team.cops_and_robbers.community.domain.RecruitmentStatus;
 import com.team.cops_and_robbers.community.exception.CommunityPostException;
 import com.team.cops_and_robbers.community.infrastructure.GeocodingResult;
+import com.team.cops_and_robbers.community.repository.CommunityPostCountProjection;
 import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -163,6 +164,28 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             then(geocodingClient).shouldHaveNoInteractions();
             then(userRepository).shouldHaveNoInteractions();
         }
+
+        @Test
+        void 생성_직후에는_좋아요_스크랩_카운트와_내_반응이_모두_비어있다() {
+            CommunityPost post = POST(1L);
+            setId(post, 1L);
+            given(userRepository.getByUserId(1L)).willReturn(USER());
+            given(geocodingClient.reverseGeocode(37.4979, 127.0276)).willReturn(GeocodingResult.resolved(PostAddress.of(
+                            "서울특별시 광진구 화양동 1-20", "서울특별시 광진구 능동로 216", null,
+                            "서울특별시 광진구 화양동", "KR")));
+            given(communityPostRepository.save(any())).willReturn(post);
+
+            CommunityPostResult result = communityPostService.createPost(
+                    new CommunityPostCreateCommand(1L, "제목", "내용",
+                            LocalDateTime.now().plusDays(3), 37.4979, 127.0276, "만나는곳", 6));
+
+            assertThat(result.likeCount()).isZero();
+            assertThat(result.scrapCount()).isZero();
+            assertThat(result.isLikedByRequester()).isFalse();
+            assertThat(result.isScrappedByRequester()).isFalse();
+            then(communityPostLikeRepository).shouldHaveNoInteractions();
+            then(communityPostScrapRepository).shouldHaveNoInteractions();
+        }
     }
 
     @Nested
@@ -176,7 +199,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             given(userRepository.findAllById(List.of(1L))).willReturn(List.of(userWithId(1L, "무서운경찰관")));
 
             CommunityPostCursorResult result = communityPostService.getPostList(
-                    listCommand(null, 10));
+                    listCommand(null, 10), null);
 
             assertThat(result.content()).hasSize(10);
             assertThat(result.hasNext()).isTrue();
@@ -191,7 +214,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             given(userRepository.findAllById(List.of(1L))).willReturn(List.of(userWithId(1L, "무서운경찰관")));
 
             CommunityPostCursorResult result = communityPostService.getPostList(
-                    listCommand(null, 10));
+                    listCommand(null, 10), null);
 
             assertThat(result.content()).hasSize(3);
             assertThat(result.hasNext()).isFalse();
@@ -206,7 +229,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
                     .willReturn(List.of());
 
             CommunityPostCursorResult result = communityPostService.getPostList(
-                    listCommand(cursor, 10));
+                    listCommand(cursor, 10), null);
 
             assertThat(result.content()).isEmpty();
             assertThat(result.hasNext()).isFalse();
@@ -224,7 +247,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
                     .willReturn(List.of(userWithId(1L, "무서운경찰관", 2)));
 
             CommunityPostCursorResult result = communityPostService.getPostList(
-                    listCommand(null, 10));
+                    listCommand(null, 10), null);
 
             assertThat(result.content().get(0).writerNickname()).isEqualTo("무서운경찰관");
             assertThat(result.content().get(0).writerProfileIcon()).isEqualTo(2);
@@ -235,8 +258,56 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         @Test
         void 잘못된_커서면_INVALID_QUERY_PARAMETER_예외가_발생한다() {
             assertThatThrownBy(() -> communityPostService.getPostList(
-                    listCommand("broken!!", 10)))
+                    listCommand("broken!!", 10), null))
                     .isInstanceOf(ApplicationException.class);
+        }
+
+        @Test
+        void 로그인_사용자가_조회하면_목록에_좋아요_스크랩_카운트와_내_반응이_배치로_반영된다() {
+            CommunityPost post1 = POST(1L, LocalDateTime.of(2026, 8, 1, 2, 0));
+            CommunityPost post2 = POST(1L, LocalDateTime.of(2026, 8, 1, 1, 0));
+            setId(post1, 1L);
+            setId(post2, 2L);
+            given(communityPostRepository.findPage(any(CommunityPostSearchCondition.class), eq(null), eq(10)))
+                    .willReturn(List.of(new CommunityPostRow(post1, null, null), new CommunityPostRow(post2, null, null)));
+            given(userRepository.findAllById(List.of(1L))).willReturn(List.of(userWithId(1L, "무서운경찰관")));
+            given(communityPostLikeRepository.countByPostIdIn(List.of(1L, 2L)))
+                    .willReturn(List.of(new CommunityPostCountProjection(1L, 3L)));
+            given(communityPostScrapRepository.countByPostIdIn(List.of(1L, 2L)))
+                    .willReturn(List.of(new CommunityPostCountProjection(2L, 1L)));
+            given(communityPostLikeRepository.findLikedPostIds(5L, List.of(1L, 2L))).willReturn(List.of(2L));
+            given(communityPostScrapRepository.findScrappedPostIds(5L, List.of(1L, 2L))).willReturn(List.of(1L));
+
+            CommunityPostCursorResult result = communityPostService.getPostList(listCommand(null, 10), 5L);
+
+            CommunityPostResult first = result.content().get(0);
+            CommunityPostResult second = result.content().get(1);
+            assertThat(first.id()).isEqualTo(1L);
+            assertThat(first.likeCount()).isEqualTo(3L);
+            assertThat(first.scrapCount()).isEqualTo(0L);
+            assertThat(first.isLikedByRequester()).isFalse();
+            assertThat(first.isScrappedByRequester()).isTrue();
+            assertThat(second.id()).isEqualTo(2L);
+            assertThat(second.likeCount()).isEqualTo(0L);
+            assertThat(second.scrapCount()).isEqualTo(1L);
+            assertThat(second.isLikedByRequester()).isTrue();
+            assertThat(second.isScrappedByRequester()).isFalse();
+        }
+
+        @Test
+        void 비로그인_조회는_목록의_liked_scrapped가_모두_false이고_배치_exists_조회를_하지_않는다() {
+            CommunityPost post1 = POST(1L, LocalDateTime.of(2026, 8, 1, 2, 0));
+            setId(post1, 1L);
+            given(communityPostRepository.findPage(any(CommunityPostSearchCondition.class), eq(null), eq(10)))
+                    .willReturn(List.of(new CommunityPostRow(post1, null, null)));
+            given(userRepository.findAllById(List.of(1L))).willReturn(List.of(userWithId(1L, "무서운경찰관")));
+
+            CommunityPostCursorResult result = communityPostService.getPostList(listCommand(null, 10), null);
+
+            assertThat(result.content().get(0).isLikedByRequester()).isFalse();
+            assertThat(result.content().get(0).isScrappedByRequester()).isFalse();
+            then(communityPostLikeRepository).should(never()).findLikedPostIds(any(), any());
+            then(communityPostScrapRepository).should(never()).findScrappedPostIds(any(), any());
         }
 
 
@@ -337,6 +408,42 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             assertThatThrownBy(() -> communityPostService.getPost(999L, 1L))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.POST_NOT_FOUND.getDetail());
+        }
+
+        @Test
+        void 좋아요_스크랩_카운트와_내가_눌렀는지_여부가_반영된다() {
+            CommunityPost post = POST(1L);
+            setId(post, 1L);
+            given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(communityPostLikeRepository.countByCommunityPostId(1L)).willReturn(5L);
+            given(communityPostScrapRepository.countByCommunityPostId(1L)).willReturn(2L);
+            given(communityPostLikeRepository.existsByCommunityPostIdAndUserId(1L, 2L)).willReturn(true);
+            given(communityPostScrapRepository.existsByCommunityPostIdAndUserId(1L, 2L)).willReturn(false);
+
+            CommunityPostResult result = communityPostService.getPost(1L, 2L);
+
+            assertThat(result.likeCount()).isEqualTo(5L);
+            assertThat(result.scrapCount()).isEqualTo(2L);
+            assertThat(result.isLikedByRequester()).isTrue();
+            assertThat(result.isScrappedByRequester()).isFalse();
+        }
+
+        @Test
+        void 비로그인_조회는_liked_scrapped가_false이고_카운트는_그대로_내려간다() {
+            CommunityPost post = POST(1L);
+            setId(post, 1L);
+            given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(communityPostLikeRepository.countByCommunityPostId(1L)).willReturn(5L);
+            given(communityPostScrapRepository.countByCommunityPostId(1L)).willReturn(2L);
+
+            CommunityPostResult result = communityPostService.getPost(1L, null);
+
+            assertThat(result.likeCount()).isEqualTo(5L);
+            assertThat(result.scrapCount()).isEqualTo(2L);
+            assertThat(result.isLikedByRequester()).isFalse();
+            assertThat(result.isScrappedByRequester()).isFalse();
+            then(communityPostLikeRepository).should(never()).existsByCommunityPostIdAndUserId(any(), any());
+            then(communityPostScrapRepository).should(never()).existsByCommunityPostIdAndUserId(any(), any());
         }
     }
 
@@ -468,6 +575,25 @@ class CommunityPostServiceTest extends ServiceUnitTest {
                             LocalDateTime.now().plusDays(5), 37.5665, 126.9780, "만나는곳", 8)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.POST_NOT_FOUND.getDetail());
+        }
+
+        @Test
+        void 수정_응답에도_기존_좋아요_스크랩_카운트가_유지된다() {
+            CommunityPost post = POST(1L);
+            setId(post, 1L);
+            given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(geocodingClient.reverseGeocode(37.5665, 126.9780)).willReturn(GeocodingResult.resolved(PostAddress.of(
+                            "서울특별시 광진구 화양동 1-20", "서울특별시 광진구 능동로 216", null,
+                            "서울특별시 광진구 화양동", "KR")));
+            given(communityPostLikeRepository.countByCommunityPostId(1L)).willReturn(4L);
+            given(communityPostScrapRepository.countByCommunityPostId(1L)).willReturn(1L);
+
+            CommunityPostResult result = communityPostService.updatePost(
+                    new CommunityPostUpdateCommand(1L, 1L, "수정된 제목", "수정된 내용",
+                            LocalDateTime.now().plusDays(5), 37.5665, 126.9780, "만나는곳", 8));
+
+            assertThat(result.likeCount()).isEqualTo(4L);
+            assertThat(result.scrapCount()).isEqualTo(1L);
         }
     }
 

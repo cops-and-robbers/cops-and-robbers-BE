@@ -30,8 +30,20 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.26.0")
+                .version("2.27.0")
                 .description("""
+                        ## v2.27.0 업데이트 내역
+
+                        ### ✨ 신규 — 커뮤니티 좋아요·스크랩 응답 필드
+                        - 게시글 응답 전체(목록·단건·내 스크랩 목록·생성·수정·상태변경)에 likeCount, scrapCount, isLikedByRequester, isScrappedByRequester 4개 필드 추가
+                          - likeCount·scrapCount는 로그인 여부와 무관하게 항상 실제 값이다
+                          - isLikedByRequester·isScrappedByRequester는 요청자 기준이며, 비로그인 조회는 항상 false다
+                          - 생성 직후에는 4개 필드 모두 비어있고(0/false), 수정·상태변경 응답은 그 시점의 실제 값을 담는다
+                        - 목록 조회에 옵셔널 인증(@AuthUser(required = false))을 추가해 isLikedByRequester·isScrappedByRequester를 실조회로 채운다
+                          - 단건 조회의 chatJoined와 같은 방식이다. 토큰 없이도 여전히 호출 가능하다
+                        - 새 엔드포인트는 없다. GET /{postId}/reactions 같은 별도 조회는 추가하지 않았다
+                        - 목록·단건·내 스크랩 목록은 요청자에 따라 응답이 달라지므로 Cache-Control: no-store를 내려 캐시되지 않게 함
+
                         ## v2.26.0 업데이트 내역
 
                         ### ✨ 신규 — 커뮤니티 알림함

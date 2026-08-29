@@ -279,6 +279,18 @@ class CommunityPostReactionControllerTest extends ControllerTest {
         }
 
         @Test
+        void 스크랩_목록_응답은_캐시되지_않는다() {
+            User user = givenUser("유저");
+
+            String cacheControl = authenticated(givenAccessToken(user))
+                    .get(MY_SCRAPS_PATH)
+                    .then().statusCode(200)
+                    .extract().header("Cache-Control");
+
+            assertThat(cacheControl).contains("no-store");
+        }
+
+        @Test
         void 채팅방_참여_여부가_스크랩한_게시글마다_반영된다() {
             User user = givenUser("유저");
             CommunityPost joined = givenPost(user);
@@ -299,6 +311,27 @@ class CommunityPostReactionControllerTest extends ControllerTest {
                     .filter(post -> post.get("id").equals(notJoined.getId().intValue())).findFirst().orElseThrow();
             assertThat(joinedResult.get("chatJoined")).isEqualTo(true);
             assertThat(notJoinedResult.get("chatJoined")).isEqualTo(false);
+        }
+
+        @Test
+        void 스크랩_목록의_좋아요_스크랩_카운트와_내_반응이_반영된다() {
+            User user = givenUser("유저");
+            User other = givenUser("다른유저");
+            CommunityPost post = givenPost(user);
+            givenScrapped(post, user);
+            givenLiked(post, other);
+            givenLiked(post, user);
+
+            Map<String, Object> response = authenticated(givenAccessToken(user))
+                    .get(MY_SCRAPS_PATH)
+                    .then().statusCode(200)
+                    .extract().as(new TypeRef<>() {});
+
+            Map<String, Object> content = extractContent(response).getFirst();
+            assertThat(content.get("likeCount")).isEqualTo(2);
+            assertThat(content.get("scrapCount")).isEqualTo(1);
+            assertThat(content.get("isLikedByRequester")).isEqualTo(true);
+            assertThat(content.get("isScrappedByRequester")).isEqualTo(true);
         }
 
         @SuppressWarnings("unchecked")
