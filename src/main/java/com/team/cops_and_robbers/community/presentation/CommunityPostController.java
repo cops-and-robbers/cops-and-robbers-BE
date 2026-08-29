@@ -77,6 +77,7 @@ public class CommunityPostController implements CommunityPostControllerDocs {
     @AllowedQueryParams({"cursor", "size", "scope", "sort", "countryCode", "latitude", "longitude", "keyword"})
     @GetMapping
     public ResponseEntity<CommunityPostListResponse> getPostList(
+            @AuthUser(required = false) LoginUser loginUser,
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "ALL") CommunityPostScope scope,
@@ -86,9 +87,10 @@ public class CommunityPostController implements CommunityPostControllerDocs {
             @RequestParam(required = false) Double longitude,
             @RequestParam(required = false) String keyword
     ) {
+        Long requesterId = (loginUser == null) ? null : loginUser.userId();
         CommunityPostListCommand command = new CommunityPostListCommand(
                 cursor, size, scope, sort, countryCode, latitude, longitude, keyword);
-        CommunityPostCursorResult result = communityPostService.getPostList(command);
+        CommunityPostCursorResult result = communityPostService.getPostList(command, requesterId);
         CommunityPostListResponse response = CommunityPostListResponse.from(result);
         return ResponseEntity.ok(response);
     }

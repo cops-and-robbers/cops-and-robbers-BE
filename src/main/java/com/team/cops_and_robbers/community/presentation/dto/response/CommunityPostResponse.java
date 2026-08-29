@@ -33,7 +33,15 @@ public record CommunityPostResponse(
         boolean chatJoined,
         @Schema(description = "이 글의 내 알림 설정. 단건 조회에서만 내려가고 목록·비로그인 조회는 null",
                 nullable = true)
-        CommunityPostNotificationSettingResponse notificationSettings
+        CommunityPostNotificationSettingResponse notificationSettings,
+        @Schema(description = "좋아요 수", example = "3")
+        long likeCount,
+        @Schema(description = "스크랩 수", example = "1")
+        long scrapCount,
+        @Schema(description = "내가 이 게시글에 좋아요를 눌렀는지 여부. 비로그인 조회는 false", example = "false")
+        boolean isLikedByRequester,
+        @Schema(description = "내가 이 게시글을 스크랩했는지 여부. 비로그인 조회는 false", example = "false")
+        boolean isScrappedByRequester
 ) {
     public record LocationResponse(
             @Schema(description = "위도", example = "37.4979")
@@ -75,7 +83,11 @@ public record CommunityPostResponse(
                 result.createdAt(),
                 result.updatedAt(),
                 result.chatJoined(),
-                CommunityPostNotificationSettingResponse.from(result.notificationSettings())
+                CommunityPostNotificationSettingResponse.from(result.notificationSettings()),
+                result.likeCount(),
+                result.scrapCount(),
+                result.isLikedByRequester(),
+                result.isScrappedByRequester()
         );
     }
 }

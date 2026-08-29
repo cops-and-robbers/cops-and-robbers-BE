@@ -67,7 +67,9 @@ public interface CommunityPostControllerDocs {
             description = "모집 게시글 목록을 국가별로 나눠 최신순 커서 방식으로 조회합니다. "
                     + "웹뷰 지원을 위해 인증 없이 호출할 수 있습니다. "
                     + "countryCode는 필수이며, GET /api/community-posts/country 로 먼저 조회하세요. "
-                    + "지원하지 않는 쿼리 파라미터가 포함되면 400을 반환합니다.")
+                    + "지원하지 않는 쿼리 파라미터가 포함되면 400을 반환합니다.\n\n"
+                    + "토큰을 보내면 isLikedByRequester·isScrappedByRequester에 내가 좋아요·스크랩했는지를 반영합니다. "
+                    + "토큰 없이 조회하면 isLikedByRequester·isScrappedByRequester는 항상 false이고, likeCount·scrapCount는 로그인 여부와 무관하게 항상 실제 값입니다.")
     @ApiErrorCode(value = CommunityPostException.class,
             codes = {"UNSUPPORTED_LIST_SCOPE", "COUNTRY_NOT_SPECIFIED", "ADDRESS_LOOKUP_FAILED"})
     @ApiResponses(value = {
@@ -76,6 +78,7 @@ public interface CommunityPostControllerDocs {
                     description = "잘못된 커서 / 사이즈 범위 초과 / 미지원 파라미터 / 검색어 2자 미만 / 거리순 좌표 누락")
     })
     ResponseEntity<CommunityPostListResponse> getPostList(
+            @Parameter(hidden = true) LoginUser loginUser,
             @Parameter(description = "이전 응답의 nextCursor 값 (첫 페이지는 생략). 국가·정렬·검색어가 받았을 때와 다르면 400") @RequestParam(required = false) String cursor,
             @Parameter(description = "페이지 크기 (1~100)", example = "10") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "조회 범위. 현재는 ALL만 지원하며 NEARBY, MINE은 400", example = "ALL")
@@ -100,8 +103,8 @@ public interface CommunityPostControllerDocs {
                     + "location.region은 동 단위(예: 서울특별시 광진구 군자동), "
                     + "location.address는 번지까지 포함한 지번 주소입니다(예: 서울특별시 광진구 군자동 98). "
                     + "화면에는 region을 쓰고 주소 복사에는 address를 쓰세요.\n\n"
-                    + "토큰을 보내면 chatJoined에 내가 이 게시글 채팅방에 참여 중인지 반영한다. "
-                    + "토큰 없이 조회하면 chatJoined는 항상 false.")
+                    + "토큰을 보내면 chatJoined에 내가 이 게시글 채팅방에 참여 중인지, isLikedByRequester·isScrappedByRequester에 내가 좋아요·스크랩했는지 반영한다. "
+                    + "토큰 없이 조회하면 chatJoined·isLikedByRequester·isScrappedByRequester는 항상 false.")
     @ApiErrorCode(value = CommunityPostException.class, codes = {"POST_NOT_FOUND"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공")

@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.community.application;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.exception.InfrastructureException;
 import com.team.cops_and_robbers.community.application.dto.CommunityPostCursor;
+import com.team.cops_and_robbers.community.application.dto.CommunityPostReactionCounts;
 import com.team.cops_and_robbers.community.application.dto.CommunityPostRow;
 import com.team.cops_and_robbers.community.application.dto.CommunityPostSearchCondition;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostCreateCommand;
@@ -25,6 +26,7 @@ import com.team.cops_and_robbers.community.repository.CommunityChatMemberReposit
 import com.team.cops_and_robbers.community.repository.CommunityChatMessageRepository;
 import com.team.cops_and_robbers.community.repository.CommunityCommentRepository;
 import com.team.cops_and_robbers.community.repository.CommunityNotificationRepository;
+import com.team.cops_and_robbers.community.repository.CommunityPostCountProjection;
 import com.team.cops_and_robbers.community.repository.CommunityPostLikeRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostNotificationSettingRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
@@ -39,6 +41,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -66,10 +69,13 @@ public class CommunityPostService {
         User writer = userRepository.getByUserId(command.writerId());
         CommunityPost post = communityPostRepository.save(CommunityPost.createPost(command, postAddress));
         communityChatMemberRepository.save(CommunityChatMember.createMember(post.getId(), command.writerId()));
-        return CommunityPostResult.from(post, writer, true);
+        return CommunityPostResult.from(post, writer, true, CommunityPostReactionCounts.EMPTY);
     }
 
-    public CommunityPostCursorResult getPostList(CommunityPostListCommand command) {
+    /**
+     * requesterId는 비로그인 조회면 null로 들어오고, isLikedByRequester·isScrappedByRequester는 항상 false다.
+     */
+    public CommunityPostCursorResult getPostList(CommunityPostListCommand command, Long requesterId) {
         String countryCode = command.countryCode().toUpperCase(Locale.ROOT);
 
         CommunityPostSearchCondition condition = new CommunityPostSearchCondition(
@@ -84,19 +90,23 @@ public class CommunityPostService {
         List<CommunityPost> posts = rows.stream().map(CommunityPostRow::post).toList();
 
         return new CommunityPostCursorResult(
-                toResults(posts), resolveNextCursor(rows, hasNext, countryCode, command), hasNext);
+                toResults(posts, requesterId),
+                resolveNextCursor(rows, hasNext, countryCode, command),
+                hasNext
+        );
     }
 
 
     /**
-     * requesterId는 비로그인 조회면 null로 들어오고, chatJoined는 항상 false다.
+     * requesterId는 비로그인 조회면 null로 들어오고, chatJoined·isLikedByRequester·isScrappedByRequester는 항상 false다.
      */
     public CommunityPostResult getPost(Long postId, Long requesterId) {
         CommunityPost post = communityPostRepository.getByPostId(postId);
         boolean chatJoined = requesterId != null
                 && communityChatMemberRepository.existsByCommunityPostIdAndUserId(postId, requesterId);
         return CommunityPostResult.of(
-                post, findWriter(post.getWriterId()), chatJoined, findNotificationSettings(post, requesterId));
+                post, findWriter(post.getWriterId()), chatJoined, findNotificationSettings(post, requesterId),
+                reactionCountsFor(postId, requesterId));
     }
 
     @Transactional
@@ -106,7 +116,8 @@ public class CommunityPostService {
         validateMeetingDate(command.meetingAt());
         PostAddress postAddress = resolveUpdatedAddress(post, command);
         post.updatePost(command, postAddress);
-        return CommunityPostResult.from(post, findWriter(post.getWriterId()), true);
+        return CommunityPostResult.from(
+                post, findWriter(post.getWriterId()), true, reactionCountsFor(post.getId(), command.writerId()));
     }
 
     /**
@@ -132,7 +143,8 @@ public class CommunityPostService {
         CommunityPost post = communityPostRepository.getByPostId(command.postId());
         validateAuthor(post, command.writerId());
         post.updateStatus(command.status());
-        return CommunityPostResult.from(post, findWriter(post.getWriterId()), true);
+        return CommunityPostResult.from(
+                post, findWriter(post.getWriterId()), true, reactionCountsFor(post.getId(), command.writerId()));
     }
 
     /** 비로그인 조회는 보여줄 설정이 없어 null로 내려간다. */
@@ -193,13 +205,65 @@ public class CommunityPostService {
     }
 
     /**
-     * 목록 조회는 로그인 여부와 무관하게 요청자 컨텍스트가 없어 chatJoined를 항상 false로 내려준다.
+     * 목록은 채팅방 참여 여부를 알려줄 컨텍스트가 없어 chatJoined를 항상 false로 내려준다.
+     * likeCount·scrapCount·isLikedByRequester·isScrappedByRequester는 요청자 기준으로 실조회한다.
      */
-    private List<CommunityPostResult> toResults(List<CommunityPost> posts) {
+    private List<CommunityPostResult> toResults(List<CommunityPost> posts, Long requesterId) {
         Map<Long, User> writers = findWriters(posts);
+        List<Long> postIds = posts.stream().map(CommunityPost::getId).toList();
+        Map<Long, CommunityPostReactionCounts> reactions = reactionCountsFor(postIds, requesterId);
+
         return posts.stream()
-                .map(post -> CommunityPostResult.from(post, writers.get(post.getWriterId()), false))
+                .map(post -> CommunityPostResult.from(
+                        post, writers.get(post.getWriterId()), false,
+                        reactions.getOrDefault(post.getId(), CommunityPostReactionCounts.EMPTY)))
                 .toList();
+    }
+
+    /** 단건 조회·수정·상태변경에서 쓰는 단일 게시글 좋아요·스크랩 조회 */
+    private CommunityPostReactionCounts reactionCountsFor(Long postId, Long requesterId) {
+        long likeCount = communityPostLikeRepository.countByCommunityPostId(postId);
+        long scrapCount = communityPostScrapRepository.countByCommunityPostId(postId);
+        boolean isLikedByRequester = (requesterId != null)
+                && communityPostLikeRepository.existsByCommunityPostIdAndUserId(postId, requesterId);
+        boolean isScrappedByRequester = (requesterId != null)
+                && communityPostScrapRepository.existsByCommunityPostIdAndUserId(postId, requesterId);
+
+        return new CommunityPostReactionCounts(likeCount, scrapCount, isLikedByRequester, isScrappedByRequester);
+    }
+
+    /**
+     * 목록 조회에서 쓰는 배치 좋아요·스크랩 조회
+     */
+    private Map<Long, CommunityPostReactionCounts> reactionCountsFor(List<Long> postIds, Long requesterId) {
+        if (postIds.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<Long, Long> likeCounts = communityPostLikeRepository.countByPostIdIn(postIds).stream()
+                .collect(Collectors.toMap(CommunityPostCountProjection::postId, CommunityPostCountProjection::count));
+        Map<Long, Long> scrapCounts = communityPostScrapRepository.countByPostIdIn(postIds).stream()
+                .collect(Collectors.toMap(CommunityPostCountProjection::postId, CommunityPostCountProjection::count));
+
+        Set<Long> likedPostIds;
+        Set<Long> scrappedPostIds;
+
+        if (requesterId == null) {
+            likedPostIds = Set.of();
+            scrappedPostIds = Set.of();
+        }
+        else {
+            likedPostIds = Set.copyOf(communityPostLikeRepository.findLikedPostIds(requesterId, postIds));
+            scrappedPostIds = Set.copyOf(communityPostScrapRepository.findScrappedPostIds(requesterId, postIds));
+        }
+
+        return postIds.stream().distinct().collect(Collectors.toMap(
+                Function.identity(),
+                postId -> new CommunityPostReactionCounts(
+                        likeCounts.getOrDefault(postId, 0L),
+                        scrapCounts.getOrDefault(postId, 0L),
+                        likedPostIds.contains(postId),
+                        scrappedPostIds.contains(postId))));
     }
 
     private String resolveNextCursor(

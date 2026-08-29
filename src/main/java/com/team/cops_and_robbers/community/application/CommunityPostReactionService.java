@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.community.application;
 
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.community.application.dto.CommunityPostReactionCounts;
 import com.team.cops_and_robbers.community.application.dto.command.CommunityPostScrapListCommand;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityPostResult;
 import com.team.cops_and_robbers.community.application.dto.result.CommunityPostScrapListResult;
@@ -9,6 +10,7 @@ import com.team.cops_and_robbers.community.domain.CommunityPostLike;
 import com.team.cops_and_robbers.community.domain.CommunityPostScrap;
 import com.team.cops_and_robbers.community.exception.CommunityPostReactionException;
 import com.team.cops_and_robbers.community.repository.CommunityChatMemberRepository;
+import com.team.cops_and_robbers.community.repository.CommunityPostCountProjection;
 import com.team.cops_and_robbers.community.repository.CommunityPostLikeRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostScrapRepository;
@@ -90,12 +92,14 @@ public class CommunityPostReactionService {
         Map<Long, CommunityPost> postsById = findPostsById(scraps);
         Map<Long, User> writers = findWriters(postsById.values());
         Set<Long> joinedPostIds = Set.copyOf(communityChatMemberRepository.findPostIdsByUserId(command.userId()));
+        Map<Long, CommunityPostReactionCounts> reactions = reactionCountsFor(postsById.keySet(), command.userId());
 
         List<CommunityPostResult> content = scraps.stream()
                 .map(scrap -> postsById.get(scrap.getCommunityPostId()))
                 .filter(Objects::nonNull)
                 .map(post -> CommunityPostResult.from(
-                        post, writers.get(post.getWriterId()), joinedPostIds.contains(post.getId())))
+                        post, writers.get(post.getWriterId()), joinedPostIds.contains(post.getId()),
+                        reactions.getOrDefault(post.getId(), CommunityPostReactionCounts.EMPTY)))
                 .toList();
         Long nextCursor = hasNext ? scraps.getLast().getId() : null;
 
@@ -112,5 +116,30 @@ public class CommunityPostReactionService {
         List<Long> writerIds = posts.stream().map(CommunityPost::getWriterId).distinct().toList();
         return userRepository.findAllById(writerIds).stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
+    }
+
+    /**
+     * 배치 좋아요·스크랩 조회
+     * 내 스크랩 목록이라 isScrappedByRequester는 항상 true지만, isLikedByRequester는 실조회로 채운다.
+     */
+    private Map<Long, CommunityPostReactionCounts> reactionCountsFor(Collection<Long> postIds, Long requesterId) {
+        if (postIds.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<Long, Long> likeCounts = communityPostLikeRepository.countByPostIdIn(postIds).stream()
+                .collect(Collectors.toMap(CommunityPostCountProjection::postId, CommunityPostCountProjection::count));
+        Map<Long, Long> scrapCounts = communityPostScrapRepository.countByPostIdIn(postIds).stream()
+                .collect(Collectors.toMap(CommunityPostCountProjection::postId, CommunityPostCountProjection::count));
+        Set<Long> likedPostIds = Set.copyOf(communityPostLikeRepository.findLikedPostIds(requesterId, postIds));
+        Set<Long> scrappedPostIds = Set.copyOf(communityPostScrapRepository.findScrappedPostIds(requesterId, postIds));
+
+        return postIds.stream().distinct().collect(Collectors.toMap(
+                Function.identity(),
+                postId -> new CommunityPostReactionCounts(
+                        likeCounts.getOrDefault(postId, 0L),
+                        scrapCounts.getOrDefault(postId, 0L),
+                        likedPostIds.contains(postId),
+                        scrappedPostIds.contains(postId))));
     }
 }
