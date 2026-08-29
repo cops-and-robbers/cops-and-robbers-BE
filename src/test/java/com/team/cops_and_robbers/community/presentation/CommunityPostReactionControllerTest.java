@@ -301,6 +301,27 @@ class CommunityPostReactionControllerTest extends ControllerTest {
             assertThat(notJoinedResult.get("chatJoined")).isEqualTo(false);
         }
 
+        @Test
+        void 스크랩_목록의_좋아요_스크랩_카운트와_내_반응이_반영된다() {
+            User user = givenUser("유저");
+            User other = givenUser("다른유저");
+            CommunityPost post = givenPost(user);
+            givenScrapped(post, user);
+            givenLiked(post, other);
+            givenLiked(post, user);
+
+            Map<String, Object> response = authenticated(givenAccessToken(user))
+                    .get(MY_SCRAPS_PATH)
+                    .then().statusCode(200)
+                    .extract().as(new TypeRef<>() {});
+
+            Map<String, Object> content = extractContent(response).getFirst();
+            assertThat(content.get("likeCount")).isEqualTo(2);
+            assertThat(content.get("scrapCount")).isEqualTo(1);
+            assertThat(content.get("isLikedByRequester")).isEqualTo(true);
+            assertThat(content.get("isScrappedByRequester")).isEqualTo(true);
+        }
+
         @SuppressWarnings("unchecked")
         private List<Map<String, Object>> extractContent(Map<String, Object> response) {
             return (List<Map<String, Object>>) response.get("content");

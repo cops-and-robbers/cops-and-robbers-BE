@@ -892,6 +892,72 @@ class CommunityPostControllerTest extends ControllerTest {
         }
 
         @Test
+        void 목록의_좋아요_스크랩_카운트는_실제_반응_수를_반영한다() {
+            Long postId = communityPostRepository.save(POST(user.getId())).getId();
+            communityPostLikeRepository.save(CommunityPostLike.createLike(postId, givenUser("좋아요러1").getId()));
+            communityPostLikeRepository.save(CommunityPostLike.createLike(postId, givenUser("좋아요러2").getId()));
+            communityPostScrapRepository.save(CommunityPostScrap.createScrap(postId, givenUser("스크랩러").getId()));
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("countryCode", "KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.jsonPath().getInt("content[0].likeCount")).isEqualTo(2);
+                softly.assertThat(extract.jsonPath().getInt("content[0].scrapCount")).isEqualTo(1);
+            });
+        }
+
+        @Test
+        void 토큰_없이_목록을_조회하면_liked_scrapped가_모두_false다() {
+            Long postId = communityPostRepository.save(POST(user.getId())).getId();
+            communityPostLikeRepository.save(CommunityPostLike.createLike(postId, user.getId()));
+            communityPostScrapRepository.save(CommunityPostScrap.createScrap(postId, user.getId()));
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("countryCode", "KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.jsonPath().getBoolean("content[0].isLikedByRequester")).isFalse();
+                softly.assertThat(extract.jsonPath().getBoolean("content[0].isScrappedByRequester")).isFalse();
+            });
+        }
+
+        @Test
+        void 로그인해서_목록을_조회하면_내가_누른_게시글만_liked_scrapped가_true다() {
+            Long likedId = communityPostRepository.save(POST(user.getId())).getId();
+            Long untouchedId = communityPostRepository.save(POST(user.getId())).getId();
+            communityPostLikeRepository.save(CommunityPostLike.createLike(likedId, user.getId()));
+            communityPostScrapRepository.save(CommunityPostScrap.createScrap(likedId, user.getId()));
+
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .queryParam("countryCode", "KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            List<Map<String, Object>> content = extract.jsonPath().getList("content");
+            Map<String, Object> liked = content.stream()
+                    .filter(post -> post.get("id").equals(likedId.intValue())).findFirst().orElseThrow();
+            Map<String, Object> untouched = content.stream()
+                    .filter(post -> post.get("id").equals(untouchedId.intValue())).findFirst().orElseThrow();
+            assertSoftly(softly -> {
+                softly.assertThat(liked.get("isLikedByRequester")).isEqualTo(true);
+                softly.assertThat(liked.get("isScrappedByRequester")).isEqualTo(true);
+                softly.assertThat(untouched.get("isLikedByRequester")).isEqualTo(false);
+                softly.assertThat(untouched.get("isScrappedByRequester")).isEqualTo(false);
+            });
+        }
+
+        @Test
         void 잘못된_커서로_요청하면_400을_응답한다() {
             ExtractableResponse<Response> extract = unauthenticated()
                     .queryParam("cursor", "broken-cursor!!")
@@ -1233,6 +1299,61 @@ class CommunityPostControllerTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
                 softly.assertThat(extract.jsonPath().getBoolean("chatJoined")).isFalse();
+            });
+        }
+
+        @Test
+        void 단건_조회의_좋아요_스크랩_카운트는_실제_반응_수를_반영한다() {
+            Long postId = communityPostRepository.save(POST(user.getId())).getId();
+            communityPostLikeRepository.save(CommunityPostLike.createLike(postId, givenUser("좋아요러1").getId()));
+            communityPostLikeRepository.save(CommunityPostLike.createLike(postId, givenUser("좋아요러2").getId()));
+            communityPostScrapRepository.save(CommunityPostScrap.createScrap(postId, givenUser("스크랩러").getId()));
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .when()
+                    .get(POST_API_URL + "/" + postId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.jsonPath().getInt("likeCount")).isEqualTo(2);
+                softly.assertThat(extract.jsonPath().getInt("scrapCount")).isEqualTo(1);
+            });
+        }
+
+        @Test
+        void 토큰_없이_요청하면_liked_scrapped는_false다() {
+            Long postId = communityPostRepository.save(POST(user.getId())).getId();
+            communityPostLikeRepository.save(CommunityPostLike.createLike(postId, user.getId()));
+            communityPostScrapRepository.save(CommunityPostScrap.createScrap(postId, user.getId()));
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .when()
+                    .get(POST_API_URL + "/" + postId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.jsonPath().getBoolean("isLikedByRequester")).isFalse();
+                softly.assertThat(extract.jsonPath().getBoolean("isScrappedByRequester")).isFalse();
+            });
+        }
+
+        @Test
+        void 좋아요_스크랩한_로그인_사용자가_조회하면_liked_scrapped는_true다() {
+            Long postId = communityPostRepository.save(POST(user.getId())).getId();
+            communityPostLikeRepository.save(CommunityPostLike.createLike(postId, user.getId()));
+            communityPostScrapRepository.save(CommunityPostScrap.createScrap(postId, user.getId()));
+
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .when()
+                    .get(POST_API_URL + "/" + postId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.jsonPath().getBoolean("isLikedByRequester")).isTrue();
+                softly.assertThat(extract.jsonPath().getBoolean("isScrappedByRequester")).isTrue();
             });
         }
     }
