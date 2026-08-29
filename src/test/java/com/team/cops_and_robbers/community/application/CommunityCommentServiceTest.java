@@ -11,7 +11,6 @@ import com.team.cops_and_robbers.community.domain.CommunityComment;
 import com.team.cops_and_robbers.community.exception.CommunityCommentException;
 import com.team.cops_and_robbers.community.exception.CommunityPostException;
 import com.team.cops_and_robbers.user.domain.User;
-import com.team.cops_and_robbers.user.exception.UserException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -27,7 +26,6 @@ import java.util.Optional;
 
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
-import static com.team.cops_and_robbers.common.fixture.UserFixture.USER_WITHOUT_TERMS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -98,18 +96,6 @@ class CommunityCommentServiceTest extends ServiceUnitTest {
             assertThat(result.writerNickname()).isEqualTo("작성자");
             assertThat(result.writerProfileIcon()).isEqualTo(User.DEFAULT_PROFILE_ICON);
             then(eventPublisher).should().publishEvent(any(Object.class));
-        }
-
-        @Test
-        void 필수_약관에_동의하지_않았으면_작성할_수_없다() {
-            given(userRepository.getByUserId(WRITER_ID)).willReturn(USER_WITHOUT_TERMS("미동의유저"));
-
-            assertThatThrownBy(() -> communityCommentService.createComment(
-                    CommunityCommentCreateCommand.of(WRITER_ID, POST_ID, null, "내용")))
-                    .isInstanceOf(ApplicationException.class)
-                    .hasMessage(UserException.REQUIRED_TERMS_NOT_AGREED.getDetail());
-
-            then(communityCommentRepository).should(never()).save(any());
         }
 
         @Test

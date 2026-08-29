@@ -41,14 +41,16 @@ public class SwaggerConfig {
                           - types: TERMS_OF_SERVICE | PRIVACY_POLICY | LOCATION_TERMS | MARKETING
                         - 필수 3종 중 하나만 해제해도 앱은 약관 동의 화면 외 경로를 막는다
                         - MARKETING은 선택 약관이라 해제해도 앱이 다시 묻지 않는다
+                        - 어드민 계정은 일괄 해제 대상에서 제외한다
                         - AdminUser에 allowMarketingPush 추가
                         - 재동의하면 terms_agreed_at을 갱신한다 (기존에는 최초 동의 시각에서 멈춰 있었다)
 
-                        ### 🛠 변경 — 커뮤니티 쓰기에 필수 약관 검증
-                        - 게시글 작성·수정, 댓글 작성, 채팅 전송에서 필수 약관 미동의면 REQUIRED_TERMS_NOT_AGREED
-                          - 기존에는 게임 생성·참가에서만 검증했다
-                          - 조회는 비로그인 공개라 검증하지 않는다
-                          - 삭제와 신고는 막지 않는다
+                        ### 🛠 변경 — 필수 약관 검증을 인터셉터로 일원화
+                        - 필수 약관에 동의하지 않으면 /api/** 전체가 REQUIRED_TERMS_NOT_AGREED로 막힌다
+                          - 기존에는 게임 생성·참가, 커뮤니티 쓰기 등 일부 서비스에서만 검증했다
+                          - 예외: 로그인·약관 동의·닉네임 중복 확인 (동의를 받으려면 열려 있어야 하는 경로)
+                          - 토큰 없이 오는 웹뷰 조회는 그대로 열려 있다
+                          - 어드민 API(/graphql)는 대상이 아니다
 
                         ## v2.27.0 업데이트 내역
 

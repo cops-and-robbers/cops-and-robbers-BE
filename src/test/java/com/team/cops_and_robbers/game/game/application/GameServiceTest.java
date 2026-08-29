@@ -148,23 +148,6 @@ class GameServiceTest extends ServiceUnitTest {
             then(gameParticipantRepository).should(never()).save(any(GameParticipant.class));
         }
 
-        @Test
-        void 필수_약관에_미동의한_유저라면_예외가_발생한다() {
-            // given
-            User unagreedHost = USER_WITHOUT_TERMS("unagreedHost");
-            setId(unagreedHost, TEST_HOST_ID);
-            GameCreateCommand command = createCircleGameCommand(unagreedHost.getId());
-
-            given(userRepository.getByUserId(unagreedHost.getId())).willReturn(unagreedHost);
-
-            // when & then
-            assertThatThrownBy(() -> gameService.createGame(command))
-                    .isInstanceOf(ApplicationException.class)
-                    .hasMessage(UserException.REQUIRED_TERMS_NOT_AGREED.getDetail());
-
-            then(gameRepository).should(never()).save(any(Game.class));
-            then(gameParticipantRepository).should(never()).save(any(GameParticipant.class));
-        }
     }
 
     @Nested

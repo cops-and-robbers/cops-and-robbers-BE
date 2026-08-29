@@ -32,7 +32,6 @@ import com.team.cops_and_robbers.community.repository.CommunityPostNotificationS
 import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.community.repository.CommunityPostScrapRepository;
 import com.team.cops_and_robbers.user.domain.User;
-import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -66,9 +65,6 @@ public class CommunityPostService {
     public CommunityPostResult createPost(CommunityPostCreateCommand command) {
         validateMeetingDate(command.meetingAt());
         User writer = userRepository.getByUserId(command.writerId());
-        if (!writer.hasAgreedRequiredTerms()) {
-            throw new ApplicationException(UserException.REQUIRED_TERMS_NOT_AGREED);
-        }
 
         PostAddress postAddress = resolveAddress(command.latitude(), command.longitude());
         CommunityPost post = communityPostRepository.save(CommunityPost.createPost(command, postAddress));
@@ -118,11 +114,7 @@ public class CommunityPostService {
         CommunityPost post = communityPostRepository.getByPostId(command.postId());
         validateAuthor(post, command.writerId());
         validateMeetingDate(command.meetingAt());
-
         User writer = userRepository.getByUserId(command.writerId());
-        if (!writer.hasAgreedRequiredTerms()) {
-            throw new ApplicationException(UserException.REQUIRED_TERMS_NOT_AGREED);
-        }
 
         PostAddress postAddress = resolveUpdatedAddress(post, command);
         post.updatePost(command, postAddress);
@@ -305,4 +297,3 @@ public class CommunityPostService {
                 .collect(Collectors.toMap(User::getId, Function.identity()));
     }
 }
-

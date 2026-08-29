@@ -4,6 +4,7 @@ import com.team.cops_and_robbers.admin.presentation.interceptor.AdminInterceptor
 import com.team.cops_and_robbers.auth.presentation.interceptor.AuthInterceptor;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUserArgumentResolver;
 import com.team.cops_and_robbers.common.presentation.interceptor.QueryParameterInterceptor;
+import com.team.cops_and_robbers.common.presentation.interceptor.TermsAgreementInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -30,6 +31,7 @@ public class WebConfig implements WebMvcConfigurer {
     private final AuthInterceptor authInterceptor;
     private final AdminInterceptor adminInterceptor;
     private final QueryParameterInterceptor queryParameterInterceptor;
+    private final TermsAgreementInterceptor termsAgreementInterceptor;
     private final LoginUserArgumentResolver loginUserArgumentResolver;
 
     @Override
@@ -45,6 +47,15 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/community-posts/{postId:\\d+}",
                         "/api/community-posts/{postId:\\d+}/comments",
                         "/actuator/health"
+                );
+
+        registry.addInterceptor(termsAgreementInterceptor)
+                .addPathPatterns("/api/**")
+                .excludePathPatterns(
+                        "/api/auth/**",
+                        "/api/user/me",
+                        "/api/user/agreements",
+                        "/api/user/check-nickname"
                 );
 
         registry.addInterceptor(queryParameterInterceptor)

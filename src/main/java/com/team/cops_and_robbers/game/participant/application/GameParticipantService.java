@@ -23,7 +23,6 @@ import com.team.cops_and_robbers.play.system.application.GameTerminationService;
 import com.team.cops_and_robbers.play.system.application.SystemEventFactory;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
 import com.team.cops_and_robbers.user.domain.User;
-import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -61,7 +60,7 @@ public class GameParticipantService {
             if (!game.isInProgress()) {
                 throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
             }
-            User eventUser = getUser(command.userId());
+            User eventUser = userRepository.getByUserId(command.userId());
             GameParticipant eventParticipant = GameParticipant.createEventModeParticipant(game, eventUser);
             gameParticipantRepository.save(eventParticipant);
             return GameJoinResult.from(eventParticipant);
@@ -69,7 +68,7 @@ public class GameParticipantService {
 
         validateJoinable(command.userId(), game);
 
-        User user = getUser(command.userId());
+        User user = userRepository.getByUserId(command.userId());
 
         GameParticipant participant = GameParticipant.createParticipant(game, user, false);
         gameParticipantRepository.save(participant);
@@ -96,14 +95,6 @@ public class GameParticipantService {
         if (participantCount >= game.getMaxParticipants()) {
             throw new ApplicationException(GameParticipantException.GAME_FULL);
         }
-    }
-
-    private User getUser(Long userId) {
-        User user = userRepository.getByUserId(userId);
-        if (!user.hasAgreedRequiredTerms()) {
-            throw  new ApplicationException(UserException.REQUIRED_TERMS_NOT_AGREED);
-        }
-        return user;
     }
 
     /**

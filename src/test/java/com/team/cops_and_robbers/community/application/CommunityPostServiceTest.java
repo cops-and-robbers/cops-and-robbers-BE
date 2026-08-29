@@ -37,7 +37,6 @@ import java.util.List;
 
 import static com.team.cops_and_robbers.common.fixture.CommunityPostFixture.POST;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
-import static com.team.cops_and_robbers.common.fixture.UserFixture.USER_WITHOUT_TERMS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -112,20 +111,6 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             assertThat(captor.getValue().getAddress()).isEqualTo("서울 강남구 역삼동");
             assertThat(captor.getValue().getRoadAddress()).isEqualTo("서울 강남구 테헤란로 152");
             assertThat(captor.getValue().getBuildingName()).isEqualTo("강남파이낸스센터");
-        }
-
-        @Test
-        void 필수_약관에_동의하지_않았으면_게시글을_만들_수_없다() {
-            given(userRepository.getByUserId(1L)).willReturn(USER_WITHOUT_TERMS("미동의유저"));
-
-            assertThatThrownBy(() -> communityPostService.createPost(
-                    new CommunityPostCreateCommand(1L, "제목", "내용",
-                            LocalDateTime.now().plusDays(3), 37.4979, 127.0276, "만나는곳", 6)))
-                    .isInstanceOf(ApplicationException.class)
-                    .hasMessage(UserException.REQUIRED_TERMS_NOT_AGREED.getDetail());
-
-            then(geocodingClient).shouldHaveNoInteractions();
-            then(communityPostRepository).should(never()).save(any());
         }
 
         @Test
@@ -328,8 +313,6 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             then(communityPostScrapRepository).should(never()).findScrappedPostIds(any(), any());
         }
 
-
-
         @Test
         void 국가_코드가_없으면_COUNTRY_NOT_SPECIFIED_예외가_발생한다() {
             assertThatThrownBy(() -> new CommunityPostListCommand(
@@ -337,7 +320,6 @@ class CommunityPostServiceTest extends ServiceUnitTest {
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.COUNTRY_NOT_SPECIFIED.getDetail());
         }
-
 
         private CommunityPostListCommand listCommand(String cursor, int size) {
             return new CommunityPostListCommand(
@@ -468,20 +450,6 @@ class CommunityPostServiceTest extends ServiceUnitTest {
     @Nested
     @DisplayName("게시글 수정")
     class Update {
-
-        @Test
-        void 필수_약관에_동의하지_않았으면_게시글을_수정할_수_없다() {
-            CommunityPost post = POST(1L);
-            setId(post, 1L);
-            given(communityPostRepository.getByPostId(1L)).willReturn(post);
-            given(userRepository.getByUserId(1L)).willReturn(USER_WITHOUT_TERMS("미동의유저"));
-
-            assertThatThrownBy(() -> communityPostService.updatePost(
-                    new CommunityPostUpdateCommand(1L, 1L, "수정된 제목", "수정된 내용",
-                            LocalDateTime.now().plusDays(5), 37.5665, 126.9780, "만나는곳", 8)))
-                    .isInstanceOf(ApplicationException.class)
-                    .hasMessage(UserException.REQUIRED_TERMS_NOT_AGREED.getDetail());
-        }
 
         @Test
         void 작성자가_게시글을_수정하고_변경된_값을_반환한다() {

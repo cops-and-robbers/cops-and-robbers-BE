@@ -6,6 +6,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.querydsl.jpa.impl.JPAUpdateClause;
+import com.team.cops_and_robbers.user.domain.Role;
 import com.team.cops_and_robbers.user.domain.TermsType;
 import lombok.RequiredArgsConstructor;
 
@@ -21,7 +22,7 @@ public class UserRepositoryCustomImpl implements UserRepositoryCustom {
         Long count = queryFactory
                 .select(user.count())
                 .from(user)
-                .where(agreedToAny(types))
+                .where(agreedToAny(types), isNotAdmin())
                 .fetchOne();
         return count == null ? 0L : count;
     }
@@ -30,7 +31,7 @@ public class UserRepositoryCustomImpl implements UserRepositoryCustom {
     public long resetTermsAgreement(List<TermsType> types) {
         JPAUpdateClause update = queryFactory.update(user);
         types.forEach(type -> clearAgreement(update, type));
-        return update.where(agreedToAny(types)).execute();
+        return update.where(agreedToAny(types), isNotAdmin()).execute();
     }
 
     private void clearAgreement(JPAUpdateClause update, TermsType type) {
@@ -40,6 +41,11 @@ public class UserRepositoryCustomImpl implements UserRepositoryCustom {
             case LOCATION_TERMS -> update.set(user.locationTermsAgreed, false);
             case MARKETING -> update.set(user.allowMarketingPush, false).setNull(user.marketingAgreedAt);
         }
+    }
+
+    /** 어드민은 운영자 계정이라 재동의 대상에서 뺀다. */
+    private BooleanExpression isNotAdmin() {
+        return user.role.ne(Role.ADMIN);
     }
 
     /**

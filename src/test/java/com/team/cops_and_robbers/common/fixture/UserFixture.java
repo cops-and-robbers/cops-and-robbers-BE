@@ -44,6 +44,9 @@ public class UserFixture {
                 .allowGamePush(true)
                 .allowMarketingPush(false)
                 .role(Role.ADMIN)
+                .termsOfServiceAgreed(true)
+                .privacyPolicyAgreed(true)
+                .locationTermsAgreed(true)
                 .build();
     }
 
