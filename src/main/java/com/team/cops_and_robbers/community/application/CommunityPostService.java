@@ -39,7 +39,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -76,13 +75,15 @@ public class CommunityPostService {
      * requesterId는 비로그인 조회면 null로 들어오고, isLikedByRequester·isScrappedByRequester는 항상 false다.
      */
     public CommunityPostCursorResult getPostList(CommunityPostListCommand command, Long requesterId) {
-        String countryCode = command.countryCode().toUpperCase(Locale.ROOT);
+        String countryScopeKey = command.countryScopeKey();
 
         CommunityPostSearchCondition condition = new CommunityPostSearchCondition(
-                countryCode, command.sort(), command.latitude(), command.longitude(), command.keyword());
+                command.countryCode(), command.excludeCountryCodes(),
+                command.sort(), command.latitude(), command.longitude(), command.keyword());
         List<CommunityPostRow> fetched = communityPostRepository.findPage(
                 condition,
-                CommunityPostCursor.decode(command.cursor(), countryCode, command.sort(), command.keyword()).orElse(null),
+                CommunityPostCursor.decode(command.cursor(), countryScopeKey, command.sort(), command.keyword())
+                        .orElse(null),
                 command.size());
 
         boolean hasNext = fetched.size() > command.size();
@@ -91,7 +92,7 @@ public class CommunityPostService {
 
         return new CommunityPostCursorResult(
                 toResults(posts, requesterId),
-                resolveNextCursor(rows, hasNext, countryCode, command),
+                resolveNextCursor(rows, hasNext, countryScopeKey, command),
                 hasNext
         );
     }
@@ -269,13 +270,13 @@ public class CommunityPostService {
     }
 
     private String resolveNextCursor(
-            List<CommunityPostRow> rows, boolean hasNext, String countryCode, CommunityPostListCommand command) {
+            List<CommunityPostRow> rows, boolean hasNext, String countryScopeKey, CommunityPostListCommand command) {
         if (!hasNext) {
             return null;
         }
         CommunityPostRow last = rows.getLast();
         CommunityPost post = last.post();
-        return CommunityPostCursor.encode(countryCode, command.sort(), command.keyword(),
+        return CommunityPostCursor.encode(countryScopeKey, command.sort(), command.keyword(),
                 post.isClosed(), sortKeyOf(last, command.sort()), post.getId());
     }
 

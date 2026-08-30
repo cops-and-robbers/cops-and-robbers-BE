@@ -7,6 +7,7 @@ import com.team.cops_and_robbers.community.domain.CommunityPostNotificationSetti
 import com.team.cops_and_robbers.community.domain.CommunityPostScrap;
 import com.team.cops_and_robbers.community.domain.PostAddress;
 import com.team.cops_and_robbers.community.domain.RecruitmentStatus;
+import com.team.cops_and_robbers.common.exception.ErrorResponse;
 import com.team.cops_and_robbers.community.exception.CommunityPostException;
 import com.team.cops_and_robbers.community.infrastructure.GeocodingResult;
 import com.team.cops_and_robbers.community.presentation.dto.request.CommunityPostStatusRequest;
@@ -359,6 +360,106 @@ class CommunityPostControllerTest extends ControllerTest {
 
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
+        void 제외할_국가를_보내면_그_국가를_뺀_전체가_나온다() {
+            communityPostRepository.save(POST_IN_COUNTRY(user.getId(), "KR"));
+            communityPostRepository.save(POST_IN_COUNTRY(user.getId(), "JP"));
+            Long usa = communityPostRepository.save(POST_IN_COUNTRY(user.getId(), "US")).getId();
+            Long france = communityPostRepository.save(POST_IN_COUNTRY(user.getId(), "FR")).getId();
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("excludeCountryCodes", "KR,JP")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getList("content.id", Long.class))
+                        .containsExactlyInAnyOrder(usa, france);
+            });
+        }
+
+        @Test
+        void 국가와_제외_국가를_함께_보내면_400을_응답한다() {
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 10)
+                    .queryParam("countryCode", "KR")
+                    .queryParam("excludeCountryCodes", "JP")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            ErrorResponse response = extract.as(ErrorResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+                softly.assertThat(response.detail())
+                        .isEqualTo(CommunityPostException.CONFLICTING_COUNTRY_FILTER.getDetail());
+            });
+        }
+
+        @Test
+        void 제외_조회로_받은_커서로_국가_조회를_요청하면_400을_응답한다() {
+            for (int i = 0; i < 3; i++) {
+                communityPostRepository.save(POST_IN_COUNTRY(user.getId(), "US"));
+            }
+            String excludeCursor = unauthenticated()
+                    .queryParam("size", 1)
+                    .queryParam("excludeCountryCodes", "KR,JP")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract()
+                    .jsonPath().getString("cursor.nextCursor");
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 1)
+                    .queryParam("cursor", excludeCursor)
+                    .queryParam("countryCode", "US")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
+        void 제외_국가의_순서가_달라도_같은_커서로_이어서_조회된다() {
+            for (int i = 0; i < 3; i++) {
+                communityPostRepository.save(POST_IN_COUNTRY(user.getId(), "US"));
+            }
+            ExtractableResponse<Response> firstPage = unauthenticated()
+                    .queryParam("size", 1)
+                    .queryParam("excludeCountryCodes", "KR,JP")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+            List<Long> firstPageIds = firstPage.jsonPath().getList("content.id", Long.class);
+
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .queryParam("size", 1)
+                    .queryParam("cursor", firstPage.jsonPath().getString("cursor.nextCursor"))
+                    .queryParam("excludeCountryCodes", "JP,KR")
+                    .when()
+                    .get(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getList("content")).hasSize(1);
+                softly.assertThat(extract.jsonPath().getList("content.id", Long.class))
+                        .doesNotContainAnyElementsOf(firstPageIds);
             });
         }
 

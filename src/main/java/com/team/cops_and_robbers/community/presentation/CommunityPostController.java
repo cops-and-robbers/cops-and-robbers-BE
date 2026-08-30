@@ -35,6 +35,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/community-posts")
 @RequiredArgsConstructor
@@ -75,7 +77,8 @@ public class CommunityPostController implements CommunityPostControllerDocs {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @AllowedQueryParams({"cursor", "size", "scope", "sort", "countryCode", "latitude", "longitude", "keyword"})
+    @AllowedQueryParams({"cursor", "size", "scope", "sort", "countryCode", "excludeCountryCodes",
+            "latitude", "longitude", "keyword"})
     @GetMapping
     public ResponseEntity<CommunityPostListResponse> getPostList(
             @AuthUser(required = false) LoginUser loginUser,
@@ -83,14 +86,15 @@ public class CommunityPostController implements CommunityPostControllerDocs {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "ALL") CommunityPostScope scope,
             @RequestParam(defaultValue = "LATEST") CommunityPostSort sort,
-            @RequestParam String countryCode,
+            @RequestParam(required = false) String countryCode,
+            @RequestParam(required = false) List<String> excludeCountryCodes,
             @RequestParam(required = false) Double latitude,
             @RequestParam(required = false) Double longitude,
             @RequestParam(required = false) String keyword
     ) {
         Long requesterId = (loginUser == null) ? null : loginUser.userId();
         CommunityPostListCommand command = new CommunityPostListCommand(
-                cursor, size, scope, sort, countryCode, latitude, longitude, keyword);
+                cursor, size, scope, sort, countryCode, excludeCountryCodes, latitude, longitude, keyword);
         CommunityPostCursorResult result = communityPostService.getPostList(command, requesterId);
         CommunityPostListResponse response = CommunityPostListResponse.from(result);
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(response);

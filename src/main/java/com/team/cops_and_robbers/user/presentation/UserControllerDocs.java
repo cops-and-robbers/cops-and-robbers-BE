@@ -53,7 +53,7 @@ public interface UserControllerDocs {
     );
 
     @Operation(summary = "닉네임 변경",
-            description = "로그인한 사용자의 닉네임을 변경합니다. (최대 10자, 중복 불가)"
+            description = "로그인한 사용자의 닉네임을 변경합니다. (최대 20자, 중복 불가)"
     )
     @ApiErrorCode(value = UserException.class, codes = {"USER_NOT_FOUND", "DUPLICATED_NICKNAME"})
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})

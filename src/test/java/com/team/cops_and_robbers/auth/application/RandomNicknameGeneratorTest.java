@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.auth.application;
 
 import com.team.cops_and_robbers.auth.domain.NicknameLanguage;
+import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -58,11 +59,11 @@ class RandomNicknameGeneratorTest {
     }
 
     @Test
-    void 닉네임이_스무_자를_넘지_않는다() {
+    void 닉네임이_최대_길이를_넘지_않는다() {
         assertSoftly(softly -> {
             for (NicknameLanguage language : NicknameLanguage.values()) {
                 for (int i = 0; i < REPEAT_COUNT; i++) {
-                    softly.assertThat(generator.generate(language)).hasSizeLessThanOrEqualTo(20);
+                    softly.assertThat(generator.generate(language)).hasSizeLessThanOrEqualTo(User.NICKNAME_MAX_LENGTH);
                 }
             }
         });
