@@ -20,7 +20,8 @@ public enum RedisChannel {
     PING_POLICE("game:%s:ping:police"),
     PING_ROBBER("game:%s:ping:robber"),
 
-    COMMUNITY_CHAT("community:%s:chat");
+    COMMUNITY_CHAT("community:%s:chat"),
+    COMMUNITY_CHAT_PIN("community:%s:chat:pin");
 
     private final String format;
 

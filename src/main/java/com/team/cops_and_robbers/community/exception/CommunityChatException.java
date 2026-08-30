@@ -23,7 +23,9 @@ public enum CommunityChatException implements ExceptionCode {
     INVALID_MESSAGE_KEY(HttpStatus.BAD_REQUEST, "잘못된 메시지 키", "메시지 키는 36자 이하로 입력해주세요."),
     EMPTY_MESSAGE(HttpStatus.BAD_REQUEST, "빈 메시지", "메시지 내용을 입력해주세요."),
     MESSAGE_TOO_LONG(HttpStatus.BAD_REQUEST, "메시지 길이 초과", "메시지는 500자 이하로 입력해주세요."),
-    CHAT_MESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅 메시지를 찾을 수 없음", "해당 채팅 메시지를 찾을 수 없습니다.");
+    CHAT_MESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅 메시지를 찾을 수 없음", "해당 채팅 메시지를 찾을 수 없습니다."),
+    CHAT_PIN_NOT_FOUND(HttpStatus.NOT_FOUND, "고정 채팅을 찾을 수 없음", "등록된 고정 채팅이 없습니다."),
+    FORBIDDEN_NOT_CHAT_PIN_HOST(HttpStatus.FORBIDDEN, "방장 아님", "방장만 고정 채팅을 등록·수정·삭제할 수 있습니다.");
 
     private final HttpStatus httpStatus;
     private final String title;

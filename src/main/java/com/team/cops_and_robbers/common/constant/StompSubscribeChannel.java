@@ -22,7 +22,8 @@ public enum StompSubscribeChannel {
     PING_ROBBER("/subscribe/game/%s/ping/robber"),
 
     COMMUNITY_CHAT("/subscribe/community/%s/chat"),
-    COMMUNITY_CHAT_USER("/subscribe/user/%s/community/chat");
+    COMMUNITY_CHAT_USER("/subscribe/user/%s/community/chat"),
+    COMMUNITY_CHAT_PIN("/subscribe/community/%s/chat/pin");
 
     private final String format;
 
