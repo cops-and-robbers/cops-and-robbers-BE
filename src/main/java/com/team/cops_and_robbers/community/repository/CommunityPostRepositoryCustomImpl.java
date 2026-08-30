@@ -49,7 +49,7 @@ public class CommunityPostRepositoryCustomImpl implements CommunityPostRepositor
                 .select(Projections.constructor(CommunityPostRow.class, communityPost, distance, score))
                 .from(communityPost)
                 .where(
-                        communityPost.countryCode.eq(condition.countryCode()),
+                        countryMatches(condition),
                         keywordContains(condition.keyword()),
                         withinPopularWindow(condition.sort(), now),
                         afterCursor(closedRank, distance, score, condition.sort(), cursor)
@@ -57,6 +57,14 @@ public class CommunityPostRepositoryCustomImpl implements CommunityPostRepositor
                 .orderBy(orderBy(closedRank, distance, score, condition.sort()))
                 .limit(size + 1L)
                 .fetch();
+    }
+
+    /** 웹의 영어 목록처럼 "특정 국가를 뺀 전부"가 필요한 경우에만 제외 조건으로 간다. */
+    private BooleanExpression countryMatches(CommunityPostSearchCondition condition) {
+        if (condition.countryCode() != null) {
+            return communityPost.countryCode.eq(condition.countryCode());
+        }
+        return communityPost.countryCode.notIn(condition.excludeCountryCodes());
     }
 
     /** 화면에 보이는 건 제목과 지역·장소명 조합이라 그 셋만 훑는다. 지번 주소는 복사용이라 뺀다. */

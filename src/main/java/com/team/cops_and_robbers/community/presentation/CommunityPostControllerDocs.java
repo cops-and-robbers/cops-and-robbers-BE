@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
+
 @Tag(name = "CommunityPost", description = "커뮤니티 모집 게시글 API")
 public interface CommunityPostControllerDocs {
 
@@ -69,11 +71,14 @@ public interface CommunityPostControllerDocs {
             description = "모집 게시글 목록을 국가별로 나눠 최신순 커서 방식으로 조회합니다. "
                     + "웹뷰 지원을 위해 인증 없이 호출할 수 있습니다. "
                     + "countryCode는 필수이며, GET /api/community-posts/country 로 먼저 조회하세요. "
+                    + "특정 국가를 뺀 전부가 필요하면 countryCode 대신 excludeCountryCodes를 보냅니다(웹 영어 목록용). "
+                    + "둘을 함께 보내면 400입니다.\n\n"
                     + "지원하지 않는 쿼리 파라미터가 포함되면 400을 반환합니다.\n\n"
                     + "토큰을 보내면 isLikedByRequester·isScrappedByRequester에 내가 좋아요·스크랩했는지를 반영합니다. "
                     + "토큰 없이 조회하면 isLikedByRequester·isScrappedByRequester는 항상 false이고, likeCount·scrapCount는 로그인 여부와 무관하게 항상 실제 값입니다.")
     @ApiErrorCode(value = CommunityPostException.class,
-            codes = {"UNSUPPORTED_LIST_SCOPE", "COUNTRY_NOT_SPECIFIED", "ADDRESS_LOOKUP_FAILED"})
+            codes = {"UNSUPPORTED_LIST_SCOPE", "COUNTRY_NOT_SPECIFIED", "CONFLICTING_COUNTRY_FILTER",
+                    "ADDRESS_LOOKUP_FAILED"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "400",
@@ -81,7 +86,7 @@ public interface CommunityPostControllerDocs {
     })
     ResponseEntity<CommunityPostListResponse> getPostList(
             @Parameter(hidden = true) LoginUser loginUser,
-            @Parameter(description = "이전 응답의 nextCursor 값 (첫 페이지는 생략). 국가·정렬·검색어가 받았을 때와 다르면 400") @RequestParam(required = false) String cursor,
+            @Parameter(description = "이전 응답의 nextCursor 값 (첫 페이지는 생략). 국가 조건·정렬·검색어가 받았을 때와 다르면 400") @RequestParam(required = false) String cursor,
             @Parameter(description = "페이지 크기 (1~100)", example = "10") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "조회 범위. 현재는 ALL만 지원하며 NEARBY, MINE은 400", example = "ALL")
             @RequestParam(defaultValue = "ALL") CommunityPostScope scope,
@@ -89,8 +94,11 @@ public interface CommunityPostControllerDocs {
                     + "POPULAR는 좋아요*1 + 스크랩*2 + 채팅 참여(멤버 수)*3 점수로 계산하며 최근 7일 이내 작성글만 대상. "
                     + "마감된 글은 정렬과 무관하게 맨 뒤", example = "LATEST")
             @RequestParam(defaultValue = "LATEST") CommunityPostSort sort,
-            @Parameter(description = "조회할 국가 코드(ISO 3166-1 alpha-2). 필수", example = "KR")
-            @RequestParam String countryCode,
+            @Parameter(description = "조회할 국가 코드(ISO 3166-1 alpha-2). excludeCountryCodes를 보내지 않으면 필수", example = "KR")
+            @RequestParam(required = false) String countryCode,
+            @Parameter(description = "제외할 국가 코드 목록(쉼표 구분). 보내면 해당 국가를 뺀 전체를 조회하며 countryCode는 생략한다",
+                    example = "KR,JP")
+            @RequestParam(required = false) List<String> excludeCountryCodes,
             @Parameter(description = "사용자 위도. sort=DISTANCE 일 때만 필수이고, 그 외 정렬에서 보내면 400")
             @RequestParam(required = false) Double latitude,
             @Parameter(description = "사용자 경도. sort=DISTANCE 일 때만 필수이고, 그 외 정렬에서 보내면 400")

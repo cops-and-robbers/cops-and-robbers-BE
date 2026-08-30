@@ -316,14 +316,56 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         @Test
         void 국가_코드가_없으면_COUNTRY_NOT_SPECIFIED_예외가_발생한다() {
             assertThatThrownBy(() -> new CommunityPostListCommand(
-                    null, 10, CommunityPostScope.ALL, CommunityPostSort.LATEST, null, null, null, null))
+                    null, 10, CommunityPostScope.ALL, CommunityPostSort.LATEST, null, null, null, null, null))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.COUNTRY_NOT_SPECIFIED.getDetail());
         }
 
+        @Test
+        void 국가와_제외_국가를_함께_주면_CONFLICTING_COUNTRY_FILTER_예외가_발생한다() {
+            assertThatThrownBy(() -> new CommunityPostListCommand(
+                    null, 10, CommunityPostScope.ALL, CommunityPostSort.LATEST,
+                    "KR", List.of("JP"), null, null, null))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(CommunityPostException.CONFLICTING_COUNTRY_FILTER.getDetail());
+        }
+
+        @Test
+        void 제외_국가는_대문자로_정렬해_담기므로_순서가_달라도_같은_커서_키를_만든다() {
+            CommunityPostListCommand ascending = excludeCommand(List.of("jp", "kr"));
+            CommunityPostListCommand descending = excludeCommand(List.of("KR", "JP"));
+
+            assertThat(ascending.countryScopeKey()).isEqualTo("!JP,KR");
+            assertThat(descending.countryScopeKey()).isEqualTo(ascending.countryScopeKey());
+        }
+
+        @Test
+        void 제외_국가만_주면_countryCode는_비고_국가_조회_커서_키와_겹치지_않는다() {
+            CommunityPostListCommand command = excludeCommand(List.of("KR"));
+
+            assertThat(command.countryCode()).isNull();
+            assertThat(command.countryScopeKey()).isEqualTo("!KR");
+            assertThat(listCommand(null, 10).countryScopeKey()).isEqualTo("KR");
+        }
+
+        @Test
+        void 빈_값만_담긴_제외_국가는_국가를_지정하지_않은_것으로_본다() {
+            assertThatThrownBy(() -> new CommunityPostListCommand(
+                    null, 10, CommunityPostScope.ALL, CommunityPostSort.LATEST,
+                    null, List.of("", " "), null, null, null))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(CommunityPostException.COUNTRY_NOT_SPECIFIED.getDetail());
+        }
+
+        private CommunityPostListCommand excludeCommand(List<String> excludeCountryCodes) {
+            return new CommunityPostListCommand(
+                    null, 10, CommunityPostScope.ALL, CommunityPostSort.LATEST,
+                    null, excludeCountryCodes, null, null, null);
+        }
+
         private CommunityPostListCommand listCommand(String cursor, int size) {
             return new CommunityPostListCommand(
-                    cursor, size, CommunityPostScope.ALL, CommunityPostSort.LATEST, "KR", null, null, null);
+                    cursor, size, CommunityPostScope.ALL, CommunityPostSort.LATEST, "KR", null, null, null, null);
         }
 
         private List<CommunityPostRow> postsOf(int count) {

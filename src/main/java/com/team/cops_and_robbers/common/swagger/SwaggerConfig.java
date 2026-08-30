@@ -34,6 +34,16 @@ public class SwaggerConfig {
                 .description("""
                         ## v2.30.0 업데이트 내역
 
+                        ### ✨ 신규 — 커뮤니티 목록 국가 제외 조회 (excludeCountryCodes)
+                        - GET /api/community-posts 에 excludeCountryCodes 추가 (쉼표 구분, 예: KR,JP)
+                          - 보내면 해당 국가를 뺀 전체를 조회하고 countryCode는 생략한다
+                          - 웹의 영어 커뮤니티 목록(그 외 국가 전부)을 만들기 위한 것이다
+                          - countryCode와 함께 보내면 400(CONFLICTING_COUNTRY_FILTER)
+                          - 둘 다 없으면 기존과 같이 400(COUNTRY_NOT_SPECIFIED)
+                        - 커서는 국가 조건까지 담으므로 제외 조회 커서로 국가 조회를 이어갈 수 없다 (400)
+                          - 제외 국가는 대문자로 정렬해 담기므로 KR,JP 와 JP,KR 은 같은 커서다
+                        - 앱 영향 없다. 이 파라미터를 보내지 않으면 지금과 동일하게 동작한다
+
                         ### 🛠 변경 — 닉네임 최대 길이 10자 → 20자
                         - PATCH /api/user/me/nickname 이 20자까지 받는다
                           - 자동 생성 닉네임이 최장 20자(영어 CheerfulSquirrel9999)인데 수정은 10자까지만 받아 어긋나 있었다
