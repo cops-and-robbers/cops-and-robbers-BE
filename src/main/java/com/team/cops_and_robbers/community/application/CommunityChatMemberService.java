@@ -101,12 +101,11 @@ public class CommunityChatMemberService {
                 .orElseThrow(() -> new ApplicationException(CommunityChatException.CHAT_MEMBER_NOT_FOUND));
 
         User targetUser = userRepository.findById(command.targetUserId()).orElse(null);
-        String targetNickname = (targetUser != null) ? targetUser.getNickname() : User.UNKNOWN_NICKNAME;
-        int targetProfileIcon = (targetUser != null) ? targetUser.getProfileIcon() : User.DEFAULT_PROFILE_ICON;
+        UserProfileProjection targetProfile = UserProfileProjection.of(command.targetUserId(), targetUser);
 
         CommunityChatMessage systemMessage = communityChatMessageRepository.save(
                 communityChatSystemMessageFactory.createKickMessage(
-                        command.postId(), command.targetUserId(), targetNickname, targetProfileIcon));
+                        command.postId(), targetProfile.userId(), targetProfile.nickname(), targetProfile.profileIcon()));
 
         communityChatMemberRepository.delete(target);
 
