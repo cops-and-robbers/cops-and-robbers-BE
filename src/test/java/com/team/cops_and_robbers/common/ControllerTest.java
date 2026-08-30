@@ -33,6 +33,7 @@ import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.history.repository.GameResultRepository;
 import com.team.cops_and_robbers.notice.repository.NoticeRepository;
+import com.team.cops_and_robbers.notice.repository.NoticeTranslationRepository;
 import com.team.cops_and_robbers.play.notification.application.GameFcmNotifier;
 import com.team.cops_and_robbers.report.repository.ReportRepository;
 import com.team.cops_and_robbers.user.domain.User;
@@ -113,6 +114,9 @@ public abstract class ControllerTest {
 
     @Autowired
     protected NoticeRepository noticeRepository;
+
+    @Autowired
+    protected NoticeTranslationRepository noticeTranslationRepository;
 
     @Autowired
     protected ReportRepository reportRepository;

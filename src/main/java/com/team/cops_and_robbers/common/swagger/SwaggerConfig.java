@@ -30,8 +30,21 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.28.0")
+                .version("2.29.0")
                 .description("""
+                        ## v2.29.0 업데이트 내역
+
+                        ### ✨ 신규 — 공지사항 다국어 (ko·ja·en)
+                        - 공지 본문이 언어별 번역(notice_translations)으로 분리됐다. 원문도 한 언어의 번역으로 같은 자리에 저장된다
+                        - GET /api/notices, GET /api/notices/{noticeId} 에 language 쿼리 파라미터 추가 (ko·ja·en, 생략 또는 미지원 값이면 ko)
+                          - 대체 순서: 요청한 언어 → 원문 언어(originalLanguage) → 아무 번역
+                          - 응답에 language(실제 내려간 언어)·requestedLanguage(요청한 언어) 추가 — 둘이 다르면 요청한 언어의 번역이 아직 없다는 뜻이라, 앱이 "아직 번역이 없어요"를 구분해 보여줄 수 있다
+                          - 기존 필드는 그대로라 언어를 보내지 않는 배포된 앱은 지금과 같은 한국어 공지를 받는다
+                        - GET /api/notices/{noticeId}/translations — 저장된 번역 전체 조회 (관리자 전용, 어드민 편집 화면용)
+                        - POST·PUT /api/notices 본문이 translations 배열로 바뀌었다 (한 공지에 여러 언어를 한 번에 저장, 수정은 통째 교체)
+                          - originalLanguage 필수이며 translations 에 그 언어가 포함되어야 한다
+                          - 같은 언어 중복 400(DUPLICATE_TRANSLATION_LANGUAGE), 원문 언어 누락 400(MISSING_ORIGINAL_TRANSLATION)
+
                         ## v2.28.0 업데이트 내역
 
                         ### ✨ 신규 — 약관 재동의 (어드민)
