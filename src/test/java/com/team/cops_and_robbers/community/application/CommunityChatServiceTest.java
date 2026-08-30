@@ -9,6 +9,7 @@ import com.team.cops_and_robbers.community.domain.CommunityChatMessage;
 import com.team.cops_and_robbers.community.domain.CommunityChatMessageType;
 import com.team.cops_and_robbers.community.exception.CommunityChatException;
 import com.team.cops_and_robbers.community.repository.CommunityChatSenderProfileProjection;
+import com.team.cops_and_robbers.user.exception.UserException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -44,8 +45,13 @@ class CommunityChatServiceTest extends ServiceUnitTest {
     private ObjectMapper objectMapper = new ObjectMapper();
 
     private void givenChatMember() {
+        givenChatMember(true);
+    }
+
+    private void givenChatMember(boolean requiredTermsAgreed) {
         given(communityChatMemberRepository.findSenderProfileByPostIdAndUserId(POST_ID, SENDER_ID))
-                .willReturn(Optional.of(new CommunityChatSenderProfileProjection(NICKNAME, PROFILE_ICON)));
+                .willReturn(Optional.of(
+                        new CommunityChatSenderProfileProjection(NICKNAME, PROFILE_ICON, requiredTermsAgreed)));
     }
 
     private CommunityChatSendCommand textCommand(String messageKey, String message) {
@@ -62,6 +68,17 @@ class CommunityChatServiceTest extends ServiceUnitTest {
     @Nested
     @DisplayName("메시지 전송")
     class Send {
+
+        @Test
+        void 필수_약관에_동의하지_않았으면_메시지를_보낼_수_없다() {
+            givenChatMember(false);
+
+            assertThatThrownBy(() -> communityChatService.send(textCommand("key-1", "안녕하세요")))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessage(UserException.REQUIRED_TERMS_NOT_AGREED.getDetail());
+
+            then(communityChatMessageRepository).should(never()).save(any());
+        }
 
         @Test
         void 멤버가_보낸_메시지는_발신_시점_닉네임과_함께_저장된다() {

@@ -120,10 +120,11 @@ public class User extends BaseTimeEntity {
     }
 
     private void agreeRequiredTerms(LocalDateTime now) {
+        boolean needsAgreedAtUpdate = !hasAgreedRequiredTerms() || this.termsAgreedAt == null;
         this.termsOfServiceAgreed = true;
         this.privacyPolicyAgreed = true;
         this.locationTermsAgreed = true;
-        if (this.termsAgreedAt == null) {
+        if (needsAgreedAtUpdate) {
             this.termsAgreedAt = now;
         }
     }

@@ -8,6 +8,7 @@ import com.team.cops_and_robbers.community.presentation.dto.request.CommunityCom
 import com.team.cops_and_robbers.community.presentation.dto.request.CommunityCommentNotificationRequest;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityCommentListResponse;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityCommentResponse;
+import com.team.cops_and_robbers.user.exception.UserException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -45,6 +46,7 @@ public interface CommunityCommentControllerDocs {
     @ApiErrorCode(value = CommunityCommentException.class,
             codes = {"PARENT_COMMENT_NOT_FOUND", "INVALID_COMMENT_DEPTH",
                     "PARENT_COMMENT_POST_MISMATCH", "DELETED_COMMENT_CANNOT_REPLY"})
+    @ApiErrorCode(value = UserException.class, codes = {"REQUIRED_TERMS_NOT_AGREED"})
     @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "작성 성공")})
     ResponseEntity<CommunityCommentResponse> createComment(
             @Parameter(hidden = true) LoginUser loginUser,

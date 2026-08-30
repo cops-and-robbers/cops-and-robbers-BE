@@ -64,9 +64,9 @@ public class CommunityPostService {
     @Transactional
     public CommunityPostResult createPost(CommunityPostCreateCommand command) {
         validateMeetingDate(command.meetingAt());
-        PostAddress postAddress = resolveAddress(command.latitude(), command.longitude());
-
         User writer = userRepository.getByUserId(command.writerId());
+
+        PostAddress postAddress = resolveAddress(command.latitude(), command.longitude());
         CommunityPost post = communityPostRepository.save(CommunityPost.createPost(command, postAddress));
         communityChatMemberRepository.save(CommunityChatMember.createMember(post.getId(), command.writerId()));
         return CommunityPostResult.from(post, writer, true, CommunityPostReactionCounts.EMPTY);
@@ -114,10 +114,12 @@ public class CommunityPostService {
         CommunityPost post = communityPostRepository.getByPostId(command.postId());
         validateAuthor(post, command.writerId());
         validateMeetingDate(command.meetingAt());
+        User writer = userRepository.getByUserId(command.writerId());
+
         PostAddress postAddress = resolveUpdatedAddress(post, command);
         post.updatePost(command, postAddress);
         return CommunityPostResult.from(
-                post, findWriter(post.getWriterId()), true, reactionCountsFor(post.getId(), command.writerId()));
+                post, writer, true, reactionCountsFor(post.getId(), command.writerId()));
     }
 
     /**
@@ -295,4 +297,3 @@ public class CommunityPostService {
                 .collect(Collectors.toMap(User::getId, Function.identity()));
     }
 }
-

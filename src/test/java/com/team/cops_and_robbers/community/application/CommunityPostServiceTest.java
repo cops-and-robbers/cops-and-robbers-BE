@@ -22,6 +22,7 @@ import com.team.cops_and_robbers.community.exception.CommunityPostException;
 import com.team.cops_and_robbers.community.infrastructure.GeocodingResult;
 import com.team.cops_and_robbers.community.repository.CommunityPostCountProjection;
 import com.team.cops_and_robbers.user.domain.User;
+import com.team.cops_and_robbers.user.exception.UserException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -114,6 +115,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
 
         @Test
         void 역지오코딩이_실패하면_게시글을_만들지_않는다() {
+            given(userRepository.getByUserId(1L)).willReturn(USER());
             given(geocodingClient.reverseGeocode(37.4979, 127.0276)).willReturn(GeocodingResult.failed());
 
             assertThatThrownBy(() -> communityPostService.createPost(
@@ -126,6 +128,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
 
         @Test
         void 주소를_찾을_수_없는_위치면_ADDRESS_NOT_FOUND_예외가_발생한다() {
+            given(userRepository.getByUserId(1L)).willReturn(USER());
             given(geocodingClient.reverseGeocode(37.4979, 127.0276)).willReturn(GeocodingResult.notFound());
 
             assertThatThrownBy(() -> communityPostService.createPost(
@@ -133,7 +136,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
                             LocalDateTime.now().plusDays(3), 37.4979, 127.0276, "만나는곳", 6)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.ADDRESS_NOT_FOUND.getDetail());
-            then(userRepository).shouldHaveNoInteractions();
+            then(communityPostRepository).should(never()).save(any());
         }
 
         @Test
@@ -310,8 +313,6 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             then(communityPostScrapRepository).should(never()).findScrappedPostIds(any(), any());
         }
 
-
-
         @Test
         void 국가_코드가_없으면_COUNTRY_NOT_SPECIFIED_예외가_발생한다() {
             assertThatThrownBy(() -> new CommunityPostListCommand(
@@ -319,7 +320,6 @@ class CommunityPostServiceTest extends ServiceUnitTest {
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.COUNTRY_NOT_SPECIFIED.getDetail());
         }
-
 
         private CommunityPostListCommand listCommand(String cursor, int size) {
             return new CommunityPostListCommand(
@@ -456,6 +456,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             CommunityPost post = POST(1L);
             setId(post, 1L);
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(userRepository.getByUserId(1L)).willReturn(USER());
             given(geocodingClient.reverseGeocode(37.5665, 126.9780)).willReturn(GeocodingResult.resolved(PostAddress.of(
                             "서울특별시 광진구 화양동 1-20", "서울특별시 광진구 능동로 216", null,
                             "서울특별시 광진구 화양동", "KR")));
@@ -474,6 +475,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             CommunityPost post = POST(1L);
             setId(post, 1L);
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(userRepository.getByUserId(1L)).willReturn(USER());
             given(geocodingClient.reverseGeocode(37.5665, 126.9780))
                     .willReturn(GeocodingResult.resolved(
                             PostAddress.of("서울 중구 태평로1가", "서울특별시 중구 세종대로 110", "서울시청", "서울 중구 태평로1가", "KR")));
@@ -491,6 +493,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             CommunityPost post = POST(1L, "서울 강남구 역삼동");
             setId(post, 1L);
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(userRepository.getByUserId(1L)).willReturn(USER());
             given(geocodingClient.reverseGeocode(37.5665, 126.9780)).willReturn(GeocodingResult.failed());
 
             assertThatThrownBy(() -> communityPostService.updatePost(new CommunityPostUpdateCommand(
@@ -503,6 +506,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             CommunityPost post = POST(1L, "서울 강남구 역삼동");
             setId(post, 1L);
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(userRepository.getByUserId(1L)).willReturn(USER());
 
             communityPostService.updatePost(new CommunityPostUpdateCommand(
                     1L, 1L, "새 제목", "새 내용", LocalDateTime.now().plusDays(3), 37.4979, 127.0276, "만나는곳", 6));
@@ -516,6 +520,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             setId(post, 1L);
             ReflectionTestUtils.setField(post, "countryCode", null);
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(userRepository.getByUserId(1L)).willReturn(USER());
             given(geocodingClient.reverseGeocode(37.4979, 127.0276))
                     .willReturn(GeocodingResult.resolved(
                             PostAddress.of("서울 강남구 역삼동", "서울 강남구 테헤란로 152", "강남파이낸스센터", "서울 강남구 역삼동", "KR")));
@@ -531,6 +536,7 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             CommunityPost post = POST(1L, "서울 강남구 역삼동");
             setId(post, 1L);
             given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(userRepository.getByUserId(1L)).willReturn(USER());
             given(geocodingClient.reverseGeocode(37.5665, 126.9780)).willReturn(GeocodingResult.notFound());
 
             assertThatThrownBy(() -> communityPostService.updatePost(new CommunityPostUpdateCommand(

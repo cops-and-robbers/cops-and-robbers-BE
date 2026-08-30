@@ -37,6 +37,7 @@ public class CommunityCommentService {
 
     @Transactional
     public CommunityCommentResult createComment(CommunityCommentCreateCommand command) {
+        User writer = userRepository.getByUserId(command.writerId());
         communityPostRepository.getByPostId(command.postId());
         validateParent(command);
 
@@ -50,7 +51,7 @@ public class CommunityCommentService {
         );
         eventPublisher.publishEvent(new CommunityCommentCreatedEvent(saved));
 
-        return CommunityCommentResult.from(saved, findWriter(command.writerId()));
+        return CommunityCommentResult.from(saved, writer);
     }
 
     /**
@@ -173,10 +174,6 @@ public class CommunityCommentService {
                 .map(reply -> CommunityCommentResult.from(reply, writers.get(reply.getWriterId())))
                 .toList();
         return CommunityCommentResult.of(root, writers.get(root.getWriterId()), replies);
-    }
-
-    private User findWriter(Long writerId) {
-        return userRepository.findById(writerId).orElse(null);
     }
 
     private Map<Long, User> findWriters(List<CommunityComment> comments) {

@@ -1,18 +1,24 @@
 package com.team.cops_and_robbers.admin.application;
 
 import com.team.cops_and_robbers.admin.application.dto.SortDirection;
+import com.team.cops_and_robbers.admin.application.dto.command.user.AdminTermsResetCommand;
 import com.team.cops_and_robbers.admin.application.dto.command.user.AdminUserListCommand;
+import com.team.cops_and_robbers.admin.application.dto.result.user.AdminTermsResetPreviewResult;
+import com.team.cops_and_robbers.admin.application.dto.result.user.AdminTermsResetResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.AdminUserPageResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.AdminUserResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.GameParticipationResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.UserDeviceResult;
+import com.team.cops_and_robbers.admin.exception.AdminException;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
+import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.common.fixture.UserDeviceFixture;
 import com.team.cops_and_robbers.common.fixture.UserFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
+import com.team.cops_and_robbers.user.domain.TermsType;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.domain.UserDevice;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.any;
@@ -55,6 +62,47 @@ class AdminUserServiceTest extends ServiceUnitTest {
         user2 = UserFixture.KAKAO_USER();
         setId(user2, 2L);
         ReflectionTestUtils.setField(user2, "createdAt", LocalDateTime.now());
+    }
+
+    @Nested
+    @DisplayName("약관 동의 초기화")
+    class ResetTermsAgreement {
+
+        @Test
+        void 실행하지_않고_영향받을_사용자_수를_미리_조회한다() {
+            // given
+            List<TermsType> types = List.of(TermsType.LOCATION_TERMS);
+            given(userRepository.countTermsResetTargets(types)).willReturn(12L);
+
+            // when
+            AdminTermsResetPreviewResult preview =
+                    adminUserService.getTermsResetPreview(AdminTermsResetCommand.of(types));
+
+            // then
+            assertThat(preview.affectedUsers()).isEqualTo(12);
+        }
+
+        @Test
+        void 선택한_약관의_동의를_해제하고_영향받은_인원을_반환한다() {
+            // given
+            List<TermsType> types = List.of(TermsType.TERMS_OF_SERVICE, TermsType.MARKETING);
+            given(userRepository.resetTermsAgreement(types)).willReturn(7L);
+
+            // when
+            AdminTermsResetResult result =
+                    adminUserService.resetTermsAgreement(AdminTermsResetCommand.of(types));
+
+            // then
+            assertThat(result.affectedUsers()).isEqualTo(7);
+        }
+
+        @Test
+        void 초기화할_약관을_지정하지_않으면_예외가_발생한다() {
+            // when & then
+            assertThatThrownBy(() -> AdminTermsResetCommand.of(List.of()))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessage(AdminException.EMPTY_TERMS_RESET_TARGET.getDetail());
+        }
     }
 
     @Nested
