@@ -70,8 +70,9 @@ public interface CommunityPostControllerDocs {
     @Operation(summary = "게시글 목록 조회 (로그인 불필요)",
             description = "모집 게시글 목록을 국가별로 나눠 최신순 커서 방식으로 조회합니다. "
                     + "웹뷰 지원을 위해 인증 없이 호출할 수 있습니다. "
-                    + "countryCode는 필수이며, GET /api/community-posts/country 로 먼저 조회하세요. "
-                    + "특정 국가를 뺀 전부가 필요하면 countryCode 대신 excludeCountryCodes를 보냅니다(웹 영어 목록용). "
+                    + "countryCode 또는 excludeCountryCodes 중 하나는 필수입니다. "
+                    + "단일 국가를 볼 때는 countryCode를 쓰고, GET /api/community-posts/country 로 먼저 조회하세요. "
+                    + "특정 국가를 뺀 전부가 필요하면 excludeCountryCodes를 씁니다(웹 영어 목록용). "
                     + "둘을 함께 보내면 400입니다.\n\n"
                     + "지원하지 않는 쿼리 파라미터가 포함되면 400을 반환합니다.\n\n"
                     + "토큰을 보내면 isLikedByRequester·isScrappedByRequester에 내가 좋아요·스크랩했는지를 반영합니다. "
