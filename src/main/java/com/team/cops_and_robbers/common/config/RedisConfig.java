@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.common.config;
 
 import com.team.cops_and_robbers.common.constant.RedisChannel;
 import com.team.cops_and_robbers.common.constant.RedisProperties;
+import com.team.cops_and_robbers.community.application.CommunityChatPinSubscriber;
 import com.team.cops_and_robbers.community.application.CommunityChatSubscriber;
 import com.team.cops_and_robbers.play.chat.application.AllChatSubscriber;
 import com.team.cops_and_robbers.play.chat.application.PoliceChatSubscriber;
@@ -123,7 +124,8 @@ public class RedisConfig {
             MessageListenerAdapter robberLocationAdapter,
             MessageListenerAdapter policePingAdapter,
             MessageListenerAdapter robberPingAdapter,
-            MessageListenerAdapter communityChatAdapter
+            MessageListenerAdapter communityChatAdapter,
+            MessageListenerAdapter communityChatPinAdapter
     ) {
         return Map.ofEntries(
                 Map.entry(RedisChannel.LOBBY.getPattern(), lobbyListenerAdapter),
@@ -135,7 +137,8 @@ public class RedisConfig {
                 Map.entry(RedisChannel.LOCATION_ROBBER.getPattern(), robberLocationAdapter),
                 Map.entry(RedisChannel.PING_POLICE.getPattern(), policePingAdapter),
                 Map.entry(RedisChannel.PING_ROBBER.getPattern(), robberPingAdapter),
-                Map.entry(RedisChannel.COMMUNITY_CHAT.getPattern(), communityChatAdapter)
+                Map.entry(RedisChannel.COMMUNITY_CHAT.getPattern(), communityChatAdapter),
+                Map.entry(RedisChannel.COMMUNITY_CHAT_PIN.getPattern(), communityChatPinAdapter)
         );
     }
 
@@ -190,6 +193,11 @@ public class RedisConfig {
 
     @Bean
     public MessageListenerAdapter communityChatAdapter(CommunityChatSubscriber subscriber) {
+        return new MessageListenerAdapter(subscriber, LISTENER_METHOD_NAME);
+    }
+
+    @Bean
+    public MessageListenerAdapter communityChatPinAdapter(CommunityChatPinSubscriber subscriber) {
         return new MessageListenerAdapter(subscriber, LISTENER_METHOD_NAME);
     }
 }

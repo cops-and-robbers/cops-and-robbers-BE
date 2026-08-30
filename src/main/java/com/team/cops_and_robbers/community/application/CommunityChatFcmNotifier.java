@@ -2,8 +2,11 @@ package com.team.cops_and_robbers.community.application;
 
 import com.team.cops_and_robbers.common.fcm.FcmMessage;
 import com.team.cops_and_robbers.common.fcm.FcmService;
+import com.team.cops_and_robbers.community.application.event.CommunityChatPinChangedEvent;
 import com.team.cops_and_robbers.community.domain.CommunityChatMessage;
 import com.team.cops_and_robbers.community.domain.CommunityChatMessageType;
+import com.team.cops_and_robbers.community.domain.CommunityChatPin;
+import com.team.cops_and_robbers.community.domain.CommunityChatSystemEventType;
 import com.team.cops_and_robbers.community.repository.CommunityChatMemberRepository;
 import com.team.cops_and_robbers.user.domain.UserDevice;
 import com.team.cops_and_robbers.user.repository.UserDeviceRepository;
@@ -23,6 +26,12 @@ import java.util.concurrent.CompletableFuture;
 public class CommunityChatFcmNotifier {
 
     private static final String GAME_INVITE_BODY = "게임에 초대했습니다";
+    private static final String PIN_PUSH_TITLE = "고정 채팅";
+    private static final Map<CommunityChatSystemEventType, String> PIN_PUSH_BODIES = Map.of(
+            CommunityChatSystemEventType.PIN_REGISTERED, "방장님이 고정 채팅을 등록했습니다",
+            CommunityChatSystemEventType.PIN_UPDATED, "방장님이 고정 채팅을 수정했습니다",
+            CommunityChatSystemEventType.PIN_DELETED, "방장님이 고정 채팅을 삭제했습니다"
+    );
 
     private final FcmService fcmService;
     private final CommunityChatMemberRepository communityChatMemberRepository;
@@ -49,12 +58,35 @@ public class CommunityChatFcmNotifier {
         return CompletableFuture.completedFuture(null);
     }
 
+    @Async("fcmExecutor")
+    public CompletableFuture<Void> notifyPinChanged(CommunityChatPinChangedEvent event) {
+        try {
+            CommunityChatPin pin = event.pin();
+            List<String> tokens = resolvePushTargets(pin.getCommunityPostId(), event.actorId());
+            if (tokens.isEmpty()) {
+                return CompletableFuture.completedFuture(null);
+            }
+            Map<String, String> data = Map.of(
+                    "type", event.action().name(),
+                    "postId", String.valueOf(pin.getCommunityPostId())
+            );
+            String body = PIN_PUSH_BODIES.get(event.action());
+            fcmService.send(new FcmMessage(tokens, PIN_PUSH_TITLE, body, data));
+        } catch (Exception e) {
+            log.error("[FCM] Async pin push failed | postId={}", event.pin().getCommunityPostId(), e);
+        }
+        return CompletableFuture.completedFuture(null);
+    }
+
     private List<String> getChatTokens(CommunityChatMessage message) {
         if (message.getMessageType() == CommunityChatMessageType.SYSTEM) {
             return List.of();
         }
-        List<Long> userIds = communityChatMemberRepository.findPushTargetUserIds(
-                message.getCommunityPostId(), message.getSenderId());
+        return resolvePushTargets(message.getCommunityPostId(), message.getSenderId());
+    }
+
+    private List<String> resolvePushTargets(Long postId, Long excludeUserId) {
+        List<Long> userIds = communityChatMemberRepository.findPushTargetUserIds(postId, excludeUserId);
         if (userIds.isEmpty()) {
             return List.of();
         }

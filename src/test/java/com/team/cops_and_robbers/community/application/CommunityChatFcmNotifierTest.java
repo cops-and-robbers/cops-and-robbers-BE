@@ -4,8 +4,11 @@ import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.fcm.FcmMessage;
 import com.team.cops_and_robbers.common.fcm.FcmService;
 import com.team.cops_and_robbers.common.fixture.UserDeviceFixture;
+import com.team.cops_and_robbers.community.application.event.CommunityChatPinChangedEvent;
 import com.team.cops_and_robbers.community.domain.CommunityChatMessage;
 import com.team.cops_and_robbers.community.domain.CommunityChatMessageType;
+import com.team.cops_and_robbers.community.domain.CommunityChatPin;
+import com.team.cops_and_robbers.community.domain.CommunityChatSystemEventType;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.domain.UserDevice;
 import org.junit.jupiter.api.DisplayName;
@@ -152,6 +155,79 @@ class CommunityChatFcmNotifierTest extends ServiceUnitTest {
                     .willThrow(new IllegalStateException("boom"));
 
             communityChatFcmNotifier.notifyMessageSent(message(CommunityChatMessageType.TEXT, "다들 오셨나요"));
+
+            then(fcmService).should(never()).send(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("고정 채팅 변경 푸시 발송")
+    class NotifyPinChanged {
+
+        private CommunityChatPin pin() {
+            CommunityChatPin pin = CommunityChatPin.createPin(POST_ID, SENDER_ID, "정문에서 만나요");
+            setId(pin, 10L);
+            return pin;
+        }
+
+        private CommunityChatPinChangedEvent event(CommunityChatSystemEventType action) {
+            return new CommunityChatPinChangedEvent(pin(), action, SENDER_ID);
+        }
+
+        @Test
+        void 등록_이벤트를_받으면_고정_문구로_발송한다() {
+            given(communityChatMemberRepository.findPushTargetUserIds(POST_ID, SENDER_ID))
+                    .willReturn(List.of(RECEIVER_ID));
+            givenDevice(RECEIVER_ID, true);
+
+            communityChatFcmNotifier.notifyPinChanged(event(CommunityChatSystemEventType.PIN_REGISTERED));
+
+            FcmMessage sent = captureSent();
+            assertSoftly(softly -> {
+                softly.assertThat(sent.tokens()).containsExactly("fcm-123");
+                softly.assertThat(sent.title()).isEqualTo("고정 채팅");
+                softly.assertThat(sent.body()).isEqualTo("방장님이 고정 채팅을 등록했습니다");
+                softly.assertThat(sent.data()).containsEntry("type", "PIN_REGISTERED");
+                softly.assertThat(sent.data()).containsEntry("postId", "1");
+            });
+        }
+
+        @Test
+        void 수정_삭제_이벤트도_액션별_고정_문구로_발송한다() {
+            given(communityChatMemberRepository.findPushTargetUserIds(POST_ID, SENDER_ID))
+                    .willReturn(List.of(RECEIVER_ID));
+            givenDevice(RECEIVER_ID, true);
+
+            communityChatFcmNotifier.notifyPinChanged(event(CommunityChatSystemEventType.PIN_UPDATED));
+            assertThat(captureSent().body()).isEqualTo("방장님이 고정 채팅을 수정했습니다");
+        }
+
+        @Test
+        void 액터_본인은_대상에서_빠진다() {
+            given(communityChatMemberRepository.findPushTargetUserIds(POST_ID, SENDER_ID)).willReturn(List.of());
+
+            communityChatFcmNotifier.notifyPinChanged(event(CommunityChatSystemEventType.PIN_REGISTERED));
+
+            then(fcmService).should(never()).send(any());
+        }
+
+        @Test
+        void 방_알림을_끈_사람에게는_발송하지_않는다() {
+            given(communityChatMemberRepository.findPushTargetUserIds(POST_ID, SENDER_ID))
+                    .willReturn(List.of(RECEIVER_ID));
+            givenDevice(RECEIVER_ID, false);
+
+            communityChatFcmNotifier.notifyPinChanged(event(CommunityChatSystemEventType.PIN_REGISTERED));
+
+            then(fcmService).should(never()).send(any());
+        }
+
+        @Test
+        void 발송에_실패해도_예외를_밖으로_던지지_않는다() {
+            given(communityChatMemberRepository.findPushTargetUserIds(POST_ID, SENDER_ID))
+                    .willThrow(new IllegalStateException("boom"));
+
+            communityChatFcmNotifier.notifyPinChanged(event(CommunityChatSystemEventType.PIN_REGISTERED));
 
             then(fcmService).should(never()).send(any());
         }
