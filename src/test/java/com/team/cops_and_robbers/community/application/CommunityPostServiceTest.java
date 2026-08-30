@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.community.application;
 
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.common.exception.CommonException;
 import com.team.cops_and_robbers.common.exception.InfrastructureException;
 import com.team.cops_and_robbers.community.application.dto.CommunityPostCursor;
 import com.team.cops_and_robbers.community.application.dto.CommunityPostRow;
@@ -355,6 +356,21 @@ class CommunityPostServiceTest extends ServiceUnitTest {
                     null, List.of("", " "), null, null, null))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(CommunityPostException.COUNTRY_NOT_SPECIFIED.getDetail());
+        }
+
+        @Test
+        void 국가_코드_형식이_아니면_INVALID_QUERY_PARAMETER_예외가_발생한다() {
+            assertThatThrownBy(() -> excludeCommand(List.of("A|B")))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(CommonException.INVALID_QUERY_PARAMETER.getDetail());
+            assertThatThrownBy(() -> excludeCommand(List.of("KOR")))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(CommonException.INVALID_QUERY_PARAMETER.getDetail());
+            assertThatThrownBy(() -> new CommunityPostListCommand(
+                    null, 10, CommunityPostScope.ALL, CommunityPostSort.LATEST,
+                    "K|R", null, null, null, null))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(CommonException.INVALID_QUERY_PARAMETER.getDetail());
         }
 
         private CommunityPostListCommand excludeCommand(List<String> excludeCountryCodes) {
