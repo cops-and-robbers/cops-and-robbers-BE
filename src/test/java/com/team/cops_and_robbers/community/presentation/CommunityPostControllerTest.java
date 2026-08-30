@@ -437,18 +437,18 @@ class CommunityPostControllerTest extends ControllerTest {
             for (int i = 0; i < 3; i++) {
                 communityPostRepository.save(POST_IN_COUNTRY(user.getId(), "US"));
             }
-            String cursor = unauthenticated()
+            ExtractableResponse<Response> firstPage = unauthenticated()
                     .queryParam("size", 1)
                     .queryParam("excludeCountryCodes", "KR,JP")
                     .when()
                     .get(POST_API_URL)
                     .then()
-                    .extract()
-                    .jsonPath().getString("cursor.nextCursor");
+                    .extract();
+            List<Long> firstPageIds = firstPage.jsonPath().getList("content.id", Long.class);
 
             ExtractableResponse<Response> extract = unauthenticated()
                     .queryParam("size", 1)
-                    .queryParam("cursor", cursor)
+                    .queryParam("cursor", firstPage.jsonPath().getString("cursor.nextCursor"))
                     .queryParam("excludeCountryCodes", "JP,KR")
                     .when()
                     .get(POST_API_URL)
@@ -458,6 +458,8 @@ class CommunityPostControllerTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
                 softly.assertThat(extract.jsonPath().getList("content")).hasSize(1);
+                softly.assertThat(extract.jsonPath().getList("content.id", Long.class))
+                        .doesNotContainAnyElementsOf(firstPageIds);
             });
         }
 
