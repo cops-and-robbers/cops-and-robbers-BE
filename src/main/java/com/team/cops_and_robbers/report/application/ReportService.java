@@ -1,10 +1,10 @@
 package com.team.cops_and_robbers.report.application;
 
 import com.team.cops_and_robbers.common.exception.ApplicationException;
-import com.team.cops_and_robbers.community.domain.CommunityChatMessage;
-import com.team.cops_and_robbers.community.domain.CommunityPost;
-import com.team.cops_and_robbers.community.repository.CommunityChatMessageRepository;
-import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
+import com.team.cops_and_robbers.community.chat.common.domain.CommunityChatMessage;
+import com.team.cops_and_robbers.community.chat.common.repository.CommunityChatMessageRepository;
+import com.team.cops_and_robbers.community.post.domain.CommunityPost;
+import com.team.cops_and_robbers.community.post.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;

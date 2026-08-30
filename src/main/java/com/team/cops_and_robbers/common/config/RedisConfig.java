@@ -2,8 +2,8 @@ package com.team.cops_and_robbers.common.config;
 
 import com.team.cops_and_robbers.common.constant.RedisChannel;
 import com.team.cops_and_robbers.common.constant.RedisProperties;
-import com.team.cops_and_robbers.community.application.CommunityChatPinSubscriber;
-import com.team.cops_and_robbers.community.application.CommunityChatSubscriber;
+import com.team.cops_and_robbers.community.chat.message.application.CommunityChatSubscriber;
+import com.team.cops_and_robbers.community.chat.pin.application.CommunityChatPinSubscriber;
 import com.team.cops_and_robbers.play.chat.application.AllChatSubscriber;
 import com.team.cops_and_robbers.play.chat.application.PoliceChatSubscriber;
 import com.team.cops_and_robbers.play.chat.application.RobberChatSubscriber;

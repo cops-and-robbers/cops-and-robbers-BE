@@ -1,7 +1,7 @@
 package com.team.cops_and_robbers.common.fixture;
 
-import com.team.cops_and_robbers.community.domain.CommunityPost;
-import com.team.cops_and_robbers.community.domain.RecruitmentStatus;
+import com.team.cops_and_robbers.community.post.domain.CommunityPost;
+import com.team.cops_and_robbers.community.post.domain.RecruitmentStatus;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;

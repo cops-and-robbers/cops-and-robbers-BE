@@ -2,10 +2,10 @@ package com.team.cops_and_robbers;
 
 import com.team.cops_and_robbers.auth.infrastructure.jwt.JwtTokenProvider;
 import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
-import com.team.cops_and_robbers.community.application.dto.command.CommunityPostCreateCommand;
-import com.team.cops_and_robbers.community.domain.CommunityPost;
-import com.team.cops_and_robbers.community.domain.PostAddress;
-import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
+import com.team.cops_and_robbers.community.post.application.dto.command.CommunityPostCreateCommand;
+import com.team.cops_and_robbers.community.post.domain.CommunityPost;
+import com.team.cops_and_robbers.community.post.domain.PostAddress;
+import com.team.cops_and_robbers.community.post.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.game.area.application.dto.GameAreaData;
 import com.team.cops_and_robbers.game.area.domain.GameArea;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
