@@ -30,6 +30,21 @@ public class CommunityChatSystemMessageFactory {
                 postId, user.getId(), user.getNickname(), user.getProfileIcon(), CommunityChatSystemEventType.LEAVE);
     }
 
+    public CommunityChatMessage createPinRegisteredMessage(Long postId, User hostUser) {
+        return createSystemMessage(postId, hostUser.getId(), hostUser.getNickname(), hostUser.getProfileIcon(),
+                CommunityChatSystemEventType.PIN_REGISTERED);
+    }
+
+    public CommunityChatMessage createPinUpdatedMessage(Long postId, User hostUser) {
+        return createSystemMessage(postId, hostUser.getId(), hostUser.getNickname(), hostUser.getProfileIcon(),
+                CommunityChatSystemEventType.PIN_UPDATED);
+    }
+
+    public CommunityChatMessage createPinDeletedMessage(Long postId, User hostUser) {
+        return createSystemMessage(postId, hostUser.getId(), hostUser.getNickname(), hostUser.getProfileIcon(),
+                CommunityChatSystemEventType.PIN_DELETED);
+    }
+
     /**
      * 강퇴 대상은 이미 탈퇴해 User 행이 없을 수 있어 User 대신 userId·nickname·아이콘을 직접 받기로 함
      */
