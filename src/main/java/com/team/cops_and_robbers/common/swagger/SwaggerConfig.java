@@ -30,8 +30,16 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.29.0")
+                .version("2.30.0")
                 .description("""
+                        ## v2.30.0 업데이트 내역
+
+                        ### 🛠 변경 — 닉네임 최대 길이 10자 → 20자
+                        - PATCH /api/user/me/nickname 이 20자까지 받는다
+                          - 자동 생성 닉네임이 최장 20자(영어 CheerfulSquirrel9999)인데 수정은 10자까지만 받아 어긋나 있었다
+                          - 앱은 입력칸 maxLength를 20으로 올려야 한다. 지금은 10이라 생성된 닉네임을 한 글자만 고쳐도 잘린다
+                        - 스키마 변경은 없다 (nickname 컬럼이 이미 length=30)
+
                         ## v2.29.0 업데이트 내역
 
                         ### ✨ 신규 — 공지사항 다국어 (ko·ja·en)

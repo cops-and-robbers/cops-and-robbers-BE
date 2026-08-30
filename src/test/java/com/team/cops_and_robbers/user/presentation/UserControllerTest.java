@@ -413,11 +413,11 @@ class UserControllerTest extends ControllerTest {
         }
 
         @Test
-        void 닉네임이_10자를_초과하면_400_BAD_REQUEST를_응답해야_한다() {
+        void 닉네임이_20자를_초과하면_400_BAD_REQUEST를_응답해야_한다() {
             // given
             User user = givenUser();
             String accessToken = givenAccessToken(user);
-            String longNickname = "열글자가넘어가는아주긴닉네임입니다"; // 11자 이상
+            String longNickname = "스무글자가넘어가는아주아주긴닉네임입니다요"; // 21자
             NicknameUpdateRequest request = new NicknameUpdateRequest(longNickname);
 
             // when
@@ -433,7 +433,7 @@ class UserControllerTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(400);
                 softly.assertThat(response.title()).isEqualTo(CommonException.INVALID_INPUT_VALUE.getTitle());
-                softly.assertThat(response.detail()).contains("최대 10자");
+                softly.assertThat(response.detail()).contains("최대 20자");
             });
         }
 

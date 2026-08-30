@@ -1,5 +1,6 @@
 package com.team.cops_and_robbers.auth.domain;
 
+import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -54,6 +55,7 @@ class NicknameLanguageTest {
 
         private static final int ADJECTIVE_COUNT = 30;
         private static final int ANIMAL_COUNT = 25;
+        private static final int SUFFIX_LENGTH = 4;
 
         @Test
         void 모든_언어가_같은_개수의_낱말을_가진다() {
@@ -79,6 +81,22 @@ class NicknameLanguageTest {
         void 일본어_동물은_카타카나로_표기한다() {
             assertThat(NicknameLanguage.JA.animals())
                     .allMatch(animal -> animal.chars().allMatch(NicknameLanguageTest::isKatakana));
+        }
+
+        /** 생성기는 무작위라 표본으로는 긴 낱말 하나를 놓친다. 낱말을 추가할 때 여기서 먼저 걸린다. */
+        @Test
+        void 모든_낱말_조합이_닉네임_최대_길이를_넘지_않는다() {
+            assertSoftly(softly -> {
+                for (NicknameLanguage language : NicknameLanguage.values()) {
+                    for (String adjective : language.adjectives()) {
+                        for (String animal : language.animals()) {
+                            softly.assertThat(adjective.length() + animal.length() + SUFFIX_LENGTH)
+                                    .as("%s: %s + %s", language, adjective, animal)
+                                    .isLessThanOrEqualTo(User.NICKNAME_MAX_LENGTH);
+                        }
+                    }
+                }
+            });
         }
     }
 
