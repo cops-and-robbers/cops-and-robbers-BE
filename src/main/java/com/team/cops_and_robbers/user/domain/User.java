@@ -26,6 +26,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseTimeEntity {
 
+    public static final int DEFAULT_PROFILE_ICON = 1;
+    public static final String UNKNOWN_NICKNAME = "알수없음";
+    public static final int NICKNAME_MAX_LENGTH = 20;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -46,6 +50,12 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean allowMarketingPush;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean allowCommunityPush = true;
+
+    private LocalDateTime communityNotificationReadAt;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
@@ -61,6 +71,10 @@ public class User extends BaseTimeEntity {
     private LocalDateTime termsAgreedAt;
 
     private LocalDateTime marketingAgreedAt;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private int profileIcon = DEFAULT_PROFILE_ICON;
 
     public static User signUp(String socialId, SocialType socialType, String nickname) {
         return User.builder()
@@ -107,15 +121,28 @@ public class User extends BaseTimeEntity {
     }
 
     private void agreeRequiredTerms(LocalDateTime now) {
+        boolean needsAgreedAtUpdate = !hasAgreedRequiredTerms() || this.termsAgreedAt == null;
         this.termsOfServiceAgreed = true;
         this.privacyPolicyAgreed = true;
         this.locationTermsAgreed = true;
-        if (this.termsAgreedAt == null) {
+        if (needsAgreedAtUpdate) {
             this.termsAgreedAt = now;
         }
     }
 
     public void updateGamePush(boolean allowGamePush) {
         this.allowGamePush = allowGamePush;
+    }
+
+    public void updateProfileIcon(int profileIcon) {
+        this.profileIcon = profileIcon;
+    }
+
+    public void updateCommunityPush(boolean allowCommunityPush) {
+        this.allowCommunityPush = allowCommunityPush;
+    }
+
+    public void readCommunityNotifications(LocalDateTime now) {
+        this.communityNotificationReadAt = now;
     }
 }

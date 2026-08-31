@@ -110,7 +110,7 @@ class AdminBugReportServiceTest extends ServiceUnitTest {
         }
 
         @Test
-        void 탈퇴한_유저의_닉네임은_탈퇴한_사용자로_반환된다() {
+        void 탈퇴한_유저의_닉네임은_알수없음으로_반환된다() {
             // given
             AdminBugReportListCommand command = new AdminBugReportListCommand(0, 10, null, SortDirection.DESC);
             Page<BugReport> bugReportPage = new PageImpl<>(List.of(bugReport), PageRequest.of(0, 10), 1);
@@ -121,7 +121,7 @@ class AdminBugReportServiceTest extends ServiceUnitTest {
             AdminBugReportPageResult result = adminBugReportService.getBugReportList(command);
 
             // then
-            assertThat(result.content().get(0).userNickname()).isEqualTo("탈퇴한 사용자");
+            assertThat(result.content().get(0).userNickname()).isEqualTo("알수없음");
         }
     }
 
@@ -149,7 +149,7 @@ class AdminBugReportServiceTest extends ServiceUnitTest {
         }
 
         @Test
-        void 상태_변경_시_탈퇴한_유저의_닉네임은_탈퇴한_사용자로_반환된다() {
+        void 상태_변경_시_탈퇴한_유저의_닉네임은_알수없음으로_반환된다() {
             // given
             AdminUpdateBugReportStatusCommand command = new AdminUpdateBugReportStatusCommand(
                     100L, BugReportStatus.RESOLVED, null);
@@ -160,7 +160,7 @@ class AdminBugReportServiceTest extends ServiceUnitTest {
             AdminBugReportResult result = adminBugReportService.updateBugReportStatus(command);
 
             // then
-            assertThat(result.userNickname()).isEqualTo("탈퇴한 사용자");
+            assertThat(result.userNickname()).isEqualTo("알수없음");
         }
     }
 }

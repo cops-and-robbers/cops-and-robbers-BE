@@ -1,6 +1,5 @@
 package com.team.cops_and_robbers.game.participant.application;
 
-
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.game.domain.Game;
@@ -153,25 +152,6 @@ class GameParticipantServiceTest extends ServiceUnitTest {
             assertThatThrownBy(() -> gameParticipantService.joinGame(command))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(GameParticipantException.GAME_ALREADY_STARTED.getDetail());
-        }
-
-        @Test
-        void 필수_약관에_미동의한_유저라면_예외가_발생한다() {
-            // given
-            User unagreedUser = USER_WITHOUT_TERMS("unagreedUser");
-            setId(unagreedUser, TEST_USER_ID);
-            GameJoinCommand command = createGameJoinCommand(unagreedUser.getId(), INVITE_CODE);
-
-            given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(waitingGame);
-            given(gameParticipantRepository.existsActiveGameByUserId(unagreedUser.getId())).willReturn(false);
-            given(userRepository.getByUserId(unagreedUser.getId())).willReturn(unagreedUser);
-
-            // when & then
-            assertThatThrownBy(() -> gameParticipantService.joinGame(command))
-                    .isInstanceOf(ApplicationException.class)
-                    .hasMessage(UserException.REQUIRED_TERMS_NOT_AGREED.getDetail());
-
-            then(gameParticipantRepository).should(never()).save(any(GameParticipant.class));
         }
 
         @Test

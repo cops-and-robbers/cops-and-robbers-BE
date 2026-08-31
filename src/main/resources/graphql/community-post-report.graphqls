@@ -1,0 +1,42 @@
+# ─── 커뮤니티 모집글 신고 쿼리/뮤테이션 ──────────────────────
+extend type Query {
+  adminCommunityPostReports(
+    page: Int = 0
+    size: Int = 20
+    status: ReportStatus
+    sortDirection: SortDirection = DESC
+  ): AdminCommunityPostReportPage!
+}
+
+extend type Mutation {
+  updateCommunityPostReportStatus(
+    reportId: ID!
+    status: ReportStatus!
+    adminMemo: String
+  ): AdminCommunityPostReport!
+}
+
+# ─── 커뮤니티 모집글 신고 타입 ────────────────────────────────
+type AdminCommunityPostReportPage {
+  content: [AdminCommunityPostReport!]!
+  totalElements: Int!
+  totalPages: Int!
+  page: Int!
+  size: Int!
+}
+
+type AdminCommunityPostReport {
+  id: ID!
+  postId: ID!
+  postTitle: String!
+  postContent: String!
+  reporterUserId: ID!
+  reporterNickname: String!
+  reportedUserId: ID!
+  reportedNickname: String!
+  reportType: ReportType!
+  etcReason: String
+  status: ReportStatus!
+  adminMemo: String
+  createdAt: String!
+}

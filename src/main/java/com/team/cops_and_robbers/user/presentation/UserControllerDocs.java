@@ -5,8 +5,10 @@ import com.team.cops_and_robbers.common.exception.CommonException;
 import com.team.cops_and_robbers.common.swagger.ApiErrorCode;
 import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.presentation.dto.request.AgreementRequest;
+import com.team.cops_and_robbers.user.presentation.dto.request.CommunityPushAgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.GamePushAgreementRequest;
 import com.team.cops_and_robbers.user.presentation.dto.request.NicknameUpdateRequest;
+import com.team.cops_and_robbers.user.presentation.dto.request.ProfileIconUpdateRequest;
 import com.team.cops_and_robbers.user.presentation.dto.response.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -51,7 +53,7 @@ public interface UserControllerDocs {
     );
 
     @Operation(summary = "닉네임 변경",
-            description = "로그인한 사용자의 닉네임을 변경합니다. (최대 10자, 중복 불가)"
+            description = "로그인한 사용자의 닉네임을 변경합니다. (최대 20자, 중복 불가)"
     )
     @ApiErrorCode(value = UserException.class, codes = {"USER_NOT_FOUND", "DUPLICATED_NICKNAME"})
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
@@ -117,5 +119,42 @@ public interface UserControllerDocs {
     ResponseEntity<Void> updateGamePushAgreement(
             @Parameter(hidden = true) LoginUser loginUser,
             @RequestBody @Valid GamePushAgreementRequest request
+    );
+
+    @Operation(summary = "커뮤니티 푸시 알림 수신 동의 여부 조회",
+            description = "로그인한 사용자의 커뮤니티 푸시 알림 수신 동의 여부를 조회합니다. 가입 시 기본값은 수신 동의입니다."
+    )
+    @ApiErrorCode(value = UserException.class, codes = {"USER_NOT_FOUND"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
+    ResponseEntity<CommunityPushAgreementResponse> getCommunityPushAgreement(
+            @Parameter(hidden = true) LoginUser loginUser);
+
+    @Operation(summary = "커뮤니티 푸시 알림 수신 동의 여부 업데이트",
+            description = "로그인한 사용자의 커뮤니티 푸시 알림 수신 동의 여부를 업데이트합니다. "
+                    + "끄면 푸시만 오지 않고 알림함에는 그대로 쌓입니다."
+    )
+    @ApiErrorCode(value = UserException.class, codes = {"USER_NOT_FOUND"})
+    @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "업데이트 성공 (응답 본문 없음)")
+    })
+    ResponseEntity<Void> updateCommunityPushAgreement(
+            @Parameter(hidden = true) LoginUser loginUser,
+            @RequestBody @Valid CommunityPushAgreementRequest request
+    );
+
+    @Operation(summary = "프로필 아이콘 변경",
+            description = "로그인한 사용자의 프로필 아이콘 번호를 변경합니다. 아이콘 번호는 앱에 내장된 SVG 에셋 번호와 1:1로 대응하며, 서버는 값의 범위를 검증하지 않습니다."
+    )
+    @ApiErrorCode(value = UserException.class, codes = {"USER_NOT_FOUND"})
+    @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "변경 성공 (응답 본문 없음)")
+    })
+    ResponseEntity<Void> updateProfileIcon(
+            @Parameter(hidden = true) LoginUser loginUser,
+            @RequestBody @Valid ProfileIconUpdateRequest request
     );
 }

@@ -103,7 +103,7 @@ class AdminReportResolverTest extends ControllerTest {
         }
 
         @Test
-        void 탈퇴한_유저의_닉네임은_탈퇴한_사용자로_반환된다() {
+        void 탈퇴한_유저의_닉네임은_알수없음으로_반환된다() {
             reportRepository.save(ChatReportFixture.VERBAL_ABUSE_REPORT(10L, 9999L, 8888L));
 
             ExtractableResponse<Response> response = executeQuery(
@@ -112,8 +112,8 @@ class AdminReportResolverTest extends ControllerTest {
 
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(200);
-                softly.assertThat(response.jsonPath().getString("data.adminReports.content[0].reporterNickname")).isEqualTo("탈퇴한 사용자");
-                softly.assertThat(response.jsonPath().getString("data.adminReports.content[0].reportedNickname")).isEqualTo("탈퇴한 사용자");
+                softly.assertThat(response.jsonPath().getString("data.adminReports.content[0].reporterNickname")).isEqualTo("알수없음");
+                softly.assertThat(response.jsonPath().getString("data.adminReports.content[0].reportedNickname")).isEqualTo("알수없음");
             });
         }
     }
@@ -153,8 +153,8 @@ class AdminReportResolverTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(200);
                 softly.assertThat(response.jsonPath().getString("data.updateReportStatus.status")).isEqualTo("DISMISSED");
-                softly.assertThat(response.jsonPath().getString("data.updateReportStatus.reporterNickname")).isEqualTo("탈퇴한 사용자");
-                softly.assertThat(response.jsonPath().getString("data.updateReportStatus.reportedNickname")).isEqualTo("탈퇴한 사용자");
+                softly.assertThat(response.jsonPath().getString("data.updateReportStatus.reporterNickname")).isEqualTo("알수없음");
+                softly.assertThat(response.jsonPath().getString("data.updateReportStatus.reportedNickname")).isEqualTo("알수없음");
             });
         }
     }

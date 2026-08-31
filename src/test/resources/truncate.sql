@@ -1,5 +1,13 @@
 TRUNCATE TABLE
+    community_notifications,
+    community_post_notification_settings,
+    community_comments,
+    community_post_likes,
+    community_post_scraps,
+    community_chat_messages,
+    community_chat_members,
     community_posts,
+    notice_translations,
     notices,
     reports,
     bug_reports,

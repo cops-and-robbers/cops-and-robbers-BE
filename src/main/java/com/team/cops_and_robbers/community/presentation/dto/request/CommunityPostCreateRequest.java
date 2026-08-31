@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
 import java.time.LocalDateTime;
 
 public record CommunityPostCreateRequest(
@@ -42,7 +43,12 @@ public record CommunityPostCreateRequest(
 
             @Schema(description = "경도", example = "127.0276")
             @NotNull(message = "경도는 필수 입력 항목입니다.")
-            Double longitude
+            Double longitude,
+
+            @Schema(description = "만나는 곳 (건물명이나 주변 장소)", example = "어린이대공원 정문")
+            @NotBlank(message = "만나는 곳은 필수 입력 항목입니다.")
+            @Size(max = 50, message = "만나는 곳은 최대 50자 입니다.")
+            String placeName
     ) {
     }
 
@@ -54,6 +60,7 @@ public record CommunityPostCreateRequest(
                 meetingAt,
                 location.latitude(),
                 location.longitude(),
+                location.placeName(),
                 maxParticipants
         );
     }

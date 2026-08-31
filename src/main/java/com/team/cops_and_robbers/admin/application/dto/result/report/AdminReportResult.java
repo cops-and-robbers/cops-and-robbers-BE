@@ -4,6 +4,7 @@ import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.report.domain.ChatReport;
 import com.team.cops_and_robbers.report.domain.ReportStatus;
 import com.team.cops_and_robbers.report.domain.ReportType;
+import com.team.cops_and_robbers.user.domain.User;
 
 public record AdminReportResult(
         Long id,
@@ -20,16 +21,14 @@ public record AdminReportResult(
         String createdAt
 ) {
 
-    private static final String WITHDRAWN_USER = "탈퇴한 사용자";
-
     public static AdminReportResult of(ChatReport report, String reporterNickname, String reportedNickname) {
         return new AdminReportResult(
                 report.getId(),
                 report.getGameId(),
                 report.getReporterUserId(),
-                reporterNickname != null ? reporterNickname : WITHDRAWN_USER,
+                reporterNickname != null ? reporterNickname : User.UNKNOWN_NICKNAME,
                 report.getReportedUserId(),
-                reportedNickname != null ? reportedNickname : WITHDRAWN_USER,
+                reportedNickname != null ? reportedNickname : User.UNKNOWN_NICKNAME,
                 report.getMessageContent(),
                 report.getReportType(),
                 report.getEtcReason(),

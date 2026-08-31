@@ -19,11 +19,18 @@ public enum StompSubscribeChannel {
     LOCATION_ROBBER("/subscribe/game/%s/location/robber"),
 
     PING_POLICE("/subscribe/game/%s/ping/police"),
-    PING_ROBBER("/subscribe/game/%s/ping/robber");
+    PING_ROBBER("/subscribe/game/%s/ping/robber"),
+
+    COMMUNITY_CHAT("/subscribe/community/%s/chat"),
+    COMMUNITY_CHAT_USER("/subscribe/user/%s/community/chat");
 
     private final String format;
 
-    public String getUrl(Long gameId) {
-        return String.format(format, gameId);
+    /**
+     * 게임 채널은 gameId, 커뮤니티 채널은 postId를 받는다.
+     * COMMUNITY_CHAT_USER는 채팅방 목록 화면에서 구독 하나로 내 모든 방을 받는 채널이라 userId를 받는다.
+     */
+    public String getUrl(Long id) {
+        return String.format(format, id);
     }
 }

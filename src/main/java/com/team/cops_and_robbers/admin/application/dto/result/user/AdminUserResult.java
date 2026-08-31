@@ -13,6 +13,7 @@ public record AdminUserResult(
         Boolean termsOfServiceAgreed,
         Boolean privacyPolicyAgreed,
         Boolean locationTermsAgreed,
+        Boolean allowMarketingPush,
         String createdAt
 ) {
     public static AdminUserResult from(User user) {
@@ -24,6 +25,7 @@ public record AdminUserResult(
                 user.isTermsOfServiceAgreed(),
                 user.isPrivacyPolicyAgreed(),
                 user.isLocationTermsAgreed(),
+                user.isAllowMarketingPush(),
                 TimestampUtil.toIsoString(user.getCreatedAt())
         );
     }

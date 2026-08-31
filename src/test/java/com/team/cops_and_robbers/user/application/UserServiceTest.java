@@ -6,8 +6,11 @@ import com.google.firebase.auth.FirebaseAuthException;
 import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.common.fixture.CommunityPostFixture;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
+import com.team.cops_and_robbers.community.domain.CommunityPost;
+import com.team.cops_and_robbers.community.domain.RecruitmentStatus;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
@@ -15,6 +18,7 @@ import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.user.application.dto.command.AgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.GamePushAgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
+import com.team.cops_and_robbers.user.application.dto.command.ProfileIconUpdateCommand;
 import com.team.cops_and_robbers.user.application.dto.result.GamePushAgreementResult;
 import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.User;
@@ -31,9 +35,11 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
+import static com.team.cops_and_robbers.common.fixture.UserFixture.USER_WITHOUT_TERMS;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
@@ -111,6 +117,38 @@ class UserServiceTest extends ServiceUnitTest {
             assertThatThrownBy(() -> userService.updateTermsAgreement(command))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessage(UserException.REQUIRED_TERMS_NOT_AGREED.getDetail());
+        }
+
+        @Test
+        void 약관_개정으로_초기화된_뒤_다시_동의하면_동의_시각이_갱신된다() {
+            // given
+            LocalDateTime firstAgreedAt = LocalDateTime.now().minusYears(1);
+            User resetUser = USER_WITHOUT_TERMS("재동의유저");
+            setId(resetUser, TEST_USER_ID);
+            ReflectionTestUtils.setField(resetUser, "termsAgreedAt", firstAgreedAt);
+            AgreementCommand command = AgreementCommand.of(TEST_USER_ID, true, true, true, false);
+            given(userRepository.getByUserId(TEST_USER_ID)).willReturn(resetUser);
+
+            // when
+            userService.updateTermsAgreement(command);
+
+            // then
+            assertThat(resetUser.getTermsAgreedAt()).isAfter(firstAgreedAt);
+        }
+
+        @Test
+        void 이미_필수_약관에_동의한_상태로_재제출하면_최초_동의_시각을_유지한다() {
+            // given
+            LocalDateTime firstAgreedAt = LocalDateTime.now().minusYears(1);
+            user.agreeTerms(false, firstAgreedAt);
+            AgreementCommand command = AgreementCommand.of(TEST_USER_ID, true, true, true, false);
+            given(userRepository.getByUserId(TEST_USER_ID)).willReturn(user);
+
+            // when
+            userService.updateTermsAgreement(command);
+
+            // then
+            assertThat(user.getTermsAgreedAt()).isEqualTo(firstAgreedAt);
         }
     }
 
@@ -282,6 +320,24 @@ class UserServiceTest extends ServiceUnitTest {
     }
 
     @Nested
+    @DisplayName("프로필 아이콘 변경")
+    class UpdateProfileIcon {
+
+        @Test
+        void 아이콘_번호_변경에_성공한다() {
+            // given
+            ProfileIconUpdateCommand command = ProfileIconUpdateCommand.of(user.getId(), 2);
+            given(userRepository.getByUserId(user.getId())).willReturn(user);
+
+            // when
+            userService.updateProfileIcon(command);
+
+            // then
+            assertThat(user.getProfileIcon()).isEqualTo(2);
+        }
+    }
+
+    @Nested
     @DisplayName("회원 탈퇴")
     class DeleteAccount {
 
@@ -332,6 +388,25 @@ class UserServiceTest extends ServiceUnitTest {
             // then
             then(userRepository).should().deleteUserByIdDirectly(user.getId());
             then(refreshTokenRepository).should().delete(user.getId());
+        }
+
+        @Test
+        void 탈퇴하면_모집중인_게시글이_자동으로_마감된다() throws Exception {
+            // given
+            given(userRepository.getByUserId(user.getId())).willReturn(user);
+            given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(false);
+
+            CommunityPost recruitingPost = CommunityPostFixture.POST(user.getId());
+            CommunityPost completedPost = CommunityPostFixture.COMPLETED_POST(user.getId());
+            given(communityPostRepository.findAllByWriterId(user.getId()))
+                    .willReturn(List.of(recruitingPost, completedPost));
+
+            // when
+            userService.deleteAccount(user.getId());
+
+            // then
+            assertThat(recruitingPost.getStatus()).isEqualTo(RecruitmentStatus.COMPLETED);
+            assertThat(completedPost.getStatus()).isEqualTo(RecruitmentStatus.COMPLETED);
         }
     }
 

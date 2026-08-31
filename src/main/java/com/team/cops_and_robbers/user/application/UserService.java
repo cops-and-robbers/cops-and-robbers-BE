@@ -7,14 +7,19 @@ import com.team.cops_and_robbers.auth.exception.AuthException;
 import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.exception.InfrastructureException;
+import com.team.cops_and_robbers.community.domain.RecruitmentStatus;
+import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.user.application.dto.command.AgreementCommand;
+import com.team.cops_and_robbers.user.application.dto.command.CommunityPushAgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.GamePushAgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateCommand;
+import com.team.cops_and_robbers.user.application.dto.command.ProfileIconUpdateCommand;
+import com.team.cops_and_robbers.user.application.dto.result.CommunityPushAgreementResult;
 import com.team.cops_and_robbers.user.application.dto.result.GamePushAgreementResult;
 import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.User;
@@ -46,6 +51,7 @@ public class UserService {
     private final GameParticipantRepository gameParticipantRepository;
     private final GameAreaRepository gameAreaRepository;
     private final GameRepository gameRepository;
+    private final CommunityPostRepository communityPostRepository;
 
     @Transactional(readOnly = true)
     public User getUserInfo(Long loginUserId) {
@@ -105,6 +111,7 @@ public class UserService {
         if (gameParticipantRepository.existsActiveGameByUserId(user.getId())) {
             throw new ApplicationException(UserException.CANNOT_WITHDRAW);
         }
+        closeRecruitingPosts(userId);
         userDeviceRepository.deleteByUserId(userId);
         userRepository.deleteUserByIdDirectly(user.getId());
         refreshTokenRepository.delete(user.getId());
@@ -118,6 +125,12 @@ public class UserService {
             }
             throw new InfrastructureException(AuthException.FIREBASE_SERVER_ERROR);
         }
+    }
+
+    private void closeRecruitingPosts(Long writerId) {
+        communityPostRepository.findAllByWriterId(writerId).stream()
+                .filter(post -> post.getStatus() == RecruitmentStatus.RECRUITING)
+                .forEach(post -> post.updateStatus(RecruitmentStatus.COMPLETED));
     }
 
     @Transactional
@@ -140,5 +153,23 @@ public class UserService {
     public void updateGamePushAgreement(GamePushAgreementCommand command) {
         User user = userRepository.getByUserId(command.userId());
         user.updateGamePush(command.allowGamePush());
+    }
+
+    @Transactional(readOnly = true)
+    public CommunityPushAgreementResult getCommunityPushAgreement(Long userId) {
+        User user = userRepository.getByUserId(userId);
+        return CommunityPushAgreementResult.from(user);
+    }
+
+    @Transactional
+    public void updateCommunityPushAgreement(CommunityPushAgreementCommand command) {
+        User user = userRepository.getByUserId(command.userId());
+        user.updateCommunityPush(command.allowCommunityPush());
+    }
+
+    @Transactional
+    public void updateProfileIcon(ProfileIconUpdateCommand command) {
+        User user = userRepository.getByUserId(command.userId());
+        user.updateProfileIcon(command.profileIcon());
     }
 }

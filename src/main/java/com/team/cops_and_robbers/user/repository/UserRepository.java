@@ -12,9 +12,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Long>, UserRepositoryCustom {
 
     @Modifying(clearAutomatically = true)
     @Query("delete from User u where u.id = :id")
@@ -40,6 +42,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
     );
 
     long countByCreatedAtGreaterThanEqual(LocalDateTime since);
+
+    @Query("""
+            select new com.team.cops_and_robbers.user.repository.UserProfileProjection(
+                u.id, u.nickname, u.profileIcon
+            )
+            from User u
+            where u.id in :userIds
+            """)
+    List<UserProfileProjection> findProfilesByIds(@Param("userIds") Collection<Long> userIds);
 
     default User getByUserId(Long userId) {
         return findById(userId)

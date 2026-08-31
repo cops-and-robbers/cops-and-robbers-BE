@@ -2,16 +2,22 @@ package com.team.cops_and_robbers.community.presentation;
 
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.common.swagger.ApiErrorCode;
+import com.team.cops_and_robbers.community.domain.CommunityPostScope;
+import com.team.cops_and_robbers.community.domain.CommunityPostSort;
 import com.team.cops_and_robbers.community.exception.CommunityPostException;
 import com.team.cops_and_robbers.community.presentation.dto.request.CommunityPostCreateRequest;
 import com.team.cops_and_robbers.community.presentation.dto.request.CommunityPostStatusRequest;
 import com.team.cops_and_robbers.community.presentation.dto.request.CommunityPostUpdateRequest;
+import com.team.cops_and_robbers.community.presentation.dto.response.AddressResponse;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityPostListResponse;
 import com.team.cops_and_robbers.community.presentation.dto.response.CommunityPostResponse;
+import com.team.cops_and_robbers.community.presentation.dto.response.CountryResponse;
+import com.team.cops_and_robbers.user.exception.UserException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -19,11 +25,39 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
+
 @Tag(name = "CommunityPost", description = "커뮤니티 모집 게시글 API")
 public interface CommunityPostControllerDocs {
 
-    @Operation(summary = "게시글 생성", description = "새로운 모집 게시글을 생성합니다.")
-    @ApiErrorCode(value = CommunityPostException.class, codes = {"INVALID_MEETING_DATE"})
+    @SecurityRequirements
+    @Operation(summary = "좌표 국가 조회 (로그인 불필요)",
+            description = "좌표가 속한 국가 코드를 반환합니다. 목록 조회 전에 한 번 호출해 countryCode를 얻는 용도입니다. "
+                    + "주소는 만들지 않으므로 표기 언어를 맞추는 추가 호출을 하지 않습니다.")
+    @ApiErrorCode(value = CommunityPostException.class, codes = {"COUNTRY_NOT_SPECIFIED", "ADDRESS_LOOKUP_FAILED"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
+    ResponseEntity<CountryResponse> getCountry(
+            @Parameter(description = "위도", example = "37.5502") @RequestParam Double latitude,
+            @Parameter(description = "경도", example = "127.0736") @RequestParam Double longitude
+    );
+
+    @Operation(summary = "좌표 주소 조회",
+            description = "좌표에 해당하는 주소를 조회합니다. 저장하지 않으며, 작성 화면에서 위치를 확인시켜 주기 위한 용도입니다. "
+                    + "게시글에는 region이 저장되고 address는 작성자 확인용입니다.")
+    @ApiErrorCode(value = CommunityPostException.class, codes = {"ADDRESS_NOT_FOUND", "ADDRESS_LOOKUP_FAILED"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
+    ResponseEntity<AddressResponse> getAddress(
+            @Parameter(description = "위도", example = "37.5502") @RequestParam Double latitude,
+            @Parameter(description = "경도", example = "127.0736") @RequestParam Double longitude
+    );
+
+    @Operation(summary = "게시글 생성", description = "새로운 모집 게시글을 생성합니다. 좌표는 서버에서 동 단위 지역으로 변환해 저장하며, 주소를 찾을 수 없는 위치는 400을 반환합니다. 만나는 곳(placeName)은 작성자가 직접 입력합니다.")
+    @ApiErrorCode(value = CommunityPostException.class, codes = {"INVALID_MEETING_DATE", "ADDRESS_NOT_FOUND", "ADDRESS_LOOKUP_FAILED"})
+    @ApiErrorCode(value = UserException.class, codes = {"REQUIRED_TERMS_NOT_AGREED"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "생성 성공")
     })
@@ -32,26 +66,69 @@ public interface CommunityPostControllerDocs {
             @RequestBody @Valid CommunityPostCreateRequest request
     );
 
-    @Operation(summary = "게시글 목록 조회", description = "모집 게시글 목록을 최신순으로 조회합니다.")
+    @SecurityRequirements
+    @Operation(summary = "게시글 목록 조회 (로그인 불필요)",
+            description = "모집 게시글 목록을 국가별로 나눠 최신순 커서 방식으로 조회합니다. "
+                    + "웹뷰 지원을 위해 인증 없이 호출할 수 있습니다. "
+                    + "countryCode 또는 excludeCountryCodes 중 하나는 필수입니다. "
+                    + "단일 국가를 볼 때는 countryCode를 쓰고, GET /api/community-posts/country 로 먼저 조회하세요. "
+                    + "특정 국가를 뺀 전부가 필요하면 excludeCountryCodes를 씁니다(웹 영어 목록용). "
+                    + "둘을 함께 보내면 400입니다.\n\n"
+                    + "지원하지 않는 쿼리 파라미터가 포함되면 400을 반환합니다.\n\n"
+                    + "토큰을 보내면 isLikedByRequester·isScrappedByRequester에 내가 좋아요·스크랩했는지를 반영합니다. "
+                    + "토큰 없이 조회하면 isLikedByRequester·isScrappedByRequester는 항상 false이고, likeCount·scrapCount는 로그인 여부와 무관하게 항상 실제 값입니다.")
+    @ApiErrorCode(value = CommunityPostException.class,
+            codes = {"UNSUPPORTED_LIST_SCOPE", "COUNTRY_NOT_SPECIFIED", "CONFLICTING_COUNTRY_FILTER",
+                    "ADDRESS_LOOKUP_FAILED"})
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "조회 성공")
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "400",
+                    description = "잘못된 커서 / 사이즈 범위 초과 / 미지원 파라미터 / 검색어 2자 미만 / 거리순 좌표 누락")
     })
     ResponseEntity<CommunityPostListResponse> getPostList(
-            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "페이지 크기 (1부터~)", example = "10") @RequestParam(defaultValue = "10") int size
+            @Parameter(hidden = true) LoginUser loginUser,
+            @Parameter(description = "이전 응답의 nextCursor 값 (첫 페이지는 생략). 국가 조건·정렬·검색어가 받았을 때와 다르면 400") @RequestParam(required = false) String cursor,
+            @Parameter(description = "페이지 크기 (1~100)", example = "10") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "조회 범위. 현재는 ALL만 지원하며 NEARBY, MINE은 400", example = "ALL")
+            @RequestParam(defaultValue = "ALL") CommunityPostScope scope,
+            @Parameter(description = "정렬 기준. LATEST, DEADLINE, DISTANCE, POPULAR 지원. "
+                    + "POPULAR는 좋아요*1 + 스크랩*2 + 채팅 참여(멤버 수)*3 점수로 계산하며 최근 7일 이내 작성글만 대상. "
+                    + "마감된 글은 정렬과 무관하게 맨 뒤", example = "LATEST")
+            @RequestParam(defaultValue = "LATEST") CommunityPostSort sort,
+            @Parameter(description = "조회할 국가 코드(ISO 3166-1 alpha-2). excludeCountryCodes를 보내지 않으면 필수", example = "KR")
+            @RequestParam(required = false) String countryCode,
+            @Parameter(description = "제외할 국가 코드 목록(쉼표 구분). 보내면 해당 국가를 뺀 전체를 조회하며 countryCode는 생략한다",
+                    example = "KR,JP")
+            @RequestParam(required = false) List<String> excludeCountryCodes,
+            @Parameter(description = "사용자 위도. sort=DISTANCE 일 때만 필수이고, 그 외 정렬에서 보내면 400")
+            @RequestParam(required = false) Double latitude,
+            @Parameter(description = "사용자 경도. sort=DISTANCE 일 때만 필수이고, 그 외 정렬에서 보내면 400")
+            @RequestParam(required = false) Double longitude,
+            @Parameter(description = "검색어. 제목·장소명·지역에서 찾는다 (대소문자 무시). 공백 제외 2자 이상이어야 하며 미만이면 400, 공백만 보내면 전체 조회", example = "서울")
+            @RequestParam(required = false) String keyword
     );
 
-    @Operation(summary = "게시글 단건 조회", description = "특정 모집 게시글을 조회합니다.")
+    @SecurityRequirements
+    @Operation(summary = "게시글 단건 조회 (로그인 불필요)",
+            description = "특정 모집 게시글을 조회합니다.\n\n"
+                    + "location.region은 동 단위(예: 서울특별시 광진구 군자동), "
+                    + "location.address는 번지까지 포함한 지번 주소입니다(예: 서울특별시 광진구 군자동 98). "
+                    + "화면에는 region을 쓰고 주소 복사에는 address를 쓰세요.\n\n"
+                    + "토큰을 보내면 chatJoined에 내가 이 게시글 채팅방에 참여 중인지, isLikedByRequester·isScrappedByRequester에 내가 좋아요·스크랩했는지 반영한다. "
+                    + "토큰 없이 조회하면 chatJoined·isLikedByRequester·isScrappedByRequester는 항상 false.")
     @ApiErrorCode(value = CommunityPostException.class, codes = {"POST_NOT_FOUND"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     ResponseEntity<CommunityPostResponse> getPost(
+            @Parameter(hidden = true) LoginUser loginUser,
             @PathVariable Long postId
     );
 
-    @Operation(summary = "게시글 수정", description = "특정 모집 게시글을 수정합니다.")
-    @ApiErrorCode(value = CommunityPostException.class, codes = {"POST_NOT_FOUND", "FORBIDDEN_NOT_AUTHOR", "INVALID_MEETING_DATE"})
+    @Operation(summary = "게시글 수정", description = "특정 모집 게시글을 수정합니다. 좌표가 바뀌었거나 지역 정보가 비어 있으면 주소를 다시 변환합니다.")
+    @ApiErrorCode(value = CommunityPostException.class, codes = {"POST_NOT_FOUND", "FORBIDDEN_NOT_AUTHOR", "INVALID_MEETING_DATE",
+            "ADDRESS_NOT_FOUND", "ADDRESS_LOOKUP_FAILED"})
+    @ApiErrorCode(value = UserException.class, codes = {"REQUIRED_TERMS_NOT_AGREED"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "수정 성공")
     })

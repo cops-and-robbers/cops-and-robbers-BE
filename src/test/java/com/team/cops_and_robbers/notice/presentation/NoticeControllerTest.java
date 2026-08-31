@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.notice.presentation;
 import com.team.cops_and_robbers.common.ControllerTest;
 import com.team.cops_and_robbers.notice.domain.NoticeCategory;
 import com.team.cops_and_robbers.notice.presentation.dto.request.NoticeCreateRequest;
+import com.team.cops_and_robbers.notice.presentation.dto.request.NoticeTranslationRequest;
 import com.team.cops_and_robbers.notice.presentation.dto.request.NoticeUpdateRequest;
 import com.team.cops_and_robbers.user.domain.User;
 import io.restassured.response.ExtractableResponse;
@@ -12,9 +13,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.util.Map;
+import java.util.List;
 
-import static com.team.cops_and_robbers.common.fixture.NoticeFixture.MAINTENANCE_NOTICE;
+import static com.team.cops_and_robbers.common.fixture.NoticeFixture.JA_TRANSLATION;
+import static com.team.cops_and_robbers.common.fixture.NoticeFixture.KO_TRANSLATION;
 import static com.team.cops_and_robbers.common.fixture.NoticeFixture.NOTICE;
 import static com.team.cops_and_robbers.common.fixture.NoticeFixture.PINNED_NOTICE;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
@@ -34,13 +36,29 @@ class NoticeControllerTest extends ControllerTest {
         userAccessToken = givenAccessToken(givenUser("일반유저"));
     }
 
+    private static NoticeTranslationRequest koTranslation() {
+        return new NoticeTranslationRequest("ko", "공지사항 제목", "공지사항 내용");
+    }
+
+    private static NoticeTranslationRequest jaTranslation() {
+        return new NoticeTranslationRequest("ja", "お知らせのタイトル", "お知らせの内容");
+    }
+
+    /** 한국어 번역만 가진 공지 하나를 저장하고 id를 돌려준다. */
+    private Long givenKoreanNotice() {
+        Long noticeId = noticeRepository.save(NOTICE()).getId();
+        noticeTranslationRepository.save(KO_TRANSLATION(noticeId));
+        return noticeId;
+    }
+
     @Nested
     @DisplayName("공지사항 생성 API")
     class CreateNotice {
 
         @Test
-        void 관리자가_공지사항_생성에_성공하면_201을_응답한다() {
-            NoticeCreateRequest request = new NoticeCreateRequest("공지사항 제목", "공지사항 내용", false, NoticeCategory.NOTICE);
+        void 관리자가_번역과_함께_공지사항_생성에_성공하면_201을_응답한다() {
+            NoticeCreateRequest request = new NoticeCreateRequest(
+                    false, NoticeCategory.NOTICE, "ko", List.of(koTranslation(), jaTranslation()));
 
             ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .body(request)
@@ -54,14 +72,69 @@ class NoticeControllerTest extends ControllerTest {
                 softly.assertThat(extract.jsonPath().getLong("id")).isNotNull();
                 softly.assertThat(extract.jsonPath().getString("title")).isEqualTo("공지사항 제목");
                 softly.assertThat(extract.jsonPath().getString("content")).isEqualTo("공지사항 내용");
+                softly.assertThat(extract.jsonPath().getString("language")).isEqualTo("ko");
+                softly.assertThat(extract.jsonPath().getString("requestedLanguage")).isEqualTo("ko");
                 softly.assertThat(extract.jsonPath().getBoolean("pinned")).isFalse();
                 softly.assertThat(extract.jsonPath().getString("category")).isEqualTo("NOTICE");
             });
         }
 
         @Test
+        void 원문_언어의_번역이_없으면_400을_응답한다() {
+            NoticeCreateRequest request = new NoticeCreateRequest(
+                    false, NoticeCategory.NOTICE, "ko", List.of(jaTranslation()));
+
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
+                    .body(request)
+                    .when()
+                    .post(NOTICE_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
+        void 같은_언어의_번역이_두_번_오면_400을_응답한다() {
+            NoticeCreateRequest request = new NoticeCreateRequest(
+                    false, NoticeCategory.NOTICE, "ko", List.of(koTranslation(), koTranslation()));
+
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
+                    .body(request)
+                    .when()
+                    .post(NOTICE_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
+        void 지원하지_않는_언어로_요청하면_400을_응답한다() {
+            NoticeCreateRequest request = new NoticeCreateRequest(
+                    false, NoticeCategory.NOTICE, "fr",
+                    List.of(new NoticeTranslationRequest("fr", "제목", "내용")));
+
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
+                    .body(request)
+                    .when()
+                    .post(NOTICE_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
         void 일반_사용자가_요청하면_403을_응답한다() {
-            NoticeCreateRequest request = new NoticeCreateRequest("공지사항 제목", "공지사항 내용", false, NoticeCategory.NOTICE);
+            NoticeCreateRequest request = new NoticeCreateRequest(
+                    false, NoticeCategory.NOTICE, "ko", List.of(koTranslation()));
 
             ExtractableResponse<Response> extract = authenticated(userAccessToken)
                     .body(request)
@@ -77,7 +150,8 @@ class NoticeControllerTest extends ControllerTest {
 
         @Test
         void 토큰_없이_요청하면_401을_응답한다() {
-            NoticeCreateRequest request = new NoticeCreateRequest("공지사항 제목", "공지사항 내용", false, NoticeCategory.NOTICE);
+            NoticeCreateRequest request = new NoticeCreateRequest(
+                    false, NoticeCategory.NOTICE, "ko", List.of(koTranslation()));
 
             ExtractableResponse<Response> extract = unauthenticated()
                     .body(request)
@@ -98,8 +172,9 @@ class NoticeControllerTest extends ControllerTest {
 
         @Test
         void 공지사항_목록_조회에_성공하면_200을_응답한다() {
-            noticeRepository.save(NOTICE());
-            noticeRepository.save(PINNED_NOTICE());
+            givenKoreanNotice();
+            Long pinnedId = noticeRepository.save(PINNED_NOTICE()).getId();
+            noticeTranslationRepository.save(KO_TRANSLATION(pinnedId));
 
             ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .queryParam("page", 0)
@@ -120,9 +195,67 @@ class NoticeControllerTest extends ControllerTest {
         }
 
         @Test
+        void 요청한_언어의_번역이_있으면_그_언어로_내려간다() {
+            Long noticeId = givenKoreanNotice();
+            noticeTranslationRepository.save(JA_TRANSLATION(noticeId));
+
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
+                    .queryParam("language", "ja")
+                    .when()
+                    .get(NOTICE_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getString("content[0].title")).isEqualTo("お知らせのタイトル");
+                softly.assertThat(extract.jsonPath().getString("content[0].language")).isEqualTo("ja");
+                softly.assertThat(extract.jsonPath().getString("content[0].requestedLanguage")).isEqualTo("ja");
+            });
+        }
+
+        @Test
+        void 요청한_언어의_번역이_없으면_원문_언어로_대체된다() {
+            givenKoreanNotice();
+
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
+                    .queryParam("language", "ja")
+                    .when()
+                    .get(NOTICE_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getString("content[0].title")).isEqualTo("공지사항 제목");
+                softly.assertThat(extract.jsonPath().getString("content[0].language")).isEqualTo("ko");
+                softly.assertThat(extract.jsonPath().getString("content[0].requestedLanguage")).isEqualTo("ja");
+            });
+        }
+
+        @Test
+        void language를_보내지_않으면_한국어로_내려간다() {
+            givenKoreanNotice();
+
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
+                    .when()
+                    .get(NOTICE_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getString("content[0].title")).isEqualTo("공지사항 제목");
+                softly.assertThat(extract.jsonPath().getString("content[0].language")).isEqualTo("ko");
+                softly.assertThat(extract.jsonPath().getString("content[0].requestedLanguage")).isEqualTo("ko");
+            });
+        }
+
+        @Test
         void category_필터로_조회하면_해당_카테고리만_반환된다() {
-            noticeRepository.save(NOTICE());        // NOTICE 카테고리
-            noticeRepository.save(PINNED_NOTICE());
+            givenKoreanNotice();        // NOTICE 카테고리
+            Long pinnedId = noticeRepository.save(PINNED_NOTICE()).getId();
+            noticeTranslationRepository.save(KO_TRANSLATION(pinnedId));
 
             ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .queryParam("page", 0)
@@ -143,7 +276,7 @@ class NoticeControllerTest extends ControllerTest {
 
         @Test
         void 존재하지_않는_category로_조회하면_빈_목록을_반환한다() {
-            noticeRepository.save(NOTICE());
+            givenKoreanNotice();
 
             ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .queryParam("page", 0)
@@ -208,7 +341,7 @@ class NoticeControllerTest extends ControllerTest {
 
         @Test
         void 존재하는_공지사항_조회에_성공하면_200을_응답한다() {
-            Long noticeId = noticeRepository.save(NOTICE()).getId();
+            Long noticeId = givenKoreanNotice();
 
             ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .when()
@@ -220,6 +353,26 @@ class NoticeControllerTest extends ControllerTest {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
                 softly.assertThat(extract.jsonPath().getLong("id")).isEqualTo(noticeId);
                 softly.assertThat(extract.jsonPath().getString("category")).isEqualTo("NOTICE");
+                softly.assertThat(extract.jsonPath().getString("language")).isEqualTo("ko");
+            });
+        }
+
+        @Test
+        void 요청한_언어의_번역이_없으면_원문_언어로_대체된다() {
+            Long noticeId = givenKoreanNotice();
+
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
+                    .queryParam("language", "ja")
+                    .when()
+                    .get(NOTICE_API_URL + "/" + noticeId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getString("title")).isEqualTo("공지사항 제목");
+                softly.assertThat(extract.jsonPath().getString("language")).isEqualTo("ko");
+                softly.assertThat(extract.jsonPath().getString("requestedLanguage")).isEqualTo("ja");
             });
         }
 
@@ -251,13 +404,80 @@ class NoticeControllerTest extends ControllerTest {
     }
 
     @Nested
+    @DisplayName("공지사항 번역 전체 조회 API")
+    class GetNoticeTranslations {
+
+        @Test
+        void 관리자가_조회하면_저장된_번역_전체를_200으로_응답한다() {
+            Long noticeId = givenKoreanNotice();
+            noticeTranslationRepository.save(JA_TRANSLATION(noticeId));
+
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
+                    .when()
+                    .get(NOTICE_API_URL + "/" + noticeId + "/translations")
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(extract.jsonPath().getLong("noticeId")).isEqualTo(noticeId);
+                softly.assertThat(extract.jsonPath().getString("originalLanguage")).isEqualTo("ko");
+                softly.assertThat(extract.jsonPath().getList("translations")).hasSize(2);
+            });
+        }
+
+        @Test
+        void 일반_사용자가_요청하면_403을_응답한다() {
+            Long noticeId = givenKoreanNotice();
+
+            ExtractableResponse<Response> extract = authenticated(userAccessToken)
+                    .when()
+                    .get(NOTICE_API_URL + "/" + noticeId + "/translations")
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(403);
+            });
+        }
+
+        @Test
+        void 존재하지_않는_공지사항이면_404를_응답한다() {
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
+                    .when()
+                    .get(NOTICE_API_URL + "/999/translations")
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(404);
+            });
+        }
+
+        @Test
+        void 토큰_없이_요청하면_401을_응답한다() {
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .when()
+                    .get(NOTICE_API_URL + "/1/translations")
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(401);
+            });
+        }
+    }
+
+    @Nested
     @DisplayName("공지사항 수정 API")
     class UpdateNotice {
 
         @Test
-        void 관리자가_공지사항_수정에_성공하면_200을_응답한다() {
-            Long noticeId = noticeRepository.save(NOTICE()).getId();
-            NoticeUpdateRequest request = new NoticeUpdateRequest("수정된 제목", "수정된 내용", true, NoticeCategory.MAINTENANCE);
+        void 관리자가_번역을_교체하며_수정에_성공하면_200을_응답한다() {
+            Long noticeId = givenKoreanNotice();
+            NoticeUpdateRequest request = new NoticeUpdateRequest(
+                    true, NoticeCategory.MAINTENANCE, "ko",
+                    List.of(new NoticeTranslationRequest("ko", "수정된 제목", "수정된 내용"), jaTranslation()));
 
             ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .body(request)
@@ -276,9 +496,28 @@ class NoticeControllerTest extends ControllerTest {
         }
 
         @Test
+        void 원문_언어의_번역이_없으면_400을_응답한다() {
+            Long noticeId = givenKoreanNotice();
+            NoticeUpdateRequest request = new NoticeUpdateRequest(
+                    true, NoticeCategory.NOTICE, "ko", List.of(jaTranslation()));
+
+            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
+                    .body(request)
+                    .when()
+                    .put(NOTICE_API_URL + "/" + noticeId)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+            });
+        }
+
+        @Test
         void 일반_사용자가_요청하면_403을_응답한다() {
-            Long noticeId = noticeRepository.save(NOTICE()).getId();
-            NoticeUpdateRequest request = new NoticeUpdateRequest("수정된 제목", "수정된 내용", true, NoticeCategory.NOTICE);
+            Long noticeId = givenKoreanNotice();
+            NoticeUpdateRequest request = new NoticeUpdateRequest(
+                    true, NoticeCategory.NOTICE, "ko", List.of(koTranslation()));
 
             ExtractableResponse<Response> extract = authenticated(userAccessToken)
                     .body(request)
@@ -294,7 +533,8 @@ class NoticeControllerTest extends ControllerTest {
 
         @Test
         void 존재하지_않는_공지사항_수정시_404를_응답한다() {
-            NoticeUpdateRequest request = new NoticeUpdateRequest("수정된 제목", "수정된 내용", true, NoticeCategory.NOTICE);
+            NoticeUpdateRequest request = new NoticeUpdateRequest(
+                    true, NoticeCategory.NOTICE, "ko", List.of(koTranslation()));
 
             ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .body(request)
@@ -310,7 +550,8 @@ class NoticeControllerTest extends ControllerTest {
 
         @Test
         void 토큰_없이_요청하면_401을_응답한다() {
-            NoticeUpdateRequest request = new NoticeUpdateRequest("수정된 제목", "수정된 내용", true, NoticeCategory.NOTICE);
+            NoticeUpdateRequest request = new NoticeUpdateRequest(
+                    true, NoticeCategory.NOTICE, "ko", List.of(koTranslation()));
 
             ExtractableResponse<Response> extract = unauthenticated()
                     .body(request)
@@ -326,95 +567,12 @@ class NoticeControllerTest extends ControllerTest {
     }
 
     @Nested
-    @DisplayName("카테고리 하위 호환성")
-    class CategoryBackwardCompatibility {
-
-        @Test
-        void 생성_요청에_category가_null이면_NOTICE로_기본_설정된다() {
-            NoticeCreateRequest request = new NoticeCreateRequest("공지사항 제목", "공지사항 내용", false, null);
-
-            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
-                    .body(request)
-                    .when()
-                    .post(NOTICE_API_URL)
-                    .then()
-                    .extract();
-
-            assertSoftly(softly -> {
-                softly.assertThat(extract.statusCode()).isEqualTo(201);
-                softly.assertThat(extract.jsonPath().getString("category")).isEqualTo("NOTICE");
-            });
-        }
-
-        @Test
-        void 생성_요청에_category_필드_자체가_없으면_NOTICE로_기본_설정된다() {
-            Map<String, Object> body = Map.of(
-                    "title", "공지사항 제목",
-                    "content", "공지사항 내용",
-                    "pinned", false
-            );
-
-            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
-                    .body(body)
-                    .when()
-                    .post(NOTICE_API_URL)
-                    .then()
-                    .extract();
-
-            assertSoftly(softly -> {
-                softly.assertThat(extract.statusCode()).isEqualTo(201);
-                softly.assertThat(extract.jsonPath().getString("category")).isEqualTo("NOTICE");
-            });
-        }
-
-        @Test
-        void 수정_요청에_category가_null이면_기존_카테고리가_유지된다() {
-            Long noticeId = noticeRepository.save(MAINTENANCE_NOTICE()).getId();
-            NoticeUpdateRequest request = new NoticeUpdateRequest("수정된 제목", "수정된 내용", true, null);
-
-            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
-                    .body(request)
-                    .when()
-                    .put(NOTICE_API_URL + "/" + noticeId)
-                    .then()
-                    .extract();
-
-            assertSoftly(softly -> {
-                softly.assertThat(extract.statusCode()).isEqualTo(200);
-                softly.assertThat(extract.jsonPath().getString("category")).isEqualTo("MAINTENANCE");
-            });
-        }
-
-        @Test
-        void 수정_요청에_category_필드_자체가_없으면_기존_카테고리가_유지된다() {
-            Long noticeId = noticeRepository.save(MAINTENANCE_NOTICE()).getId();
-            Map<String, Object> body = Map.of(
-                    "title", "수정된 제목",
-                    "content", "수정된 내용",
-                    "pinned", true
-            );
-
-            ExtractableResponse<Response> extract = authenticated(adminAccessToken)
-                    .body(body)
-                    .when()
-                    .put(NOTICE_API_URL + "/" + noticeId)
-                    .then()
-                    .extract();
-
-            assertSoftly(softly -> {
-                softly.assertThat(extract.statusCode()).isEqualTo(200);
-                softly.assertThat(extract.jsonPath().getString("category")).isEqualTo("MAINTENANCE");
-            });
-        }
-    }
-
-    @Nested
     @DisplayName("공지사항 삭제 API")
     class DeleteNotice {
 
         @Test
-        void 관리자가_공지사항_삭제에_성공하면_204를_응답한다() {
-            Long noticeId = noticeRepository.save(NOTICE()).getId();
+        void 관리자가_공지사항_삭제에_성공하면_204를_응답하고_번역도_함께_삭제된다() {
+            Long noticeId = givenKoreanNotice();
 
             ExtractableResponse<Response> extract = authenticated(adminAccessToken)
                     .when()
@@ -425,12 +583,13 @@ class NoticeControllerTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(204);
                 softly.assertThat(noticeRepository.findById(noticeId)).isEmpty();
+                softly.assertThat(noticeTranslationRepository.findAllByNoticeId(noticeId)).isEmpty();
             });
         }
 
         @Test
         void 일반_사용자가_요청하면_403을_응답한다() {
-            Long noticeId = noticeRepository.save(NOTICE()).getId();
+            Long noticeId = givenKoreanNotice();
 
             ExtractableResponse<Response> extract = authenticated(userAccessToken)
                     .when()

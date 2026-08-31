@@ -1,0 +1,31 @@
+# ─── 통합 신고 조회 쿼리 ────────────────────────────────────
+extend type Query {
+  adminAllReports(
+    page: Int = 0
+    size: Int = 20
+    status: ReportStatus
+    source: ReportSource
+    sortDirection: SortDirection = DESC
+  ): AdminAllReportPage!
+}
+
+# ─── 통합 신고 타입 ──────────────────────────────────────────
+type AdminAllReportPage {
+  content: [AdminAllReport!]!
+  totalElements: Int!
+  totalPages: Int!
+  page: Int!
+  size: Int!
+}
+
+type AdminAllReport {
+  id: ID!
+  source: ReportSource!
+  reporterUserId: ID!
+  reporterNickname: String!
+  reportedUserId: ID!
+  reportedNickname: String!
+  content: String!
+  status: ReportStatus!
+  createdAt: String!
+}

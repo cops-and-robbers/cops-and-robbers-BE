@@ -17,6 +17,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/** 공지의 분류·고정 여부만 갖는다. 제목과 내용은 언어별로 {@link NoticeTranslation} 에 있다. */
 @Entity
 @Table(name = "notices")
 @Getter
@@ -29,12 +30,6 @@ public class Notice extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100)
-    private String title;
-
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String content;
-
     @Column(nullable = false)
     private boolean pinned;
 
@@ -42,19 +37,22 @@ public class Notice extends BaseTimeEntity {
     @Column(nullable = false, length = 20)
     private NoticeCategory category;
 
+    /** 이 공지가 처음 작성된 언어. 요청 언어의 번역이 없을 때 대체 기준이 된다. */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 5)
+    private NoticeLanguage originalLanguage;
+
     public static Notice createNotice(NoticeCreateCommand command) {
         return Notice.builder()
-                .title(command.title())
-                .content(command.content())
                 .pinned(command.pinned())
                 .category(command.category())
+                .originalLanguage(command.originalLanguage())
                 .build();
     }
 
     public void updateNotice(NoticeUpdateCommand command) {
-        this.title = command.title();
-        this.content = command.content();
         this.pinned = command.pinned();
+        this.originalLanguage = command.originalLanguage();
         if (command.category() != null) {
             this.category = command.category();
         }

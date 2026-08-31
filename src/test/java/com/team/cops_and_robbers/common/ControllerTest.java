@@ -9,10 +9,22 @@ import com.team.cops_and_robbers.auth.infrastructure.social.strategy.KakaoLoginS
 import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
 import com.team.cops_and_robbers.bug.repository.BugReportRepository;
 import com.team.cops_and_robbers.common.fcm.FcmService;
-import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.common.fixture.UserDeviceFixture;
 import com.team.cops_and_robbers.common.fixture.UserFixture;
+import com.team.cops_and_robbers.community.application.CommunityChatFcmNotifier;
+import com.team.cops_and_robbers.community.application.CommunityFcmNotifier;
+import com.team.cops_and_robbers.community.domain.PostAddress;
+import com.team.cops_and_robbers.community.infrastructure.GeocodingClient;
+import com.team.cops_and_robbers.community.infrastructure.GeocodingResult;
+import com.team.cops_and_robbers.community.repository.CommunityChatMemberRepository;
+import com.team.cops_and_robbers.community.repository.CommunityChatMessageRepository;
+import com.team.cops_and_robbers.community.repository.CommunityCommentRepository;
+import com.team.cops_and_robbers.community.repository.CommunityNotificationRepository;
+import com.team.cops_and_robbers.community.repository.CommunityPostLikeRepository;
+import com.team.cops_and_robbers.community.repository.CommunityPostNotificationSettingRepository;
+import com.team.cops_and_robbers.community.repository.CommunityPostRepository;
+import com.team.cops_and_robbers.community.repository.CommunityPostScrapRepository;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
@@ -21,6 +33,7 @@ import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.history.repository.GameResultRepository;
 import com.team.cops_and_robbers.notice.repository.NoticeRepository;
+import com.team.cops_and_robbers.notice.repository.NoticeTranslationRepository;
 import com.team.cops_and_robbers.play.notification.application.GameFcmNotifier;
 import com.team.cops_and_robbers.report.repository.ReportRepository;
 import com.team.cops_and_robbers.user.domain.User;
@@ -40,6 +53,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 
 import static io.restassured.RestAssured.given;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 
 @Sql(scripts = "/truncate.sql")
 @ActiveProfiles("test")
@@ -63,6 +78,15 @@ public abstract class ControllerTest {
 
     @MockitoBean
     protected GameFcmNotifier gameFcmNotifier;
+
+    @MockitoBean
+    protected CommunityFcmNotifier communityFcmNotifier;
+
+    @MockitoBean
+    protected CommunityChatFcmNotifier communityChatFcmNotifier;
+
+    @MockitoBean
+    protected GeocodingClient geocodingClient;
 
     @Autowired
     protected UserRepository userRepository;
@@ -92,10 +116,34 @@ public abstract class ControllerTest {
     protected NoticeRepository noticeRepository;
 
     @Autowired
+    protected NoticeTranslationRepository noticeTranslationRepository;
+
+    @Autowired
     protected ReportRepository reportRepository;
 
     @Autowired
     protected CommunityPostRepository communityPostRepository;
+
+    @Autowired
+    protected CommunityChatMemberRepository communityChatMemberRepository;
+
+    @Autowired
+    protected CommunityChatMessageRepository communityChatMessageRepository;
+
+    @Autowired
+    protected CommunityCommentRepository communityCommentRepository;
+
+    @Autowired
+    protected CommunityPostLikeRepository communityPostLikeRepository;
+
+    @Autowired
+    protected CommunityPostScrapRepository communityPostScrapRepository;
+
+    @Autowired
+    protected CommunityNotificationRepository communityNotificationRepository;
+
+    @Autowired
+    protected CommunityPostNotificationSettingRepository communityPostNotificationSettingRepository;
 
     @Autowired
     protected JwtTokenProvider jwtTokenProvider;
@@ -107,6 +155,11 @@ public abstract class ControllerTest {
     void setUp() {
         RestAssured.port = port;
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+        doReturn(GeocodingResult.resolved(PostAddress.of(
+                "서울특별시 광진구 화양동 1-20", "서울특별시 광진구 능동로 216", null,
+                "서울특별시 광진구 화양동", "KR")))
+                .when(geocodingClient)
+                .reverseGeocode(any(), any());
     }
 
     protected String givenAccessToken(User user) {
