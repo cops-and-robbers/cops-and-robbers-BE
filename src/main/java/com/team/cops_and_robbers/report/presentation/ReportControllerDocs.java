@@ -2,8 +2,8 @@ package com.team.cops_and_robbers.report.presentation;
 
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.common.swagger.ApiErrorCode;
-import com.team.cops_and_robbers.community.exception.CommunityChatException;
-import com.team.cops_and_robbers.community.exception.CommunityPostException;
+import com.team.cops_and_robbers.community.chat.common.exception.CommunityChatException;
+import com.team.cops_and_robbers.community.post.exception.CommunityPostException;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.report.exception.ReportException;

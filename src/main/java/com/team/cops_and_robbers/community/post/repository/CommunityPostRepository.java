@@ -1,0 +1,38 @@
+package com.team.cops_and_robbers.community.post.repository;
+
+import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.community.post.domain.CommunityPost;
+import com.team.cops_and_robbers.community.post.exception.CommunityPostException;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface CommunityPostRepository
+        extends JpaRepository<CommunityPost, Long>, CommunityPostRepositoryCustom {
+
+    List<CommunityPost> findAllByWriterId(Long writerId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from CommunityPost p where p.id = :postId")
+    Optional<CommunityPost> findByPostIdForUpdate(@Param("postId") Long postId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("delete from CommunityPost c where c.id = :postId")
+    void deleteByPostId(@Param("postId") Long postId);
+
+    default CommunityPost getByPostId(Long postId) {
+        return findById(postId)
+                .orElseThrow(() -> new ApplicationException(CommunityPostException.POST_NOT_FOUND));
+    }
+
+    default CommunityPost getByPostIdForUpdate(Long postId) {
+        return findByPostIdForUpdate(postId)
+                .orElseThrow(() -> new ApplicationException(CommunityPostException.POST_NOT_FOUND));
+    }
+}
