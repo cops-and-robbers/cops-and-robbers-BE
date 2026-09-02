@@ -13,6 +13,7 @@ import com.team.cops_and_robbers.common.fixture.GameResultParticipantFixture;
 import com.team.cops_and_robbers.game.area.domain.AreaType;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.history.domain.GameEndReason;
+import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.history.domain.GameResult;
 import com.team.cops_and_robbers.history.domain.GameResultParticipant;
 import com.team.cops_and_robbers.history.exception.GameResultException;
@@ -101,6 +102,32 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
                 softly.assertThat(result.totalElements()).isEqualTo(1);
                 softly.assertThat(result.content().get(0).endReason())
                         .isEqualTo(GameEndReason.ALL_ARRESTED);
+            });
+        }
+
+        /** 위치정보 확인자료(수집 일시·주기)를 어드민이 열람할 수 있어야 한다. */
+        @Test
+        void 위치_수집_시작_종료_시각과_공개_주기가_매핑된다() {
+            // given
+            AdminGameHistoryListCommand command = new AdminGameHistoryListCommand(
+                    0, 10, null, SortDirection.DESC);
+
+            Page<GameResult> resultPage = new PageImpl<>(
+                    List.of(createGameResult(1L, 10L)), PageRequest.of(0, 10), 1);
+            given(gameResultRepository.findAllForAdmin(isNull(), any())).willReturn(resultPage);
+
+            // when
+            AdminGameHistoryPageResult result = adminGameHistoryService.getGameHistoryList(command);
+
+            // then
+            AdminGameHistoryResult history = result.content().get(0);
+            assertSoftly(softly -> {
+                softly.assertThat(history.startedAt())
+                        .isEqualTo(TimestampUtil.toIsoString(GameResultFixture.STARTED_AT));
+                softly.assertThat(history.endedAt())
+                        .isEqualTo(TimestampUtil.toIsoString(GameResultFixture.ENDED_AT));
+                softly.assertThat(history.locationRevealIntervalMinutes())
+                        .isEqualTo(GameResultFixture.REVEAL_INTERVAL_MINUTES);
             });
         }
 

@@ -30,8 +30,18 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.31.0")
+                .version("2.32.0")
                 .description("""
+                        ## v2.32.0 업데이트 내역
+
+                        ### 🛠 변경 — 게임 기록에 위치 수집 시각·주기 보존
+                        - 위치정보법 제16조 제2항 확인자료(수집·이용·제공사실 기록) 대응이다
+                        - game_results 에 started_at, ended_at, location_reveal_interval_minutes 를 저장한다
+                          - 방 설정(games)은 게임이 끝나고 다시 설정하면 덮어써져, 지난 게임의 주기를 알 수 없었다
+                          - durationSeconds 처럼 그 게임 시점의 값을 복사해 둔다. 게임 중에는 설정을 바꿀 수 없어 시작 시점 값과 같다
+                        - 어드민 게임 기록(AdminGameHistory)에 startedAt, endedAt, locationRevealIntervalMinutes 노출
+                        - 앱 영향 없다. 좌표는 그대로 Redis TTL(10분)로만 두고 새로 저장하지 않는다
+
                         ## v2.31.0 업데이트 내역
 
                         ### ✨ 신규 — 채팅방 고정 채팅(공지)
