@@ -39,7 +39,8 @@ public class SwaggerConfig {
                         - game_results 에 started_at, ended_at, location_reveal_interval_minutes 를 저장한다
                           - 방 설정(games)은 게임이 끝나고 다시 설정하면 덮어써져, 지난 게임의 주기를 알 수 없었다
                           - durationSeconds 처럼 그 게임 시점의 값을 복사해 둔다. 게임 중에는 설정을 바꿀 수 없어 시작 시점 값과 같다
-                        - 어드민 게임 기록(AdminGameHistory)에 startedAt, endedAt, locationRevealIntervalMinutes 노출
+                        - 어드민 게임방 상세(AdminGame.result)와 게임 기록(AdminGameHistory) 두 곳에
+                          startedAt, endedAt, locationRevealIntervalMinutes 노출
                         - 앱 영향 없다. 좌표는 그대로 Redis TTL(10분)로만 두고 새로 저장하지 않는다
 
                         ## v2.31.0 업데이트 내역
