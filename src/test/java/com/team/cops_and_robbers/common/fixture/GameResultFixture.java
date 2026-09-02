@@ -11,14 +11,23 @@ import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.geom.PrecisionModel;
 
+import java.time.LocalDateTime;
+
 public class GameResultFixture {
 
     private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory(new PrecisionModel(), 4326);
+
+    public static final LocalDateTime STARTED_AT = LocalDateTime.of(2026, 9, 2, 12, 49);
+    public static final LocalDateTime ENDED_AT = LocalDateTime.of(2026, 9, 2, 12, 54);
+    public static final int REVEAL_INTERVAL_MINUTES = 3;
 
     public static GameResult POLICE_WIN_RESULT(Long gameId) {
         Point center = GEOMETRY_FACTORY.createPoint(new Coordinate(127.0276, 37.4979));
         Point jailCenter = GEOMETRY_FACTORY.createPoint(new Coordinate(127.0286, 37.4989));
         return GameResult.builder()
+                .startedAt(STARTED_AT)
+                .endedAt(ENDED_AT)
+                .locationRevealIntervalMinutes(REVEAL_INTERVAL_MINUTES)
                 .gameId(gameId)
                 .winnerTeam(Team.POLICE)
                 .endReason(GameEndReason.ALL_ARRESTED)

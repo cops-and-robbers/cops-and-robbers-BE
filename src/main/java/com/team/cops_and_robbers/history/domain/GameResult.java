@@ -62,6 +62,15 @@ public class GameResult extends BaseTimeEntity {
     @Column(nullable = false)
     private Integer durationSeconds;
 
+    /** 위치정보 수집 시작 일시 (게임 시작 시각). */
+    private LocalDateTime startedAt;
+
+    /** 위치정보 수집 종료 일시 (게임 종료 시각). */
+    private LocalDateTime endedAt;
+
+    /** 이 게임에 적용된 위치 공개 주기. 방 설정은 게임 사이에 바뀌므로 그때 값을 복사해 둔다. */
+    private Integer locationRevealIntervalMinutes;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AreaType areaType;
@@ -92,8 +101,9 @@ public class GameResult extends BaseTimeEntity {
             Integer totalArrestCount,
             GameArea gameArea
     ) {
+        LocalDateTime endedAt = LocalDateTime.now();
         int durationSeconds = (int) Duration
-                .between(game.getStartedAt(), LocalDateTime.now())
+                .between(game.getStartedAt(), endedAt)
                 .getSeconds();
 
         GameResultBuilder builder = GameResult.builder()
@@ -105,6 +115,9 @@ public class GameResult extends BaseTimeEntity {
                 .arrestedRobberCount(jailedAtEnd)
                 .totalArrestCount(totalArrestCount)
                 .durationSeconds(durationSeconds)
+                .startedAt(game.getStartedAt())
+                .endedAt(endedAt)
+                .locationRevealIntervalMinutes(game.getLocationRevealIntervalMinutes())
                 .areaType(gameArea.getAreaType());
 
         if (gameArea.getAreaType() == AreaType.CIRCLE) {
