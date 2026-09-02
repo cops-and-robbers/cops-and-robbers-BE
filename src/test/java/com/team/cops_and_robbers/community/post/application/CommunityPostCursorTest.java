@@ -1,0 +1,108 @@
+package com.team.cops_and_robbers.community.post.application;
+
+import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.common.exception.CommonException;
+import com.team.cops_and_robbers.community.post.application.dto.CommunityPostCursor;
+import com.team.cops_and_robbers.community.post.domain.CommunityPostSort;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.Base64;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+@DisplayName("커뮤니티 게시글 커서")
+class CommunityPostCursorTest {
+
+    @Test
+    void 인코딩한_커서를_다시_디코딩하면_같은_값이_나온다() {
+        LocalDateTime createdAt = LocalDateTime.of(2026, 8, 15, 12, 30, 45, 123456000);
+
+        String encoded = CommunityPostCursor.encode("KR", CommunityPostSort.LATEST, null, true, CommunityPostCursor.sortKeyOf(createdAt), 42L);
+        CommunityPostCursor decoded = CommunityPostCursor.decode(encoded, "KR", CommunityPostSort.LATEST, null).orElseThrow();
+
+        assertThat(decoded.countryCode()).isEqualTo("KR");
+        assertThat(decoded.sort()).isEqualTo(CommunityPostSort.LATEST);
+        assertThat(decoded.isClosed()).isTrue();
+        assertThat(decoded.sortAt()).isEqualTo(createdAt);
+        assertThat(decoded.id()).isEqualTo(42L);
+    }
+
+    @Test
+    void 국가가_다른_커서는_INVALID_QUERY_PARAMETER_예외가_발생한다() {
+        String koreaCursor = CommunityPostCursor.encode(
+                "KR", CommunityPostSort.LATEST, null, false,
+                CommunityPostCursor.sortKeyOf(LocalDateTime.of(2026, 8, 15, 12, 0)), 1L);
+
+        assertThatThrownBy(() -> CommunityPostCursor.decode(koreaCursor, "JP", CommunityPostSort.LATEST, null))
+                .isInstanceOf(ApplicationException.class)
+                .hasMessageContaining(CommonException.INVALID_QUERY_PARAMETER.getDetail());
+    }
+
+    @Test
+    void 검색어가_다른_커서는_INVALID_QUERY_PARAMETER_예외가_발생한다() {
+        String seoulCursor = CommunityPostCursor.encode(
+                "KR", CommunityPostSort.LATEST, "서울", false,
+                CommunityPostCursor.sortKeyOf(LocalDateTime.of(2026, 8, 15, 12, 0)), 1L);
+
+        assertThatThrownBy(() -> CommunityPostCursor.decode(seoulCursor, "KR", CommunityPostSort.LATEST, "부산"))
+                .isInstanceOf(ApplicationException.class)
+                .hasMessageContaining(CommonException.INVALID_QUERY_PARAMETER.getDetail());
+    }
+
+    @Test
+    void 구분자가_들어간_검색어도_커서가_깨지지_않는다() {
+        String cursor = CommunityPostCursor.encode(
+                "KR", CommunityPostSort.LATEST, "서울|강남", false,
+                CommunityPostCursor.sortKeyOf(LocalDateTime.of(2026, 8, 15, 12, 0)), 1L);
+
+        assertThat(CommunityPostCursor.decode(cursor, "KR", CommunityPostSort.LATEST, "서울|강남")).isPresent();
+    }
+
+    @Test
+    void 정렬이_다른_커서는_INVALID_QUERY_PARAMETER_예외가_발생한다() {
+        String latestCursor = CommunityPostCursor.encode(
+                "KR", CommunityPostSort.LATEST, null, false, CommunityPostCursor.sortKeyOf(LocalDateTime.of(2026, 8, 15, 12, 0)), 1L);
+
+        assertThatThrownBy(() -> CommunityPostCursor.decode(latestCursor, "KR", CommunityPostSort.DEADLINE, null))
+                .isInstanceOf(ApplicationException.class)
+                .hasMessageContaining(CommonException.INVALID_QUERY_PARAMETER.getDetail());
+    }
+
+    @Test
+    void null이나_빈_문자열은_커서_없음으로_디코딩된다() {
+        assertThat(CommunityPostCursor.decode(null, "KR", CommunityPostSort.LATEST, null)).isEmpty();
+        assertThat(CommunityPostCursor.decode("", "KR", CommunityPostSort.LATEST, null)).isEmpty();
+        assertThat(CommunityPostCursor.decode("  ", "KR", CommunityPostSort.LATEST, null)).isEmpty();
+    }
+
+    @Test
+    void base64가_아닌_커서는_INVALID_QUERY_PARAMETER_예외가_발생한다() {
+        assertThatThrownBy(() -> CommunityPostCursor.decode("not-base64!!!", "KR", CommunityPostSort.LATEST, null))
+                .isInstanceOf(ApplicationException.class)
+                .hasMessageContaining(CommonException.INVALID_QUERY_PARAMETER.getDetail());
+    }
+
+    @Test
+    void 구분자가_없는_커서는_INVALID_QUERY_PARAMETER_예외가_발생한다() {
+        String noDelimiter = Base64.getUrlEncoder().withoutPadding()
+                .encodeToString("hello".getBytes(StandardCharsets.UTF_8));
+
+        assertThatThrownBy(() -> CommunityPostCursor.decode(noDelimiter, "KR", CommunityPostSort.LATEST, null))
+                .isInstanceOf(ApplicationException.class)
+                .hasMessageContaining(CommonException.INVALID_QUERY_PARAMETER.getDetail());
+    }
+
+    @Test
+    void 시각_형식이_잘못된_커서는_INVALID_QUERY_PARAMETER_예외가_발생한다() {
+        String invalidTime = Base64.getUrlEncoder().withoutPadding()
+                .encodeToString("KR|LATEST|0|0|어제|42".getBytes(StandardCharsets.UTF_8));
+
+        assertThatThrownBy(() -> CommunityPostCursor.decode(invalidTime, "KR", CommunityPostSort.LATEST, null))
+                .isInstanceOf(ApplicationException.class)
+                .hasMessageContaining(CommonException.INVALID_QUERY_PARAMETER.getDetail());
+    }
+}

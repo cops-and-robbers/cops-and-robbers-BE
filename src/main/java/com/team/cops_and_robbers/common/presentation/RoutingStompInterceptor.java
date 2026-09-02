@@ -1,7 +1,7 @@
 package com.team.cops_and_robbers.common.presentation;
 
 import com.team.cops_and_robbers.common.util.StompPathUtil;
-import com.team.cops_and_robbers.community.presentation.CommunityStompInterceptor;
+import com.team.cops_and_robbers.community.chat.common.presentation.CommunityStompInterceptor;
 import com.team.cops_and_robbers.play.common.GameStompInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.Message;

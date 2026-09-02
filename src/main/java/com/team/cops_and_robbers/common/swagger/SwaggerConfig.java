@@ -30,8 +30,25 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.30.0")
+                .version("2.31.0")
                 .description("""
+                        ## v2.31.0 업데이트 내역
+
+                        ### ✨ 신규 — 채팅방 고정 채팅(공지)
+                        - 앱 전체 공지사항 게시판(/api/notices)과는 별개 기능이다. 채팅방 상단에 방장이 고정해 두는 공지를 가리킨다
+                        - POST /api/community-posts/{postId}/chat/pin — 등록 (방장만, 201)
+                        - PUT /api/community-posts/{postId}/chat/pin — 수정 (방장만, 200)
+                        - DELETE /api/community-posts/{postId}/chat/pin — 삭제 (방장만, 204)
+                        - GET /api/community-posts/{postId}/chat/pin — 조회 (방 멤버 누구나, 200)
+                          - 등록된 것이 없으면 예외 없이 200과 함께 content 등이 null인 응답을 내려준다
+                        - 방마다 고정 채팅은 최대 1개이며, 다시 등록하면 이전 내용은 이력 없이 사라진다(하드 삭제)
+                        - 제목 없이 본문만 있으며 최대 500자다 (일반 채팅 메시지와 동일 제한)
+                        - 등록·수정·삭제는 세 가지가 함께 일어난다
+                          - 방 참여자 화면에 실시간(웹소켓)으로 반영 — 구독 /subscribe/community/{postId}/chat/pin
+                          - 채팅 대화창에 시스템 메시지로 남음 (입장·퇴장·강퇴와 동일 패턴)
+                          - 방 참여자에게 FCM 푸시 발송 (등록·수정·삭제 모두, 입장·퇴장 안내와 달리 항상 보냄)
+                        - 방장 아니면 403(FORBIDDEN_NOT_CHAT_PIN_HOST), 등록된 것 없이 수정·삭제하면 404(CHAT_PIN_NOT_FOUND)
+
                         ## v2.30.0 업데이트 내역
 
                         ### ✨ 신규 — 커뮤니티 목록 국가 제외 조회 (excludeCountryCodes)
