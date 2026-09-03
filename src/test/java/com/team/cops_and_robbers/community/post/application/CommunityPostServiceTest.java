@@ -694,6 +694,17 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         }
 
         @Test
+        void 게시글을_삭제하면_고정_공지도_함께_정리된다() {
+            CommunityPost post = POST(1L);
+            setId(post, 1L);
+            given(communityPostRepository.getByPostIdForUpdate(1L)).willReturn(post);
+
+            communityPostService.deletePost(new CommunityPostDeleteCommand(1L, 1L));
+
+            then(communityChatPinRepository).should().deleteByCommunityPostId(1L);
+        }
+
+        @Test
         void 게시글을_삭제하면_댓글과_좋아요와_스크랩도_함께_정리된다() {
             CommunityPost post = POST(1L);
             setId(post, 1L);

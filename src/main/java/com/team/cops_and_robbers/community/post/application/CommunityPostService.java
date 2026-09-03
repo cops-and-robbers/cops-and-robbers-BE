@@ -5,6 +5,7 @@ import com.team.cops_and_robbers.common.exception.InfrastructureException;
 import com.team.cops_and_robbers.community.chat.common.repository.CommunityChatMessageRepository;
 import com.team.cops_and_robbers.community.chat.member.domain.CommunityChatMember;
 import com.team.cops_and_robbers.community.chat.member.repository.CommunityChatMemberRepository;
+import com.team.cops_and_robbers.community.chat.pin.repository.CommunityChatPinRepository;
 import com.team.cops_and_robbers.community.comment.repository.CommunityCommentRepository;
 import com.team.cops_and_robbers.community.notification.application.dto.result.CommunityPostNotificationSettingResult;
 import com.team.cops_and_robbers.community.notification.domain.CommunityPostNotificationRole;
@@ -52,6 +53,7 @@ public class CommunityPostService {
 
     private final CommunityPostRepository communityPostRepository;
     private final CommunityChatMemberRepository communityChatMemberRepository;
+    private final CommunityChatPinRepository communityChatPinRepository;
     private final CommunityChatMessageRepository communityChatMessageRepository;
     private final CommunityCommentRepository communityCommentRepository;
     private final CommunityPostLikeRepository communityPostLikeRepository;
@@ -135,6 +137,7 @@ public class CommunityPostService {
         validateAuthor(post, command.writerId());
         communityChatMessageRepository.deleteAllByCommunityPostId(command.postId());
         communityChatMemberRepository.deleteAllByCommunityPostId(command.postId());
+        communityChatPinRepository.deleteByCommunityPostId(command.postId());
         communityCommentRepository.deleteAllByCommunityPostId(command.postId());
         communityPostLikeRepository.deleteAllByCommunityPostId(command.postId());
         communityPostScrapRepository.deleteAllByCommunityPostId(command.postId());
