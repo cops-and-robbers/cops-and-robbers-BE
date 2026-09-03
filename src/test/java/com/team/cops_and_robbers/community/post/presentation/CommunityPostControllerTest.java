@@ -23,6 +23,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +47,9 @@ import static org.mockito.Mockito.doReturn;
 class CommunityPostControllerTest extends ControllerTest {
 
     private static final String POST_API_URL = "/api/community-posts";
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+    // 클라이언트(Dart toUtc().toIso8601String())가 실제로 보내는 포맷
+    private static final DateTimeFormatter CLIENT_ISO = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private static final String ADDRESS_API_URL = POST_API_URL + "/address";
     private static final String COUNTRY_API_URL = POST_API_URL + "/country";
 
@@ -205,7 +213,7 @@ class CommunityPostControllerTest extends ControllerTest {
             Map<String, Object> request = Map.of(
                     "title", "같이 경찰과 도둑 하실 분!",
                     "content", "강남역 근처에서 5명 모집합니다.",
-                    "meetingAt", LocalDateTime.now().plusDays(3).toString(),
+                    "meetingAt", OffsetDateTime.now(KST).plusDays(3).toString(),
                     "location", location,
                     "maxParticipants", 6
             );
@@ -229,6 +237,32 @@ class CommunityPostControllerTest extends ControllerTest {
         }
 
         @Test
+        void 클라이언트가_UTC로_보낸_모임_시각도_같은_순간의_KST로_저장된다() {
+            OffsetDateTime meetingAt = OffsetDateTime.now(KST).plusMinutes(30).truncatedTo(ChronoUnit.SECONDS);
+            Map<String, Object> location = Map.of("latitude", 37.4979, "longitude", 127.0276, "placeName", "강남역 11번 출구");
+            Map<String, Object> request = Map.of(
+                    "title", "30분 뒤에 모여요",
+                    "content", "UTC로 보내도 KST 기준으로 등록돼야 합니다.",
+                    "meetingAt", meetingAt.withOffsetSameInstant(ZoneOffset.UTC).format(CLIENT_ISO),
+                    "location", location,
+                    "maxParticipants", 6
+            );
+
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(POST_API_URL)
+                    .then()
+                    .extract();
+
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(201);
+                softly.assertThat(OffsetDateTime.parse(extract.jsonPath().getString("meetingAt")))
+                        .isEqualTo(meetingAt);
+            });
+        }
+
+        @Test
         void 역지오코딩에_성공하면_지역과_사용자_입력_장소를_함께_응답한다() {
             doReturn(GeocodingResult.resolved(
                     PostAddress.of("서울특별시 광진구 군자동 98", null, null, "서울특별시 광진구 군자동", "KR")))
@@ -238,7 +272,7 @@ class CommunityPostControllerTest extends ControllerTest {
             Map<String, Object> request = Map.of(
                     "title", "세종대에서 하실 분!",
                     "content", "세종대 정문에서 모입니다.",
-                    "meetingAt", LocalDateTime.now().plusDays(3).toString(),
+                    "meetingAt", OffsetDateTime.now(KST).plusDays(3).toString(),
                     "location", location,
                     "maxParticipants", 6
             );
@@ -265,7 +299,7 @@ class CommunityPostControllerTest extends ControllerTest {
             Map<String, Object> request = Map.of(
                     "title", "제목",
                     "content", "내용",
-                    "meetingAt", LocalDateTime.now().plusDays(3).toString(),
+                    "meetingAt", OffsetDateTime.now(KST).plusDays(3).toString(),
                     "location", location,
                     "maxParticipants", 6
             );
@@ -1514,7 +1548,7 @@ class CommunityPostControllerTest extends ControllerTest {
             Map<String, Object> request = Map.of(
                     "title", "수정된 제목",
                     "content", "수정된 내용",
-                    "meetingAt", LocalDateTime.now().plusDays(5).toString(),
+                    "meetingAt", OffsetDateTime.now(KST).plusDays(5).toString(),
                     "location", location,
                     "maxParticipants", 8
             );
@@ -1541,7 +1575,7 @@ class CommunityPostControllerTest extends ControllerTest {
             Map<String, Object> request = Map.of(
                     "title", "수정된 제목",
                     "content", "수정된 내용",
-                    "meetingAt", LocalDateTime.now().plusDays(5).toString(),
+                    "meetingAt", OffsetDateTime.now(KST).plusDays(5).toString(),
                     "location", location,
                     "maxParticipants", 8
             );
@@ -1564,7 +1598,7 @@ class CommunityPostControllerTest extends ControllerTest {
             Map<String, Object> request = Map.of(
                     "title", "수정된 제목",
                     "content", "수정된 내용",
-                    "meetingAt", LocalDateTime.now().plusDays(5).toString(),
+                    "meetingAt", OffsetDateTime.now(KST).plusDays(5).toString(),
                     "location", location,
                     "maxParticipants", 8
             );
@@ -1587,7 +1621,7 @@ class CommunityPostControllerTest extends ControllerTest {
             Map<String, Object> request = Map.of(
                     "title", "수정된 제목",
                     "content", "수정된 내용",
-                    "meetingAt", LocalDateTime.now().plusDays(5).toString(),
+                    "meetingAt", OffsetDateTime.now(KST).plusDays(5).toString(),
                     "location", location,
                     "maxParticipants", 8
             );

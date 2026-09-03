@@ -5,6 +5,7 @@ import com.team.cops_and_robbers.common.exception.InfrastructureException;
 import com.team.cops_and_robbers.community.chat.common.repository.CommunityChatMessageRepository;
 import com.team.cops_and_robbers.community.chat.member.domain.CommunityChatMember;
 import com.team.cops_and_robbers.community.chat.member.repository.CommunityChatMemberRepository;
+import com.team.cops_and_robbers.community.chat.pin.repository.CommunityChatPinRepository;
 import com.team.cops_and_robbers.community.comment.repository.CommunityCommentRepository;
 import com.team.cops_and_robbers.community.notification.application.dto.result.CommunityPostNotificationSettingResult;
 import com.team.cops_and_robbers.community.notification.domain.CommunityPostNotificationRole;
@@ -37,6 +38,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +53,7 @@ public class CommunityPostService {
 
     private final CommunityPostRepository communityPostRepository;
     private final CommunityChatMemberRepository communityChatMemberRepository;
+    private final CommunityChatPinRepository communityChatPinRepository;
     private final CommunityChatMessageRepository communityChatMessageRepository;
     private final CommunityCommentRepository communityCommentRepository;
     private final CommunityPostLikeRepository communityPostLikeRepository;
@@ -59,6 +62,7 @@ public class CommunityPostService {
     private final CommunityPostNotificationSettingRepository communityPostNotificationSettingRepository;
     private final UserRepository userRepository;
     private final GeocodingClient geocodingClient;
+    private final Clock clock;
 
     @Transactional
     public CommunityPostResult createPost(CommunityPostCreateCommand command) {
@@ -133,6 +137,7 @@ public class CommunityPostService {
         validateAuthor(post, command.writerId());
         communityChatMessageRepository.deleteAllByCommunityPostId(command.postId());
         communityChatMemberRepository.deleteAllByCommunityPostId(command.postId());
+        communityChatPinRepository.deleteByCommunityPostId(command.postId());
         communityCommentRepository.deleteAllByCommunityPostId(command.postId());
         communityPostLikeRepository.deleteAllByCommunityPostId(command.postId());
         communityPostScrapRepository.deleteAllByCommunityPostId(command.postId());
@@ -174,7 +179,7 @@ public class CommunityPostService {
     }
 
     private void validateMeetingDate(LocalDateTime meetingAt) {
-        if (meetingAt.isBefore(LocalDateTime.now())) {
+        if (meetingAt.isBefore(LocalDateTime.now(clock))) {
             throw new ApplicationException(CommunityPostException.INVALID_MEETING_DATE);
         }
     }

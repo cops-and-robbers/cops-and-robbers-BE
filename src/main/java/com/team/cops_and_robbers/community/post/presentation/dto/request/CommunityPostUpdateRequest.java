@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.community.post.presentation.dto.request;
 
 import com.team.cops_and_robbers.community.post.application.dto.command.CommunityPostUpdateCommand;
+import com.team.cops_and_robbers.common.util.TimestampUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -9,7 +10,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public record CommunityPostUpdateRequest(
         @Schema(description = "게시글 제목", example = "같이 경찰과 도둑 하실 분! (수정)")
@@ -21,9 +22,9 @@ public record CommunityPostUpdateRequest(
         @NotBlank(message = "내용은 필수 입력 항목입니다.")
         String content,
 
-        @Schema(description = "모임 날짜/시간", example = "2026-08-10T15:00:00")
+        @Schema(description = "모임 날짜/시간 (오프셋 포함 ISO-8601)", example = "2026-08-10T15:00:00+09:00")
         @NotNull(message = "모임 날짜는 필수 입력 항목입니다.")
-        LocalDateTime meetingAt,
+        OffsetDateTime meetingAt,
 
         @Schema(description = "모임 장소 좌표")
         @NotNull(message = "모임 장소는 필수 입력 항목입니다.")
@@ -58,7 +59,7 @@ public record CommunityPostUpdateRequest(
                 postId,
                 title,
                 content,
-                meetingAt,
+                TimestampUtil.toKstLocalDateTime(meetingAt),
                 location.latitude(),
                 location.longitude(),
                 location.placeName(),
