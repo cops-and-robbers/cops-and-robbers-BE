@@ -37,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +60,7 @@ public class CommunityPostService {
     private final CommunityPostNotificationSettingRepository communityPostNotificationSettingRepository;
     private final UserRepository userRepository;
     private final GeocodingClient geocodingClient;
+    private final Clock clock;
 
     @Transactional
     public CommunityPostResult createPost(CommunityPostCreateCommand command) {
@@ -174,7 +176,7 @@ public class CommunityPostService {
     }
 
     private void validateMeetingDate(LocalDateTime meetingAt) {
-        if (meetingAt.isBefore(LocalDateTime.now())) {
+        if (meetingAt.isBefore(LocalDateTime.now(clock))) {
             throw new ApplicationException(CommunityPostException.INVALID_MEETING_DATE);
         }
     }
