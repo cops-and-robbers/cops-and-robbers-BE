@@ -18,6 +18,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.CIRCLE_GAME_AREA;
@@ -68,6 +70,80 @@ class GameResultServiceTest extends ServiceUnitTest {
             assertThat(result.getPlaygroundRadiusInMeters()).isNotNull();
             assertThat(result.getPlaygroundPolygon()).isNull();
             then(gameResultRepository).should().save(any(GameResult.class));
+        }
+
+        @Test
+        void 게임이_종료되면_위치_수집_시작_시각과_공개_주기가_그대로_복사된다() {
+            // given
+            LocalDateTime startedAt = LocalDateTime.now().minusMinutes(40);
+            Game game = IN_PROGRESS_GAME(startedAt);
+            setId(game, TEST_GAME_ID);
+            GameArea circleArea = CIRCLE_GAME_AREA(game);
+
+            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(circleArea);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.POLICE)).willReturn(2);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.ROBBER)).willReturn(3);
+            given(gameParticipantRepository.countByGameIdAndRobberStatus(TEST_GAME_ID, ParticipantStatus.JAILED)).willReturn(3);
+            given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
+
+            // when
+            GameResult result = gameResultService.recordGameResult(game, Team.POLICE, GameEndReason.ALL_ARRESTED);
+
+            // then
+            assertThat(result.getStartedAt()).isEqualTo(startedAt);
+            assertThat(result.getEndedAt()).isNotNull();
+            assertThat(result.getEndedAt()).isAfter(startedAt);
+            assertThat(result.getLocationRevealIntervalMinutes())
+                    .isEqualTo(game.getLocationRevealIntervalMinutes());
+        }
+
+        /** durationSeconds 와 endedAt 이 같은 시각에서 나와야 셋이 서로 어긋나지 않는다. */
+        @Test
+        void 수집_시작과_종료_시각의_차이가_기록된_진행_시간과_일치한다() {
+            // given
+            LocalDateTime startedAt = LocalDateTime.now().minusMinutes(40);
+            Game game = IN_PROGRESS_GAME(startedAt);
+            setId(game, TEST_GAME_ID);
+            GameArea circleArea = CIRCLE_GAME_AREA(game);
+
+            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(circleArea);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.POLICE)).willReturn(2);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.ROBBER)).willReturn(3);
+            given(gameParticipantRepository.countByGameIdAndRobberStatus(TEST_GAME_ID, ParticipantStatus.JAILED)).willReturn(3);
+            given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
+
+            // when
+            GameResult result = gameResultService.recordGameResult(game, Team.POLICE, GameEndReason.ALL_ARRESTED);
+
+            // then
+            long betweenSeconds = Duration.between(result.getStartedAt(), result.getEndedAt()).getSeconds();
+            assertThat(betweenSeconds).isEqualTo(result.getDurationSeconds().longValue());
+        }
+
+        /** 방 설정은 게임 사이에 바뀌므로, 지난 게임 기록이 새 설정으로 흔들리면 안 된다. */
+        @Test
+        void 게임_뒤에_방_설정이_바뀌어도_이미_저장된_공개_주기는_그대로다() {
+            // given
+            Game game = IN_PROGRESS_GAME();
+            setId(game, TEST_GAME_ID);
+            GameArea circleArea = CIRCLE_GAME_AREA(game);
+
+            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(circleArea);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.POLICE)).willReturn(2);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.ROBBER)).willReturn(3);
+            given(gameParticipantRepository.countByGameIdAndRobberStatus(TEST_GAME_ID, ParticipantStatus.JAILED)).willReturn(3);
+            given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
+
+            GameResult result = gameResultService.recordGameResult(game, Team.POLICE, GameEndReason.ALL_ARRESTED);
+            Integer recordedInterval = result.getLocationRevealIntervalMinutes();
+
+            // when
+            game.updateSettings(30, 1, 3, 10);
+
+            // then
+            assertThat(recordedInterval).isEqualTo(5);
+            assertThat(result.getLocationRevealIntervalMinutes()).isEqualTo(5);
+            assertThat(game.getLocationRevealIntervalMinutes()).isEqualTo(1);
         }
 
         @Test

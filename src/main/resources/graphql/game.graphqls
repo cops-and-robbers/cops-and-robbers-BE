@@ -71,6 +71,9 @@ type GameResult {
   totalRobberCount: Int!
   arrestedRobberCount: Int!
   durationSeconds: Int!
+  startedAt: String
+  endedAt: String
+  locationRevealIntervalMinutes: Int
 }
 
 type GameArea {
@@ -109,6 +112,9 @@ type AdminGameHistory {
   arrestedRobberCount: Int!
   totalArrestCount: Int!
   durationSeconds: Int!
+  startedAt: String
+  endedAt: String
+  locationRevealIntervalMinutes: Int
   areaType: AreaType!
   area: GameArea
   createdAt: String!

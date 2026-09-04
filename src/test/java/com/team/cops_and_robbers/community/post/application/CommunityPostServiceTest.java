@@ -29,9 +29,12 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
+import org.mockito.Spy;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,6 +52,9 @@ class CommunityPostServiceTest extends ServiceUnitTest {
 
     @InjectMocks
     private CommunityPostService communityPostService;
+
+    @Spy
+    private Clock clock = Clock.system(ZoneId.of("Asia/Seoul"));
 
     @Nested
     @DisplayName("게시글 생성")
@@ -685,6 +691,17 @@ class CommunityPostServiceTest extends ServiceUnitTest {
 
             then(communityChatMessageRepository).should().deleteAllByCommunityPostId(1L);
             then(communityChatMemberRepository).should().deleteAllByCommunityPostId(1L);
+        }
+
+        @Test
+        void 게시글을_삭제하면_고정_공지도_함께_정리된다() {
+            CommunityPost post = POST(1L);
+            setId(post, 1L);
+            given(communityPostRepository.getByPostIdForUpdate(1L)).willReturn(post);
+
+            communityPostService.deletePost(new CommunityPostDeleteCommand(1L, 1L));
+
+            then(communityChatPinRepository).should().deleteByCommunityPostId(1L);
         }
 
         @Test
