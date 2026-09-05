@@ -36,10 +36,7 @@ public class GameResultService {
     private final GameParticipantRepository gameParticipantRepository;
 
     /**
-     * 게임이 시작되면 확인자료를 열고 그 시점의 참가자 명단을 남깁니다.
-     * <p>
-     * 좌표 제공이 시작되는 시점에 명단을 박아 두어야, 게임 중 퇴장해 participants 행이 지워진
-     * 사람도 위치정보법 제16조 제2항의 "제공받은 자"로 남습니다.
+     * 게임이 시작되면 GameResult 를 열고 그 시점의 참가자 명단을 남깁니다.
      */
     @Transactional(propagation = Propagation.MANDATORY)
     public GameResult openGameResult(Game game) {
@@ -51,10 +48,7 @@ public class GameResultService {
     }
 
     /**
-     * 게임이 시작된 뒤 들어온 참가자를 확인자료 명단에 추가합니다.
-     * <p>
-     * 일반 게임은 WAITING 상태에서만 입장할 수 있어 시작 시점 명단으로 충분하지만,
-     * 이벤트 게임은 반대로 IN_PROGRESS 상태에서만 입장할 수 있어 여기서 따로 담아야 합니다.
+     * 게임이 시작된 뒤 들어온 참가자를 명단에 추가합니다. (이벤트 게임은 IN_PROGRESS 에서 입장)
      */
     @Transactional(propagation = Propagation.MANDATORY)
     public void recordParticipantJoined(Long gameId, GameParticipant participant) {
@@ -64,7 +58,7 @@ public class GameResultService {
     }
 
     /**
-     * 게임 중 퇴장을 확인자료에 남깁니다. 명단에서 지우지 않고 퇴장 시각만 찍습니다.
+     * 게임 중 퇴장을 기록합니다. 명단에서 지우지 않고 퇴장 시각만 찍습니다.
      */
     @Transactional(propagation = Propagation.MANDATORY)
     public void recordParticipantLeft(Long gameId, Long userId) {

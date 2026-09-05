@@ -135,7 +135,6 @@ class GameResultServiceTest extends ServiceUnitTest {
                     .isEqualTo(inProgressGame.getLocationRevealIntervalMinutes());
         }
 
-        /** 종료돼야 알 수 있는 값들은 이 시점에 비어 있어야 한다. */
         @Test
         void 열린_결과는_아직_완료되지_않은_상태다() {
             // given
@@ -200,7 +199,6 @@ class GameResultServiceTest extends ServiceUnitTest {
             assertThat(snapshot.getStatus()).isEqualTo(ParticipantStatus.POLICE_WAITING);
         }
 
-        /** 이 변경 이전에 시작돼 열린 확인자료가 없는 게임에서도 퇴장 처리가 막히면 안 된다. */
         @Test
         void 열린_확인자료가_없으면_아무것도_하지_않는다() {
             // given
@@ -350,7 +348,6 @@ class GameResultServiceTest extends ServiceUnitTest {
             assertThat(snapshot.getStatus()).isEqualTo(ParticipantStatus.JAILED);
         }
 
-        /** 퇴장자의 상태는 나갈 당시 그대로여야 제공 기간이 어긋나지 않는다. */
         @Test
         void 퇴장한_참가자는_명단에_남고_상태도_덮이지_않는다() {
             // given
@@ -375,7 +372,6 @@ class GameResultServiceTest extends ServiceUnitTest {
             assertThat(leftSnapshot.hasLeft()).isTrue();
         }
 
-        /** 이 변경 이전에 시작돼 진행 중이던 게임이 종료될 때도 기록은 남아야 한다. */
         @Test
         void 열린_확인자료가_없으면_그_자리에서_열고_채운다() {
             // given
@@ -449,7 +445,6 @@ class GameResultServiceTest extends ServiceUnitTest {
                     .hasMessage(GameResultException.GAME_RESULT_NOT_FOUND.getDetail());
         }
 
-        /** 진행 중인 결과는 승패가 비어 있어 결과 화면이 읽을 수 없다. */
         @Test
         void 아직_끝나지_않은_게임_결과는_조회되지_않는다() {
             // given

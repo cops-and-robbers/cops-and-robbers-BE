@@ -19,8 +19,7 @@ public interface GameResultRepository extends JpaRepository<GameResult, Long> {
     Optional<GameResult> findByGameId(Long gameId);
 
     /**
-     * 완료된 결과만 오래된 라운드부터 조회. 한 방이 라운드를 이어가면 게임당 여러 건이다.
-     * roundNumber 는 이 컬럼이 생기기 전 기록에 없으므로 id 순으로 정렬한다.
+     * 완료된 결과를 오래된 라운드부터 조회
      */
     @Query("""
             select r from GameResult r
@@ -31,7 +30,7 @@ public interface GameResultRepository extends JpaRepository<GameResult, Long> {
     List<GameResult> findCompletedByGameIdIn(@Param("gameIds") List<Long> gameIds);
 
     /**
-     * 아직 종료되지 않은 확인자료 조회. 게임 시작 시점에 열어 둔 행이며 게임당 최대 하나다.
+     * 아직 종료되지 않은 결과 조회. 게임당 최대 하나다.
      */
     Optional<GameResult> findByGameIdAndEndReasonIsNull(Long gameId);
 

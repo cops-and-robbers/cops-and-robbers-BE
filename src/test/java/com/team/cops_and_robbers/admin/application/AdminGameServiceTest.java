@@ -261,7 +261,6 @@ class AdminGameServiceTest extends ServiceUnitTest {
             });
         }
 
-        /** 한 방이 라운드를 이어가면 라운드마다 결과가 쌓인다. 예전에는 여기서 중복 키로 터졌다. */
         @Test
         void 같은_방의_여러_라운드가_오래된_순으로_모두_담긴다() {
             // given
@@ -328,7 +327,6 @@ class AdminGameServiceTest extends ServiceUnitTest {
             });
         }
 
-        /** 조회가 오래된 순이므로 마지막 것이 최신 라운드다. */
         @Test
         void 여러_라운드를_돈_방은_마지막_라운드가_담긴다() {
             // given

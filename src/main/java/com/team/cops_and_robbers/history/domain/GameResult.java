@@ -39,13 +39,8 @@ public class GameResult extends BaseTimeEntity {
     @Column(nullable = false)
     private Long gameId;
 
-    /** 같은 방에서 몇 번째 게임인지. 한 방은 "한 번 더"로 라운드를 계속 이어갈 수 있다. */
+    /** 같은 방에서 몇 번째 게임인지. */
     private Integer roundNumber;
-
-    /*
-     * 아래 일곱 필드는 게임이 끝나야 정해진다.
-     * 확인자료는 좌표 제공이 시작되는 게임 시작 시점에 열어 두므로, 진행 중에는 비어 있다.
-     */
 
     @Enumerated(EnumType.STRING)
     private Team winnerTeam;
@@ -93,7 +88,7 @@ public class GameResult extends BaseTimeEntity {
     private Polygon jailPolygon;
 
     /**
-     * 게임이 시작될 때 확인자료를 연다. 종료돼야 알 수 있는 값은 {@link #complete} 에서 채운다.
+     * 게임 시작 시점의 값으로 GameResult 를 엽니다. 나머지는 complete 에서 채웁니다.
      */
     public static GameResult openSnapshot(Game game, GameArea gameArea) {
         GameResultBuilder builder = GameResult.builder()
@@ -118,8 +113,7 @@ public class GameResult extends BaseTimeEntity {
     }
 
     /**
-     * 게임 종료 시점의 승패와 통계를 채운다.
-     * 인원 집계는 종료 시점에 남아 있던 인원이며, 게임 중 퇴장자는 참가자 명단이 따로 보존한다.
+     * 게임 종료 시점의 승패와 통계를 채웁니다.
      */
     public void complete(
             Team winningTeam,

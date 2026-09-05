@@ -300,7 +300,6 @@ class LobbyControllerTest extends ControllerTest {
             assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
         }
 
-        /** 한 방은 "한 번 더"로 라운드를 이어갈 수 있다. 라운드마다 기록이 빠짐없이 쌓여야 한다. */
         @Test
         void 같은_방으로_두_번_게임하면_라운드마다_기록이_따로_쌓인다() {
             // given
@@ -316,7 +315,6 @@ class LobbyControllerTest extends ControllerTest {
             assertThat(results).allMatch(GameResult::isCompleted);
         }
 
-        /** 라운드마다 그 시점의 참가자 명단이 따로 남아야 한다. */
         @Test
         void 라운드마다_참가자_명단이_따로_저장된다() {
             // given
