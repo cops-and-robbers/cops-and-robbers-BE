@@ -17,6 +17,7 @@ import com.team.cops_and_robbers.game.area.domain.GameArea;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
+import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantCountProjection;
 import com.team.cops_and_robbers.history.domain.GameResult;
 import com.team.cops_and_robbers.user.domain.User;
@@ -266,7 +267,7 @@ class AdminGameServiceTest extends ServiceUnitTest {
             // given
             GameResult round1 = GameResultFixture.POLICE_WIN_RESULT(1L);
             setId(round1, 100L);
-            GameResult round2 = GameResultFixture.POLICE_WIN_RESULT(1L);
+            GameResult round2 = GameResultFixture.ROBBER_WIN_RESULT(1L);
             setId(round2, 101L);
 
             AdminGameResult adminGame1 = AdminGameResult.from(game1);
@@ -279,7 +280,9 @@ class AdminGameServiceTest extends ServiceUnitTest {
                     adminGameService.getResultsByGame(List.of(adminGame1));
 
             // then
-            assertThat(result.get(adminGame1)).hasSize(2);
+            assertThat(result.get(adminGame1))
+                    .extracting(AdminGameDetailResult::winnerTeam)
+                    .containsExactly(Team.POLICE, Team.ROBBER);
         }
 
         @Test

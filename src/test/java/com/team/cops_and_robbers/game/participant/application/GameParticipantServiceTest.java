@@ -330,6 +330,7 @@ class GameParticipantServiceTest extends ServiceUnitTest {
             then(inGameParticipantCacheRepository).should().deleteByParticipantId(any(), any());
             then(gameTerminationService).should(never()).endGameByPoliceForfeited(any());
             then(eventPublisher).should().publishEvent(any(SystemEvent.class));
+            then(gameResultService).should().recordParticipantLeft(TEST_GAME_ID, user.getId());
         }
 
         @Test
