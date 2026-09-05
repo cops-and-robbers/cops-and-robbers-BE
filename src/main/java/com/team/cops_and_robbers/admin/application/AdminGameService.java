@@ -72,6 +72,7 @@ public class AdminGameService {
         List<Long> gameIds = games.stream().map(AdminGameResult::id).toList();
         Map<Long, AdminGameDetailResult> resultByGameId = gameResultRepository.findByGameIdIn(gameIds)
                 .stream()
+                .filter(GameResult::isCompleted)
                 .collect(Collectors.toMap(
                         GameResult::getGameId,
                         AdminGameDetailResult::from

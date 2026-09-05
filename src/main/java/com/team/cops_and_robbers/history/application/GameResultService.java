@@ -4,6 +4,7 @@ import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.area.domain.GameArea;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
@@ -21,6 +22,9 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,10 +36,51 @@ public class GameResultService {
     private final GameParticipantRepository gameParticipantRepository;
 
     /**
-     * 게임 종료 시점의 통계를 수집하고 GameResult 를 저장합니다.
+     * 게임이 시작되면 확인자료를 열고 그 시점의 참가자 명단을 남깁니다.
+     * <p>
+     * 좌표 제공이 시작되는 시점에 명단을 박아 두어야, 게임 중 퇴장해 participants 행이 지워진
+     * 사람도 위치정보법 제16조 제2항의 "제공받은 자"로 남습니다.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public GameResult openGameResult(Game game) {
+        GameArea gameArea = gameAreaRepository.getByGameId(game.getId());
+        GameResult openedResult = gameResultRepository.save(GameResult.openSnapshot(game, gameArea));
+        saveParticipantSnapshots(openedResult, game.getId());
+
+        return openedResult;
+    }
+
+    /**
+     * 게임 시작 후 들어온 참가자(이벤트 게임)를 확인자료 명단에 추가합니다.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void recordParticipantJoined(Long gameId, GameParticipant participant) {
+        findInProgressResult(gameId).ifPresent(result -> gameResultParticipantRepository.save(
+                GameResultParticipant.createSnapshot(result, participant)
+        ));
+    }
+
+    /**
+     * 게임 중 퇴장을 확인자료에 남깁니다. 명단에서 지우지 않고 퇴장 시각만 찍습니다.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void recordParticipantLeft(Long gameId, Long userId) {
+        findInProgressResult(gameId)
+                .flatMap(result -> gameResultParticipantRepository
+                        .findByGameResultIdAndUserIdAndLeftAtIsNull(result.getId(), userId))
+                .ifPresent(GameResultParticipant::markLeft);
+    }
+
+    /**
+     * 게임 종료 시점의 통계를 수집해 열어 둔 GameResult 를 완성합니다.
      */
     @Transactional(propagation = Propagation.MANDATORY)
     public GameResult recordGameResult(Game game, Team winner, GameEndReason reason) {
+        GameResult result = findInProgressResult(game.getId())
+                .orElseGet(() -> openGameResult(game));
+
+        updateFinalParticipantStatuses(result, game.getId());
+
         int totalPolice = gameParticipantRepository.countByGameIdAndTeam(
                 game.getId(), Team.POLICE
         );
@@ -46,22 +91,20 @@ public class GameResultService {
                 game.getId(), ParticipantStatus.JAILED
         );
 
-        GameArea gameArea = gameAreaRepository.getByGameId(game.getId());
-        GameResult result = GameResult.createSnapshot(
-                game,
+        result.complete(
                 winner,
                 reason,
                 totalPolice,
                 totalRobber,
                 jailedCountAtEnd,
-                game.getTotalArrestCount(),
-                gameArea
+                game.getTotalArrestCount()
         );
 
-        GameResult savedResult = gameResultRepository.save(result);
-        saveParticipantSnapshots(savedResult, game.getId());
+        return gameResultRepository.save(result);
+    }
 
-        return savedResult;
+    private Optional<GameResult> findInProgressResult(Long gameId) {
+        return gameResultRepository.findByGameIdAndEndReasonIsNull(gameId);
     }
 
     private void saveParticipantSnapshots(GameResult gameResult, Long gameId) {
@@ -73,9 +116,23 @@ public class GameResultService {
         gameResultParticipantRepository.saveAll(snapshots);
     }
 
+    private void updateFinalParticipantStatuses(GameResult gameResult, Long gameId) {
+        Map<Long, ParticipantStatus> statusByUserId =
+                gameParticipantRepository.findAllByGameIdWithUser(gameId)
+                        .stream()
+                        .collect(Collectors.toMap(
+                                participant -> participant.getUser().getId(),
+                                GameParticipant::getStatus
+                        ));
+
+        gameResultParticipantRepository.findByGameResultId(gameResult.getId())
+                .forEach(snapshot -> snapshot.updateFinalStatus(statusByUserId.get(snapshot.getUserId())));
+    }
+
     @Transactional(readOnly = true)
     public GameResultResult getGameResult(GameResultCommand command) {
         GameResult gameResult = gameResultRepository.findById(command.gameResultId())
+                .filter(GameResult::isCompleted)
                 .orElseThrow(() -> new ApplicationException(GameResultException.GAME_RESULT_NOT_FOUND));
         gameParticipantRepository.getByGameIdAndUserId(gameResult.getGameId(), command.userId());
         return GameResultResult.from(gameResult);

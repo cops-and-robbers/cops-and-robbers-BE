@@ -15,6 +15,7 @@ import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
+import com.team.cops_and_robbers.history.application.GameResultService;
 import com.team.cops_and_robbers.play.common.repository.InGameParticipantCacheRepository;
 import com.team.cops_and_robbers.play.lobby.application.LobbyEventFactory;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
@@ -68,6 +69,9 @@ class GameParticipantServiceTest extends ServiceUnitTest {
 
     @Mock
     private GameTerminationService gameTerminationService;
+
+    @Mock
+    private GameResultService gameResultService;
 
     @Mock
     private LobbyEvent lobbyEvent;

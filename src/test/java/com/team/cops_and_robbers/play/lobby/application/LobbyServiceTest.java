@@ -6,6 +6,7 @@ import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
+import com.team.cops_and_robbers.history.application.GameResultService;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.GameStartCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.KickCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.LobbyInfoCommand;
@@ -52,6 +53,9 @@ class LobbyServiceTest extends ServiceUnitTest {
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private GameResultService gameResultService;
 
     @Mock
     private LobbyEvent lobbyEvent;

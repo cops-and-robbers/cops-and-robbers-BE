@@ -16,6 +16,7 @@ import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
+import com.team.cops_and_robbers.history.application.GameResultService;
 import com.team.cops_and_robbers.play.common.repository.InGameParticipantCacheRepository;
 import com.team.cops_and_robbers.play.lobby.application.LobbyEventFactory;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
@@ -48,6 +49,7 @@ public class GameParticipantService {
     private final LobbyEventFactory lobbyEventFactory;
     private final SystemEventFactory systemEventFactory;
     private final GameTerminationService gameTerminationService;
+    private final GameResultService gameResultService;
 
     @Transactional
     public GameJoinResult joinGame(GameJoinCommand command) {
@@ -63,6 +65,7 @@ public class GameParticipantService {
             User eventUser = userRepository.getByUserId(command.userId());
             GameParticipant eventParticipant = GameParticipant.createEventModeParticipant(game, eventUser);
             gameParticipantRepository.save(eventParticipant);
+            gameResultService.recordParticipantJoined(game.getId(), eventParticipant);
             return GameJoinResult.from(eventParticipant);
         }
 
@@ -155,6 +158,7 @@ public class GameParticipantService {
         boolean wasHost = participant.isHost();
 
         SystemEvent playerLeftEvent = systemEventFactory.createPlayerLeftEvent(gameId, participant);
+        gameResultService.recordParticipantLeft(gameId, userId);
         removeParticipant(gameId, participant);
 
         int remainingCount = gameParticipantRepository.countByGameId(gameId);

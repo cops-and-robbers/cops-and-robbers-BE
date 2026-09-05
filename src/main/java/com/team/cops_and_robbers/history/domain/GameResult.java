@@ -39,27 +39,25 @@ public class GameResult extends BaseTimeEntity {
     @Column(nullable = false)
     private Long gameId;
 
+    /*
+     * 아래 일곱 필드는 게임이 끝나야 정해진다.
+     * 확인자료는 좌표 제공이 시작되는 게임 시작 시점에 열어 두므로, 진행 중에는 비어 있다.
+     */
+
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Team winnerTeam;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private GameEndReason endReason;
 
-    @Column(nullable = false)
     private Integer totalPoliceCount;
 
-    @Column(nullable = false)
     private Integer totalRobberCount;
 
-    @Column(nullable = false)
     private Integer arrestedRobberCount;
 
-    @Column(nullable = false)
     private Integer totalArrestCount;
 
-    @Column(nullable = false)
     private Integer durationSeconds;
 
     /** 위치정보 수집 시작 일시 (게임 시작 시각). */
@@ -91,32 +89,13 @@ public class GameResult extends BaseTimeEntity {
     @Column(columnDefinition = "GEOMETRY(POLYGON, 4326)")
     private Polygon jailPolygon;
 
-    public static GameResult createSnapshot(
-            Game game,
-            Team winningTeam,
-            GameEndReason endReason,
-            Integer totalPolice,
-            Integer totalRobber,
-            Integer jailedAtEnd,
-            Integer totalArrestCount,
-            GameArea gameArea
-    ) {
-        LocalDateTime endedAt = LocalDateTime.now();
-        int durationSeconds = (int) Duration
-                .between(game.getStartedAt(), endedAt)
-                .getSeconds();
-
+    /**
+     * 게임이 시작될 때 확인자료를 연다. 종료돼야 알 수 있는 값은 {@link #complete} 에서 채운다.
+     */
+    public static GameResult openSnapshot(Game game, GameArea gameArea) {
         GameResultBuilder builder = GameResult.builder()
                 .gameId(game.getId())
-                .winnerTeam(winningTeam)
-                .endReason(endReason)
-                .totalPoliceCount(totalPolice)
-                .totalRobberCount(totalRobber)
-                .arrestedRobberCount(jailedAtEnd)
-                .totalArrestCount(totalArrestCount)
-                .durationSeconds(durationSeconds)
                 .startedAt(game.getStartedAt())
-                .endedAt(endedAt)
                 .locationRevealIntervalMinutes(game.getLocationRevealIntervalMinutes())
                 .areaType(gameArea.getAreaType());
 
@@ -132,5 +111,33 @@ public class GameResult extends BaseTimeEntity {
         }
 
         return builder.build();
+    }
+
+    /**
+     * 게임 종료 시점의 승패와 통계를 채운다.
+     * 인원 집계는 종료 시점에 남아 있던 인원이며, 게임 중 퇴장자는 참가자 명단이 따로 보존한다.
+     */
+    public void complete(
+            Team winningTeam,
+            GameEndReason endReason,
+            Integer totalPolice,
+            Integer totalRobber,
+            Integer jailedAtEnd,
+            Integer totalArrestCount
+    ) {
+        this.endedAt = LocalDateTime.now();
+        this.durationSeconds = (int) Duration
+                .between(this.startedAt, this.endedAt)
+                .getSeconds();
+        this.winnerTeam = winningTeam;
+        this.endReason = endReason;
+        this.totalPoliceCount = totalPolice;
+        this.totalRobberCount = totalRobber;
+        this.arrestedRobberCount = jailedAtEnd;
+        this.totalArrestCount = totalArrestCount;
+    }
+
+    public boolean isCompleted() {
+        return this.endReason != null;
     }
 }

@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.play.lobby.presentation;
 
 import com.team.cops_and_robbers.common.ControllerTest;
+import com.team.cops_and_robbers.common.fixture.GameAreaFixture;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
@@ -48,6 +49,7 @@ class LobbyControllerTest extends ControllerTest {
         guestToken = givenAccessToken(guest);
 
         game = gameRepository.save(GameFixture.WAITING_GAME());
+        gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(game));
         hostParticipant = givenHost(game, host);
         guestParticipant = givenGuest(game, guest);
     }

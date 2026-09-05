@@ -21,6 +21,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "game_result_participants")
 @Getter
@@ -51,6 +53,9 @@ public class GameResultParticipant extends BaseTimeEntity {
     @Column(nullable = false)
     private ParticipantStatus status;
 
+    /** 게임 중 퇴장한 시각. 끝까지 있었으면 null. 좌표를 언제까지 주고받았는지의 근거다. */
+    private LocalDateTime leftAt;
+
     public static GameResultParticipant createSnapshot(
             GameResult gameResult,
             GameParticipant participant
@@ -62,5 +67,25 @@ public class GameResultParticipant extends BaseTimeEntity {
                 .team(participant.getTeam())
                 .status(participant.getStatus())
                 .build();
+    }
+
+    /** 게임 중 퇴장. status 는 나갈 당시 상태 그대로 둔다. */
+    public void markLeft() {
+        this.leftAt = LocalDateTime.now();
+    }
+
+    /**
+     * 감옥에 갔는지는 게임이 끝나야 알 수 있으므로 종료 시점 상태로 갱신한다.
+     * 게임 중 나간 사람은 나갈 당시 상태가 곧 마지막 상태이므로 덮지 않는다.
+     */
+    public void updateFinalStatus(ParticipantStatus finalStatus) {
+        if (hasLeft() || finalStatus == null) {
+            return;
+        }
+        this.status = finalStatus;
+    }
+
+    public boolean hasLeft() {
+        return this.leftAt != null;
     }
 }
