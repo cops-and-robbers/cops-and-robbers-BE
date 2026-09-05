@@ -68,20 +68,36 @@ public class AdminGameService {
         ));
     }
 
-    public Map<AdminGameResult, AdminGameDetailResult> getResultsByGame(List<AdminGameResult> games) {
+    public Map<AdminGameResult, List<AdminGameDetailResult>> getResultsByGame(List<AdminGameResult> games) {
         List<Long> gameIds = games.stream().map(AdminGameResult::id).toList();
-        Map<Long, AdminGameDetailResult> resultByGameId = gameResultRepository.findByGameIdIn(gameIds)
-                .stream()
-                .filter(GameResult::isCompleted)
-                .collect(Collectors.toMap(
-                        GameResult::getGameId,
-                        AdminGameDetailResult::from
-                ));
+        Map<Long, List<AdminGameDetailResult>> resultsByGameId =
+                gameResultRepository.findCompletedByGameIdIn(gameIds)
+                        .stream()
+                        .collect(Collectors.groupingBy(
+                                GameResult::getGameId,
+                                Collectors.mapping(AdminGameDetailResult::from, Collectors.toList())
+                        ));
+        return games.stream().collect(Collectors.toMap(
+                game -> game,
+                game -> resultsByGameId.getOrDefault(game.id(), List.of())
+        ));
+    }
+
+    public Map<AdminGameResult, AdminGameDetailResult> getLatestResultByGame(List<AdminGameResult> games) {
+        List<Long> gameIds = games.stream().map(AdminGameResult::id).toList();
+        Map<Long, AdminGameDetailResult> latestResultByGameId =
+                gameResultRepository.findCompletedByGameIdIn(gameIds)
+                        .stream()
+                        .collect(Collectors.toMap(
+                                GameResult::getGameId,
+                                AdminGameDetailResult::from,
+                                (previous, latest) -> latest
+                        ));
         return games.stream()
-                .filter(game -> resultByGameId.containsKey(game.id()))
+                .filter(game -> latestResultByGameId.containsKey(game.id()))
                 .collect(Collectors.toMap(
                         game -> game,
-                        game -> resultByGameId.get(game.id())
+                        game -> latestResultByGameId.get(game.id())
                 ));
     }
 

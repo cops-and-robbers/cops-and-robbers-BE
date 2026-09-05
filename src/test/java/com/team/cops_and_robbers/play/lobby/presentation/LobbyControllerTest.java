@@ -7,8 +7,12 @@ import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.Team;
+import com.team.cops_and_robbers.history.domain.GameResult;
+import com.team.cops_and_robbers.history.domain.GameResultParticipant;
+import com.team.cops_and_robbers.history.repository.GameResultParticipantRepository;
 import com.team.cops_and_robbers.play.lobby.presentation.dto.request.ReadyUpdateRequest;
 import com.team.cops_and_robbers.play.lobby.presentation.dto.request.TeamChangeRequest;
+import com.team.cops_and_robbers.play.system.application.GameTerminationService;
 import com.team.cops_and_robbers.user.domain.User;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
@@ -16,8 +20,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,6 +37,12 @@ class LobbyControllerTest extends ControllerTest {
     private static final String GAME_START_URL = "/api/games/{gameId}/lobby/start";
     private static final String LOBBY_INFO_URL = "/api/games/{gameId}/lobby";
     private static final String KICK_URL = "/api/games/{gameId}/lobby/{participantId}";
+
+    @Autowired
+    private GameTerminationService gameTerminationService;
+
+    @Autowired
+    private GameResultParticipantRepository gameResultParticipantRepository;
 
     private User host;
     private User guest;
@@ -286,6 +298,57 @@ class LobbyControllerTest extends ControllerTest {
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        /** 한 방은 "한 번 더"로 라운드를 이어갈 수 있다. 라운드마다 기록이 빠짐없이 쌓여야 한다. */
+        @Test
+        void 같은_방으로_두_번_게임하면_라운드마다_기록이_따로_쌓인다() {
+            // given
+            playOneRound();
+
+            // when
+            playOneRound();
+
+            // then
+            List<GameResult> results = gameResultRepository.findCompletedByGameIdIn(List.of(game.getId()));
+            assertThat(results).hasSize(2);
+            assertThat(results).extracting(GameResult::getRoundNumber).containsExactly(1, 2);
+            assertThat(results).allMatch(GameResult::isCompleted);
+        }
+
+        /** 라운드마다 그 시점의 참가자 명단이 따로 남아야 한다. */
+        @Test
+        void 라운드마다_참가자_명단이_따로_저장된다() {
+            // given
+            playOneRound();
+            playOneRound();
+
+            // when
+            List<GameResult> results = gameResultRepository.findCompletedByGameIdIn(List.of(game.getId()));
+
+            // then
+            assertThat(results).allSatisfy(result ->
+                    assertThat(gameResultParticipantRepository.findByGameResultId(result.getId()))
+                            .extracting(GameResultParticipant::getUserId)
+                            .containsExactlyInAnyOrder(host.getId(), guest.getId())
+            );
+        }
+
+        /** 라운드가 끝나면 준비 상태가 풀리므로, 다음 라운드는 다시 준비를 눌러야 시작된다. */
+        private void playOneRound() {
+            GameParticipant guestInRoom = gameParticipantRepository.getByGameIdAndUserId(game.getId(), guest.getId());
+            guestInRoom.updateReady(true);
+            gameParticipantRepository.save(guestInRoom);
+
+            ExtractableResponse<Response> response = authenticated(hostToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(GAME_START_URL)
+                    .then()
+                    .extract();
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
+
+            gameTerminationService.endGameByTimeOver(game.getId());
         }
 
         @Test

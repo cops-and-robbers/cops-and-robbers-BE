@@ -233,8 +233,73 @@ class AdminGameServiceTest extends ServiceUnitTest {
     }
 
     @Nested
-    @DisplayName("게임별 결과 배치 조회")
+    @DisplayName("게임별 전체 라운드 결과 배치 조회")
     class GetResultsByGame {
+
+        @Test
+        void 결과가_있는_게임만_결과가_담긴다() {
+            // given
+            GameResult gameResult = GameResultFixture.POLICE_WIN_RESULT(1L);
+
+            AdminGameResult adminGame1 = AdminGameResult.from(game1);
+            AdminGameResult adminGame2 = AdminGameResult.from(game2);
+            List<AdminGameResult> games = List.of(adminGame1, adminGame2);
+
+            given(gameResultRepository.findCompletedByGameIdIn(List.of(1L, 2L)))
+                    .willReturn(List.of(gameResult));
+
+            // when
+            Map<AdminGameResult, List<AdminGameDetailResult>> result =
+                    adminGameService.getResultsByGame(games);
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(result).hasSize(2);
+                softly.assertThat(result.get(adminGame1)).hasSize(1);
+                softly.assertThat(result.get(adminGame2)).isEmpty();
+            });
+        }
+
+        /** 한 방이 라운드를 이어가면 라운드마다 결과가 쌓인다. 예전에는 여기서 중복 키로 터졌다. */
+        @Test
+        void 같은_방의_여러_라운드가_오래된_순으로_모두_담긴다() {
+            // given
+            GameResult round1 = GameResultFixture.POLICE_WIN_RESULT(1L);
+            setId(round1, 100L);
+            GameResult round2 = GameResultFixture.POLICE_WIN_RESULT(1L);
+            setId(round2, 101L);
+
+            AdminGameResult adminGame1 = AdminGameResult.from(game1);
+
+            given(gameResultRepository.findCompletedByGameIdIn(List.of(1L)))
+                    .willReturn(List.of(round1, round2));
+
+            // when
+            Map<AdminGameResult, List<AdminGameDetailResult>> result =
+                    adminGameService.getResultsByGame(List.of(adminGame1));
+
+            // then
+            assertThat(result.get(adminGame1)).hasSize(2);
+        }
+
+        @Test
+        void 결과가_없으면_빈_목록을_반환한다() {
+            // given
+            AdminGameResult adminGame = AdminGameResult.from(game1);
+            given(gameResultRepository.findCompletedByGameIdIn(anyList())).willReturn(List.of());
+
+            // when
+            Map<AdminGameResult, List<AdminGameDetailResult>> result =
+                    adminGameService.getResultsByGame(List.of(adminGame));
+
+            // then
+            assertThat(result.get(adminGame)).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("게임별 최근 라운드 결과 배치 조회")
+    class GetLatestResultByGame {
 
         @Test
         void 결과가_있는_게임만_결과_맵에_포함된다() {
@@ -245,12 +310,12 @@ class AdminGameServiceTest extends ServiceUnitTest {
             AdminGameResult adminGame2 = AdminGameResult.from(game2);
             List<AdminGameResult> games = List.of(adminGame1, adminGame2);
 
-            given(gameResultRepository.findByGameIdIn(List.of(1L, 2L)))
+            given(gameResultRepository.findCompletedByGameIdIn(List.of(1L, 2L)))
                     .willReturn(List.of(gameResult));
 
             // when
             Map<AdminGameResult, AdminGameDetailResult> result =
-                    adminGameService.getResultsByGame(games);
+                    adminGameService.getLatestResultByGame(games);
 
             // then
             assertSoftly(softly -> {
@@ -260,15 +325,37 @@ class AdminGameServiceTest extends ServiceUnitTest {
             });
         }
 
+        /** 조회가 오래된 순이므로 마지막 것이 최신 라운드다. */
+        @Test
+        void 여러_라운드를_돈_방은_마지막_라운드가_담긴다() {
+            // given
+            GameResult round1 = GameResultFixture.POLICE_WIN_RESULT(1L);
+            setId(round1, 100L);
+            GameResult round2 = GameResultFixture.ROBBER_WIN_RESULT(1L);
+            setId(round2, 101L);
+
+            AdminGameResult adminGame1 = AdminGameResult.from(game1);
+
+            given(gameResultRepository.findCompletedByGameIdIn(List.of(1L)))
+                    .willReturn(List.of(round1, round2));
+
+            // when
+            Map<AdminGameResult, AdminGameDetailResult> result =
+                    adminGameService.getLatestResultByGame(List.of(adminGame1));
+
+            // then
+            assertThat(result.get(adminGame1).winnerTeam()).isEqualTo(round2.getWinnerTeam());
+        }
+
         @Test
         void 결과가_없으면_빈_맵을_반환한다() {
             // given
             AdminGameResult adminGame = AdminGameResult.from(game1);
-            given(gameResultRepository.findByGameIdIn(anyList())).willReturn(List.of());
+            given(gameResultRepository.findCompletedByGameIdIn(anyList())).willReturn(List.of());
 
             // when
             Map<AdminGameResult, AdminGameDetailResult> result =
-                    adminGameService.getResultsByGame(List.of(adminGame));
+                    adminGameService.getLatestResultByGame(List.of(adminGame));
 
             // then
             assertThat(result).isEmpty();

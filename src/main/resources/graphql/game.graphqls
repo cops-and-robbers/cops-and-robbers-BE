@@ -37,6 +37,8 @@ type AdminGameSummary {
   maxParticipants: Int!
   isEventGame: Boolean!
   participantCount: Int!
+  "이 방이 지금까지 시작한 라운드 수. 여러 판 한 방은 상세에서 라운드별로 볼 수 있다"
+  roundNumber: Int!
   createdAt: String!
 }
 
@@ -49,10 +51,15 @@ type AdminGame {
   policeWaitMinutes: Int!
   maxParticipants: Int!
   isEventGame: Boolean!
+  "이 방이 지금까지 시작한 라운드 수"
+  roundNumber: Int!
   createdAt: String!
   startedAt: String
   participants: [AdminParticipant!]!
+  "가장 최근 라운드 결과. 한 방이 라운드를 이어가면 results 로 전체를 본다"
   result: GameResult
+  "이 방에서 진행한 모든 라운드 결과. 오래된 라운드부터"
+  results: [GameResult!]!
   area: GameArea
 }
 
@@ -65,6 +72,8 @@ type AdminParticipant {
 }
 
 type GameResult {
+  "같은 방에서 몇 번째 게임인지. 이 컬럼이 생기기 전 기록은 null"
+  roundNumber: Int
   winnerTeam: Team!
   endReason: GameEndReason!
   totalPoliceCount: Int!
@@ -105,6 +114,8 @@ type AdminGameHistoryPage {
 type AdminGameHistory {
   id: ID!
   gameId: ID!
+  "같은 방에서 몇 번째 게임인지. 이 컬럼이 생기기 전 기록은 null"
+  roundNumber: Int
   winnerTeam: Team!
   endReason: GameEndReason!
   totalPoliceCount: Int!

@@ -13,6 +13,7 @@ public record AdminGameSummaryResult(
         Integer maxParticipants,
         Boolean isEventGame,
         Integer participantCount,
+        Integer roundNumber,
         String createdAt
 ) {
     public static AdminGameSummaryResult from(Game game, int participantCount) {
@@ -25,6 +26,7 @@ public record AdminGameSummaryResult(
                 game.getMaxParticipants(),
                 game.isEventGame(),
                 participantCount,
+                game.getRoundNumber(),
                 TimestampUtil.toIsoString(game.getCreatedAt())
         );
     }

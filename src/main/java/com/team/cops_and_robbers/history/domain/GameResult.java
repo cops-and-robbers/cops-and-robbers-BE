@@ -39,6 +39,9 @@ public class GameResult extends BaseTimeEntity {
     @Column(nullable = false)
     private Long gameId;
 
+    /** 같은 방에서 몇 번째 게임인지. 한 방은 "한 번 더"로 라운드를 계속 이어갈 수 있다. */
+    private Integer roundNumber;
+
     /*
      * 아래 일곱 필드는 게임이 끝나야 정해진다.
      * 확인자료는 좌표 제공이 시작되는 게임 시작 시점에 열어 두므로, 진행 중에는 비어 있다.
@@ -95,6 +98,7 @@ public class GameResult extends BaseTimeEntity {
     public static GameResult openSnapshot(Game game, GameArea gameArea) {
         GameResultBuilder builder = GameResult.builder()
                 .gameId(game.getId())
+                .roundNumber(game.getRoundNumber())
                 .startedAt(game.getStartedAt())
                 .locationRevealIntervalMinutes(game.getLocationRevealIntervalMinutes())
                 .areaType(gameArea.getAreaType());

@@ -13,6 +13,7 @@ public record AdminGameResult(
         Integer policeWaitMinutes,
         Integer maxParticipants,
         Boolean isEventGame,
+        Integer roundNumber,
         String createdAt,
         String startedAt
 ) {
@@ -29,6 +30,7 @@ public record AdminGameResult(
                 game.getPoliceWaitMinutes(),
                 game.getMaxParticipants(),
                 game.isEventGame(),
+                game.getRoundNumber(),
                 TimestampUtil.toIsoString(game.getCreatedAt()),
                 startedAt
         );
