@@ -340,6 +340,35 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
         }
 
         @Test
+        void 게임_중_퇴장한_참여자는_퇴장_시각과_함께_반환된다() {
+            // given
+            GameResult gameResult = createGameResult(1L, 10L);
+
+            GameResultParticipant stayed =
+                    GameResultParticipantFixture.POLICE_PARTICIPANT(gameResult, 100L, "police1");
+            setId(stayed, 1000L);
+            GameResultParticipant left =
+                    GameResultParticipantFixture.POLICE_PARTICIPANT(gameResult, 101L, "police2");
+            setId(left, 1001L);
+            left.markLeft();
+
+            AdminGameHistoryResult history = AdminGameHistoryResult.from(gameResult);
+            given(gameResultParticipantRepository.findByGameResultIdIn(List.of(10L)))
+                    .willReturn(List.of(stayed, left));
+
+            // when
+            Map<AdminGameHistoryResult, List<AdminGameHistoryParticipantResult>> result =
+                    adminGameHistoryService.getHistoryParticipantsByGame(List.of(history));
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(result.get(history)).hasSize(2);
+                softly.assertThat(result.get(history).get(0).leftAt()).isNull();
+                softly.assertThat(result.get(history).get(1).leftAt()).isNotNull();
+            });
+        }
+
+        @Test
         void 한_히스토리에_여러_참여자가_있는_경우_모두_반환한다() {
             // given
             GameResult gameResult = createGameResult(1L, 10L);

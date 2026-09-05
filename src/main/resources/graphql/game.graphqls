@@ -126,4 +126,5 @@ type AdminGameHistoryParticipant {
   nickname: String!
   team: Team!
   status: ParticipantStatus!
+  leftAt: String
 }
