@@ -51,7 +51,10 @@ public class GameResultService {
     }
 
     /**
-     * 게임 시작 후 들어온 참가자(이벤트 게임)를 확인자료 명단에 추가합니다.
+     * 게임이 시작된 뒤 들어온 참가자를 확인자료 명단에 추가합니다.
+     * <p>
+     * 일반 게임은 WAITING 상태에서만 입장할 수 있어 시작 시점 명단으로 충분하지만,
+     * 이벤트 게임은 반대로 IN_PROGRESS 상태에서만 입장할 수 있어 여기서 따로 담아야 합니다.
      */
     @Transactional(propagation = Propagation.MANDATORY)
     public void recordParticipantJoined(Long gameId, GameParticipant participant) {
