@@ -48,6 +48,19 @@ public class SwaggerConfig {
                           - 좌표를 주고받은 사람 전원은 참가자 명단이 담당한다
                         - 앱 영향 없다
 
+                        ### 🐛 수정 — 같은 방으로 두 번째 게임을 하면 어드민 방 상세가 500
+                        - game_results 는 라운드마다 행이 쌓이는데, 어드민 방 상세(AdminGame.result)가
+                          방 하나에 결과 하나를 가정해 중복 키로 터졌다. 이번 변경 이전부터 있던 문제다
+                        - AdminGame.results 를 추가한다. 그 방의 모든 라운드 결과를 오래된 순으로 준다
+                          - 기존 result 는 가장 최근 라운드를 가리키도록 남겨 둔다. 어드민 웹은 그대로 동작한다
+                        - game_results 에 round_number 를 저장한다. 그동안 라운드 번호는 games 에만 있어서
+                          지난 기록이 몇 번째 게임이었는지 알 수 없었다
+                          - GameResult.roundNumber, AdminGameHistory.roundNumber 노출
+                          - 이 컬럼이 생기기 전 기록은 null
+                        - 방 목록·상세(AdminGameSummary·AdminGame)에 roundNumber 노출.
+                          그 방이 지금까지 시작한 라운드 수다
+                        - 한 방에 동시에 열린 게임은 하나뿐이도록 부분 유니크 인덱스로 막는다
+
                         ## v2.32.0 업데이트 내역
 
                         ### 🛠 변경 — 게임 기록에 위치 수집 시각·주기 보존
