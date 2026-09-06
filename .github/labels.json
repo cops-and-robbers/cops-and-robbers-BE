@@ -43,5 +43,10 @@
     "name": "docs",
     "color": "FFFFFF",
     "description": "문서 및 명세 작성"
+  },
+  {
+    "name": "in-progress",
+    "color": "F7E0D0",
+    "description": "작업이 시작된 이슈"
   }
 ]

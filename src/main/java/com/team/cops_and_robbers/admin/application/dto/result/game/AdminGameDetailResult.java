@@ -8,6 +8,7 @@ import com.team.cops_and_robbers.history.domain.GameResult;
 import java.time.LocalDateTime;
 
 public record AdminGameDetailResult(
+        Integer roundNumber,
         Team winnerTeam,
         GameEndReason endReason,
         Integer totalPoliceCount,
@@ -20,6 +21,7 @@ public record AdminGameDetailResult(
 ) {
     public static AdminGameDetailResult from(GameResult gameResult) {
         return new AdminGameDetailResult(
+                gameResult.getRoundNumber(),
                 gameResult.getWinnerTeam(),
                 gameResult.getEndReason(),
                 gameResult.getTotalPoliceCount(),

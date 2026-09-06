@@ -18,9 +18,27 @@ public interface GameResultRepository extends JpaRepository<GameResult, Long> {
 
     Optional<GameResult> findByGameId(Long gameId);
 
-    List<GameResult> findByGameIdIn(List<Long> gameIds);
+    /**
+     * 완료된 결과를 오래된 라운드부터 조회
+     */
+    @Query("""
+            select r from GameResult r
+            where r.gameId in :gameIds
+            and r.endReason is not null
+            order by r.id asc
+            """)
+    List<GameResult> findCompletedByGameIdIn(@Param("gameIds") List<Long> gameIds);
 
-    @Query("select r.endReason as endReason, count(r) as count from GameResult r group by r.endReason")
+    /**
+     * 아직 종료되지 않은 결과 조회. 게임당 최대 하나다.
+     */
+    Optional<GameResult> findByGameIdAndEndReasonIsNull(Long gameId);
+
+    @Query("""
+            select r.endReason as endReason, count(r) as count from GameResult r
+            where r.endReason is not null
+            group by r.endReason
+            """)
     List<EndReasonCountProjection> countGroupByEndReason();
 
     @Query("select avg(r.durationSeconds) from GameResult r")
@@ -30,7 +48,8 @@ public interface GameResultRepository extends JpaRepository<GameResult, Long> {
 
     @Query("""
             select r from GameResult r
-            where (:endReason is null or r.endReason = :endReason)
+            where r.endReason is not null
+            and (:endReason is null or r.endReason = :endReason)
             """)
     Page<GameResult> findAllForAdmin(
             @Param("endReason") GameEndReason endReason,

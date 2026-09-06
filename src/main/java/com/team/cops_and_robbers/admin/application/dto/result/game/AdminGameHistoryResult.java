@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 public record AdminGameHistoryResult(
         Long id,
         Long gameId,
+        Integer roundNumber,
         Team winnerTeam,
         GameEndReason endReason,
         Integer totalPoliceCount,
@@ -30,6 +31,7 @@ public record AdminGameHistoryResult(
         return new AdminGameHistoryResult(
                 gameResult.getId(),
                 gameResult.getGameId(),
+                gameResult.getRoundNumber(),
                 gameResult.getWinnerTeam(),
                 gameResult.getEndReason(),
                 gameResult.getTotalPoliceCount(),
