@@ -69,8 +69,8 @@ public class GameResultParticipant extends BaseTimeEntity {
                 .build();
     }
 
-    public void markLeft() {
-        this.leftAt = LocalDateTime.now();
+    public void markLeft(LocalDateTime leftTime) {
+        this.leftAt = leftTime;
     }
 
     /** 종료 시점 상태로 갱신합니다. 게임 중 나간 사람은 덮지 않습니다. */

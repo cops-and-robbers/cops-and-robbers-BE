@@ -22,9 +22,12 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
+import org.mockito.Spy;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,6 +50,12 @@ class GameResultServiceTest extends ServiceUnitTest {
 
     @InjectMocks
     private GameResultService gameResultService;
+
+    @Spy
+    private Clock clock = Clock.fixed(NOW.atZone(KST).toInstant(), KST);
+
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 9, 6, 15, 0);
 
     private static final Long TEST_USER_ID = 1L;
     private static final Long TEST_GAME_ID = 1L;
@@ -195,7 +204,7 @@ class GameResultServiceTest extends ServiceUnitTest {
 
             // then
             assertThat(snapshot.hasLeft()).isTrue();
-            assertThat(snapshot.getLeftAt()).isNotNull();
+            assertThat(snapshot.getLeftAt()).isEqualTo(NOW);
             assertThat(snapshot.getStatus()).isEqualTo(ParticipantStatus.POLICE_WAITING);
         }
 
@@ -272,7 +281,7 @@ class GameResultServiceTest extends ServiceUnitTest {
             assertThat(result.getTotalPoliceCount()).isEqualTo(2);
             assertThat(result.getTotalRobberCount()).isEqualTo(3);
             assertThat(result.getArrestedRobberCount()).isEqualTo(3);
-            assertThat(result.getEndedAt()).isNotNull();
+            assertThat(result.getEndedAt()).isEqualTo(NOW);
         }
 
         /** durationSeconds 와 endedAt 이 같은 시각에서 나와야 셋이 서로 어긋나지 않는다. */
@@ -353,7 +362,7 @@ class GameResultServiceTest extends ServiceUnitTest {
             // given
             GameResultParticipant leftSnapshot =
                     GameResultParticipant.createSnapshot(openedResult, robberParticipant);
-            leftSnapshot.markLeft();
+            leftSnapshot.markLeft(LocalDateTime.now());
 
             given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
                     .willReturn(Optional.of(openedResult));

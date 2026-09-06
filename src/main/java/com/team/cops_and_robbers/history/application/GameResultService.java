@@ -21,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class GameResultService {
 
+    private final Clock clock;
     private final GameResultRepository gameResultRepository;
     private final GameResultParticipantRepository gameResultParticipantRepository;
     private final GameAreaRepository gameAreaRepository;
@@ -65,7 +68,7 @@ public class GameResultService {
         findInProgressResult(gameId)
                 .flatMap(result -> gameResultParticipantRepository
                         .findByGameResultIdAndUserIdAndLeftAtIsNull(result.getId(), userId))
-                .ifPresent(GameResultParticipant::markLeft);
+                .ifPresent(snapshot -> snapshot.markLeft(LocalDateTime.now(clock)));
     }
 
     /**
@@ -89,6 +92,7 @@ public class GameResultService {
         );
 
         result.complete(
+                LocalDateTime.now(clock),
                 winner,
                 reason,
                 totalPolice,

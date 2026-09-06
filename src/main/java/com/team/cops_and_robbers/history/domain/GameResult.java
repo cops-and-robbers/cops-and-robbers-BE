@@ -116,6 +116,7 @@ public class GameResult extends BaseTimeEntity {
      * 게임 종료 시점의 승패와 통계를 채웁니다.
      */
     public void complete(
+            LocalDateTime endTime,
             Team winningTeam,
             GameEndReason endReason,
             Integer totalPolice,
@@ -123,7 +124,7 @@ public class GameResult extends BaseTimeEntity {
             Integer jailedAtEnd,
             Integer totalArrestCount
     ) {
-        this.endedAt = LocalDateTime.now();
+        this.endedAt = endTime;
         this.durationSeconds = (int) Duration
                 .between(this.startedAt, this.endedAt)
                 .getSeconds();

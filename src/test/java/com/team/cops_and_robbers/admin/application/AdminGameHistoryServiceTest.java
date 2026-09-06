@@ -350,7 +350,7 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
             GameResultParticipant left =
                     GameResultParticipantFixture.POLICE_PARTICIPANT(gameResult, 101L, "police2");
             setId(left, 1001L);
-            left.markLeft();
+            left.markLeft(LocalDateTime.now());
 
             AdminGameHistoryResult history = AdminGameHistoryResult.from(gameResult);
             given(gameResultParticipantRepository.findByGameResultIdIn(List.of(10L)))
