@@ -66,6 +66,7 @@ public class GameParticipantService {
             GameParticipant eventParticipant = GameParticipant.createEventModeParticipant(game, eventUser);
             gameParticipantRepository.save(eventParticipant);
             gameResultService.recordParticipantJoined(game.getId(), eventParticipant);
+            loadEventParticipantCache(game.getId(), eventParticipant.getId());
             return GameJoinResult.from(eventParticipant);
         }
 
@@ -83,6 +84,15 @@ public class GameParticipantService {
         eventPublisher.publishEvent(enterEvent);
 
         return GameJoinResult.from(participant);
+    }
+
+    /**
+     * 게임이 시작된 뒤 들어온 참가자를 인게임 캐시에 추가합니다. (이벤트 게임은 IN_PROGRESS 에서 입장)
+     * - 캐시에 없으면 채팅·핑·FCM 이 동작하지 않습니다.
+     */
+    private void loadEventParticipantCache(Long gameId, Long participantId) {
+        gameParticipantRepository.findCacheProjectionById(participantId)
+                .ifPresent(projection -> inGameParticipantCacheRepository.save(gameId, projection));
     }
 
     private void validateJoinable(Long userId, Game game) {

@@ -2,6 +2,10 @@ package com.team.cops_and_robbers.play.notification.application;
 
 import com.team.cops_and_robbers.common.fcm.FcmMessage;
 import com.team.cops_and_robbers.common.fcm.FcmService;
+import com.team.cops_and_robbers.game.participant.domain.Team;
+import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
+import com.team.cops_and_robbers.play.chat.domain.ChatMessage;
+import com.team.cops_and_robbers.play.chat.domain.ChatScope;
 import com.team.cops_and_robbers.play.common.domain.InGameParticipantCache;
 import com.team.cops_and_robbers.play.common.repository.InGameParticipantCacheRepository;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
@@ -22,8 +26,11 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class GameFcmNotifier {
 
+    private static final String CHAT_PUSH_TYPE = "CHAT";
+
     private final FcmService fcmService;
     private final InGameParticipantCacheRepository inGameParticipantCacheRepository;
+    private final GameParticipantRepository gameParticipantRepository;
 
     @Async("fcmExecutor")
     public CompletableFuture<Void> notifySystemEvent(SystemEvent event) {
@@ -63,6 +70,32 @@ public class GameFcmNotifier {
                 yield new FcmPayload(playerLeft.team().getDisplayName() + " 참가자 퇴장", playerLeft.nickname() + "님이 게임에서 퇴장했습니다.", data);
             }
         };
+    }
+
+    @Async("fcmExecutor")
+    public CompletableFuture<Void> notifyChatMessage(ChatMessage message) {
+        try {
+            List<String> tokens = getChatTokens(message);
+            if (tokens.isEmpty()) {
+                return CompletableFuture.completedFuture(null);
+            }
+
+            FcmPayload payload = resolveChatPayload(message);
+            fcmService.send(new FcmMessage(tokens, payload.title(), payload.body(), payload.data()));
+        } catch (Exception e) {
+            log.error("[FCM] Async chat send failed | gameId={}, participantId={}", message.gameId(), message.sender().participantId(), e);
+        }
+        return CompletableFuture.completedFuture(null);
+    }
+
+    private List<String> getChatTokens(ChatMessage message) {
+        Team targetTeam = message.scope() == ChatScope.TEAM ? message.sender().team() : null;
+        return gameParticipantRepository.findChatPushTokens(message.gameId(), message.sender().participantId(), targetTeam);
+    }
+
+    private FcmPayload resolveChatPayload(ChatMessage message) {
+        Map<String, String> data = Map.of("type", CHAT_PUSH_TYPE, "gameId", String.valueOf(message.gameId()), "scope", message.scope().name());
+        return new FcmPayload(message.sender().nickname(), message.message(), data);
     }
 
     private record FcmPayload(String title, String body, Map<String, String> data) {}
