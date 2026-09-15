@@ -161,7 +161,7 @@ public class GameResultService {
                 .orElseThrow(() -> new ApplicationException(GameResultException.GAME_RESULT_NOT_FOUND));
 
         return gameResultParticipantRepository
-                .findByGameResultIdAndUserId(command.gameResultId(), command.userId())
+                .findFirstByGameResultIdAndUserIdOrderByIdDesc(command.gameResultId(), command.userId())
                 .map(GameResultParticipantResult::from)
                 .orElseThrow(() -> new ApplicationException(GameResultException.GAME_RESULT_NOT_FOUND));
     }

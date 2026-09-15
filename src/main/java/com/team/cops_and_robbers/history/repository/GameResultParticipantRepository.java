@@ -14,5 +14,5 @@ public interface GameResultParticipantRepository extends JpaRepository<GameResul
 
     Optional<GameResultParticipant> findByGameResultIdAndUserIdAndLeftAtIsNull(Long gameResultId, Long userId);
 
-    Optional<GameResultParticipant> findByGameResultIdAndUserId(Long gameResultId, Long userId);
+    Optional<GameResultParticipant> findFirstByGameResultIdAndUserIdOrderByIdDesc(Long gameResultId, Long userId);
 }

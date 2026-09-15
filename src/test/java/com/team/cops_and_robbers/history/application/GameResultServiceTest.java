@@ -72,6 +72,10 @@ class GameResultServiceTest extends ServiceUnitTest {
     private GameParticipant policeParticipant;
     private GameParticipant robberParticipant;
 
+    private static void setArrestCountToNull(GameResultParticipant participant) {
+        org.springframework.test.util.ReflectionTestUtils.setField(participant, "arrestCount", null);
+    }
+
     @BeforeEach
     void setUp() {
         police = USER("police");
@@ -239,7 +243,7 @@ class GameResultServiceTest extends ServiceUnitTest {
 
             given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(completed));
             given(gameResultParticipantRepository
-                    .findByGameResultIdAndUserId(TEST_GAME_RESULT_ID, POLICE_USER_ID))
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(TEST_GAME_RESULT_ID, POLICE_USER_ID))
                     .willReturn(Optional.of(snapshot));
 
             // when
@@ -251,6 +255,52 @@ class GameResultServiceTest extends ServiceUnitTest {
             assertThat(result.team()).isEqualTo(Team.POLICE);
         }
 
+        /** 이벤트 게임은 퇴장 시 참가자 행이 지워져 재입장이 되므로 스냅샷이 여러 개 쌓인다. */
+        @Test
+        void 퇴장_후_재입장했으면_재입장_이후_기록만_반환한다() {
+            // given
+            GameResult completed = POLICE_WIN_RESULT(TEST_GAME_ID);
+            setId(completed, TEST_GAME_RESULT_ID);
+
+            GameResultParticipant after = GameResultParticipant.createSnapshot(completed, policeParticipant);
+            after.incrementArrestCount();
+            after.incrementArrestCount();
+
+            given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(completed));
+            given(gameResultParticipantRepository
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(TEST_GAME_RESULT_ID, POLICE_USER_ID))
+                    .willReturn(Optional.of(after));
+
+            // when
+            GameResultParticipantResult result = gameResultService.getMyGameRecord(
+                    GameResultCommand.of(POLICE_USER_ID, TEST_GAME_RESULT_ID));
+
+            // then
+            assertThat(result.arrestCount()).isEqualTo(2);
+            assertThat(result.leftAt()).isNull();
+        }
+
+        @Test
+        void 이_기능_이전_기록이면_체포수가_null이다() {
+            // given
+            GameResult completed = POLICE_WIN_RESULT(TEST_GAME_ID);
+            setId(completed, TEST_GAME_RESULT_ID);
+            GameResultParticipant legacy = GameResultParticipant.createSnapshot(completed, policeParticipant);
+            setArrestCountToNull(legacy);
+
+            given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(completed));
+            given(gameResultParticipantRepository
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(TEST_GAME_RESULT_ID, POLICE_USER_ID))
+                    .willReturn(Optional.of(legacy));
+
+            // when
+            GameResultParticipantResult result = gameResultService.getMyGameRecord(
+                    GameResultCommand.of(POLICE_USER_ID, TEST_GAME_RESULT_ID));
+
+            // then
+            assertThat(result.arrestCount()).isNull();
+        }
+
         @Test
         void 그_게임_참가자가_아니면_예외가_발생한다() {
             // given
@@ -259,7 +309,7 @@ class GameResultServiceTest extends ServiceUnitTest {
 
             given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(completed));
             given(gameResultParticipantRepository
-                    .findByGameResultIdAndUserId(TEST_GAME_RESULT_ID, POLICE_USER_ID))
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(TEST_GAME_RESULT_ID, POLICE_USER_ID))
                     .willReturn(Optional.empty());
 
             // when & then
