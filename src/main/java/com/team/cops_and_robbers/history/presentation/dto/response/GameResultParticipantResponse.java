@@ -13,7 +13,7 @@ public record GameResultParticipantResponse(
         @Schema(description = "종료 시점 상태", example = "ALIVE")
         ParticipantStatus status,
         @Schema(description = "본인이 체포한 횟수", example = "3")
-        int arrestCount,
+        Integer arrestCount,
         @Schema(description = "게임 중 퇴장한 시각. 끝까지 있었으면 null", example = "2026-09-16T14:30:00")
         String leftAt
 ) {

@@ -13,7 +13,7 @@ public record AdminGameHistoryParticipantResult(
         Team team,
         ParticipantStatus status,
         String leftAt,
-        int arrestCount
+        Integer arrestCount
 ) {
 
     public static AdminGameHistoryParticipantResult from(GameResultParticipant participant) {

@@ -11,7 +11,7 @@ public record GameResultParticipantResult(
         String nickname,
         Team team,
         ParticipantStatus status,
-        int arrestCount,
+        Integer arrestCount,
         String leftAt
 ) {
     public static GameResultParticipantResult from(GameResultParticipant participant) {

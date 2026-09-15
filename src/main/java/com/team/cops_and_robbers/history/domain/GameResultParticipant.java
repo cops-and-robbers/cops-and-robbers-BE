@@ -58,7 +58,7 @@ public class GameResultParticipant extends BaseTimeEntity {
 
     /** 이 참가자가 체포한 횟수. 도둑과 이 컬럼이 생기기 전 기록은 0. */
     @Column(nullable = false)
-    private int arrestCount;
+    private Integer arrestCount;
 
     public static GameResultParticipant createSnapshot(
             GameResult gameResult,
@@ -70,6 +70,7 @@ public class GameResultParticipant extends BaseTimeEntity {
                 .nickname(participant.getUser().getNickname())
                 .team(participant.getTeam())
                 .status(participant.getStatus())
+                .arrestCount(0)
                 .build();
     }
 
