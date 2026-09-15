@@ -61,6 +61,12 @@ public class AdminGameResolver {
     @BatchMapping(typeName = "AdminGame", field = "result")
     public Map<AdminGameResult, AdminGameDetailResult> result(
             List<AdminGameResult> games) {
+        return adminGameService.getLatestResultByGame(games);
+    }
+
+    @BatchMapping(typeName = "AdminGame", field = "results")
+    public Map<AdminGameResult, List<AdminGameDetailResult>> results(
+            List<AdminGameResult> games) {
         return adminGameService.getResultsByGame(games);
     }
 

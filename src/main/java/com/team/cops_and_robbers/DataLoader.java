@@ -16,6 +16,7 @@ import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
+import com.team.cops_and_robbers.history.application.GameResultService;
 import com.team.cops_and_robbers.user.domain.DeviceType;
 import com.team.cops_and_robbers.user.domain.SocialType;
 import com.team.cops_and_robbers.user.domain.User;
@@ -56,6 +57,7 @@ public class DataLoader implements CommandLineRunner {
     private final GameAreaRepository gameAreaRepository;
     private final GameParticipantRepository gameParticipantRepository;
     private final CommunityPostRepository communityPostRepository;
+    private final GameResultService gameResultService;
 
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
@@ -89,6 +91,7 @@ public class DataLoader implements CommandLineRunner {
         // 4. 게임 시작 상태로 변경
         game.startGame(LocalDateTime.now());
         gameParticipantRepository.updateStatusByGameId(game.getId(), ParticipantStatus.ALIVE);
+        gameResultService.openGameResult(game);
 
         log.info("Game Started: [ID: {}, InviteCode: {}]", game.getId(), game.getInviteCode());
 

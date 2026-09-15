@@ -44,6 +44,29 @@ public class GameResultFixture {
                 .build();
     }
 
+    public static GameResult ROBBER_WIN_RESULT(Long gameId) {
+        Point center = GEOMETRY_FACTORY.createPoint(new Coordinate(127.0276, 37.4979));
+        Point jailCenter = GEOMETRY_FACTORY.createPoint(new Coordinate(127.0286, 37.4989));
+        return GameResult.builder()
+                .startedAt(STARTED_AT)
+                .endedAt(ENDED_AT)
+                .locationRevealIntervalMinutes(REVEAL_INTERVAL_MINUTES)
+                .gameId(gameId)
+                .winnerTeam(Team.ROBBER)
+                .endReason(GameEndReason.TIME_OVER)
+                .totalPoliceCount(2)
+                .totalRobberCount(3)
+                .arrestedRobberCount(1)
+                .totalArrestCount(2)
+                .durationSeconds(1800)
+                .areaType(AreaType.CIRCLE)
+                .playgroundCenter(center)
+                .playgroundRadiusInMeters(500)
+                .jailCenter(jailCenter)
+                .jailRadiusInMeters(50)
+                .build();
+    }
+
     public static GameResult POLICE_WIN_RESULT_WITHOUT_JAIL(Long gameId) {
         Point center = GEOMETRY_FACTORY.createPoint(new Coordinate(127.0276, 37.4979));
         return GameResult.builder()

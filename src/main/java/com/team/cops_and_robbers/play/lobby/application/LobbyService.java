@@ -8,6 +8,7 @@ import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
+import com.team.cops_and_robbers.history.application.GameResultService;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.GameStartCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.KickCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.LobbyInfoCommand;
@@ -37,6 +38,7 @@ public class LobbyService {
 
     private final ApplicationEventPublisher eventPublisher;
     private final LobbyEventFactory lobbyEventFactory;
+    private final GameResultService gameResultService;
 
     /**
      * 팀 변경 (경찰 <-> 도둑)
@@ -88,6 +90,8 @@ public class LobbyService {
 
         gameParticipantRepository.updateStatusByGameIdAndTeam(command.gameId(), Team.ROBBER, ParticipantStatus.ALIVE);
         gameParticipantRepository.updateStatusByGameIdAndTeam(command.gameId(), Team.POLICE, ParticipantStatus.POLICE_WAITING);
+
+        gameResultService.openGameResult(game);
 
         LobbyEvent event = lobbyEventFactory.createGameStartEvent(command.gameId(), now);
         eventPublisher.publishEvent(event);
