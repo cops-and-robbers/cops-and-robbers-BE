@@ -45,3 +45,6 @@ out/
 
 ### Editor configuration
 .editorconfig
+
+### Load test
+loadtest/players.json
