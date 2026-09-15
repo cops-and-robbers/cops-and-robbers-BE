@@ -10,6 +10,7 @@ import com.team.cops_and_robbers.play.chat.domain.ChatScope;
 import com.team.cops_and_robbers.play.chat.domain.ChatSender;
 import com.team.cops_and_robbers.play.common.domain.InGameParticipantCache;
 import com.team.cops_and_robbers.play.common.repository.InGameParticipantCacheRepository;
+import com.team.cops_and_robbers.play.notification.application.GameFcmNotifier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -22,6 +23,7 @@ public class ChatPublisher {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final InGameParticipantCacheRepository inGameParticipantCacheRepository;
+    private final GameFcmNotifier gameFcmNotifier;
 
     /**
      * 1. 채팅 메세지를 받아 적절한 토픽에 라우팅
@@ -35,6 +37,7 @@ public class ChatPublisher {
         RedisChannel targetChannel = routeTopic(command.scope(), participant.team());
         String destinationTopic = targetChannel.getTopic(command.gameId());
         redisTemplate.convertAndSend(destinationTopic, chatMessage);
+        gameFcmNotifier.notifyChatMessage(chatMessage);
 
         log.debug("Chat Pub: topic={}, sender={}", destinationTopic, sender.nickname());
     }

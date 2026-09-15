@@ -1,0 +1,20 @@
+name: 🏷️ 이슈가 닫히면 in-progress 라벨 제거
+
+on:
+  issues:
+    types: [closed]
+
+permissions:
+  issues: write
+
+jobs:
+  remove-in-progress-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: in-progress 라벨 제거
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue edit "${{ github.event.issue.number }}" \
+            --remove-label "in-progress" \
+            --repo "${{ github.repository }}" || true

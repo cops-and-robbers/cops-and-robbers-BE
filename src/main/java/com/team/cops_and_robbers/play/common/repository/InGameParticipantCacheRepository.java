@@ -35,6 +35,12 @@ public class InGameParticipantCacheRepository {
         redisTemplate.expire(key(gameId), TTL);
     }
 
+    public void save(Long gameId, GameParticipantCacheProjection projection) {
+        InGameParticipantCache entry = InGameParticipantCache.from(projection);
+        redisTemplate.opsForHash().put(key(gameId), field(projection.participantId()), entry);
+        redisTemplate.expire(key(gameId), TTL);
+    }
+
     public List<InGameParticipantCache> findAllByGameId(Long gameId) {
         Collection<Object> values = redisTemplate.opsForHash().entries(key(gameId)).values();
         return values.stream()

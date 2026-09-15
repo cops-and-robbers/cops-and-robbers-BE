@@ -15,6 +15,7 @@ import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
+import com.team.cops_and_robbers.game.participant.repository.GameParticipantCacheProjection;
 import com.team.cops_and_robbers.history.application.GameResultService;
 import com.team.cops_and_robbers.play.common.repository.InGameParticipantCacheRepository;
 import com.team.cops_and_robbers.play.lobby.application.LobbyEventFactory;
@@ -33,6 +34,7 @@ import org.mockito.Mock;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.team.cops_and_robbers.common.fixture.GameFixture.EVENT_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
@@ -78,6 +80,7 @@ class GameParticipantServiceTest extends ServiceUnitTest {
 
     private static final Long TEST_USER_ID = 1L;
     private static final Long TEST_GAME_ID = 1L;
+    private static final Long TEST_PARTICIPANT_ID = 1L;
 
     private User user;
     private User user2;
@@ -197,6 +200,51 @@ class GameParticipantServiceTest extends ServiceUnitTest {
                 // then
                 assertThat(result.isEventGame()).isTrue();
                 then(eventPublisher).should(never()).publishEvent(any());
+            }
+
+            @Test
+            void 이벤트_게임_참여에_성공하면_인게임_캐시에_참가자를_적재한다() {
+                // given
+                Game eventGame = EVENT_GAME(INVITE_CODE);
+                setId(eventGame, TEST_GAME_ID);
+                GameParticipant eventPolice = EVENT_POLICE_WAITING(eventGame, user);
+                GameJoinCommand command = createGameJoinCommand(user.getId(), INVITE_CODE);
+                GameParticipantCacheProjection projection = new GameParticipantCacheProjection(
+                        TEST_PARTICIPANT_ID, user.getNickname(), Team.POLICE, "token"
+                );
+
+                given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(eventGame);
+                given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(false);
+                given(userRepository.getByUserId(user.getId())).willReturn(user);
+                given(gameParticipantRepository.save(any(GameParticipant.class))).willReturn(eventPolice);
+                given(gameParticipantRepository.findCacheProjectionById(any())).willReturn(Optional.of(projection));
+
+                // when
+                gameParticipantService.joinGame(command);
+
+                // then
+                then(inGameParticipantCacheRepository).should().save(TEST_GAME_ID, projection);
+            }
+
+            @Test
+            void 캐시_적재용_조회가_비면_캐시에_적재하지_않는다() {
+                // given
+                Game eventGame = EVENT_GAME(INVITE_CODE);
+                setId(eventGame, TEST_GAME_ID);
+                GameParticipant eventPolice = EVENT_POLICE_WAITING(eventGame, user);
+                GameJoinCommand command = createGameJoinCommand(user.getId(), INVITE_CODE);
+
+                given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(eventGame);
+                given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(false);
+                given(userRepository.getByUserId(user.getId())).willReturn(user);
+                given(gameParticipantRepository.save(any(GameParticipant.class))).willReturn(eventPolice);
+                given(gameParticipantRepository.findCacheProjectionById(any())).willReturn(Optional.empty());
+
+                // when
+                gameParticipantService.joinGame(command);
+
+                // then
+                then(inGameParticipantCacheRepository).should(never()).save(any(), any());
             }
 
             @Test
