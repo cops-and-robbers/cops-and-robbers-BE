@@ -1,2 +1,2 @@
 ALTER TABLE game_result_participants
-    ADD COLUMN arrest_count INTEGER;
+    ADD COLUMN arrest_count INTEGER NOT NULL DEFAULT 0;

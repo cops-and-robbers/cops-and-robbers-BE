@@ -72,10 +72,6 @@ class GameResultServiceTest extends ServiceUnitTest {
     private GameParticipant policeParticipant;
     private GameParticipant robberParticipant;
 
-    private static void setArrestCountToNull(GameResultParticipant participant) {
-        org.springframework.test.util.ReflectionTestUtils.setField(participant, "arrestCount", null);
-    }
-
     @BeforeEach
     void setUp() {
         police = USER("police");
@@ -278,27 +274,6 @@ class GameResultServiceTest extends ServiceUnitTest {
             // then
             assertThat(result.arrestCount()).isEqualTo(2);
             assertThat(result.leftAt()).isNull();
-        }
-
-        @Test
-        void 이_기능_이전_기록이면_체포수가_null이다() {
-            // given
-            GameResult completed = POLICE_WIN_RESULT(TEST_GAME_ID);
-            setId(completed, TEST_GAME_RESULT_ID);
-            GameResultParticipant legacy = GameResultParticipant.createSnapshot(completed, policeParticipant);
-            setArrestCountToNull(legacy);
-
-            given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(completed));
-            given(gameResultParticipantRepository
-                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(TEST_GAME_RESULT_ID, POLICE_USER_ID))
-                    .willReturn(Optional.of(legacy));
-
-            // when
-            GameResultParticipantResult result = gameResultService.getMyGameRecord(
-                    GameResultCommand.of(POLICE_USER_ID, TEST_GAME_RESULT_ID));
-
-            // then
-            assertThat(result.arrestCount()).isNull();
         }
 
         @Test

@@ -42,7 +42,7 @@ public interface GameResultControllerDocs {
                     요청한 사용자 자신의 기록만 반환하므로 participantId 를 넘기지 않습니다.
                     명단에 없으면 그 게임 참가자가 아니므로 `GAME_RESULT_NOT_FOUND` 입니다.
 
-                    `arrestCount` 는 이 기능이 추가되기 전에 끝난 게임에서는 `null` 입니다.
+                    `arrestCount` 는 도둑과 이 기능이 추가되기 전에 끝난 게임에서는 `0` 입니다.
 
                     게임을 나갔다가 같은 방에 다시 들어온 경우, 재입장 이후의 기록만 반환합니다.
                     나가기 전에 잡은 수는 이어지지 않습니다.

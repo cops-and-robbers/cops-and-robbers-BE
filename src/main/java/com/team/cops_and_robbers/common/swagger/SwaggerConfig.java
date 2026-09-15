@@ -44,7 +44,7 @@ public class SwaggerConfig {
                           - 요청자 자신의 기록만 주므로 participantId 를 넘기지 않는다.
                             명단에 없으면 그 게임 참가자가 아니므로 GAME_RESULT_NOT_FOUND
                         - 어드민 게임 기록 참가자(AdminGameHistoryParticipant)에 arrestCount 노출
-                        - `arrestCount` 는 이 기능 이전에 끝난 게임에서는 null 이다 (0 과 구분)
+                        - `arrestCount` 는 도둑과 이 기능 이전에 끝난 게임에서는 0 이다
                         - 게임을 나갔다가 같은 방에 다시 들어오면 재입장 이후 기록만 준다.
                           나가기 전에 잡은 수는 이어지지 않는다
                         - game_results 가 라운드마다 새 행이므로 체포수도 라운드별로 분리된다
