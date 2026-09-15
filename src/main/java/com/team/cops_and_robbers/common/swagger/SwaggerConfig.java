@@ -30,8 +30,29 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.34.0")
+                .version("2.35.0")
                 .description("""
+                        ## v2.35.0 업데이트 내역
+
+                        ### ✨ 신규 — 개인별 체포수 기록
+                        - 체포할 때마다 그 경찰의 개인별 체포수를 게임 기록에 남긴다
+                          - 그동안은 게임 전체 합계(totalArrestCount)만 있어서 누가 몇 명 잡았는지 알 수 없었다
+                          - 앱 이벤트 모드 증거 보드가 이 값을 STOMP 이벤트로 세서 앱 메모리에만 들고 있었고,
+                            앱을 껐다 켜거나 재접속하면 0으로 돌아갔다
+                        - GET /api/game-results/{gameResultId}/me 추가
+                          - 그 게임에서 **본인의** 개인 기록(팀·종료 시점 상태·체포 횟수·퇴장 시각)을 준다
+                          - 요청자 자신의 기록만 주므로 participantId 를 넘기지 않는다.
+                            명단에 없으면 그 게임 참가자가 아니므로 GAME_RESULT_NOT_FOUND
+                        - 어드민 게임 기록 참가자(AdminGameHistoryParticipant)에 arrestCount 노출
+                        - `arrestCount` 는 이 기능 이전에 끝난 게임에서는 null 이다 (0 과 구분)
+                        - game_results 가 라운드마다 새 행이므로 체포수도 라운드별로 분리된다
+                        - **앱 작업 필요** — 증거 보드를 로컬 카운트에서 이 API 조회로 바꾸면 재접속 후에도 맞는 수가 나온다
+
+                        ### 🛠 변경 없음 — 기존 응답·동작
+                        - GET /api/game-results/{gameResultId} 는 그대로다. 승리 팀·진행 시간·총 체포 횟수·남은 도둑 수
+                        - 체포 판정, 도둑 JAILED 전환, 게임 종료 조건, games.total_arrest_count 모두 그대로다.
+                          개인별 카운트만 추가로 찍는다
+
                         ## v2.34.0 업데이트 내역
 
                         ### ✨ 신규 — 인게임 채팅 FCM 푸시
