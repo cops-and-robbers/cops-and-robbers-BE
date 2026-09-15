@@ -47,8 +47,7 @@ public class LoadTestDataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        if (gameRepository.existsByInviteCode(ROOMS.get(0).inviteCode())) {
-            log.info("[LoadTest] 이미 시딩된 데이터가 있어 건너뜁니다. 다시 만들려면 DB를 비우세요.");
+        if (skipOrFailOnExistingData()) {
             return;
         }
 
@@ -70,6 +69,36 @@ public class LoadTestDataLoader implements CommandLineRunner {
         writePlayersFile(allPlayers);
 
         log.info("========== 부하테스트 데이터 시딩 완료: 총 {}명 ==========", allPlayers.size());
+    }
+
+    /**
+     * 이미 시딩된 상태면 건너뛰고, 중간에 끊긴 상태면 실패시킨다.
+     * <p>
+     * 방 하나만 확인하면 A는 커밋됐는데 B/C에서 실패한 경우를 완료로 오인해,
+     * 다음 실행이 통째로 건너뛰면서 players.json 없이 반쪽짜리 데이터만 남는다.
+     * 방 세 개와 토큰 파일이 모두 있어야 완료로 본다.
+     *
+     * @return 시딩을 건너뛰어야 하면 true
+     */
+    private boolean skipOrFailOnExistingData() {
+        long seededRooms = ROOMS.stream()
+                .filter(room -> gameRepository.existsByInviteCode(room.inviteCode()))
+                .count();
+        boolean tokenFileExists = Files.exists(Path.of(outputPath));
+
+        if (seededRooms == ROOMS.size() && tokenFileExists) {
+            log.info("[LoadTest] 이미 시딩된 데이터가 있어 건너뜁니다. 다시 만들려면 정리 후 재실행하세요. (README 참고)");
+            return true;
+        }
+
+        if (seededRooms > 0 || tokenFileExists) {
+            throw new IllegalStateException(
+                    "부하테스트 데이터가 불완전합니다. 방 %d/%d, 토큰 파일 %s. 정리 후 다시 실행하세요. (README 참고)"
+                            .formatted(seededRooms, ROOMS.size(), tokenFileExists ? "있음" : "없음")
+            );
+        }
+
+        return false;
     }
 
     private void writePlayersFile(List<PlayerCredential> players) throws Exception {
