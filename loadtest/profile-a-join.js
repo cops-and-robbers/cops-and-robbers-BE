@@ -17,8 +17,12 @@ import {
 } from './lib/stomp.js';
 
 const WS_URL = __ENV.WS_URL || 'ws://localhost:8080/connection';
-const RAMP_SECONDS = __ENV.RAMP_SECONDS || '60s';
+const RAMP_SECONDS = Number(__ENV.RAMP_SECONDS || 60);
 const HOLD_SECONDS = Number(__ENV.HOLD_SECONDS || 60);
+const JOIN_TIMEOUT_MS = Number(__ENV.JOIN_TIMEOUT_MS || 15000);
+
+// 소켓을 테스트가 끝날 때까지 열어 둔다.
+const SESSION_LIFETIME_MS = (RAMP_SECONDS + HOLD_SECONDS + 60) * 1000;
 
 const players = new SharedArray('players', () =>
   JSON.parse(open(__ENV.PLAYERS || './players.json'))
@@ -37,10 +41,12 @@ export const options = {
       executor: 'ramping-vus',
       startVUs: 0,
       stages: [
-        { duration: RAMP_SECONDS, target: players.length },
+        { duration: `${RAMP_SECONDS}s`, target: players.length },
         { duration: `${HOLD_SECONDS}s`, target: players.length },
       ],
-      gracefulRampDown: '30s',
+      // 열려 있는 세션을 기다리지 않고 종료한다. 어차피 재입장을 막으려고
+      // 수명을 테스트보다 길게 잡아둬서, 모든 iteration이 여기서 끊긴다.
+      gracefulStop: '0s',
     },
   },
   thresholds: {
@@ -58,6 +64,14 @@ export default function () {
   let openedAt = 0;
   let connectedAt = 0;
   let joined = false;
+  let judged = false;
+
+  // 성공과 실패를 한 세션당 한 번만 기록
+  function judge(ok) {
+    if (judged) return;
+    judged = true;
+    joinSuccess.add(ok);
+  }
 
   const res = ws.connect(WS_URL, {}, function (socket) {
     socket.on('open', () => {
@@ -95,7 +109,7 @@ export default function () {
           if (!joined && frame.body.indexOf(marker) !== -1) {
             joined = true;
             subscribeDuration.add(Date.now() - connectedAt, { room: player.room });
-            joinSuccess.add(true);
+            judge(true);
           }
         } else if (frame.command === 'ERROR') {
           stompErrors.add(1, { room: player.room });
@@ -110,13 +124,10 @@ export default function () {
       }
     });
 
-    socket.on('close', () => {
-      if (!joined) {
-        joinSuccess.add(false);
-      }
-    });
+    socket.on('close', () => judge(joined));
 
-    socket.setTimeout(() => socket.close(), HOLD_SECONDS * 1000);
+    socket.setTimeout(() => judge(joined), JOIN_TIMEOUT_MS);
+    socket.setTimeout(() => socket.close(), SESSION_LIFETIME_MS);
   });
 
   check(res, { 'ws handshake 101': (r) => r && r.status === 101 });

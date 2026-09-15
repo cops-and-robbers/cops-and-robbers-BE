@@ -19,10 +19,9 @@ import {
 const WS_URL = __ENV.WS_URL || 'ws://localhost:8080/connection';
 const DURATION_MINUTES = Number(__ENV.DURATION_MINUTES || 15);
 
-// 도둑 위치 전송 주기. FE 정책상 이동 중일 때 최대 5초에 1건이다 (계획 §2).
 const LOCATION_INTERVAL_MS = Number(__ENV.LOCATION_INTERVAL_MS || 5000);
-// 경찰 핑 주기.
 const PING_INTERVAL_MS = Number(__ENV.PING_INTERVAL_MS || 20000);
+const CLOSE_TOLERANCE_MS = 2000;
 
 const players = new SharedArray('players', () =>
   JSON.parse(open(__ENV.PLAYERS || './players.json'))
@@ -36,8 +35,6 @@ const roomSizes = players.reduce((acc, p) => {
 // 방 크기별로 분리해서 본다. 20명 방은 멀쩡한데 100명 방만 느려지면 원인이 팬아웃으로 특정된다.
 const chatRtt = new Trend('stomp_chat_rtt', true);
 const chatSent = new Counter('stomp_chat_sent');
-// 채팅뿐 아니라 위치공개 / 핑 / 시스템 이벤트까지 서버가 내려보낸 모든 MESSAGE 프레임을 센다.
-// 팬아웃 총량이 이 값이므로 채팅만 세면 outbound를 과소평가하게 된다.
 const messagesReceived = new Counter('stomp_messages_received');
 const locationSent = new Counter('stomp_location_sent');
 const stompErrors = new Counter('stomp_error_frames');
@@ -46,9 +43,9 @@ const sessionAlive = new Rate('session_alive');
 export const options = {
   scenarios: {
     play: {
-      executor: 'shared-iterations',
+      executor: 'per-vu-iterations',
       vus: players.length,
-      iterations: players.length,
+      iterations: 1,
       maxDuration: `${DURATION_MINUTES + 2}m`,
     },
   },
@@ -84,6 +81,7 @@ export default function () {
   const player = players[(exec.vu.idInTest - 1) % players.length];
   const marker = `b-${exec.vu.idInTest}`;
   const startedAt = Date.now();
+  const plannedEndAt = startedAt + DURATION_MINUTES * 60 * 1000;
 
   let connected = false;
 
@@ -94,7 +92,6 @@ export default function () {
       for (const frame of parseFrames(raw)) {
         if (frame.command === 'CONNECTED') {
           connected = true;
-          sessionAlive.add(true);
 
           gameSubscriptions(player.gameId, player.team).forEach((dest, i) => {
             socket.send(subscribeFrame(i, dest));
@@ -123,10 +120,12 @@ export default function () {
       }
     });
 
+    // 판정은 종료 시점에 한 번만 한다.
+    // CONNECTED 직후에 true 를 찍어두면, 서버가 곧바로 끊어도 실패가 기록되지 않아
+    // 전 세션이 1초 만에 죽어도 임계값이 통과해버린다.
     socket.on('close', () => {
-      if (!connected) {
-        sessionAlive.add(false);
-      }
+      const heldToEnd = connected && Date.now() >= plannedEndAt - CLOSE_TOLERANCE_MS;
+      sessionAlive.add(heldToEnd);
     });
 
     socket.setTimeout(() => socket.close(), DURATION_MINUTES * 60 * 1000);
@@ -156,7 +155,7 @@ function startLoops(socket, player, marker, startedAt) {
   }
 
   // 채팅 레이트가 구간마다 바뀌므로 고정 interval 대신 1초마다 조건을 다시 평가한다.
-  let nextChatAt = Date.now();
+  let nextChatAt = Date.now() + Math.random() * chatIntervalMs(player.room, 0);
   socket.setInterval(() => {
     const now = Date.now();
     if (now < nextChatAt) {
