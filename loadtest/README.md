@@ -26,20 +26,17 @@ k6가 읽을 `players.json`을 생성한다.
 
 ### 로컬
 
+`logback-spring.xml`의 `LOG_PATH`가 컨테이너 경로 `/log`로 고정이라, 로컬에서 그냥 부팅하면
+logback 초기화에서 `FileNotFoundException`으로 죽는다. 그래서 `--logging.config`로
+콘솔 전용 설정(`loadtest/console-only-logback.xml`, 레포에 포함)을 지정해야 한다.
+
 ```bash
 # 로컬 인프라 (postgres-main 5432, redis-main 6379)
 docker compose -f docker-compose-dev.yml up -d postgres-main redis-main
 
 # 시딩 플래그를 켜고 부팅
 SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun \
-  --args='--loadtest.seed.enabled=true --loadtest.seed.output=./loadtest/players.json'
-```
-
-로컬에서는 `logback-spring.xml`의 `LOG_PATH`가 컨테이너 경로 `/log`로 고정되어 있어
-그냥 부팅하면 logback 초기화에서 실패한다. 콘솔 전용 설정으로 우회한다.
-
-```bash
---args='--logging.config=/path/to/console-only-logback.xml --loadtest.seed.enabled=true ...'
+  --args='--logging.config=./loadtest/console-only-logback.xml --loadtest.seed.enabled=true --loadtest.seed.output=./loadtest/players.json'
 ```
 
 ### OCI 개발서버 (실행 단계 2)
@@ -168,17 +165,46 @@ COMMIT;
 > `games`를 참조하는 테이블이 더 있으면 FK 제약으로 막힌다.
 > 그때는 에러 메시지에 나온 테이블을 `participants` 줄 위에 추가하면 된다.
 
-Redis 잔여 키도 함께 지운다.
+Redis 잔여 키도 지워야 하는데, **개발서버 Redis는 다른 게임·다른 개발자와 공유된다.**
+와일드카드로 지우면 남의 데이터까지 날아가므로 반드시 범위를 좁힌다.
+
+`players.json`에서 이번 부하테스트의 `gameId`와 `userId`만 뽑아 그 키만 지운다.
 
 ```bash
-redis-cli --scan --pattern 'game:*' | xargs -r redis-cli DEL
-redis-cli --scan --pattern 'refresh_token:*' | xargs -r redis-cli DEL
-redis-cli DEL 'redisson_delay_queue:{game:schedule:events}' \
-              'redisson_delay_queue_timeout:{game:schedule:events}'
+# 이번 테스트가 만든 gameId / userId 목록
+GAME_IDS=$(jq -r '[.[].gameId] | unique | .[]' loadtest/players.json)
+USER_IDS=$(jq -r '[.[].userId] | unique | .[]' loadtest/players.json)
+
+for g in $GAME_IDS; do
+  redis-cli --scan --pattern "game:${g}:*" | xargs -r redis-cli DEL
+done
+
+for u in $USER_IDS; do
+  redis-cli DEL "refresh_token:${u}"
+done
 ```
 
-스케줄 큐를 안 지우면 사라진 게임의 이벤트가 계속 발화해
-`GameEventConsumer`에서 에러 로그가 반복된다.
+> ⚠️ **절대 하면 안 되는 것**
+>
+> - `redis-cli --scan --pattern 'game:*' | xargs redis-cli DEL`
+>   → 진행 중인 다른 게임의 참가자 캐시까지 지워서, 그 게임들이 전부
+>     `PARTICIPANT_NOT_FOUND`로 깨진다
+> - `redis-cli --scan --pattern 'refresh_token:*' | xargs redis-cli DEL`
+>   → 개발자 전원이 로그아웃된다
+> - `redis-cli DEL 'redisson_delay_queue:{game:schedule:events}'`
+>   → **공유 큐다.** 다른 게임의 `POLICE_MOVE_START` / `ROBBER_LOCATION_REVEAL` /
+>     `GAME_OVER` 예약까지 사라져서 그 게임들이 영원히 끝나지 않는다
+
+### 예약 이벤트는 어떻게 하나
+
+지연 큐에는 삭제된 게임의 이벤트가 남는다. 이것들이 발화하면 `GameEventConsumer`가
+게임을 못 찾아 에러 로그를 남기지만, **그뿐이고 다른 게임에 영향은 없다.**
+`consume()`이 `while` 루프 안에서 `catch (Exception)`으로 받고 계속 돌기 때문이다.
+라운드 시간(기본 30분)이 지나면 자연히 소진되므로 **그냥 두는 게 맞다.**
+
+로그 노이즈까지 피하고 싶으면 공유 Redis를 쓰지 말고, 부하테스트용 Redis를
+**별도 포트로 따로 띄워** `REDIS_HOST` / `REDIS_PORT`를 그쪽으로 돌린다.
+그러면 끝나고 `FLUSHALL` 한 번으로 정리된다.
 
 ---
 
