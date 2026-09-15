@@ -1,0 +1,18 @@
+<!--
+  부하테스트 시딩을 로컬에서 돌릴 때 쓰는 콘솔 전용 로그 설정
+  사용법은 loadtest/README.md 참고
+-->
+<configuration>
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss} %-5level %logger{20} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <logger name="com.team.cops_and_robbers" level="INFO"/>
+  <logger name="p6spy" level="OFF"/>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+</configuration>
