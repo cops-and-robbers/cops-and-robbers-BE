@@ -9,6 +9,7 @@ import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.history.application.dto.command.GameResultCommand;
+import com.team.cops_and_robbers.history.application.dto.result.GameResultParticipantResult;
 import com.team.cops_and_robbers.history.application.dto.result.GameResultResult;
 import com.team.cops_and_robbers.history.domain.GameEndReason;
 import com.team.cops_and_robbers.history.domain.GameResult;
@@ -69,6 +70,17 @@ public class GameResultService {
                 .flatMap(result -> gameResultParticipantRepository
                         .findByGameResultIdAndUserIdAndLeftAtIsNull(result.getId(), userId))
                 .ifPresent(snapshot -> snapshot.markLeft(LocalDateTime.now(clock)));
+    }
+
+    /**
+     * 체포한 경찰의 체포수를 1 올립니다.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void recordArrest(Long gameId, Long policeUserId) {
+        findInProgressResult(gameId)
+                .flatMap(result -> gameResultParticipantRepository
+                        .findByGameResultIdAndUserIdAndLeftAtIsNull(result.getId(), policeUserId))
+                .ifPresent(GameResultParticipant::incrementArrestCount);
     }
 
     /**
@@ -137,6 +149,21 @@ public class GameResultService {
                 .orElseThrow(() -> new ApplicationException(GameResultException.GAME_RESULT_NOT_FOUND));
         gameParticipantRepository.getByGameIdAndUserId(gameResult.getGameId(), command.userId());
         return GameResultResult.from(gameResult);
+    }
+
+    /**
+     * 요청한 사용자 자신의 개인 기록을 조회합니다.
+     * 명단에 없으면 그 게임 참가자가 아니므로 조회할 수 없습니다.
+     */
+    public GameResultParticipantResult getMyGameRecord(GameResultCommand command) {
+        gameResultRepository.findById(command.gameResultId())
+                .filter(GameResult::isCompleted)
+                .orElseThrow(() -> new ApplicationException(GameResultException.GAME_RESULT_NOT_FOUND));
+
+        return gameResultParticipantRepository
+                .findFirstByGameResultIdAndUserIdOrderByIdDesc(command.gameResultId(), command.userId())
+                .map(GameResultParticipantResult::from)
+                .orElseThrow(() -> new ApplicationException(GameResultException.GAME_RESULT_NOT_FOUND));
     }
 
 }

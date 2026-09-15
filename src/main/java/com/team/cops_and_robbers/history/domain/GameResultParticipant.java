@@ -56,6 +56,10 @@ public class GameResultParticipant extends BaseTimeEntity {
     /** 게임 중 퇴장한 시각. 끝까지 있었으면 null. */
     private LocalDateTime leftAt;
 
+    /** 이 참가자가 체포한 횟수. 도둑과 이 컬럼이 생기기 전 기록은 0. */
+    @Column(nullable = false)
+    private Integer arrestCount;
+
     public static GameResultParticipant createSnapshot(
             GameResult gameResult,
             GameParticipant participant
@@ -66,7 +70,12 @@ public class GameResultParticipant extends BaseTimeEntity {
                 .nickname(participant.getUser().getNickname())
                 .team(participant.getTeam())
                 .status(participant.getStatus())
+                .arrestCount(0)
                 .build();
+    }
+
+    public void incrementArrestCount() {
+        this.arrestCount++;
     }
 
     public void markLeft(LocalDateTime leftTime) {
