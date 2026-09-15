@@ -41,17 +41,22 @@ SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun \
 
 ### OCI 개발서버 (실행 단계 2)
 
-서버가 이미 `SPRING_PROFILES_ACTIVE=dev`로 돌고 있으므로(`docker-compose-dev-server.yml`),
-컨테이너 환경에 플래그만 얹으면 된다.
+서버가 이미 `SPRING_PROFILES_ACTIVE=dev`로 돌고 있으므로 플래그만 주면 된다.
+**`docker-compose-dev-server.yml`은 git에 추적되는 파일이라 직접 수정하지 않는다.**
+실수로 커밋되면 개발서버가 부팅마다 170명을 만들게 된다.
 
-```yaml
-# docker-compose-dev-server.yml 의 environment 에 임시로 추가
-LOADTEST_SEED_ENABLED: "true"
-LOADTEST_SEED_OUTPUT: /log/players.json
+일회성 컨테이너로 주입한다.
+
+```bash
+docker compose -f docker-compose-dev-server.yml run --rm \
+  -e LOADTEST_SEED_ENABLED=true \
+  -e LOADTEST_SEED_OUTPUT=/log/players.json \
+  cops-and-robbers-dev
 ```
 
-`/log`는 호스트의 `/home/ubuntu/log`에 마운트되어 있으므로, 생성된 `players.json`을
-`scp`로 내려받아 부하 발생기(로컬 맥)에서 쓴다. **시딩이 끝나면 플래그를 반드시 다시 내린다.**
+`run --rm`은 포트를 매핑하지 않아 실행 중인 서버와 충돌하지 않고, 끝나면 컨테이너가 사라진다.
+`/log`는 호스트의 `/home/ubuntu/log`에 마운트되어 있으므로 생성된 `players.json`을
+`scp`로 내려받아 부하 발생기(로컬 맥)에서 쓴다.
 
 - `loadtest.seed.enabled=true` 일 때만 동작한다. 평소 dev 부팅에는 영향이 없다.
 - 이미 시딩되어 있으면(`LTA001` 초대코드 존재) 건너뛴다. 다시 만들려면 DB를 비운다.
@@ -121,19 +126,83 @@ k6 run -e WS_URL=ws://localhost:8080/connection loadtest/profile-b-play.js
 
 ---
 
-## 4. 서버 쪽에서 같이 볼 것
+## 4. 측정값 수집
 
-부하 발생기 지표만으로는 원인이 안 잡힌다. 아래를 병행한다.
+**모니터링 서버는 부하테스트 이후에 붙이기로 했으므로, 지금은 직접 저장해야 한다.**
+k6는 기본적으로 stdout에만 요약을 찍고 끝나서, 저장하지 않으면 측정값이 남지 않는다.
+
+### 4-1. 클라이언트 쪽 (k6)
+
+```bash
+mkdir -p loadtest/out
+
+k6 run \
+  --out json=loadtest/out/profile-b.json.gz \
+  --summary-export=loadtest/out/profile-b-summary.json \
+  -e WS_URL=ws://서버:8080/connection \
+  loadtest/profile-b-play.js
+```
+
+- `--summary-export` — 집계값만. 합격 기준 판정에는 이것으로 충분하다
+- `--out json=` — 원시 샘플 전부. 시간축으로 그려보려면 필요하다
+  - **용량 주의**: 파일명이 `.gz`로 끝나면 k6가 자동 압축한다.
+    170 VU 실측 기준 1분에 비압축 6.3 MB / 압축 0.2 MB이므로,
+    15분이면 **비압축 약 95 MB, 압축 약 3 MB**다. `.gz`를 꼭 붙인다
+
+### 4-2. 서버 쪽 (Prometheus 스크랩)
+
+테스트 시작할 때 같이 띄워두고, 끝나면 `Ctrl+C`로 멈춘다.
+
+```bash
+mkdir -p loadtest/out
+
+while sleep 5; do
+  echo "### $(date -Iseconds)" >> loadtest/out/server-metrics.txt
+  curl -s http://서버:9091/actuator/prometheus >> loadtest/out/server-metrics.txt
+done
+```
+
+액추에이터는 `9091` 포트에 열려 있다(`docker-compose-dev-server.yml`).
+
+### 4-3. 무엇을 보나
 
 | 대상 | 지표 | 왜 |
 |---|---|---|
 | HikariCP | `hikaricp_connections_pending` | 프로파일 A의 1순위 병목 |
-| JVM | heap used / GC pause | 팬아웃 적체가 힙으로 나타난다 |
-| WebSocket | 세션 수, `clientOutboundChannel` 큐 | 프로파일 B의 1순위 병목 |
-| FCM | `fcmExecutor` 큐 깊이 | `DiscardOldestPolicy`라 적체 시 푸시가 조용히 버려진다 |
-| EC2 | CPU%, `CPUCreditBalance` | 운영 검증 시에만 |
+| JVM | `jvm_memory_used_bytes`, `jvm_gc_pause_seconds` | 팬아웃 적체가 힙으로 나타난다 |
+| FCM | `executor_queued_tasks{name="fcmExecutor"}` | `DiscardOldestPolicy`라 적체 시 푸시가 조용히 버려진다 |
+| WebSocket 팬아웃 | `executor_queued_tasks{name="clientOutboundChannelExecutor"}` | **프로파일 B의 1순위 병목.** 계속 쌓이면 팬아웃이 밀리는 중이고 곧 힙 적체로 이어진다 |
+| WebSocket 인바운드 | `executor_queued_tasks{name="clientInboundChannelExecutor"}` | 입장 폭주 때 SUBSCRIBE 처리가 밀리는지 |
+| WebSocket 세션 수 | 미노출 | **아래 4-4 참고** |
+| EC2 | CPU%, `CPUCreditBalance` | 운영 검증 시에만 (CloudWatch) |
 
-actuator + micrometer-prometheus + node-exporter가 이미 붙어 있으므로 수집 경로는 갖춰져 있다.
+### 4-4. 세션 수만 로그로 본다
+
+채널 큐(`clientInboundChannelExecutor` / `clientOutboundChannelExecutor`)는
+**프로메테우스에 이미 `executor_queued_tasks`로 나온다.** Spring이 이 익스큐터들을
+`ThreadPoolTaskExecutor` 타입으로 선언해 두어서 액추에이터가 자동으로 잡는다.
+1순위 병목 지표는 4-2의 스크랩만으로 시계열로 남는다.
+
+노출되지 않는 건 **WebSocket 세션 수**뿐이다(`tomcat_sessions_*`는 HTTP 세션이라 무관).
+Gauge를 새로 등록하는 건 범위가 커서, 이미 있는 `WebSocketMessageBrokerStats`의
+로깅 주기만 낮춰 로그로 본다. 기본 30분이라 그대로는 못 쓴다.
+
+```bash
+--loadtest.stats.logging-period-ms=10000
+```
+
+`LoadTestBrokerStatsLogger`가 이 프로퍼티가 있을 때만 등록되므로 **플래그를 빼면 원래대로 돌아간다.**
+코드를 되돌릴 필요가 없다.
+
+10초마다 이런 줄이 찍힌다.
+
+```
+WebSocketSession[170 current WS(170)-HttpStream(0)-HttpPoll(0), 170 total, 0 closed abnormally]
+clientInboundChannel[pool size = 4, active threads = 0, queued tasks = 0, completed tasks = 8213]
+clientOutboundChannel[pool size = 4, active threads = 0, queued tasks = 0, completed tasks = 84870]
+```
+
+`closed abnormally` 수가 중도 이탈과 맞물리는지 보면 프로파일 B의 `session_alive`와 교차검증이 된다.
 
 ---
 
@@ -152,6 +221,9 @@ CREATE TEMP TABLE lt_users AS
 
 DELETE FROM game_result_participants
   WHERE game_result_id IN (SELECT id FROM game_results WHERE game_id IN (SELECT id FROM lt_games));
+DELETE FROM reports          WHERE game_id IN (SELECT id FROM lt_games)
+                                OR reporter_user_id IN (SELECT id FROM lt_users)
+                                OR reported_user_id IN (SELECT id FROM lt_users);
 DELETE FROM game_results     WHERE game_id IN (SELECT id FROM lt_games);
 DELETE FROM participants     WHERE game_id IN (SELECT id FROM lt_games);
 DELETE FROM game_areas       WHERE game_id IN (SELECT id FROM lt_games);
@@ -162,6 +234,9 @@ DELETE FROM users            WHERE id      IN (SELECT id FROM lt_users);
 COMMIT;
 ```
 
+> `reports`는 `game_id` / `reporter_user_id` / `reported_user_id` 에 FK가 없어 삭제를 막지는 않지만,
+> 그냥 두면 고아 행이 남는다. 부하 시나리오가 신고를 만들지는 않으므로 보통 0건이지만 같이 지운다.
+>
 > `games`를 참조하는 테이블이 더 있으면 FK 제약으로 막힌다.
 > 그때는 에러 메시지에 나온 테이블을 `participants` 줄 위에 추가하면 된다.
 
@@ -208,8 +283,24 @@ done
 
 ---
 
-## 6. 주의
+## 6. 테스트 끝나고 되돌릴 것
 
-- **부하 발생기는 서버 밖(로컬 맥)에서 돌린다.** 같은 인스턴스에서 돌리면 그 CPU도 크레딧에서 빠져 측정이 오염된다.
+§5의 데이터 정리와 별개로, 켜둔 스위치를 내린다.
+
+- [ ] `LOADTEST_SEED_ENABLED` 내리기 — `run --rm`으로 주입했다면 컨테이너가 사라지면서 자동으로 정리된다
+- [ ] `--loadtest.stats.logging-period-ms` 빼기 — 안 빼면 10초마다 브로커 통계가 찍힌다
+- [ ] `players.json` 삭제 — **유효한 access token 170개가 들어있다**
+- [ ] 시딩 데이터 SQL 정리 (§5)
+- [ ] Redis 키 정리 (§5) — 범위 제한 확인
+- [ ] blue/green 내린 쪽 복구 (운영 검증한 경우만)
+
+`fcmExecutor` 반환 타입 변경은 지표 노출을 위한 것이라 되돌리지 않는다.
+
+---
+
+## 7. 주의
+
+- **부하 발생기는 서버 밖(로컬 맥)에서 돌린다.** 같은 인스턴스에서 돌리면
+  그 CPU도 크레딧에서 빠져나가 측정이 오염된다.
 - 운영 검증 시에는 blue/green 중 한쪽을 반드시 내린다. 1 GiB에 JVM 2개는 버티지 못한다.
-- `players.json`은 유효한 access token을 담고 있다. **커밋하지 않는다.**
+- `players.json`과 `loadtest/out/`은 `.gitignore`에 있다. **커밋하지 않는다.**

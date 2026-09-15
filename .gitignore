@@ -48,3 +48,4 @@ out/
 
 ### Load test
 loadtest/players.json
+loadtest/out/
