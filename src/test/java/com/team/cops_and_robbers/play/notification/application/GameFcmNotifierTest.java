@@ -7,7 +7,6 @@ import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.play.chat.domain.ChatMessage;
 import com.team.cops_and_robbers.play.chat.domain.ChatScope;
 import com.team.cops_and_robbers.play.chat.domain.ChatSender;
-import com.team.cops_and_robbers.play.common.InGamePresenceRegistry;
 import com.team.cops_and_robbers.play.common.domain.InGameParticipantCache;
 import com.team.cops_and_robbers.play.common.repository.InGameParticipantCacheRepository;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
@@ -26,7 +25,6 @@ import java.util.Map;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.lenient;
@@ -42,9 +40,6 @@ class GameFcmNotifierTest extends ServiceUnitTest {
 
     @Mock
     private InGameParticipantCacheRepository inGameParticipantCacheRepository;
-
-    @Mock
-    private InGamePresenceRegistry inGamePresenceRegistry;
 
     @Mock
     private ChatPushDebouncer chatPushDebouncer;
@@ -107,7 +102,6 @@ class GameFcmNotifierTest extends ServiceUnitTest {
                     POLICE_PARTICIPANT_ID, new InGameParticipantCache("경찰", Team.POLICE, "police-token"),
                     ROBBER_PARTICIPANT_ID, new InGameParticipantCache("도둑", Team.ROBBER, "robber-token")
             ));
-            lenient().when(inGamePresenceRegistry.isOnline(eq(TEST_GAME_ID), anyLong())).thenReturn(false);
         }
 
         private ChatMessage chatMessage(ChatScope scope) {
@@ -151,19 +145,6 @@ class GameFcmNotifierTest extends ServiceUnitTest {
                 softly.assertThat(sent.tokens()).containsExactly("police-token");
                 softly.assertThat(sent.data()).containsEntry("scope", "TEAM");
             });
-        }
-
-        @Test
-        void 소켓이_연결된_참가자는_채팅을_화면에서_받으므로_제외한다() {
-            // given
-            given(inGamePresenceRegistry.isOnline(TEST_GAME_ID, POLICE_PARTICIPANT_ID)).willReturn(true);
-
-            // when
-            gameFcmNotifier.notifyChatMessage(chatMessage(ChatScope.ALL));
-
-            // then
-            FcmMessage sent = captureSent();
-            assertSoftly(softly -> softly.assertThat(sent.tokens()).containsExactly("robber-token"));
         }
 
         @Test

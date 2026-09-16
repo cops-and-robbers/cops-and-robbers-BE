@@ -5,7 +5,6 @@ import com.team.cops_and_robbers.common.fcm.FcmService;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.play.chat.domain.ChatMessage;
 import com.team.cops_and_robbers.play.chat.domain.ChatScope;
-import com.team.cops_and_robbers.play.common.InGamePresenceRegistry;
 import com.team.cops_and_robbers.play.common.domain.InGameParticipantCache;
 import com.team.cops_and_robbers.play.common.repository.InGameParticipantCacheRepository;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
@@ -33,7 +32,6 @@ public class GameFcmNotifier {
 
     private final FcmService fcmService;
     private final InGameParticipantCacheRepository inGameParticipantCacheRepository;
-    private final InGamePresenceRegistry inGamePresenceRegistry;
     private final ChatPushDebouncer chatPushDebouncer;
 
     @Async("fcmExecutor")
@@ -98,17 +96,14 @@ public class GameFcmNotifier {
         return CompletableFuture.completedFuture(null);
     }
 
-    // 소켓이 살아 있는 참가자는 채팅을 화면에서 받고 있으므로 제외한다
     private List<String> getChatTokens(ChatMessage message) {
-        Long gameId = message.gameId();
         Long senderId = message.sender().participantId();
         Team targetTeam = message.scope() == ChatScope.TEAM ? message.sender().team() : null;
 
-        return inGameParticipantCacheRepository.findAllEntriesByGameId(gameId).entrySet().stream()
+        return inGameParticipantCacheRepository.findAllEntriesByGameId(message.gameId()).entrySet().stream()
                 .filter(e -> !e.getKey().equals(senderId))
                 .filter(e -> targetTeam == null || e.getValue().team() == targetTeam)
                 .filter(e -> e.getValue().fcmToken() != null)
-                .filter(e -> !inGamePresenceRegistry.isOnline(gameId, e.getKey()))
                 .map(e -> e.getValue().fcmToken())
                 .toList();
     }
