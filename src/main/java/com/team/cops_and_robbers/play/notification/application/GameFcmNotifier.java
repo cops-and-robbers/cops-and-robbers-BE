@@ -3,9 +3,9 @@ package com.team.cops_and_robbers.play.notification.application;
 import com.team.cops_and_robbers.common.fcm.FcmMessage;
 import com.team.cops_and_robbers.common.fcm.FcmService;
 import com.team.cops_and_robbers.game.participant.domain.Team;
-import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.play.chat.domain.ChatMessage;
 import com.team.cops_and_robbers.play.chat.domain.ChatScope;
+import com.team.cops_and_robbers.play.common.InGamePresenceRegistry;
 import com.team.cops_and_robbers.play.common.domain.InGameParticipantCache;
 import com.team.cops_and_robbers.play.common.repository.InGameParticipantCacheRepository;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
@@ -27,10 +27,14 @@ import java.util.concurrent.CompletableFuture;
 public class GameFcmNotifier {
 
     private static final String CHAT_PUSH_TYPE = "CHAT";
+    private static final String CHAT_COLLAPSE_KEY_PREFIX = "chat:";
+    private static final String CHAT_PUSH_TITLE = "새 채팅";
+    private static final String CHAT_PUSH_BODY = "새 채팅이 도착했습니다.";
 
     private final FcmService fcmService;
     private final InGameParticipantCacheRepository inGameParticipantCacheRepository;
-    private final GameParticipantRepository gameParticipantRepository;
+    private final InGamePresenceRegistry inGamePresenceRegistry;
+    private final ChatPushDebouncer chatPushDebouncer;
 
     @Async("fcmExecutor")
     public CompletableFuture<Void> notifySystemEvent(SystemEvent event) {
@@ -75,27 +79,44 @@ public class GameFcmNotifier {
     @Async("fcmExecutor")
     public CompletableFuture<Void> notifyChatMessage(ChatMessage message) {
         try {
+            // 창이 열려 있으면 캐시 조회·팬아웃을 스킵한다
+            if (!chatPushDebouncer.tryOpenWindow(message.gameId())) {
+                return CompletableFuture.completedFuture(null);
+            }
+
             List<String> tokens = getChatTokens(message);
             if (tokens.isEmpty()) {
                 return CompletableFuture.completedFuture(null);
             }
 
             FcmPayload payload = resolveChatPayload(message);
-            fcmService.send(new FcmMessage(tokens, payload.title(), payload.body(), payload.data()));
+            fcmService.send(new FcmMessage(tokens, payload.title(), payload.body(), payload.data(),
+                    CHAT_COLLAPSE_KEY_PREFIX + message.gameId()));
         } catch (Exception e) {
             log.error("[FCM] Async chat send failed | gameId={}, participantId={}", message.gameId(), message.sender().participantId(), e);
         }
         return CompletableFuture.completedFuture(null);
     }
 
+    // 소켓이 살아 있는 참가자는 채팅을 화면에서 받고 있으므로 제외한다
     private List<String> getChatTokens(ChatMessage message) {
+        Long gameId = message.gameId();
+        Long senderId = message.sender().participantId();
         Team targetTeam = message.scope() == ChatScope.TEAM ? message.sender().team() : null;
-        return gameParticipantRepository.findChatPushTokens(message.gameId(), message.sender().participantId(), targetTeam);
+
+        return inGameParticipantCacheRepository.findAllEntriesByGameId(gameId).entrySet().stream()
+                .filter(e -> !e.getKey().equals(senderId))
+                .filter(e -> targetTeam == null || e.getValue().team() == targetTeam)
+                .filter(e -> e.getValue().fcmToken() != null)
+                .filter(e -> !inGamePresenceRegistry.isOnline(gameId, e.getKey()))
+                .map(e -> e.getValue().fcmToken())
+                .toList();
     }
 
+    // 방 단위로 묶여 나가므로 고정 문구를 쓴다.
     private FcmPayload resolveChatPayload(ChatMessage message) {
         Map<String, String> data = Map.of("type", CHAT_PUSH_TYPE, "gameId", String.valueOf(message.gameId()), "scope", message.scope().name());
-        return new FcmPayload(message.sender().nickname(), message.message(), data);
+        return new FcmPayload(CHAT_PUSH_TITLE, CHAT_PUSH_BODY, data);
     }
 
     private record FcmPayload(String title, String body, Map<String, String> data) {}

@@ -30,6 +30,7 @@ public class GameStompInterceptor implements ChannelInterceptor {
     private static final String ROBBER_CHANNEL_SUFFIX = "/robber";
 
     private final GameParticipantRepository gameParticipantRepository;
+    private final InGamePresenceRegistry inGamePresenceRegistry;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -61,6 +62,7 @@ public class GameStompInterceptor implements ChannelInterceptor {
 
         StompSessionHelper.putGameId(accessor, gameId);
         StompSessionHelper.putParticipantId(accessor, participant.getId());
+        inGamePresenceRegistry.register(gameId, participant.getId(), accessor.getSessionId());
         log.info("[Wed Socket] SUBSCRIBE success: gameId={}, userId={}, participantId={}", gameId, userId, participant.getId());
     }
 
