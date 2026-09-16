@@ -44,6 +44,11 @@ springdoc:
 encryption:
   secret-key: ${ENCRYPTION_KEY}
 
+fcm:
+  chat:
+    # 한 게임의 채팅 푸시를 방 단위로 이 시간에 1건으로 제한한다 (docs/load-test-result-2026-09-15.md)
+    debounce-seconds: 30
+
 geocoding:
   vworld:
     api-key: ${VWORLD_API_KEY:}

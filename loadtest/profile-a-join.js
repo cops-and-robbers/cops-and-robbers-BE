@@ -17,7 +17,8 @@ import {
 } from './lib/stomp.js';
 
 const WS_URL = __ENV.WS_URL || 'ws://localhost:8080/connection';
-const RAMP_SECONDS = Number(__ENV.RAMP_SECONDS || 60);
+// 합격 판정은 현실적인 입장 속도(5분)로 한다. 60초는 스트레스 참고치로만 쓴다.
+const RAMP_SECONDS = Number(__ENV.RAMP_SECONDS || 300);
 const HOLD_SECONDS = Number(__ENV.HOLD_SECONDS || 60);
 const JOIN_TIMEOUT_MS = Number(__ENV.JOIN_TIMEOUT_MS || 15000);
 
