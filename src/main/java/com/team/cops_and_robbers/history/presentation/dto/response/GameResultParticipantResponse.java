@@ -14,6 +14,8 @@ public record GameResultParticipantResponse(
         ParticipantStatus status,
         @Schema(description = "본인이 체포한 횟수", example = "3")
         Integer arrestCount,
+        @Schema(description = "본인이 잡힌 횟수", example = "2")
+        Integer arrestedCount,
         @Schema(description = "게임 중 퇴장한 시각. 끝까지 있었으면 null", example = "2026-09-16T14:30:00+09:00")
         String leftAt
 ) {
@@ -23,6 +25,7 @@ public record GameResultParticipantResponse(
                 result.team(),
                 result.status(),
                 result.arrestCount(),
+                result.arrestedCount(),
                 result.leftAt()
         );
     }

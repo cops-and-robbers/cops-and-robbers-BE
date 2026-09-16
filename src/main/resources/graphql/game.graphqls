@@ -133,4 +133,5 @@ type AdminGameHistoryParticipant {
   status: ParticipantStatus!
   leftAt: String
   arrestCount: Int!
+  arrestedCount: Int!
 }

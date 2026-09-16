@@ -60,6 +60,10 @@ public class GameResultParticipant extends BaseTimeEntity {
     @Column(nullable = false)
     private Integer arrestCount;
 
+    /** 이 참가자가 잡힌 횟수. 경찰과 이 컬럼이 생기기 전 기록은 0. */
+    @Column(nullable = false)
+    private Integer arrestedCount;
+
     public static GameResultParticipant createSnapshot(
             GameResult gameResult,
             GameParticipant participant
@@ -71,11 +75,16 @@ public class GameResultParticipant extends BaseTimeEntity {
                 .team(participant.getTeam())
                 .status(participant.getStatus())
                 .arrestCount(0)
+                .arrestedCount(0)
                 .build();
     }
 
     public void incrementArrestCount() {
         this.arrestCount++;
+    }
+
+    public void incrementArrestedCount() {
+        this.arrestedCount++;
     }
 
     public void markLeft(LocalDateTime leftTime) {
