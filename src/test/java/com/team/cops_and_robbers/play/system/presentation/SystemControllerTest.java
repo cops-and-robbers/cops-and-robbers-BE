@@ -7,6 +7,8 @@ import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
+import com.team.cops_and_robbers.history.domain.GameResult;
+import com.team.cops_and_robbers.history.domain.GameResultParticipant;
 import com.team.cops_and_robbers.play.system.presentation.dto.request.ArrestRequest;
 import com.team.cops_and_robbers.play.system.presentation.dto.response.ArrestResponse;
 import com.team.cops_and_robbers.user.domain.User;
@@ -268,6 +270,89 @@ class SystemControllerTest extends ControllerTest {
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        }
+    }
+
+    @Nested
+    @DisplayName("체포 개인 기록")
+    class ArrestPersonalRecord {
+
+        /** 카운트는 열려 있는 GameResult 명단에 쌓이므로, 게임 시작 시점처럼 스냅샷을 먼저 연다. */
+        private GameResult openResultWithSnapshots(Game targetGame, GameParticipant... participants) {
+            GameResult openedResult = gameResultRepository.save(
+                    GameResult.openSnapshot(targetGame, gameAreaRepository.getByGameId(targetGame.getId())));
+            for (GameParticipant participant : participants) {
+                gameResultParticipantRepository.save(GameResultParticipant.createSnapshot(openedResult, participant));
+            }
+            return openedResult;
+        }
+
+        private void arrest(String token, Game targetGame, Long robberParticipantId) {
+            authenticated(token)
+                    .body(new ArrestRequest(robberParticipantId))
+                    .pathParam(GAME_ID_PARAM, targetGame.getId())
+                    .when()
+                    .post(ARREST_URL)
+                    .then()
+                    .statusCode(HttpStatus.OK.value());
+        }
+
+        @Test
+        void 체포와_탈옥_후_재체포가_경찰과_도둑의_개인_기록에_각각_누적된다() {
+            // given - 도둑을 하나 더 두어 전원 체포로 게임이 끝나지 않게 한다
+            User secondRobber = givenUser("robber2");
+            givenRobber(game, secondRobber);
+            GameResult openedResult = openResultWithSnapshots(game, policeParticipant, robberParticipant);
+
+            // when - 체포 → 탈옥 → 재체포를 전부 실제 API 로 수행
+            arrest(policeToken, game, robberParticipant.getId());
+            authenticated(robberToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(ESCAPE_URL)
+                    .then()
+                    .statusCode(HttpStatus.NO_CONTENT.value());
+            arrest(policeToken, game, robberParticipant.getId());
+
+            // then
+            GameResultParticipant policeRecord = gameResultParticipantRepository
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(openedResult.getId(), police.getId()).orElseThrow();
+            GameResultParticipant robberRecord = gameResultParticipantRepository
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(openedResult.getId(), robber.getId()).orElseThrow();
+            assertSoftly(softly -> {
+                softly.assertThat(policeRecord.getArrestCount()).isEqualTo(2);
+                softly.assertThat(policeRecord.getArrestedCount()).isZero();
+                softly.assertThat(robberRecord.getArrestedCount()).isEqualTo(2);
+                softly.assertThat(robberRecord.getArrestCount()).isZero();
+            });
+        }
+
+        @Test
+        void 이벤트_게임에서_같은_도둑을_반복_체포하면_잡힌_횟수가_그대로_누적된다() {
+            // given - 이벤트 게임은 체포돼도 JAILED 로 바뀌지 않아 탈옥 없이 바로 재체포된다
+            User eventPolice = givenUser("eventPolice");
+            User eventRobber = givenUser("eventRobber");
+            String eventPoliceToken = givenAccessToken(eventPolice);
+
+            Game eventGame = gameRepository.save(GameFixture.EVENT_GAME());
+            gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(eventGame));
+            GameParticipant eventPoliceParticipant = givenPolice(eventGame, eventPolice);
+            GameParticipant eventRobberParticipant = givenRobber(eventGame, eventRobber);
+            GameResult openedResult = openResultWithSnapshots(eventGame, eventPoliceParticipant, eventRobberParticipant);
+
+            // when
+            arrest(eventPoliceToken, eventGame, eventRobberParticipant.getId());
+            arrest(eventPoliceToken, eventGame, eventRobberParticipant.getId());
+
+            // then
+            GameResultParticipant robberRecord = gameResultParticipantRepository
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(openedResult.getId(), eventRobber.getId()).orElseThrow();
+            GameResultParticipant policeRecord = gameResultParticipantRepository
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(openedResult.getId(), eventPolice.getId()).orElseThrow();
+            assertSoftly(softly -> {
+                softly.assertThat(robberRecord.getArrestedCount()).isEqualTo(2);
+                softly.assertThat(policeRecord.getArrestCount()).isEqualTo(2);
+            });
         }
     }
 
