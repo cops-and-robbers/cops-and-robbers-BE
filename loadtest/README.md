@@ -78,7 +78,7 @@ sudo systemctl restart tailscale-docker-forward   # deploy-dev.sh와 동일. 없
 
 - **토큰은 `ACCESS_EXPIRATION`(dev 1h) 뒤에 만료된다.** 시딩 후 1시간 안에 A·B를 끝낸다.
   넘기면 §5로 정리하고 다시 시딩해야 한다 ("이미 시딩됨"으로 건너뛰어 토큰이 재발급되지 않는다).
-- 시딩 시점에 게임 시계가 돈다. 라운드는 120분이라 A·B를 이어 돌려도 GAME_OVER가 끼어들지 않는다.
+- 시딩 시점에 게임 시계가 돈다. 라운드는 60분(토큰 수명과 동일)이라 A·B를 이어 돌려도 GAME_OVER가 끼어들지 않는다.
 - nginx는 `/game-connection`에만 WebSocket Upgrade를 넘긴다. k6의 `WS_URL`은
   `wss://dev-api.copsnro66ers.site/game-connection`이다 (8080/9091은 외부에서 막혀 있다).
 
@@ -302,7 +302,7 @@ done
 지연 큐에는 삭제된 게임의 이벤트가 남는다. 이것들이 발화하면 `GameEventConsumer`가
 게임을 못 찾아 에러 로그를 남기지만, **그뿐이고 다른 게임에 영향은 없다.**
 `consume()`이 `while` 루프 안에서 `catch (Exception)`으로 받고 계속 돌기 때문이다.
-라운드 시간(기본 30분)이 지나면 자연히 소진되므로 **그냥 두는 게 맞다.**
+라운드 시간(60분)이 지나면 자연히 소진되므로 **그냥 두는 게 맞다.**
 
 로그 노이즈까지 피하고 싶으면 공유 Redis를 쓰지 말고, 부하테스트용 Redis를
 **별도 포트로 따로 띄워** `REDIS_HOST` / `REDIS_PORT`를 그쪽으로 돌린다.
