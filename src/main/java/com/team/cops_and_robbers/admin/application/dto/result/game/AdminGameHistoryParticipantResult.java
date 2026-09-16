@@ -13,7 +13,8 @@ public record AdminGameHistoryParticipantResult(
         Team team,
         ParticipantStatus status,
         String leftAt,
-        Integer arrestCount
+        Integer arrestCount,
+        Integer arrestedCount
 ) {
 
     public static AdminGameHistoryParticipantResult from(GameResultParticipant participant) {
@@ -23,7 +24,8 @@ public record AdminGameHistoryParticipantResult(
                 participant.getTeam(),
                 participant.getStatus(),
                 toIsoOrNull(participant.getLeftAt()),
-                participant.getArrestCount()
+                participant.getArrestCount(),
+                participant.getArrestedCount()
         );
     }
 

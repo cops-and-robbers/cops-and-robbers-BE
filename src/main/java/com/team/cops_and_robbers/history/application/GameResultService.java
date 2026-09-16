@@ -84,6 +84,17 @@ public class GameResultService {
     }
 
     /**
+     * 잡힌 도둑의 잡힌 횟수를 1 올립니다.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void recordArrested(Long gameId, Long robberUserId) {
+        findInProgressResult(gameId)
+                .flatMap(result -> gameResultParticipantRepository
+                        .findByGameResultIdAndUserIdAndLeftAtIsNull(result.getId(), robberUserId))
+                .ifPresent(GameResultParticipant::incrementArrestedCount);
+    }
+
+    /**
      * 게임 종료 시점의 통계를 수집해 열어 둔 GameResult 를 완성합니다.
      */
     @Transactional(propagation = Propagation.MANDATORY)

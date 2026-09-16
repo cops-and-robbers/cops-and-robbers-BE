@@ -30,8 +30,30 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.35.0")
+                .version("2.36.0")
                 .description("""
+                        ## v2.36.0 업데이트 내역
+
+                        ### ✨ 신규 — 도둑 개인별 잡힌 횟수 기록
+                        - 체포될 때마다 그 도둑의 잡힌 횟수를 게임 기록에 남긴다
+                          - v2.35.0 으로 경찰 개인 체포수는 생겼지만 도둑 쪽 개인 지표는 없었다.
+                            도둑이 /me 를 불러도 새로 얻는 값이 없었다
+                          - 종료 시점 status 로는 알 수 없다. 3번 잡혔다 3번 탈옥한 도둑과
+                            한 번도 안 잡힌 도둑의 종료 시점 status 가 똑같이 ALIVE 다
+                        - GET /api/game-results/{gameResultId}/me 응답에 arrestedCount 추가
+                          - 새 엔드포인트 없음. 경찰은 체포 대상이 아니고 도둑은 체포 주체가 아니라
+                            반대쪽 값은 항상 0 이다. 앱은 team 으로 골라 쓴다
+                        - 어드민 게임 기록 참가자(AdminGameHistoryParticipant)에 arrestedCount 노출
+                        - `arrestedCount` 는 경찰과 이 컬럼이 생기기 전에 끝난 게임에서는 0 이다
+                        - 이벤트 게임은 도둑이 JAILED 로 바뀌지 않아 같은 도둑이 반복해서 잡힐 수 있고
+                          그대로 누적된다. 어드민에서는 라운드별 부스 실적으로 읽힌다
+                        - 게임을 나갔다가 같은 방에 다시 들어오면 재입장 이후 기록만 준다 (arrestCount 와 동일)
+
+                        ### 🛠 변경 없음 — 기존 응답·동작
+                        - 체포 판정, 도둑 JAILED 전환, 게임 종료 조건, 경찰 개인 arrestCount,
+                          games.total_arrest_count 모두 그대로다. 잡힌 도둑 행에 카운트만 추가로 찍는다
+                        - GET /api/game-results/{gameResultId} 는 그대로다
+
                         ## v2.35.0 업데이트 내역
 
                         ### ✨ 신규 — 개인별 체포수 기록

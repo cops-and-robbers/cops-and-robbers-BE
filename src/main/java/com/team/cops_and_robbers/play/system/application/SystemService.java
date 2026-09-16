@@ -49,6 +49,7 @@ public class SystemService {
         }
         game.incrementArrestCount();
         gameResultService.recordArrest(game.getId(), command.policeUserId());
+        gameResultService.recordArrested(game.getId(), robber.getUser().getId());
 
         int remainingThieves = gameParticipantRepository.countByGameIdAndRobberStatus(
                 game.getId(), ParticipantStatus.ALIVE
