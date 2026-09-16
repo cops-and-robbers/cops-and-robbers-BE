@@ -10,6 +10,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prod
       TZ: Asia/Seoul
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=50 -XX:+UseG1GC"
 
       FIREBASE_KEY_PATH: /app/firebase-key.json
 

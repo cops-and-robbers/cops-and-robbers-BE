@@ -220,21 +220,6 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
         """)
     Optional<GameParticipantCacheProjection> findCacheProjectionById(@Param("participantId") Long participantId);
 
-    @Query("""
-        select ud.fcmToken
-        from GameParticipant gp
-        join gp.user u
-        join UserDevice ud on ud.user.id = u.id and ud.fcmToken is not null and u.allowGamePush = true
-        where gp.game.id = :gameId
-        and gp.id <> :senderParticipantId
-        and (:team is null or gp.team = :team)
-        """)
-    List<String> findChatPushTokens(
-            @Param("gameId") Long gameId,
-            @Param("senderParticipantId") Long senderParticipantId,
-            @Param("team") Team team
-    );
-
     default GameParticipant getByGameIdAndUserId(Long gameId, Long userId) {
         return findByGameIdAndUserId(gameId, userId)
                 .orElseThrow(() ->

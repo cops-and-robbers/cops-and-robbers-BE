@@ -14,6 +14,8 @@ public class GameResultParticipantFixture {
                 .nickname(nickname)
                 .team(Team.POLICE)
                 .status(ParticipantStatus.ALIVE)
+                .arrestCount(0)
+                .arrestedCount(0)
                 .build();
     }
 
@@ -24,6 +26,8 @@ public class GameResultParticipantFixture {
                 .nickname(nickname)
                 .team(Team.ROBBER)
                 .status(ParticipantStatus.JAILED)
+                .arrestCount(0)
+                .arrestedCount(0)
                 .build();
     }
 }

@@ -48,6 +48,15 @@ public class InGameParticipantCacheRepository {
                 .toList();
     }
 
+    // findAllByGameId와 달리 participantId까지 함께 돌려준다
+    public Map<Long, InGameParticipantCache> findAllEntriesByGameId(Long gameId) {
+        return redisTemplate.opsForHash().entries(key(gameId)).entrySet().stream()
+                .collect(Collectors.toMap(
+                        e -> Long.valueOf(String.valueOf(e.getKey())),
+                        e -> objectMapper.convertValue(e.getValue(), InGameParticipantCache.class)
+                ));
+    }
+
     public Optional<InGameParticipantCache> findByParticipantId(Long gameId, Long participantId) {
         Object value = redisTemplate.opsForHash().get(key(gameId), field(participantId));
         if (value == null) {

@@ -132,4 +132,6 @@ type AdminGameHistoryParticipant {
   team: Team!
   status: ParticipantStatus!
   leftAt: String
+  arrestCount: Int!
+  arrestedCount: Int!
 }

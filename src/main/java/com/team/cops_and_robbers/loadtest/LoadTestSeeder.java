@@ -49,7 +49,7 @@ public class LoadTestSeeder {
     /** 실제 유저와 섞이지 않도록 */
     static final String SOCIAL_ID_PREFIX = "loadtest-";
 
-    private static final int ROUND_DURATION_MINUTES = 30;
+    private static final int ROUND_DURATION_MINUTES = 60;
     private static final int LOCATION_REVEAL_INTERVAL_MINUTES = 5;
     private static final int POLICE_WAIT_MINUTES = 3;
 

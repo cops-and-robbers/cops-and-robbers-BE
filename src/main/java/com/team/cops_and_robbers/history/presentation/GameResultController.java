@@ -4,7 +4,9 @@ import com.team.cops_and_robbers.auth.presentation.annotation.AuthUser;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.history.application.GameResultService;
 import com.team.cops_and_robbers.history.application.dto.command.GameResultCommand;
+import com.team.cops_and_robbers.history.application.dto.result.GameResultParticipantResult;
 import com.team.cops_and_robbers.history.application.dto.result.GameResultResult;
+import com.team.cops_and_robbers.history.presentation.dto.response.GameResultParticipantResponse;
 import com.team.cops_and_robbers.history.presentation.dto.response.GameResultResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +30,17 @@ public class GameResultController implements GameResultControllerDocs {
         GameResultCommand command = GameResultCommand.of(loginUser.userId(), gameResultId);
         GameResultResult result = gameResultService.getGameResult(command);
         GameResultResponse response = GameResultResponse.from(result);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{gameResultId}/me")
+    public ResponseEntity<GameResultParticipantResponse> getMyGameRecord(
+            @AuthUser LoginUser loginUser,
+            @PathVariable Long gameResultId
+    ) {
+        GameResultCommand command = GameResultCommand.of(loginUser.userId(), gameResultId);
+        GameResultParticipantResult result = gameResultService.getMyGameRecord(command);
+        GameResultParticipantResponse response = GameResultParticipantResponse.from(result);
         return ResponseEntity.ok(response);
     }
 }

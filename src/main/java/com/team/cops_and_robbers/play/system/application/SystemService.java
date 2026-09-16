@@ -8,6 +8,7 @@ import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
+import com.team.cops_and_robbers.history.application.GameResultService;
 import com.team.cops_and_robbers.play.system.application.dto.command.ArrestCommand;
 import com.team.cops_and_robbers.play.system.application.dto.command.EscapeCommand;
 import com.team.cops_and_robbers.play.system.application.dto.result.ArrestResult;
@@ -29,6 +30,7 @@ public class SystemService {
     private final ApplicationEventPublisher eventPublisher;
     private final SystemEventFactory systemEventFactory;
     private final GameTerminationService gameTerminationService;
+    private final GameResultService gameResultService;
 
     /**
      * 경찰이 도둑을 체포합니다.
@@ -46,6 +48,8 @@ public class SystemService {
             robber.updateStatus(ParticipantStatus.JAILED);
         }
         game.incrementArrestCount();
+        gameResultService.recordArrest(game.getId(), command.policeUserId());
+        gameResultService.recordArrested(game.getId(), robber.getUser().getId());
 
         int remainingThieves = gameParticipantRepository.countByGameIdAndRobberStatus(
                 game.getId(), ParticipantStatus.ALIVE

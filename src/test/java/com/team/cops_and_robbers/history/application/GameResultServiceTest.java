@@ -10,6 +10,7 @@ import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.history.application.dto.command.GameResultCommand;
+import com.team.cops_and_robbers.history.application.dto.result.GameResultParticipantResult;
 import com.team.cops_and_robbers.history.application.dto.result.GameResultResult;
 import com.team.cops_and_robbers.history.domain.GameEndReason;
 import com.team.cops_and_robbers.history.domain.GameResult;
@@ -219,6 +220,237 @@ class GameResultServiceTest extends ServiceUnitTest {
 
             // then
             then(gameResultParticipantRepository).should(never()).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("내 개인 기록 조회")
+    class GetMyGameRecord {
+
+        @Test
+        void 내_체포수와_팀을_반환한다() {
+            // given
+            GameResult completed = POLICE_WIN_RESULT(TEST_GAME_ID);
+            setId(completed, TEST_GAME_RESULT_ID);
+            GameResultParticipant snapshot =
+                    GameResultParticipant.createSnapshot(completed, policeParticipant);
+            snapshot.incrementArrestCount();
+            snapshot.incrementArrestCount();
+
+            given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(completed));
+            given(gameResultParticipantRepository
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(TEST_GAME_RESULT_ID, POLICE_USER_ID))
+                    .willReturn(Optional.of(snapshot));
+
+            // when
+            GameResultParticipantResult result = gameResultService.getMyGameRecord(
+                    GameResultCommand.of(POLICE_USER_ID, TEST_GAME_RESULT_ID));
+
+            // then
+            assertThat(result.arrestCount()).isEqualTo(2);
+            assertThat(result.arrestedCount()).isZero();
+            assertThat(result.team()).isEqualTo(Team.POLICE);
+        }
+
+        @Test
+        void 도둑은_잡힌_횟수를_반환한다() {
+            // given
+            GameResult completed = POLICE_WIN_RESULT(TEST_GAME_ID);
+            setId(completed, TEST_GAME_RESULT_ID);
+            GameResultParticipant snapshot =
+                    GameResultParticipant.createSnapshot(completed, robberParticipant);
+            snapshot.incrementArrestedCount();
+            snapshot.incrementArrestedCount();
+
+            given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(completed));
+            given(gameResultParticipantRepository
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(TEST_GAME_RESULT_ID, ROBBER_USER_ID))
+                    .willReturn(Optional.of(snapshot));
+
+            // when
+            GameResultParticipantResult result = gameResultService.getMyGameRecord(
+                    GameResultCommand.of(ROBBER_USER_ID, TEST_GAME_RESULT_ID));
+
+            // then
+            assertThat(result.arrestedCount()).isEqualTo(2);
+            assertThat(result.arrestCount()).isZero();
+            assertThat(result.team()).isEqualTo(Team.ROBBER);
+        }
+
+        /** 이벤트 게임은 퇴장 시 참가자 행이 지워져 재입장이 되므로 스냅샷이 여러 개 쌓인다. */
+        @Test
+        void 퇴장_후_재입장했으면_재입장_이후_기록만_반환한다() {
+            // given
+            GameResult completed = POLICE_WIN_RESULT(TEST_GAME_ID);
+            setId(completed, TEST_GAME_RESULT_ID);
+
+            GameResultParticipant after = GameResultParticipant.createSnapshot(completed, policeParticipant);
+            after.incrementArrestCount();
+            after.incrementArrestCount();
+
+            given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(completed));
+            given(gameResultParticipantRepository
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(TEST_GAME_RESULT_ID, POLICE_USER_ID))
+                    .willReturn(Optional.of(after));
+
+            // when
+            GameResultParticipantResult result = gameResultService.getMyGameRecord(
+                    GameResultCommand.of(POLICE_USER_ID, TEST_GAME_RESULT_ID));
+
+            // then
+            assertThat(result.arrestCount()).isEqualTo(2);
+            assertThat(result.leftAt()).isNull();
+        }
+
+        @Test
+        void 그_게임_참가자가_아니면_예외가_발생한다() {
+            // given
+            GameResult completed = POLICE_WIN_RESULT(TEST_GAME_ID);
+            setId(completed, TEST_GAME_RESULT_ID);
+
+            given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(completed));
+            given(gameResultParticipantRepository
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(TEST_GAME_RESULT_ID, POLICE_USER_ID))
+                    .willReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> gameResultService.getMyGameRecord(
+                    GameResultCommand.of(POLICE_USER_ID, TEST_GAME_RESULT_ID)))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(GameResultException.GAME_RESULT_NOT_FOUND.getDetail());
+        }
+
+        @Test
+        void 끝나지_않은_게임이면_예외가_발생한다() {
+            // given
+            given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(openedResult));
+
+            // when & then
+            assertThatThrownBy(() -> gameResultService.getMyGameRecord(
+                    GameResultCommand.of(POLICE_USER_ID, TEST_GAME_RESULT_ID)))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(GameResultException.GAME_RESULT_NOT_FOUND.getDetail());
+        }
+    }
+
+    @Nested
+    @DisplayName("체포 기록")
+    class RecordArrest {
+
+        @Test
+        void 체포하면_해당_경찰의_체포수가_올라간다() {
+            // given
+            GameResultParticipant snapshot =
+                    GameResultParticipant.createSnapshot(openedResult, policeParticipant);
+
+            given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
+                    .willReturn(Optional.of(openedResult));
+            given(gameResultParticipantRepository
+                    .findByGameResultIdAndUserIdAndLeftAtIsNull(TEST_GAME_RESULT_ID, POLICE_USER_ID))
+                    .willReturn(Optional.of(snapshot));
+
+            // when
+            gameResultService.recordArrest(TEST_GAME_ID, POLICE_USER_ID);
+
+            // then
+            assertThat(snapshot.getArrestCount()).isEqualTo(1);
+            assertThat(snapshot.getArrestedCount()).isZero();
+        }
+
+        @Test
+        void 여러_번_체포하면_누적된다() {
+            // given
+            GameResultParticipant snapshot =
+                    GameResultParticipant.createSnapshot(openedResult, policeParticipant);
+
+            given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
+                    .willReturn(Optional.of(openedResult));
+            given(gameResultParticipantRepository
+                    .findByGameResultIdAndUserIdAndLeftAtIsNull(TEST_GAME_RESULT_ID, POLICE_USER_ID))
+                    .willReturn(Optional.of(snapshot));
+
+            // when
+            gameResultService.recordArrest(TEST_GAME_ID, POLICE_USER_ID);
+            gameResultService.recordArrest(TEST_GAME_ID, POLICE_USER_ID);
+            gameResultService.recordArrest(TEST_GAME_ID, POLICE_USER_ID);
+
+            // then
+            assertThat(snapshot.getArrestCount()).isEqualTo(3);
+        }
+
+        @Test
+        void 열린_확인자료가_없으면_아무것도_하지_않는다() {
+            // given
+            given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
+                    .willReturn(Optional.empty());
+
+            // when
+            gameResultService.recordArrest(TEST_GAME_ID, POLICE_USER_ID);
+
+            // then
+            then(gameResultParticipantRepository).should(never())
+                    .findByGameResultIdAndUserIdAndLeftAtIsNull(any(), any());
+        }
+    }
+
+    @Nested
+    @DisplayName("잡힌 기록")
+    class RecordArrested {
+
+        @Test
+        void 잡히면_해당_도둑의_잡힌_횟수가_올라간다() {
+            // given
+            GameResultParticipant snapshot =
+                    GameResultParticipant.createSnapshot(openedResult, robberParticipant);
+
+            given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
+                    .willReturn(Optional.of(openedResult));
+            given(gameResultParticipantRepository
+                    .findByGameResultIdAndUserIdAndLeftAtIsNull(TEST_GAME_RESULT_ID, ROBBER_USER_ID))
+                    .willReturn(Optional.of(snapshot));
+
+            // when
+            gameResultService.recordArrested(TEST_GAME_ID, ROBBER_USER_ID);
+
+            // then
+            assertThat(snapshot.getArrestedCount()).isEqualTo(1);
+            assertThat(snapshot.getArrestCount()).isZero();
+        }
+
+        /** 탈옥 후 재체포, 이벤트 게임의 반복 체포 모두 같은 행에 쌓인다. status 는 카운트에 영향이 없다. */
+        @Test
+        void 여러_번_잡히면_누적된다() {
+            // given
+            GameResultParticipant snapshot =
+                    GameResultParticipant.createSnapshot(openedResult, robberParticipant);
+
+            given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
+                    .willReturn(Optional.of(openedResult));
+            given(gameResultParticipantRepository
+                    .findByGameResultIdAndUserIdAndLeftAtIsNull(TEST_GAME_RESULT_ID, ROBBER_USER_ID))
+                    .willReturn(Optional.of(snapshot));
+
+            // when
+            gameResultService.recordArrested(TEST_GAME_ID, ROBBER_USER_ID);
+            gameResultService.recordArrested(TEST_GAME_ID, ROBBER_USER_ID);
+            gameResultService.recordArrested(TEST_GAME_ID, ROBBER_USER_ID);
+
+            // then
+            assertThat(snapshot.getArrestedCount()).isEqualTo(3);
+        }
+
+        @Test
+        void 열린_확인자료가_없으면_아무것도_하지_않는다() {
+            // given
+            given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
+                    .willReturn(Optional.empty());
+
+            // when
+            gameResultService.recordArrested(TEST_GAME_ID, ROBBER_USER_ID);
+
+            // then
+            then(gameResultParticipantRepository).should(never())
+                    .findByGameResultIdAndUserIdAndLeftAtIsNull(any(), any());
         }
     }
 

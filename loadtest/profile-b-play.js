@@ -2,7 +2,7 @@
 // 메시지 팬아웃 처리량과 메모리 안정성 확인
 
 import ws from 'k6/ws';
-import { check } from 'k6';
+import { check, sleep } from 'k6';
 import { Trend, Counter, Rate } from 'k6/metrics';
 import { SharedArray } from 'k6/data';
 import exec from 'k6/execution';
@@ -18,6 +18,8 @@ import {
 
 const WS_URL = __ENV.WS_URL || 'ws://localhost:8080/connection';
 const DURATION_MINUTES = Number(__ENV.DURATION_MINUTES || 15);
+// 접속을 이 시간 안에 흩뿌린다. 170명이 같은 순간에 붙는 건 입장 폭주(프로파일 A)의 몫이지 여기서 볼 게 아니다.
+const JOIN_SPREAD_SECONDS = Number(__ENV.JOIN_SPREAD_SECONDS || 60);
 
 const LOCATION_INTERVAL_MS = Number(__ENV.LOCATION_INTERVAL_MS || 5000);
 const PING_INTERVAL_MS = Number(__ENV.PING_INTERVAL_MS || 20000);
@@ -46,7 +48,7 @@ export const options = {
       executor: 'per-vu-iterations',
       vus: players.length,
       iterations: 1,
-      maxDuration: `${DURATION_MINUTES + 2}m`,
+      maxDuration: `${DURATION_MINUTES * 60 + JOIN_SPREAD_SECONDS + 120}s`,
     },
   },
   thresholds: {
@@ -80,6 +82,7 @@ function chatIntervalMs(room, elapsedMs) {
 export default function () {
   const player = players[(exec.vu.idInTest - 1) % players.length];
   const marker = `b-${exec.vu.idInTest}`;
+  sleep(Math.random() * JOIN_SPREAD_SECONDS);
   const startedAt = Date.now();
   const plannedEndAt = startedAt + DURATION_MINUTES * 60 * 1000;
 

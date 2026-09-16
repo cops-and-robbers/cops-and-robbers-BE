@@ -45,18 +45,42 @@ SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun \
 **`docker-compose-dev-server.yml`은 git에 추적되는 파일이라 직접 수정하지 않는다.**
 실수로 커밋되면 개발서버가 부팅마다 170명을 만들게 된다.
 
-일회성 컨테이너로 주입한다.
+**본 컨테이너를 플래그와 함께 재기동한다.** 오버라이드 compose 파일로 env만 얹는다.
+
+> `run --rm`으로 별도 컨테이너를 띄우는 방식은 안 된다. `deploy-dev.sh`가 배포 후 `.env`를 지워
+> `DB_URL` 등이 비고, 시더가 `CommandLineRunner`라 끝나도 앱이 안 꺼져서 1 GiB에 JVM 2개가 뜬다.
 
 ```bash
-docker compose -f docker-compose-dev-server.yml run --rm \
-  -e LOADTEST_SEED_ENABLED=true \
-  -e LOADTEST_SEED_OUTPUT=/log/players.json \
-  cops-and-robbers-dev
+cd /home/ubuntu/cops-and-robbers
+
+# 실행 중 컨테이너의 env로 .env를 잠깐 복원한다 (재기동에만 쓰고 지운다)
+sudo docker inspect cops-and-robbers-dev --format '{{range .Config.Env}}{{println .}}{{end}}' \
+  | grep -E '^(DB_URL|DB_USERNAME|DB_PASSWORD|REDIS_PASSWORD|ACCESS_SECRET_KEY|REFRESH_SECRET_KEY|ACCESS_EXPIRATION|REFRESH_EXPIRATION|ENCRYPTION_KEY|DISCORD_WEBHOOK_BUG|DISCORD_WEBHOOK_ALERT|VWORLD_API_KEY|GEOAPIFY_API_KEY)=' > .env
+chmod 600 .env
+
+cat > docker-compose-loadtest.yml <<'YML'
+services:
+  cops-and-robbers-dev:
+    environment:
+      LOADTEST_SEED_ENABLED: "true"
+      LOADTEST_SEED_OUTPUT: /log/players.json
+      LOADTEST_STATS_LOGGINGPERIODMS: "10000"
+YML
+
+sudo docker compose -f docker-compose-dev-server.yml -f docker-compose-loadtest.yml up -d
+rm -f .env
+sudo systemctl restart tailscale-docker-forward   # deploy-dev.sh와 동일. 없으면 VWorld 호출이 전부 타임아웃
 ```
 
-`run --rm`은 포트를 매핑하지 않아 실행 중인 서버와 충돌하지 않고, 끝나면 컨테이너가 사라진다.
+개발서버가 약 1분 내려간다. 다음 dev 배포 때 `deploy-dev.sh`가 오버라이드 없이 `up -d` 하므로 플래그는 자동으로 빠진다.
 `/log`는 호스트의 `/home/ubuntu/log`에 마운트되어 있으므로 생성된 `players.json`을
 `scp`로 내려받아 부하 발생기(로컬 맥)에서 쓴다.
+
+- **토큰은 `ACCESS_EXPIRATION`(dev 1h) 뒤에 만료된다.** 시딩 후 1시간 안에 A·B를 끝낸다.
+  넘기면 §5로 정리하고 다시 시딩해야 한다 ("이미 시딩됨"으로 건너뛰어 토큰이 재발급되지 않는다).
+- 시딩 시점에 게임 시계가 돈다. 라운드는 60분(토큰 수명과 동일)이라 A·B를 이어 돌려도 GAME_OVER가 끼어들지 않는다.
+- nginx는 `/game-connection`에만 WebSocket Upgrade를 넘긴다. k6의 `WS_URL`은
+  `wss://dev-api.copsnro66ers.site/game-connection`이다 (8080/9091은 외부에서 막혀 있다).
 
 - `loadtest.seed.enabled=true` 일 때만 동작한다. 평소 dev 부팅에는 영향이 없다.
 - 이미 시딩되어 있으면(`LTA001` 초대코드 존재) 건너뛴다. 다시 만들려면 DB를 비운다.
@@ -80,13 +104,13 @@ docker compose -f docker-compose-dev-server.yml run --rm \
 k6 run -e WS_URL=ws://localhost:8080/connection loadtest/profile-a-join.js
 ```
 
-170명을 60초에 투입해 접속 → 7채널 구독 → 도둑은 위치 1회 발사까지 재현한다.
+170명을 램프 시간 안에 투입해 접속 → 7채널 구독 → 도둑은 위치 1회 발사까지 재현한다.
 
 | 옵션 | 기본값 | 설명 |
 |---|---|---|
 | `WS_URL` | `ws://localhost:8080/connection` | STOMP 엔드포인트 |
-| `PLAYERS` | `./players.json` | 토큰 파일 경로 |
-| `RAMP_SECONDS` | `60s` | 램프업 시간 |
+| `PLAYERS` | `./players.json` | 토큰 파일 경로. `open()`이 스크립트 위치 기준이라 **절대경로**로 준다 |
+| `RAMP_SECONDS` | `300` | 램프업 시간. **합격 판정은 5분(현실적인 입장 속도)** 으로 하고, `60`은 스트레스 참고치로만 돌린다 |
 | `HOLD_SECONDS` | `60` | 투입 후 유지 시간 |
 
 **측정 지표**
@@ -113,6 +137,7 @@ k6 run -e WS_URL=ws://localhost:8080/connection loadtest/profile-b-play.js
 | 옵션 | 기본값 | 설명 |
 |---|---|---|
 | `DURATION_MINUTES` | `15` | 유지 시간 |
+| `JOIN_SPREAD_SECONDS` | `60` | 접속을 이 시간 안에 흩뿌린다. 170명 동시 CONNECT는 A의 몫이라 여기서는 피한다 |
 | `LOCATION_INTERVAL_MS` | `5000` | 도둑 위치 전송 주기. FE 정책상 최대 5초에 1건 |
 | `PING_INTERVAL_MS` | `20000` | 경찰 핑 주기 |
 
@@ -140,9 +165,11 @@ k6 run \
   --out json=loadtest/out/profile-b.json.gz \
   --summary-export=loadtest/out/profile-b-summary.json \
   -e WS_URL=ws://서버:8080/connection \
-  loadtest/profile-b-play.js
+  loadtest/profile-b-play.js > loadtest/out/profile-b-stdout.log 2>&1
 ```
 
+- `> …-stdout.log 2>&1` — **STOMP ERROR 프레임 본문과 ws 에러가 여기에만 찍힌다.** 1차 측정에서
+  이걸 안 남겨 A의 에러 49건 내용을 잃었다
 - `--summary-export` — 집계값만. 합격 기준 판정에는 이것으로 충분하다
 - `--out json=` — 원시 샘플 전부. 시간축으로 그려보려면 필요하다
   - **용량 주의**: 파일명이 `.gz`로 끝나면 k6가 자동 압축한다.
@@ -275,7 +302,7 @@ done
 지연 큐에는 삭제된 게임의 이벤트가 남는다. 이것들이 발화하면 `GameEventConsumer`가
 게임을 못 찾아 에러 로그를 남기지만, **그뿐이고 다른 게임에 영향은 없다.**
 `consume()`이 `while` 루프 안에서 `catch (Exception)`으로 받고 계속 돌기 때문이다.
-라운드 시간(기본 30분)이 지나면 자연히 소진되므로 **그냥 두는 게 맞다.**
+라운드 시간(60분)이 지나면 자연히 소진되므로 **그냥 두는 게 맞다.**
 
 로그 노이즈까지 피하고 싶으면 공유 Redis를 쓰지 말고, 부하테스트용 Redis를
 **별도 포트로 따로 띄워** `REDIS_HOST` / `REDIS_PORT`를 그쪽으로 돌린다.

@@ -3,7 +3,6 @@ package com.team.cops_and_robbers.play.notification.application;
 import com.team.cops_and_robbers.common.fcm.FcmMessage;
 import com.team.cops_and_robbers.common.fcm.FcmService;
 import com.team.cops_and_robbers.game.participant.domain.Team;
-import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.play.chat.domain.ChatMessage;
 import com.team.cops_and_robbers.play.chat.domain.ChatScope;
 import com.team.cops_and_robbers.play.common.domain.InGameParticipantCache;
@@ -27,10 +26,13 @@ import java.util.concurrent.CompletableFuture;
 public class GameFcmNotifier {
 
     private static final String CHAT_PUSH_TYPE = "CHAT";
+    private static final String CHAT_COLLAPSE_KEY_PREFIX = "chat:";
+    private static final String CHAT_PUSH_TITLE = "새 채팅";
+    private static final String CHAT_PUSH_BODY = "새 채팅이 도착했습니다.";
 
     private final FcmService fcmService;
     private final InGameParticipantCacheRepository inGameParticipantCacheRepository;
-    private final GameParticipantRepository gameParticipantRepository;
+    private final ChatPushDebouncer chatPushDebouncer;
 
     @Async("fcmExecutor")
     public CompletableFuture<Void> notifySystemEvent(SystemEvent event) {
@@ -80,8 +82,14 @@ public class GameFcmNotifier {
                 return CompletableFuture.completedFuture(null);
             }
 
+            // 실제 보낼 대상이 있을 때만 창을 소모한다. 창은 scope별로 나눠, 한 팀 채팅이 다른 팀 채팅 푸시를 막지 않게 한다.
+            if (!chatPushDebouncer.tryOpenWindow(message.gameId(), debounceScope(message))) {
+                return CompletableFuture.completedFuture(null);
+            }
+
             FcmPayload payload = resolveChatPayload(message);
-            fcmService.send(new FcmMessage(tokens, payload.title(), payload.body(), payload.data()));
+            fcmService.send(new FcmMessage(tokens, payload.title(), payload.body(), payload.data(),
+                    CHAT_COLLAPSE_KEY_PREFIX + message.gameId()));
         } catch (Exception e) {
             log.error("[FCM] Async chat send failed | gameId={}, participantId={}", message.gameId(), message.sender().participantId(), e);
         }
@@ -89,13 +97,29 @@ public class GameFcmNotifier {
     }
 
     private List<String> getChatTokens(ChatMessage message) {
+        Long senderId = message.sender().participantId();
         Team targetTeam = message.scope() == ChatScope.TEAM ? message.sender().team() : null;
-        return gameParticipantRepository.findChatPushTokens(message.gameId(), message.sender().participantId(), targetTeam);
+
+        return inGameParticipantCacheRepository.findAllEntriesByGameId(message.gameId()).entrySet().stream()
+                .filter(e -> !e.getKey().equals(senderId))
+                .filter(e -> targetTeam == null || e.getValue().team() == targetTeam)
+                .filter(e -> e.getValue().fcmToken() != null)
+                .map(e -> e.getValue().fcmToken())
+                .toList();
     }
 
+    // 전체 채팅과 팀별 채팅의 스로틀 창을 분리한다 (ALL / TEAM:POLICE / TEAM:ROBBER)
+    private String debounceScope(ChatMessage message) {
+        if (message.scope() == ChatScope.TEAM) {
+            return ChatScope.TEAM.name() + ":" + message.sender().team().name();
+        }
+        return message.scope().name();
+    }
+
+    // 방 단위로 묶여 나가므로 고정 문구를 쓴다.
     private FcmPayload resolveChatPayload(ChatMessage message) {
         Map<String, String> data = Map.of("type", CHAT_PUSH_TYPE, "gameId", String.valueOf(message.gameId()), "scope", message.scope().name());
-        return new FcmPayload(message.sender().nickname(), message.message(), data);
+        return new FcmPayload(CHAT_PUSH_TITLE, CHAT_PUSH_BODY, data);
     }
 
     private record FcmPayload(String title, String body, Map<String, String> data) {}
