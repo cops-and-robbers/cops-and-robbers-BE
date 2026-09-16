@@ -77,13 +77,13 @@ public class GameFcmNotifier {
     @Async("fcmExecutor")
     public CompletableFuture<Void> notifyChatMessage(ChatMessage message) {
         try {
-            // 창이 열려 있으면 캐시 조회·팬아웃을 스킵한다
-            if (!chatPushDebouncer.tryOpenWindow(message.gameId())) {
+            List<String> tokens = getChatTokens(message);
+            if (tokens.isEmpty()) {
                 return CompletableFuture.completedFuture(null);
             }
 
-            List<String> tokens = getChatTokens(message);
-            if (tokens.isEmpty()) {
+            // 실제 보낼 대상이 있을 때만 창을 소모한다. 창은 scope별로 나눠, 한 팀 채팅이 다른 팀 채팅 푸시를 막지 않게 한다.
+            if (!chatPushDebouncer.tryOpenWindow(message.gameId(), debounceScope(message))) {
                 return CompletableFuture.completedFuture(null);
             }
 
@@ -106,6 +106,14 @@ public class GameFcmNotifier {
                 .filter(e -> e.getValue().fcmToken() != null)
                 .map(e -> e.getValue().fcmToken())
                 .toList();
+    }
+
+    // 전체 채팅과 팀별 채팅의 스로틀 창을 분리한다 (ALL / TEAM:POLICE / TEAM:ROBBER)
+    private String debounceScope(ChatMessage message) {
+        if (message.scope() == ChatScope.TEAM) {
+            return ChatScope.TEAM.name() + ":" + message.sender().team().name();
+        }
+        return message.scope().name();
     }
 
     // 방 단위로 묶여 나가므로 고정 문구를 쓴다.

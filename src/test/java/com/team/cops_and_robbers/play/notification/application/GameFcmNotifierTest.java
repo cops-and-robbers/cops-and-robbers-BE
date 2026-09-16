@@ -22,9 +22,11 @@ import org.mockito.Mock;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.lenient;
@@ -95,7 +97,7 @@ class GameFcmNotifierTest extends ServiceUnitTest {
         @BeforeEach
         void setUp() {
             // 창이 닫힌 케이스에선 이 스텁들이 호출되지 않으므로 lenient
-            lenient().when(chatPushDebouncer.tryOpenWindow(TEST_GAME_ID)).thenReturn(true);
+            lenient().when(chatPushDebouncer.tryOpenWindow(eq(TEST_GAME_ID), anyString())).thenReturn(true);
             // 발신자(경찰) + 경찰 1명 + 도둑 1명, 전원 오프라인
             lenient().when(inGameParticipantCacheRepository.findAllEntriesByGameId(TEST_GAME_ID)).thenReturn(Map.of(
                     SENDER_PARTICIPANT_ID, new InGameParticipantCache("보낸사람", Team.POLICE, "sender-token"),
@@ -148,16 +150,26 @@ class GameFcmNotifierTest extends ServiceUnitTest {
         }
 
         @Test
-        void 방_단위_창이_열려_있으면_아무에게도_보내지_않고_캐시_조회도_하지_않는다() {
+        void 창이_열려_있으면_대상이_있어도_발송하지_않는다() {
             // given
-            given(chatPushDebouncer.tryOpenWindow(TEST_GAME_ID)).willReturn(false);
+            given(chatPushDebouncer.tryOpenWindow(eq(TEST_GAME_ID), anyString())).willReturn(false);
 
             // when
             gameFcmNotifier.notifyChatMessage(chatMessage(ChatScope.ALL));
 
             // then
-            then(inGameParticipantCacheRepository).should(never()).findAllEntriesByGameId(anyLong());
             then(fcmService).should(never()).send(any(FcmMessage.class));
+        }
+
+        @Test
+        void 팀_채팅은_팀별로_분리된_스로틀_창을_사용한다() {
+            // when
+            gameFcmNotifier.notifyChatMessage(chatMessage(ChatScope.TEAM));
+
+            // then
+            ArgumentCaptor<String> scope = ArgumentCaptor.forClass(String.class);
+            then(chatPushDebouncer).should().tryOpenWindow(eq(TEST_GAME_ID), scope.capture());
+            assertThat(scope.getValue()).isEqualTo("TEAM:POLICE");
         }
 
         @Test

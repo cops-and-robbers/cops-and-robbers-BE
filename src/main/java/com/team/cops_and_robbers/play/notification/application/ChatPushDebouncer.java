@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 
 /**
- * 한 게임의 채팅 푸시를 방 단위로 일정 시간에 1건만 내보낸다.
+ * 한 게임의 채팅 푸시를 (게임 + scope) 단위로 일정 시간에 1건만 내보낸다.
  */
 @Component
 @RequiredArgsConstructor
@@ -24,13 +24,13 @@ public class ChatPushDebouncer {
     /**
      * @return 창을 새로 열었으면 true(지금 발송), 이미 열려 있으면 false(스킵).
      */
-    public boolean tryOpenWindow(Long gameId) {
+    public boolean tryOpenWindow(Long gameId, String scope) {
         Boolean opened = redisTemplate.opsForValue()
-                .setIfAbsent(key(gameId), "1", Duration.ofSeconds(debounceSeconds));
+                .setIfAbsent(key(gameId, scope), "1", Duration.ofSeconds(debounceSeconds));
         return Boolean.TRUE.equals(opened);
     }
 
-    private String key(Long gameId) {
-        return KEY_PREFIX + gameId;
+    private String key(Long gameId, String scope) {
+        return KEY_PREFIX + gameId + ":" + scope;
     }
 }
