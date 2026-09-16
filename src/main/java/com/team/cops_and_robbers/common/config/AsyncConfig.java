@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.common.config;
 
 
 import com.team.cops_and_robbers.common.infrastructure.discord.DiscordProperties;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +11,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
+@Slf4j
 @Configuration
 @EnableAsync
 @EnableConfigurationProperties(DiscordProperties.class)
@@ -31,7 +33,13 @@ public class AsyncConfig {
         executor.setThreadNamePrefix(FCM_NOTIFIER_PREFIX);
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(30);
-        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardOldestPolicy());
+
+        ThreadPoolExecutor.DiscardOldestPolicy discardOldest = new ThreadPoolExecutor.DiscardOldestPolicy();
+        executor.setRejectedExecutionHandler((task, pool) -> {
+            log.warn("[FCM] Executor queue full, discarding oldest task | queued={}, active={}",
+                    pool.getQueue().size(), pool.getActiveCount());
+            discardOldest.rejectedExecution(task, pool);
+        });
 
         executor.initialize();
         return executor;

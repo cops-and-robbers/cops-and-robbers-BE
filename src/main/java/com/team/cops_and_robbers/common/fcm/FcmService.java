@@ -25,6 +25,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FcmService {
 
+    private static final String APNS_COLLAPSE_ID_HEADER = "apns-collapse-id";
+
     private final FirebaseMessaging firebaseMessaging;
 
     public void send(FcmMessage fcmMessage) {
@@ -34,6 +36,16 @@ public class FcmService {
         if (validTokens.isEmpty()) return;
 
         try {
+            AndroidConfig.Builder androidConfig = AndroidConfig.builder()
+                    .setPriority(AndroidConfig.Priority.HIGH);
+            ApnsConfig.Builder apnsConfig = ApnsConfig.builder()
+                    .setAps(Aps.builder().setSound("default").build());
+
+            if (StringUtils.hasText(fcmMessage.collapseKey())) {
+                androidConfig.setCollapseKey(fcmMessage.collapseKey());
+                apnsConfig.putHeader(APNS_COLLAPSE_ID_HEADER, fcmMessage.collapseKey());
+            }
+
             MulticastMessage message = MulticastMessage.builder()
                     .addAllTokens(validTokens)
                     .setNotification(Notification.builder()
@@ -41,10 +53,8 @@ public class FcmService {
                             .setBody(fcmMessage.body())
                             .build())
                     .putAllData(fcmMessage.data())
-                    .setAndroidConfig(AndroidConfig.builder()
-                            .setPriority(AndroidConfig.Priority.HIGH).build())
-                    .setApnsConfig(ApnsConfig.builder()
-                            .setAps(Aps.builder().setSound("default").build()).build())
+                    .setAndroidConfig(androidConfig.build())
+                    .setApnsConfig(apnsConfig.build())
                     .build();
 
             BatchResponse response = firebaseMessaging.sendEachForMulticast(message);
@@ -64,15 +74,25 @@ public class FcmService {
         List<SendResponse> responses = response.getResponses();
         Map<MessagingErrorCode, List<String>> failures = new EnumMap<>(MessagingErrorCode.class);
 
+        List<String> unknownFailures = new ArrayList<>();
+
         for (int i = 0; i < responses.size(); i++) {
             SendResponse sendResponse = responses.get(i);
             if (sendResponse.isSuccessful() || sendResponse.getException() == null) continue;
 
             MessagingErrorCode errorCode = sendResponse.getException().getMessagingErrorCode();
+            if (errorCode == null) {
+                unknownFailures.add(tokens.get(i));
+                continue;
+            }
             failures.computeIfAbsent(errorCode, key -> new ArrayList<>()).add(tokens.get(i));
         }
 
         failures.forEach(this::logFailureSummary);
+        if (!unknownFailures.isEmpty()) {
+            log.error("[FCM] Send failed without error code | count={}, tokens={}",
+                    unknownFailures.size(), unknownFailures);
+        }
     }
 
     private void logFailureSummary(MessagingErrorCode errorCode, List<String> failedTokens) {
