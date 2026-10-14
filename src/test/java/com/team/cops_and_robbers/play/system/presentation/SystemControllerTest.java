@@ -279,8 +279,8 @@ class SystemControllerTest extends ControllerTest {
 
         /** 카운트는 열려 있는 GameResult 명단에 쌓이므로, 게임 시작 시점처럼 스냅샷을 먼저 연다. */
         private GameResult openResultWithSnapshots(Game targetGame, GameParticipant... participants) {
-            GameResult openedResult = gameResultRepository.save(
-                    GameResult.openSnapshot(targetGame, gameAreaRepository.getByGameId(targetGame.getId())));
+            GameResult openedResult = gameResultRepository.save(GameResult.openSnapshot(
+                    targetGame, gameAreaRepository.getByGameId(targetGame.getId()), null));
             for (GameParticipant participant : participants) {
                 gameResultParticipantRepository.save(GameResultParticipant.createSnapshot(openedResult, participant));
             }

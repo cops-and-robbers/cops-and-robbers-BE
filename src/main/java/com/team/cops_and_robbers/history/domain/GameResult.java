@@ -58,14 +58,17 @@ public class GameResult extends BaseTimeEntity {
 
     private Integer durationSeconds;
 
-    /** 위치정보 수집 시작 일시 (게임 시작 시각). */
     private LocalDateTime startedAt;
 
-    /** 위치정보 수집 종료 일시 (게임 종료 시각). */
     private LocalDateTime endedAt;
 
     /** 이 게임에 적용된 위치 공개 주기. 방 설정은 게임 사이에 바뀌므로 그때 값을 복사해 둔다. */
     private Integer locationRevealIntervalMinutes;
+
+    @Column(name = "is_event_game")
+    private Boolean eventGame;
+
+    private Long hostUserId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -90,12 +93,14 @@ public class GameResult extends BaseTimeEntity {
     /**
      * 게임 시작 시점의 값으로 GameResult 를 엽니다. 나머지는 complete 에서 채웁니다.
      */
-    public static GameResult openSnapshot(Game game, GameArea gameArea) {
+    public static GameResult openSnapshot(Game game, GameArea gameArea, Long hostUserId) {
         GameResultBuilder builder = GameResult.builder()
                 .gameId(game.getId())
                 .roundNumber(game.getRoundNumber())
                 .startedAt(game.getStartedAt())
                 .locationRevealIntervalMinutes(game.getLocationRevealIntervalMinutes())
+                .eventGame(game.isEventGame())
+                .hostUserId(hostUserId)
                 .areaType(gameArea.getAreaType());
 
         if (gameArea.getAreaType() == AreaType.CIRCLE) {
@@ -134,6 +139,13 @@ public class GameResult extends BaseTimeEntity {
         this.totalRobberCount = totalRobber;
         this.arrestedRobberCount = jailedAtEnd;
         this.totalArrestCount = totalArrestCount;
+    }
+
+    /**
+     * 진행 중에 이벤트 게임으로 전환되면 시작 시점에 복사해 둔 값을 따라 바꿉니다.
+     */
+    public void updateEventGame(boolean eventGame) {
+        this.eventGame = eventGame;
     }
 
     public boolean isCompleted() {
