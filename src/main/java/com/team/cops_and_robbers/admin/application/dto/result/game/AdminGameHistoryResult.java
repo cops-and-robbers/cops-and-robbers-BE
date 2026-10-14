@@ -22,6 +22,8 @@ public record AdminGameHistoryResult(
         String startedAt,
         String endedAt,
         Integer locationRevealIntervalMinutes,
+        Boolean isEventGame,
+        Long hostUserId,
         AreaType areaType,
         AdminGameAreaResult area,
         String createdAt
@@ -42,6 +44,8 @@ public record AdminGameHistoryResult(
                 toIsoOrNull(gameResult.getStartedAt()),
                 toIsoOrNull(gameResult.getEndedAt()),
                 gameResult.getLocationRevealIntervalMinutes(),
+                gameResult.getEventGame(),
+                gameResult.getHostUserId(),
                 gameResult.getAreaType(),
                 toAreaResult(gameResult),
                 TimestampUtil.toIsoString(gameResult.getCreatedAt())
