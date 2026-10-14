@@ -2,12 +2,14 @@ package com.team.cops_and_robbers.admin.application;
 
 import com.team.cops_and_robbers.admin.application.dto.SortDirection;
 import com.team.cops_and_robbers.admin.application.dto.command.game.AdminGameListCommand;
+import com.team.cops_and_robbers.admin.application.dto.command.game.AdminUpdateEventGameCommand;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameAreaResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameDetailResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGamePageResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminParticipantResult;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
+import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.fixture.GameAreaFixture;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
@@ -16,6 +18,7 @@ import com.team.cops_and_robbers.common.fixture.UserFixture;
 import com.team.cops_and_robbers.game.area.domain.GameArea;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
+import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantCountProjection;
@@ -32,8 +35,10 @@ import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.any;
@@ -403,6 +408,115 @@ class AdminGameServiceTest extends ServiceUnitTest {
 
             // then
             assertThat(result).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("이벤트 게임 전환")
+    class UpdateEventGame {
+
+        private static final Long IN_PROGRESS_GAME_ID = 3L;
+
+        private Game inProgressGame;
+
+        @BeforeEach
+        void setUpInProgressGame() {
+            inProgressGame = GameFixture.IN_PROGRESS_GAME();
+            setId(inProgressGame, IN_PROGRESS_GAME_ID);
+        }
+
+        @Test
+        void 대기_중인_게임을_이벤트_게임으로_켤_수_있다() {
+            // given
+            given(gameRepository.getByGameId(2L)).willReturn(game2);
+            given(gameResultRepository.findByGameIdAndEndReasonIsNull(2L)).willReturn(Optional.empty());
+
+            // when
+            AdminGameResult result = adminGameService.updateEventGame(
+                    new AdminUpdateEventGameCommand(2L, true));
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(result.isEventGame()).isTrue();
+                softly.assertThat(game2.isEventGame()).isTrue();
+            });
+        }
+
+        /** 시작 시점 복사만으로는 결과에 false 로 남으므로, 진행 중 전환은 열린 결과까지 따라가야 한다. */
+        @Test
+        void 진행_중인_게임을_켜면_열려_있는_결과도_함께_바뀐다() {
+            // given
+            GameResult openedResult = GameResult.openSnapshot(
+                    inProgressGame, GameAreaFixture.CIRCLE_GAME_AREA(inProgressGame), null);
+
+            given(gameRepository.getByGameId(IN_PROGRESS_GAME_ID)).willReturn(inProgressGame);
+            given(gameResultRepository.findByGameIdAndEndReasonIsNull(IN_PROGRESS_GAME_ID))
+                    .willReturn(Optional.of(openedResult));
+
+            // when
+            adminGameService.updateEventGame(new AdminUpdateEventGameCommand(IN_PROGRESS_GAME_ID, true));
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(inProgressGame.isEventGame()).isTrue();
+                softly.assertThat(openedResult.getEventGame()).isTrue();
+            });
+        }
+
+        @Test
+        void 진행_중인데_열린_결과가_없으면_게임_설정만_바뀐다() {
+            // given
+            given(gameRepository.getByGameId(IN_PROGRESS_GAME_ID)).willReturn(inProgressGame);
+            given(gameResultRepository.findByGameIdAndEndReasonIsNull(IN_PROGRESS_GAME_ID))
+                    .willReturn(Optional.empty());
+
+            // when
+            AdminGameResult result = adminGameService.updateEventGame(
+                    new AdminUpdateEventGameCommand(IN_PROGRESS_GAME_ID, true));
+
+            // then
+            assertThat(result.isEventGame()).isTrue();
+        }
+
+        @Test
+        void 대기_중인_게임은_이벤트_게임을_끌_수_있다() {
+            // given
+            game2.updateEventGame(true);
+            given(gameRepository.getByGameId(2L)).willReturn(game2);
+            given(gameResultRepository.findByGameIdAndEndReasonIsNull(2L)).willReturn(Optional.empty());
+
+            // when
+            AdminGameResult result = adminGameService.updateEventGame(
+                    new AdminUpdateEventGameCommand(2L, false));
+
+            // then
+            assertThat(result.isEventGame()).isFalse();
+        }
+
+        /** 진행 중에 끄면 이벤트로 들어온 경찰이 일반 규칙 게임에 남아 기권패가 되살아난다. */
+        @Test
+        void 진행_중인_게임은_이벤트_게임을_끌_수_없다() {
+            // given
+            inProgressGame.updateEventGame(true);
+            given(gameRepository.getByGameId(IN_PROGRESS_GAME_ID)).willReturn(inProgressGame);
+
+            // when & then
+            assertThatThrownBy(() -> adminGameService.updateEventGame(
+                    new AdminUpdateEventGameCommand(IN_PROGRESS_GAME_ID, false)))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(GameException.GAME_NOT_WAITING.getDetail());
+        }
+
+        @Test
+        void 종료된_게임은_이벤트_게임으로_켤_수_없다() {
+            // given
+            given(gameRepository.getByGameId(1L)).willReturn(game1);
+
+            // when & then
+            assertThatThrownBy(() -> adminGameService.updateEventGame(
+                    new AdminUpdateEventGameCommand(1L, true)))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(GameException.GAME_NOT_ACTIVE.getDetail());
         }
     }
 }
