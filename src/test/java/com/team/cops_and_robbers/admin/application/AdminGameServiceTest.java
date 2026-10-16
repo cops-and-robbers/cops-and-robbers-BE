@@ -428,7 +428,7 @@ class AdminGameServiceTest extends ServiceUnitTest {
         @Test
         void 대기_중인_게임을_이벤트_게임으로_켤_수_있다() {
             // given
-            given(gameRepository.getByGameId(2L)).willReturn(game2);
+            given(gameRepository.getByGameIdForUpdate(2L)).willReturn(game2);
             given(gameResultRepository.findByGameIdAndEndReasonIsNull(2L)).willReturn(Optional.empty());
 
             // when
@@ -449,7 +449,7 @@ class AdminGameServiceTest extends ServiceUnitTest {
             GameResult openedResult = GameResult.openSnapshot(
                     inProgressGame, GameAreaFixture.CIRCLE_GAME_AREA(inProgressGame), null);
 
-            given(gameRepository.getByGameId(IN_PROGRESS_GAME_ID)).willReturn(inProgressGame);
+            given(gameRepository.getByGameIdForUpdate(IN_PROGRESS_GAME_ID)).willReturn(inProgressGame);
             given(gameResultRepository.findByGameIdAndEndReasonIsNull(IN_PROGRESS_GAME_ID))
                     .willReturn(Optional.of(openedResult));
 
@@ -466,7 +466,7 @@ class AdminGameServiceTest extends ServiceUnitTest {
         @Test
         void 진행_중인데_열린_결과가_없으면_게임_설정만_바뀐다() {
             // given
-            given(gameRepository.getByGameId(IN_PROGRESS_GAME_ID)).willReturn(inProgressGame);
+            given(gameRepository.getByGameIdForUpdate(IN_PROGRESS_GAME_ID)).willReturn(inProgressGame);
             given(gameResultRepository.findByGameIdAndEndReasonIsNull(IN_PROGRESS_GAME_ID))
                     .willReturn(Optional.empty());
 
@@ -482,7 +482,7 @@ class AdminGameServiceTest extends ServiceUnitTest {
         void 대기_중인_게임은_이벤트_게임을_끌_수_있다() {
             // given
             game2.updateEventGame(true);
-            given(gameRepository.getByGameId(2L)).willReturn(game2);
+            given(gameRepository.getByGameIdForUpdate(2L)).willReturn(game2);
             given(gameResultRepository.findByGameIdAndEndReasonIsNull(2L)).willReturn(Optional.empty());
 
             // when
@@ -498,7 +498,7 @@ class AdminGameServiceTest extends ServiceUnitTest {
         void 진행_중인_게임은_이벤트_게임을_끌_수_없다() {
             // given
             inProgressGame.updateEventGame(true);
-            given(gameRepository.getByGameId(IN_PROGRESS_GAME_ID)).willReturn(inProgressGame);
+            given(gameRepository.getByGameIdForUpdate(IN_PROGRESS_GAME_ID)).willReturn(inProgressGame);
 
             // when & then
             assertThatThrownBy(() -> adminGameService.updateEventGame(
@@ -510,7 +510,7 @@ class AdminGameServiceTest extends ServiceUnitTest {
         @Test
         void 종료된_게임은_이벤트_게임으로_켤_수_없다() {
             // given
-            given(gameRepository.getByGameId(1L)).willReturn(game1);
+            given(gameRepository.getByGameIdForUpdate(1L)).willReturn(game1);
 
             // when & then
             assertThatThrownBy(() -> adminGameService.updateEventGame(

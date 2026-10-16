@@ -63,7 +63,7 @@ public class AdminGameService {
      */
     @Transactional
     public AdminGameResult updateEventGame(AdminUpdateEventGameCommand command) {
-        Game game = gameRepository.getByGameId(command.gameId());
+        Game game = gameRepository.getByGameIdForUpdate(command.gameId());
         validateEventGameChangeable(game, command.isEventGame());
 
         game.updateEventGame(command.isEventGame());

@@ -5,9 +5,11 @@ import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -41,8 +43,17 @@ public interface GameRepository extends JpaRepository<Game, Long> {
             Pageable pageable
     );
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select g from Game g where g.id = :gameId")
+    Optional<Game> findByGameIdForUpdate(@Param("gameId") Long gameId);
+
     default Game getByGameId(Long gameId) {
         return findById(gameId)
+                .orElseThrow(() -> new ApplicationException(GameException.GAME_NOT_FOUND));
+    }
+
+    default Game getByGameIdForUpdate(Long gameId) {
+        return findByGameIdForUpdate(gameId)
                 .orElseThrow(() -> new ApplicationException(GameException.GAME_NOT_FOUND));
     }
 
