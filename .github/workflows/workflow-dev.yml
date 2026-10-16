@@ -2,7 +2,7 @@ name: 👮🏻 Dev CI/CD 파이프라인 🥷
 
 on:
   push:
-    branches: [ "dev", "hyerimh/feat-213-admin-event-game" ]
+    branches: [ "dev" ]
   workflow_dispatch:
 
 jobs:
