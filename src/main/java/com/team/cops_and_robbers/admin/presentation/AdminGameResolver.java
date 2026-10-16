@@ -5,6 +5,7 @@ import com.team.cops_and_robbers.admin.application.AdminGameService;
 import com.team.cops_and_robbers.admin.application.dto.SortDirection;
 import com.team.cops_and_robbers.admin.application.dto.command.game.AdminGameHistoryListCommand;
 import com.team.cops_and_robbers.admin.application.dto.command.game.AdminGameListCommand;
+import com.team.cops_and_robbers.admin.application.dto.command.game.AdminUpdateEventGameCommand;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameAreaResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameDetailResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameHistoryPageResult;
@@ -20,6 +21,7 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.BatchMapping;
+import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
@@ -50,6 +52,15 @@ public class AdminGameResolver {
     @QueryMapping
     public AdminGameResult adminGame(@Argument Long id) {
         return adminGameService.getGame(id);
+    }
+
+    @MutationMapping
+    public AdminGameResult updateEventGame(
+            @Argument Long gameId,
+            @Argument boolean isEventGame
+    ) {
+        AdminUpdateEventGameCommand command = new AdminUpdateEventGameCommand(gameId, isEventGame);
+        return adminGameService.updateEventGame(command);
     }
 
     @BatchMapping(typeName = "AdminGame", field = "participants")

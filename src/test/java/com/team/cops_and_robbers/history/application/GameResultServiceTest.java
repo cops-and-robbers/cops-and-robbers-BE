@@ -34,8 +34,10 @@ import java.util.Optional;
 
 import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.CIRCLE_GAME_AREA;
 import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.POLYGON_GAME_AREA;
+import static com.team.cops_and_robbers.common.fixture.GameFixture.EVENT_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_ROBBER;
+import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.HOST_PARTICIPANT;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.WAITING_POLICE;
 import static com.team.cops_and_robbers.common.fixture.GameResultFixture.POLICE_WIN_RESULT;
 import static com.team.cops_and_robbers.common.fixture.GameResultFixture.POLICE_WIN_RESULT_POLYGON;
@@ -46,6 +48,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
 class GameResultServiceTest extends ServiceUnitTest {
 
@@ -82,7 +85,7 @@ class GameResultServiceTest extends ServiceUnitTest {
         setId(inProgressGame, TEST_GAME_ID);
 
         gameArea = CIRCLE_GAME_AREA(inProgressGame);
-        openedResult = GameResult.openSnapshot(inProgressGame, gameArea);
+        openedResult = GameResult.openSnapshot(inProgressGame, gameArea, POLICE_USER_ID);
         setId(openedResult, TEST_GAME_RESULT_ID);
 
         policeParticipant = WAITING_POLICE(inProgressGame, police);
@@ -181,6 +184,92 @@ class GameResultServiceTest extends ServiceUnitTest {
             assertThat(captor.getValue()).extracting(GameResultParticipant::getUserId)
                     .containsExactlyInAnyOrder(POLICE_USER_ID, ROBBER_USER_ID);
             assertThat(captor.getValue()).allMatch(snapshot -> !snapshot.hasLeft());
+        }
+
+        /** 방은 마지막 참가자가 나가면 사라지므로, 이벤트 여부와 방장은 시작 시점에 박아 둬야 남는다. */
+        @Test
+        void 이벤트_게임이_시작되면_이벤트_여부와_방장이_복사된다() {
+            // given
+            Game eventGame = EVENT_GAME();
+            setId(eventGame, TEST_GAME_ID);
+
+            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(CIRCLE_GAME_AREA(eventGame));
+            given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
+            given(gameParticipantRepository.findAllByGameIdWithUser(TEST_GAME_ID))
+                    .willReturn(List.of(ALIVE_ROBBER(eventGame, robber), HOST_PARTICIPANT(eventGame, police)));
+
+            // when
+            GameResult result = gameResultService.openGameResult(eventGame);
+
+            // then
+            assertThat(result.getEventGame()).isTrue();
+            assertThat(result.getHostUserId()).isEqualTo(POLICE_USER_ID);
+        }
+
+        @Test
+        void 일반_게임이_시작되면_이벤트_여부가_거짓으로_기록된다() {
+            // given
+            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(gameArea);
+            given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
+
+            // when
+            GameResult result = gameResultService.openGameResult(inProgressGame);
+
+            // then
+            assertThat(result.getEventGame()).isFalse();
+        }
+
+        /** 라운드마다 새 행이 열리므로, 2라운드에 켜도 1라운드 기록은 일반 게임으로 남는다. */
+        @Test
+        void 같은_방이라도_라운드마다_이벤트_여부가_따로_기록된다() {
+            // given
+            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(gameArea);
+            given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
+
+            // when
+            GameResult firstRound = gameResultService.openGameResult(inProgressGame);
+
+            inProgressGame.updateEventGame(true);
+            inProgressGame.resetForNextRound();
+            inProgressGame.startGame(NOW);
+            GameResult secondRound = gameResultService.openGameResult(inProgressGame);
+
+            // then
+            assertThat(firstRound.getRoundNumber()).isEqualTo(1);
+            assertThat(firstRound.getEventGame()).isFalse();
+            assertThat(secondRound.getRoundNumber()).isEqualTo(2);
+            assertThat(secondRound.getEventGame()).isTrue();
+        }
+
+        /** 전원 퇴장 뒤 종료되면 명단이 비어 결과가 열리므로, 방장을 못 찾아도 기록은 남아야 한다. */
+        @Test
+        void 참가자가_아무도_없으면_방장은_비어_있다() {
+            // given
+            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(gameArea);
+            given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
+            given(gameParticipantRepository.findAllByGameIdWithUser(TEST_GAME_ID)).willReturn(List.of());
+
+            // when
+            GameResult result = gameResultService.openGameResult(inProgressGame);
+
+            // then
+            assertThat(result.getHostUserId()).isNull();
+        }
+
+        /** 명단 저장에 쓰는 조회를 그대로 재사용한다. 방장 때문에 조회가 한 번 더 늘면 안 된다. */
+        @Test
+        void 방장을_찾느라_참가자를_다시_조회하지_않는다() {
+            // given
+            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(gameArea);
+            given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
+            given(gameParticipantRepository.findAllByGameIdWithUser(TEST_GAME_ID))
+                    .willReturn(List.of(policeParticipant, robberParticipant));
+
+            // when
+            gameResultService.openGameResult(inProgressGame);
+
+            // then
+            then(gameParticipantRepository).should(times(1)).findAllByGameIdWithUser(TEST_GAME_ID);
         }
     }
 
@@ -523,7 +612,8 @@ class GameResultServiceTest extends ServiceUnitTest {
             LocalDateTime startedAt = LocalDateTime.now().minusMinutes(40);
             Game longGame = IN_PROGRESS_GAME(startedAt);
             setId(longGame, TEST_GAME_ID);
-            GameResult longOpenedResult = GameResult.openSnapshot(longGame, CIRCLE_GAME_AREA(longGame));
+            GameResult longOpenedResult =
+                    GameResult.openSnapshot(longGame, CIRCLE_GAME_AREA(longGame), POLICE_USER_ID);
             setId(longOpenedResult, TEST_GAME_RESULT_ID);
 
             given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))

@@ -45,8 +45,11 @@ public class GameResultService {
     @Transactional(propagation = Propagation.MANDATORY)
     public GameResult openGameResult(Game game) {
         GameArea gameArea = gameAreaRepository.getByGameId(game.getId());
-        GameResult openedResult = gameResultRepository.save(GameResult.openSnapshot(game, gameArea));
-        saveParticipantSnapshots(openedResult, game.getId());
+        List<GameParticipant> participants = gameParticipantRepository.findAllByGameIdWithUser(game.getId());
+        GameResult openedResult = gameResultRepository.save(
+                GameResult.openSnapshot(game, gameArea, findHostUserId(participants))
+        );
+        saveParticipantSnapshots(openedResult, participants);
 
         return openedResult;
     }
@@ -131,12 +134,18 @@ public class GameResultService {
         return gameResultRepository.findByGameIdAndEndReasonIsNull(gameId);
     }
 
-    private void saveParticipantSnapshots(GameResult gameResult, Long gameId) {
-        List<GameResultParticipant> snapshots =
-                gameParticipantRepository.findAllByGameIdWithUser(gameId)
-                        .stream()
-                        .map(gp -> GameResultParticipant.createSnapshot(gameResult, gp))
-                        .toList();
+    private Long findHostUserId(List<GameParticipant> participants) {
+        return participants.stream()
+                .filter(GameParticipant::isHost)
+                .findFirst()
+                .map(participant -> participant.getUser().getId())
+                .orElse(null);
+    }
+
+    private void saveParticipantSnapshots(GameResult gameResult, List<GameParticipant> participants) {
+        List<GameResultParticipant> snapshots = participants.stream()
+                .map(gp -> GameResultParticipant.createSnapshot(gameResult, gp))
+                .toList();
         gameResultParticipantRepository.saveAll(snapshots);
     }
 

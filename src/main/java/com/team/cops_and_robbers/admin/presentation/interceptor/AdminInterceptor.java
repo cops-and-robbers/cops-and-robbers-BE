@@ -9,10 +9,12 @@ import com.team.cops_and_robbers.user.domain.Role;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AdminInterceptor implements HandlerInterceptor {
@@ -36,6 +38,8 @@ public class AdminInterceptor implements HandlerInterceptor {
 
         Long userId = jwtTokenProvider.getUserIdFromAccessToken(accessToken);
         request.setAttribute("loginUser", new LoginUser(userId));
+
+        log.info("[Admin] {} {} | adminUserId={}", request.getMethod(), request.getRequestURI(), userId);
 
         return true;
     }
