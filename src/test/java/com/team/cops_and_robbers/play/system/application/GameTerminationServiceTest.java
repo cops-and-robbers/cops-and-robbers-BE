@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.play.system.application;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.history.application.GameResultService;
+import com.team.cops_and_robbers.play.distance.application.ParticipantDistanceService;
 import com.team.cops_and_robbers.history.domain.GameResult;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
 import org.junit.jupiter.api.DisplayName;
@@ -29,6 +30,9 @@ class GameTerminationServiceTest extends ServiceUnitTest {
     private GameResultService gameResultService;
 
     @Mock
+    private ParticipantDistanceService participantDistanceService;
+
+    @Mock
     private SystemEventFactory systemEventFactory;
 
     @Mock
@@ -46,7 +50,7 @@ class GameTerminationServiceTest extends ServiceUnitTest {
             Game game = IN_PROGRESS_GAME();
             setId(game, TEST_GAME_ID);
             given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(game);
-            given(gameResultService.recordGameResult(any(), any(), any())).willReturn(mock(GameResult.class));
+            given(gameResultService.recordGameResult(any(), any(), any(), any())).willReturn(mock(GameResult.class));
             given(systemEventFactory.createGameEndEvent(any(), any(), any(), any())).willReturn(mock(SystemEvent.class));
 
             // when
@@ -81,7 +85,7 @@ class GameTerminationServiceTest extends ServiceUnitTest {
             Game game = IN_PROGRESS_GAME();
             setId(game, TEST_GAME_ID);
             given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(game);
-            given(gameResultService.recordGameResult(any(), any(), any())).willReturn(mock(GameResult.class));
+            given(gameResultService.recordGameResult(any(), any(), any(), any())).willReturn(mock(GameResult.class));
             given(systemEventFactory.createGameEndEvent(any(), any(), any(), any())).willReturn(mock(SystemEvent.class));
 
             // when

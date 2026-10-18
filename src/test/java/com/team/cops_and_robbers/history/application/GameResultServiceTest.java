@@ -9,6 +9,7 @@ import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
+import com.team.cops_and_robbers.history.application.dto.ParticipantDistance;
 import com.team.cops_and_robbers.history.application.dto.command.GameResultCommand;
 import com.team.cops_and_robbers.history.application.dto.result.GameResultParticipantResult;
 import com.team.cops_and_robbers.history.application.dto.result.GameResultResult;
@@ -30,6 +31,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.CIRCLE_GAME_AREA;
@@ -54,6 +56,9 @@ class GameResultServiceTest extends ServiceUnitTest {
 
     @InjectMocks
     private GameResultService gameResultService;
+
+    @Spy
+    private TeamMvpSelector teamMvpSelector = new TeamMvpSelector();
 
     @Spy
     private Clock clock = Clock.fixed(NOW.atZone(KST).toInstant(), KST);
@@ -592,7 +597,7 @@ class GameResultServiceTest extends ServiceUnitTest {
             given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
 
             // when
-            GameResult result = gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ALL_ARRESTED);
+            GameResult result = gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ALL_ARRESTED, List.of());
 
             // then
             assertThat(result).isSameAs(openedResult);
@@ -624,7 +629,7 @@ class GameResultServiceTest extends ServiceUnitTest {
             given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
 
             // when
-            GameResult result = gameResultService.recordGameResult(longGame, Team.POLICE, GameEndReason.ALL_ARRESTED);
+            GameResult result = gameResultService.recordGameResult(longGame, Team.POLICE, GameEndReason.ALL_ARRESTED, List.of());
 
             // then
             assertThat(result.getStartedAt()).isEqualTo(startedAt);
@@ -643,7 +648,7 @@ class GameResultServiceTest extends ServiceUnitTest {
             given(gameParticipantRepository.countByGameIdAndRobberStatus(TEST_GAME_ID, ParticipantStatus.JAILED)).willReturn(3);
             given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
 
-            GameResult result = gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ALL_ARRESTED);
+            GameResult result = gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ALL_ARRESTED, List.of());
             Integer recordedInterval = result.getLocationRevealIntervalMinutes();
 
             // when
@@ -673,7 +678,7 @@ class GameResultServiceTest extends ServiceUnitTest {
             given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
 
             // when
-            gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ALL_ARRESTED);
+            gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ALL_ARRESTED, List.of());
 
             // then
             assertThat(snapshot.getStatus()).isEqualTo(ParticipantStatus.JAILED);
@@ -696,7 +701,7 @@ class GameResultServiceTest extends ServiceUnitTest {
             given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
 
             // when
-            gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ROBBER_FORFEITED);
+            gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ROBBER_FORFEITED, List.of());
 
             // then
             assertThat(leftSnapshot.getStatus()).isEqualTo(ParticipantStatus.ALIVE);
@@ -714,12 +719,104 @@ class GameResultServiceTest extends ServiceUnitTest {
             given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
 
             // when
-            GameResult result = gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ALL_ARRESTED);
+            GameResult result = gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ALL_ARRESTED, List.of());
 
             // then
             assertThat(result.isCompleted()).isTrue();
             assertThat(result.getEndReason()).isEqualTo(GameEndReason.ALL_ARRESTED);
             assertThat(result.getAreaType()).isEqualTo(AreaType.CIRCLE);
+        }
+    }
+
+    @Nested
+    @DisplayName("종료 시 MVP 판정과 이동 거리 반영")
+    class MarkTeamMvps {
+
+        private static final Long POLICE_PARTICIPANT_ID = 201L;
+        private static final Long ROBBER_PARTICIPANT_ID = 202L;
+
+        private GameResultParticipant policeSnapshot;
+        private GameResultParticipant robberSnapshot;
+
+        @BeforeEach
+        void setUpSnapshots() {
+            setId(policeParticipant, POLICE_PARTICIPANT_ID);
+            setId(robberParticipant, ROBBER_PARTICIPANT_ID);
+
+            policeSnapshot = GameResultParticipant.createSnapshot(openedResult, policeParticipant);
+            robberSnapshot = GameResultParticipant.createSnapshot(openedResult, robberParticipant);
+            setId(policeSnapshot, 1L);
+            setId(robberSnapshot, 2L);
+        }
+
+        @Test
+        void 팀별로_MVP가_한_명씩_선정된다() {
+            givenEndOfGame(List.of(policeParticipant, robberParticipant), List.of(policeSnapshot, robberSnapshot));
+
+            gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ALL_ARRESTED, List.of());
+
+            assertThat(policeSnapshot.isMvp()).isTrue();
+            assertThat(robberSnapshot.isMvp()).isTrue();
+        }
+
+        @Test
+        void 수신된_이동_거리가_참가자_행에_저장된다() {
+            givenEndOfGame(List.of(policeParticipant, robberParticipant), List.of(policeSnapshot, robberSnapshot));
+
+            gameResultService.recordGameResult(
+                    inProgressGame,
+                    Team.POLICE,
+                    GameEndReason.ALL_ARRESTED,
+                    List.of(
+                            new ParticipantDistance(POLICE_PARTICIPANT_ID, 1500.0),
+                            new ParticipantDistance(ROBBER_PARTICIPANT_ID, 900.0)
+                    )
+            );
+
+            assertThat(policeSnapshot.getDistanceMeters()).isEqualTo(1500.0);
+            assertThat(robberSnapshot.getDistanceMeters()).isEqualTo(900.0);
+        }
+
+        @Test
+        void 이벤트_게임은_MVP를_판정하지_않는다() {
+            openedResult.updateEventGame(true);
+            givenEndOfGame(List.of(policeParticipant, robberParticipant), List.of(policeSnapshot, robberSnapshot));
+
+            gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ALL_ARRESTED, List.of());
+
+            assertThat(policeSnapshot.isMvp()).isFalse();
+            assertThat(robberSnapshot.isMvp()).isFalse();
+        }
+
+        @Test
+        void 중도_퇴장자는_체포_횟수가_가장_많아도_MVP가_되지_않는다() {
+            User leaver = USER("leaver");
+            setId(leaver, 103L);
+            GameParticipant leaverParticipant = WAITING_POLICE(inProgressGame, leaver);
+            setId(leaverParticipant, 203L);
+
+            GameResultParticipant leftSnapshot = GameResultParticipant.createSnapshot(openedResult, leaverParticipant);
+            setId(leftSnapshot, 3L);
+            leftSnapshot.incrementArrestCount();
+            leftSnapshot.markLeft(NOW.minusMinutes(5));
+
+            givenEndOfGame(
+                    List.of(policeParticipant, leaverParticipant),
+                    List.of(policeSnapshot, leftSnapshot)
+            );
+
+            gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ALL_ARRESTED, List.of());
+
+            assertThat(leftSnapshot.isMvp()).isFalse();
+            assertThat(policeSnapshot.isMvp()).isTrue();
+        }
+
+        private void givenEndOfGame(List<GameParticipant> participants, List<GameResultParticipant> snapshots) {
+            given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
+                    .willReturn(Optional.of(openedResult));
+            given(gameParticipantRepository.findAllByGameIdWithUser(TEST_GAME_ID)).willReturn(participants);
+            given(gameResultParticipantRepository.findByGameResultId(TEST_GAME_RESULT_ID)).willReturn(snapshots);
+            given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
         }
     }
 

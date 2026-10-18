@@ -14,6 +14,8 @@ public interface GameResultParticipantRepository extends JpaRepository<GameResul
 
     List<GameResultParticipant> findByGameResultId(Long gameResultId);
 
+    List<GameResultParticipant> findByGameResultIdAndIsMvpTrue(Long gameResultId);
+
     /**
      * 체포수·잡힌 횟수 증가와 퇴장 시각 기록이 모두 이 조회를 거쳐 값을 바꾸므로 행을 잠급니다.
      * 잠그지 않으면 같은 경찰이 연달아 체포하거나, 이벤트 게임에서 여러 경찰이

@@ -13,6 +13,7 @@ public record GameResultParticipantResult(
         ParticipantStatus status,
         Integer arrestCount,
         Integer arrestedCount,
+        boolean isMvp,
         String leftAt
 ) {
     public static GameResultParticipantResult from(GameResultParticipant participant) {
@@ -22,6 +23,7 @@ public record GameResultParticipantResult(
                 participant.getStatus(),
                 participant.getArrestCount(),
                 participant.getArrestedCount(),
+                participant.isMvp(),
                 toIsoOrNull(participant.getLeftAt())
         );
     }

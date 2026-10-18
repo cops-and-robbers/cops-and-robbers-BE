@@ -8,6 +8,7 @@ import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
+import com.team.cops_and_robbers.history.application.dto.ParticipantDistance;
 import com.team.cops_and_robbers.history.application.dto.command.GameResultCommand;
 import com.team.cops_and_robbers.history.application.dto.result.GameResultParticipantResult;
 import com.team.cops_and_robbers.history.application.dto.result.GameResultResult;
@@ -38,6 +39,7 @@ public class GameResultService {
     private final GameResultParticipantRepository gameResultParticipantRepository;
     private final GameAreaRepository gameAreaRepository;
     private final GameParticipantRepository gameParticipantRepository;
+    private final TeamMvpSelector teamMvpSelector;
 
     /**
      * 게임이 시작되면 GameResult 를 열고 그 시점의 참가자 명단을 남깁니다.
@@ -101,11 +103,21 @@ public class GameResultService {
      * 게임 종료 시점의 통계를 수집해 열어 둔 GameResult 를 완성합니다.
      */
     @Transactional(propagation = Propagation.MANDATORY)
-    public GameResult recordGameResult(Game game, Team winner, GameEndReason reason) {
+    public GameResult recordGameResult(
+            Game game,
+            Team winner,
+            GameEndReason reason,
+            List<ParticipantDistance> distances
+    ) {
         GameResult result = findInProgressResult(game.getId())
                 .orElseGet(() -> openGameResult(game));
 
-        updateFinalParticipantStatuses(result, game.getId());
+        List<GameParticipant> participants = gameParticipantRepository.findAllByGameIdWithUser(game.getId());
+        List<GameResultParticipant> snapshots = gameResultParticipantRepository.findByGameResultId(result.getId());
+
+        updateFinalParticipantStatuses(snapshots, participants);
+        applyDistances(snapshots, participants, distances);
+        markTeamMvps(snapshots, result);
 
         int totalPolice = gameParticipantRepository.countByGameIdAndTeam(
                 game.getId(), Team.POLICE
@@ -149,17 +161,52 @@ public class GameResultService {
         gameResultParticipantRepository.saveAll(snapshots);
     }
 
-    private void updateFinalParticipantStatuses(GameResult gameResult, Long gameId) {
-        Map<Long, ParticipantStatus> statusByUserId =
-                gameParticipantRepository.findAllByGameIdWithUser(gameId)
-                        .stream()
-                        .collect(Collectors.toMap(
-                                participant -> participant.getUser().getId(),
-                                GameParticipant::getStatus
-                        ));
+    private void updateFinalParticipantStatuses(
+            List<GameResultParticipant> snapshots,
+            List<GameParticipant> participants
+    ) {
+        Map<Long, ParticipantStatus> statusByUserId = participants.stream()
+                .collect(Collectors.toMap(
+                        participant -> participant.getUser().getId(),
+                        GameParticipant::getStatus
+                ));
 
-        gameResultParticipantRepository.findByGameResultId(gameResult.getId())
-                .forEach(snapshot -> snapshot.updateFinalStatus(statusByUserId.get(snapshot.getUserId())));
+        snapshots.forEach(snapshot -> snapshot.updateFinalStatus(statusByUserId.get(snapshot.getUserId())));
+    }
+
+    private void applyDistances(
+            List<GameResultParticipant> snapshots,
+            List<GameParticipant> participants,
+            List<ParticipantDistance> distances
+    ) {
+        if (distances.isEmpty()) {
+            return;
+        }
+
+        Map<Long, GameParticipant> participantById = participants.stream()
+                .collect(Collectors.toMap(GameParticipant::getId, participant -> participant));
+        Map<Long, GameResultParticipant> snapshotByUserId = snapshots.stream()
+                .filter(snapshot -> !snapshot.hasLeft())
+                .collect(Collectors.toMap(GameResultParticipant::getUserId, snapshot -> snapshot));
+
+        distances.forEach(distance -> {
+            GameParticipant participant = participantById.get(distance.participantId());
+            if (participant == null) {
+                return;
+            }
+            GameResultParticipant snapshot = snapshotByUserId.get(participant.getUser().getId());
+            if (snapshot != null) {
+                snapshot.updateDistanceMeters(distance.distanceMeters());
+            }
+        });
+    }
+
+    private void markTeamMvps(List<GameResultParticipant> snapshots, GameResult result) {
+        if (Boolean.TRUE.equals(result.getEventGame())) {
+            return;
+        }
+        teamMvpSelector.selectPoliceMvp(snapshots).ifPresent(GameResultParticipant::markMvp);
+        teamMvpSelector.selectRobberMvp(snapshots).ifPresent(GameResultParticipant::markMvp);
     }
 
     @Transactional(readOnly = true)
@@ -168,7 +215,10 @@ public class GameResultService {
                 .filter(GameResult::isCompleted)
                 .orElseThrow(() -> new ApplicationException(GameResultException.GAME_RESULT_NOT_FOUND));
         gameParticipantRepository.getByGameIdAndUserId(gameResult.getGameId(), command.userId());
-        return GameResultResult.from(gameResult);
+        return GameResultResult.from(
+                gameResult,
+                gameResultParticipantRepository.findByGameResultIdAndIsMvpTrue(gameResult.getId())
+        );
     }
 
     /**

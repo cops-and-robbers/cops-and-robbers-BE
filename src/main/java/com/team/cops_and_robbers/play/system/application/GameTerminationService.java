@@ -6,6 +6,7 @@ import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.history.application.GameResultService;
+import com.team.cops_and_robbers.play.distance.application.ParticipantDistanceService;
 import com.team.cops_and_robbers.history.domain.GameEndReason;
 import com.team.cops_and_robbers.history.domain.GameResult;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
@@ -25,6 +26,7 @@ public class GameTerminationService {
     private final ApplicationEventPublisher eventPublisher;
     private final SystemEventFactory systemEventFactory;
     private final GameResultService gameResultService;
+    private final ParticipantDistanceService participantDistanceService;
 
     @Transactional
     public void endGameByAllArrested(Long gameId) {
@@ -71,7 +73,9 @@ public class GameTerminationService {
     }
 
     private void endGame(Game game, Team winner, GameEndReason reason) {
-        GameResult result = gameResultService.recordGameResult(game, winner, reason);
+        GameResult result = gameResultService.recordGameResult(
+                game, winner, reason, participantDistanceService.getDistances(game.getId())
+        );
         game.resetForNextRound();
         gameParticipantRepository.resetAllParticipantsForNextRound(game.getId(), ParticipantStatus.WAITING);
 
