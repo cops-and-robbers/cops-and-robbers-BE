@@ -21,7 +21,15 @@ public interface GameResultControllerDocs {
 
     @Operation(
             summary = "게임 결과 조회",
-            description = "게임 종료 후 결과(승리 팀, 진행 시간, 총 체포 횟수, 남은 도둑 수)를 조회합니다.",
+            description = """
+                    게임 종료 후 결과(승리 팀, 진행 시간, 총 체포 횟수, 남은 도둑 수)와 팀별 MVP 를 조회합니다.
+
+                    `policeMvp` 는 체포 많은 순 → 이동 거리 긴 순 → 먼저 참가한 순으로 뽑습니다.
+                    `robberMvp` 는 잡힌 횟수 적은 순 → 종료 시점 감옥 밖 우선 → 이동 거리 긴 순 → 먼저 참가한 순입니다.
+
+                    중도 퇴장자는 후보에서 빠지며, 팀에 남은 사람이 없으면 `null` 입니다.
+                    이벤트 게임과 이 기능이 추가되기 전에 끝난 게임도 `null` 입니다.
+                    """,
             security = @SecurityRequirement(name = "JWT")
     )
     @ApiErrorCode(value = GameResultException.class, codes = {"GAME_RESULT_NOT_FOUND"})
@@ -37,7 +45,7 @@ public interface GameResultControllerDocs {
     @Operation(
             summary = "내 개인 기록 조회",
             description = """
-                    그 게임에서 본인의 개인 기록(팀, 종료 시점 상태, 체포 횟수, 잡힌 횟수, 퇴장 시각)을 조회합니다.
+                    그 게임에서 본인의 개인 기록(팀, 종료 시점 상태, 체포 횟수, 잡힌 횟수, MVP 여부, 퇴장 시각)을 조회합니다.
 
                     요청한 사용자 자신의 기록만 반환하므로 participantId 를 넘기지 않습니다.
                     명단에 없으면 그 게임 참가자가 아니므로 `GAME_RESULT_NOT_FOUND` 입니다.
@@ -45,6 +53,9 @@ public interface GameResultControllerDocs {
                     `arrestCount` 는 도둑과 이 기능이 추가되기 전에 끝난 게임에서는 `0` 입니다.
                     `arrestedCount` 는 경찰과 이 컬럼이 추가되기 전에 끝난 게임에서는 `0` 입니다.
                     두 필드를 모두 주므로 앱은 `team` 으로 골라 씁니다.
+
+                    `isMvp` 는 본인이 자기 팀 MVP 인지입니다. 이벤트 게임과 이 기능이 추가되기 전에
+                    끝난 게임에서는 항상 `false` 입니다.
 
                     게임을 나갔다가 같은 방에 다시 들어온 경우, 재입장 이후의 기록만 반환합니다.
                     나가기 전에 잡은 수는 이어지지 않습니다.
