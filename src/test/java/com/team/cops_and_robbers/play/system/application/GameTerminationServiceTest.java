@@ -3,8 +3,8 @@ package com.team.cops_and_robbers.play.system.application;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.history.application.GameResultService;
-import com.team.cops_and_robbers.play.distance.application.ParticipantDistanceService;
 import com.team.cops_and_robbers.history.domain.GameResult;
+import com.team.cops_and_robbers.play.distance.application.ParticipantDistanceService;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -12,10 +12,14 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.redis.RedisConnectionFailureException;
+
+import java.util.List;
 
 import static com.team.cops_and_robbers.common.fixture.GameFixture.FINISHED_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -107,6 +111,30 @@ class GameTerminationServiceTest extends ServiceUnitTest {
 
             // then
             then(eventPublisher).should(never()).publishEvent(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("이동 거리 조회 실패")
+    class LoadDistancesFailure {
+
+        @Test
+        void 거리를_읽지_못해도_게임은_종료된다() {
+            // given
+            Game game = IN_PROGRESS_GAME();
+            setId(game, TEST_GAME_ID);
+            given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(game);
+            given(participantDistanceService.getDistances(TEST_GAME_ID))
+                    .willThrow(new RedisConnectionFailureException("Redis 연결 실패"));
+            given(gameResultService.recordGameResult(any(), any(), any(), any())).willReturn(mock(GameResult.class));
+            given(systemEventFactory.createGameEndEvent(any(), any(), any(), any())).willReturn(mock(SystemEvent.class));
+
+            // when
+            gameTerminationService.endGameByTimeOver(TEST_GAME_ID);
+
+            // then
+            then(gameResultService).should().recordGameResult(any(), any(), any(), eq(List.of()));
+            then(eventPublisher).should().publishEvent(any(SystemEvent.class));
         }
     }
 }

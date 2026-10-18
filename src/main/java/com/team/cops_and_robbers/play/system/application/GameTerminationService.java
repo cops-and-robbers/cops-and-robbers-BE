@@ -6,15 +6,18 @@ import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.history.application.GameResultService;
-import com.team.cops_and_robbers.play.distance.application.ParticipantDistanceService;
+import com.team.cops_and_robbers.history.application.dto.ParticipantDistance;
 import com.team.cops_and_robbers.history.domain.GameEndReason;
 import com.team.cops_and_robbers.history.domain.GameResult;
+import com.team.cops_and_robbers.play.distance.application.ParticipantDistanceService;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -74,7 +77,7 @@ public class GameTerminationService {
 
     private void endGame(Game game, Team winner, GameEndReason reason) {
         GameResult result = gameResultService.recordGameResult(
-                game, winner, reason, participantDistanceService.getDistances(game.getId())
+                game, winner, reason, loadDistances(game.getId())
         );
         game.resetForNextRound();
         gameParticipantRepository.resetAllParticipantsForNextRound(game.getId(), ParticipantStatus.WAITING);
@@ -85,5 +88,17 @@ public class GameTerminationService {
         eventPublisher.publishEvent(gameEndEvent);
 
         log.info("[GameTerminationService] Game {} ended. Winner: {}, Reason: {}", game.getId(), winner, reason);
+    }
+
+    /**
+     * 거리는 MVP 동점을 가르는 보조 값이라, 조회에 실패해도 게임 종료는 그대로 진행합니다.
+     */
+    private List<ParticipantDistance> loadDistances(Long gameId) {
+        try {
+            return participantDistanceService.getDistances(gameId);
+        } catch (Exception e) {
+            log.error("[GameTerminationService] Failed to load distances | gameId={}", gameId, e);
+            return List.of();
+        }
     }
 }
