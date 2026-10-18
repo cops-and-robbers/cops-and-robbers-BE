@@ -183,18 +183,16 @@ public class GameResultService {
             return;
         }
 
-        Map<Long, GameParticipant> participantById = participants.stream()
-                .collect(Collectors.toMap(GameParticipant::getId, participant -> participant));
+        Map<Long, Long> userIdByParticipantId = participants.stream()
+                .collect(Collectors.toMap(GameParticipant::getId, participant -> participant.getUser().getId()));
         Map<Long, GameResultParticipant> snapshotByUserId = snapshots.stream()
                 .filter(snapshot -> !snapshot.hasLeft())
                 .collect(Collectors.toMap(GameResultParticipant::getUserId, snapshot -> snapshot));
 
         distances.forEach(distance -> {
-            GameParticipant participant = participantById.get(distance.participantId());
-            if (participant == null) {
-                return;
-            }
-            GameResultParticipant snapshot = snapshotByUserId.get(participant.getUser().getId());
+            GameResultParticipant snapshot = snapshotByUserId.get(
+                    userIdByParticipantId.get(distance.participantId())
+            );
             if (snapshot != null) {
                 snapshot.updateDistanceMeters(distance.distanceMeters());
             }
