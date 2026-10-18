@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.play.system.application;
 
 import com.team.cops_and_robbers.play.notification.application.GameFcmNotifier;
 import com.team.cops_and_robbers.play.common.application.InGameParticipantCacheService;
+import com.team.cops_and_robbers.play.distance.application.ParticipantDistanceService;
 import com.team.cops_and_robbers.play.location.application.RobberLocationService;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
 import com.team.cops_and_robbers.play.system.domain.SystemEventType;
@@ -17,6 +18,7 @@ public class SystemEventHandler {
     private final SystemPublisher systemPublisher;
     private final RobberLocationService robberLocationService;
     private final InGameParticipantCacheService inGameParticipantCacheService;
+    private final ParticipantDistanceService participantDistanceService;
 
     private final GameFcmNotifier gameFcmNotifier;
 
@@ -28,6 +30,7 @@ public class SystemEventHandler {
                 robberLocationService.clearRobberLocations(event.gameId());
                 robberLocationService.clearRobberLocationSnapshot(event.gameId());
                 inGameParticipantCacheService.clearCache(event.gameId());
+                participantDistanceService.clearDistances(event.gameId());
             });
         } else {
             gameFcmNotifier.notifySystemEvent(event);
