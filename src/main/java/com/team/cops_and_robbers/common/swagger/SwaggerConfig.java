@@ -30,8 +30,24 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.38.0")
+                .version("2.39.0")
                 .description("""
+                        ## v2.39.0 업데이트 내역
+
+                        ### ✨ 신규 — 게임 종료 시 팀별 MVP 선정
+                        - GET /api/game-results/{gameResultId} 응답에 policeMvp, robberMvp 추가.
+                          각각 { nickname } 이고, 해당 팀에 남은 사람이 없으면 null 이다
+                        - GET /api/game-results/{gameResultId}/me 응답에 isMvp 추가 (본인이 팀 MVP 인지)
+                        - 경찰은 체포 많은 순 → 이동 거리 긴 순 → 먼저 참가한 순,
+                          도둑은 잡힌 횟수 적은 순 → 종료 시점 감옥 밖 우선 → 이동 거리 긴 순 → 먼저 참가한 순
+                        - 중도 퇴장자는 후보에서 빠진다. 이벤트 게임은 판정하지 않아 둘 다 null 이다
+
+                        ### ✨ 신규 — 게임 중 이동 거리 수신 (STOMP)
+                        - /publish/game/{gameId}/distance 로 { distanceMeters } 를 보낸다.
+                          앱이 누적 거리를 계산해 보내고 서버는 마지막 값만 들고 있다
+                        - 되보내는 메시지는 없다. 음수·직전보다 작은 값·시속 25km 를 넘는 증가는 버린다
+                        - **앱 영향** — 거리를 보내지 않아도 기존 동작은 그대로이고, MVP 판정에서 0m 로 계산된다
+
                         ## v2.38.0 업데이트 내역
 
                         ### ✨ 신규 — 어드민 이벤트 게임 전환 (어드민 전용)

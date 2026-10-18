@@ -64,6 +64,11 @@ public class GameResultParticipant extends BaseTimeEntity {
     @Column(nullable = false)
     private Integer arrestedCount;
 
+    @Column(nullable = false)
+    private boolean isMvp;
+
+    private Double distanceMeters;
+
     public static GameResultParticipant createSnapshot(
             GameResult gameResult,
             GameParticipant participant
@@ -76,6 +81,7 @@ public class GameResultParticipant extends BaseTimeEntity {
                 .status(participant.getStatus())
                 .arrestCount(0)
                 .arrestedCount(0)
+                .isMvp(false)
                 .build();
     }
 
@@ -97,6 +103,14 @@ public class GameResultParticipant extends BaseTimeEntity {
             return;
         }
         this.status = finalStatus;
+    }
+
+    public void updateDistanceMeters(Double distanceMeters) {
+        this.distanceMeters = distanceMeters;
+    }
+
+    public void markMvp() {
+        this.isMvp = true;
     }
 
     public boolean hasLeft() {
