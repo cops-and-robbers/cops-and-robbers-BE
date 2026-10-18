@@ -91,6 +91,17 @@ class ParticipantDistanceServiceTest extends ServiceUnitTest {
         }
 
         @Test
+        void 무한대나_NaN은_무시된다() {
+            given(participantDistanceRepository.findByParticipantId(GAME_ID, PARTICIPANT_ID))
+                    .willReturn(Optional.empty());
+
+            participantDistanceService.updateDistance(command(Double.POSITIVE_INFINITY));
+            participantDistanceService.updateDistance(command(Double.NaN));
+
+            verify(participantDistanceRepository, never()).save(anyLong(), anyLong(), any());
+        }
+
+        @Test
         void 직전_값보다_작으면_무시된다() {
             given(participantDistanceRepository.findByParticipantId(GAME_ID, PARTICIPANT_ID))
                     .willReturn(Optional.of(previous(500.0, 10_000)));

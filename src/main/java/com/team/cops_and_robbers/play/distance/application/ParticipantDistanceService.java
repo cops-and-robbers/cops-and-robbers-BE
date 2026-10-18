@@ -58,7 +58,7 @@ public class ParticipantDistanceService {
     }
 
     private boolean isAbnormal(Double distanceMeters, ParticipantDistanceHash previous, long now) {
-        if (distanceMeters == null || distanceMeters < 0) {
+        if (distanceMeters == null || !Double.isFinite(distanceMeters) || distanceMeters < 0) {
             return true;
         }
         if (previous == null) {
