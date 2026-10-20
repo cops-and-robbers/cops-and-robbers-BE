@@ -19,6 +19,14 @@ extend type Query {
   adminGameHistory(id: ID!): AdminGameHistory!
 }
 
+# ─── 게임 변경 ───────────────────────────────────────────────
+extend type Mutation {
+  updateEventGame(
+    gameId: ID!
+    isEventGame: Boolean!
+  ): AdminGame!
+}
+
 # ─── 게임 타입 ───────────────────────────────────────────────
 type AdminGamePage {
   content: [AdminGameSummary!]!
@@ -120,6 +128,8 @@ type AdminGameHistory {
   startedAt: String
   endedAt: String
   locationRevealIntervalMinutes: Int
+  isEventGame: Boolean
+  hostUserId: ID
   areaType: AreaType!
   area: GameArea
   createdAt: String!

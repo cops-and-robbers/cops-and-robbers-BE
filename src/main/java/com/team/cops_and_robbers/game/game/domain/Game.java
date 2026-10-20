@@ -111,6 +111,10 @@ public class Game extends BaseTimeEntity {
         this.maxParticipants = maxParticipants;
     }
 
+    public void updateEventGame(boolean isEventGame) {
+        this.isEventGame = isEventGame;
+    }
+
     public boolean isSameRound(int eventRound) {
         return this.roundNumber == eventRound;
     }

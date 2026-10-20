@@ -58,7 +58,7 @@ log "INFO" "CONTAINER_START_SUCCESS"
 
 
 # 5. 헬스체크
-MAX_RETRY=36
+MAX_RETRY=60
 RETRY_INTERVAL=5
 
 for i in $(seq 1 $MAX_RETRY); do
@@ -69,7 +69,7 @@ for i in $(seq 1 $MAX_RETRY); do
 
     if [ "$i" -eq "$MAX_RETRY" ]; then
         log "ERROR" "HEALTH_CHECK_FAILED"
-        sudo docker compose -f docker-compose-dev-server.yml logs --tail 50 >> "$LOG_FILE" 2>&1 || true
+        sudo docker compose -f docker-compose-dev-server.yml logs --tail 100 2>&1 | sudo tee -a "$LOG_FILE" || true
         sudo docker compose -f docker-compose-dev-server.yml down
         rm -f .env
         finish_logging "ERROR"

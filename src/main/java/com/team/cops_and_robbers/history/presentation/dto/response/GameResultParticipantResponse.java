@@ -16,6 +16,8 @@ public record GameResultParticipantResponse(
         Integer arrestCount,
         @Schema(description = "본인이 잡힌 횟수", example = "2")
         Integer arrestedCount,
+        @Schema(description = "팀 MVP 여부", example = "true")
+        boolean isMvp,
         @Schema(description = "게임 중 퇴장한 시각. 끝까지 있었으면 null", example = "2026-09-16T14:30:00+09:00")
         String leftAt
 ) {
@@ -26,6 +28,7 @@ public record GameResultParticipantResponse(
                 result.status(),
                 result.arrestCount(),
                 result.arrestedCount(),
+                result.isMvp(),
                 result.leftAt()
         );
     }

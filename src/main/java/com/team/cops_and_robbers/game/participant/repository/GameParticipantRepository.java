@@ -57,13 +57,14 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
     Optional<GameParticipant> findByIdWithUser(@Param("id") Long id);
 
     /**
-     * 게임의 모든 참가자를 유저 정보와 함께 조회
+     * 게임의 모든 참가자를 유저 정보와 함께 참가 순으로 조회
      */
     @Query("""
         select gp
         from GameParticipant gp
         join fetch gp.user
         where gp.game.id = :gameId
+        order by gp.id
     """)
     List<GameParticipant> findAllByGameIdWithUser(@Param("gameId") Long gameId);
 

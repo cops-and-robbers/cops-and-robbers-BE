@@ -34,17 +34,30 @@ public interface GameResultRepository extends JpaRepository<GameResult, Long> {
      */
     Optional<GameResult> findByGameIdAndEndReasonIsNull(Long gameId);
 
+    /**
+     * 아래 통계 셋은 이벤트 게임을 집계에서 뺍니다. 규칙이 달라(#111) 일반 게임과 섞이면 수치가 왜곡됩니다.
+     * 컬럼이 생기기 전 기록은 이벤트 여부를 알 수 없어 null 이며, 지금까지처럼 집계에 포함합니다.
+     */
     @Query("""
             select r.endReason as endReason, count(r) as count from GameResult r
             where r.endReason is not null
+            and (r.eventGame is null or r.eventGame = false)
             group by r.endReason
             """)
     List<EndReasonCountProjection> countGroupByEndReason();
 
-    @Query("select avg(r.durationSeconds) from GameResult r")
+    @Query("""
+            select avg(r.durationSeconds) from GameResult r
+            where r.eventGame is null or r.eventGame = false
+            """)
     Double averageDurationSeconds();
 
-    long countByWinnerTeam(Team winnerTeam);
+    @Query("""
+            select count(r) from GameResult r
+            where r.winnerTeam = :winnerTeam
+            and (r.eventGame is null or r.eventGame = false)
+            """)
+    long countByWinnerTeam(@Param("winnerTeam") Team winnerTeam);
 
     @Query("""
             select r from GameResult r
