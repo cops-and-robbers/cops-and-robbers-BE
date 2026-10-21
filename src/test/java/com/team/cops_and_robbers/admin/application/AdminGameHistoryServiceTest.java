@@ -17,6 +17,7 @@ import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.history.domain.GameResult;
 import com.team.cops_and_robbers.history.domain.GameResultParticipant;
 import com.team.cops_and_robbers.history.exception.GameResultException;
+import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -365,6 +366,31 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
                 softly.assertThat(result.get(history)).hasSize(2);
                 softly.assertThat(result.get(history).get(0).leftAt()).isNull();
                 softly.assertThat(result.get(history).get(1).leftAt()).isNotNull();
+            });
+        }
+
+        @Test
+        void 탈퇴한_참여자는_userId_없이_알수없음으로_반환된다() {
+            // given
+            GameResult gameResult = createGameResult(1L, 10L);
+
+            GameResultParticipant withdrawn =
+                    GameResultParticipantFixture.POLICE_PARTICIPANT(gameResult, null, User.UNKNOWN_NICKNAME);
+            setId(withdrawn, 1000L);
+
+            AdminGameHistoryResult history = AdminGameHistoryResult.from(gameResult);
+            given(gameResultParticipantRepository.findByGameResultIdIn(List.of(10L)))
+                    .willReturn(List.of(withdrawn));
+
+            // when
+            Map<AdminGameHistoryResult, List<AdminGameHistoryParticipantResult>> result =
+                    adminGameHistoryService.getHistoryParticipantsByGame(List.of(history));
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(result.get(history)).hasSize(1);
+                softly.assertThat(result.get(history).get(0).userId()).isNull();
+                softly.assertThat(result.get(history).get(0).nickname()).isEqualTo(User.UNKNOWN_NICKNAME);
             });
         }
 

@@ -29,6 +29,7 @@ public interface GameResultControllerDocs {
 
                     중도 퇴장자는 후보에서 빠지며, 팀에 남은 사람이 없으면 `null` 입니다.
                     이벤트 게임과 이 기능이 추가되기 전에 끝난 게임도 `null` 입니다.
+                    MVP 가 탈퇴한 사용자면 `nickname` 은 `"알수없음"` 입니다.
                     """,
             security = @SecurityRequirement(name = "JWT")
     )

@@ -39,7 +39,6 @@ public class GameResultParticipant extends BaseTimeEntity {
     @JoinColumn(name = "game_result_id", nullable = false)
     private GameResult gameResult;
 
-    @Column(nullable = false)
     private Long userId;
 
     @Column(nullable = false, length = 20)
@@ -53,14 +52,11 @@ public class GameResultParticipant extends BaseTimeEntity {
     @Column(nullable = false)
     private ParticipantStatus status;
 
-    /** 게임 중 퇴장한 시각. 끝까지 있었으면 null. */
     private LocalDateTime leftAt;
 
-    /** 이 참가자가 체포한 횟수. 도둑과 이 컬럼이 생기기 전 기록은 0. */
     @Column(nullable = false)
     private Integer arrestCount;
 
-    /** 이 참가자가 잡힌 횟수. 경찰과 이 컬럼이 생기기 전 기록은 0. */
     @Column(nullable = false)
     private Integer arrestedCount;
 
