@@ -8,6 +8,7 @@ import com.team.cops_and_robbers.history.exception.GameResultException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -68,6 +69,17 @@ public interface GameResultRepository extends JpaRepository<GameResult, Long> {
             @Param("endReason") GameEndReason endReason,
             Pageable pageable
     );
+
+    /**
+     * 탈퇴자가 방장이었던 기록에서 방장 id 를 비웁니다.
+     */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+            update GameResult r
+            set r.hostUserId = null
+            where r.hostUserId = :userId
+            """)
+    void clearHostUserId(@Param("userId") Long userId);
 
     default GameResult getByGameResultId(Long gameResultId) {
         return findById(gameResultId)

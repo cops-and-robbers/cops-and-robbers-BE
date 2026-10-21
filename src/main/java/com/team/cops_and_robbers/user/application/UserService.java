@@ -14,6 +14,8 @@ import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
+import com.team.cops_and_robbers.history.repository.GameResultParticipantRepository;
+import com.team.cops_and_robbers.history.repository.GameResultRepository;
 import com.team.cops_and_robbers.user.application.dto.command.AgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.CommunityPushAgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.GamePushAgreementCommand;
@@ -51,6 +53,8 @@ public class UserService {
     private final GameParticipantRepository gameParticipantRepository;
     private final GameAreaRepository gameAreaRepository;
     private final GameRepository gameRepository;
+    private final GameResultRepository gameResultRepository;
+    private final GameResultParticipantRepository gameResultParticipantRepository;
     private final CommunityPostRepository communityPostRepository;
 
     @Transactional(readOnly = true)
@@ -113,6 +117,8 @@ public class UserService {
         }
         closeRecruitingPosts(userId);
         userDeviceRepository.deleteByUserId(userId);
+        gameResultParticipantRepository.anonymizeByUserId(userId, User.UNKNOWN_NICKNAME);
+        gameResultRepository.clearHostUserId(userId);
         userRepository.deleteUserByIdDirectly(user.getId());
         refreshTokenRepository.delete(user.getId());
 
