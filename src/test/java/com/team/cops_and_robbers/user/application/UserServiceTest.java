@@ -369,7 +369,23 @@ class UserServiceTest extends ServiceUnitTest {
 
             then(userRepository).should(never()).delete(any());
             then(refreshTokenRepository).should(never()).delete(any());
+            then(gameResultParticipantRepository).should(never()).anonymizeByUserId(any(), any());
+            then(gameResultRepository).should(never()).clearHostUserId(any());
             then(firebaseAuth).shouldHaveNoInteractions();
+        }
+
+        @Test
+        void 탈퇴하면_게임_기록의_탈퇴자_정보가_비워진다() throws Exception {
+            // given
+            given(userRepository.getByUserId(user.getId())).willReturn(user);
+            given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(false);
+
+            // when
+            userService.deleteAccount(user.getId());
+
+            // then
+            then(gameResultParticipantRepository).should().anonymizeByUserId(user.getId(), User.UNKNOWN_NICKNAME);
+            then(gameResultRepository).should().clearHostUserId(user.getId());
         }
 
         @Test

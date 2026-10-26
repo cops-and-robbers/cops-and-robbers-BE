@@ -20,7 +20,7 @@ public record GameResultResponse(
 ) {
     @Schema(name = "MvpResponse", description = "팀 MVP 정보")
     public record MvpResponse(
-            @Schema(description = "닉네임", example = "번개경찰")
+            @Schema(description = "닉네임 (탈퇴한 유저면 \"알수없음\")", example = "번개경찰")
             String nickname
     ) {
     }

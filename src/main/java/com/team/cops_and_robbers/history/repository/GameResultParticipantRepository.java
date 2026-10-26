@@ -4,6 +4,9 @@ import com.team.cops_and_robbers.history.domain.GameResultParticipant;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,4 +28,16 @@ public interface GameResultParticipantRepository extends JpaRepository<GameResul
     Optional<GameResultParticipant> findByGameResultIdAndUserIdAndLeftAtIsNull(Long gameResultId, Long userId);
 
     Optional<GameResultParticipant> findFirstByGameResultIdAndUserIdOrderByIdDesc(Long gameResultId, Long userId);
+
+    /**
+     * 탈퇴자의 참가 기록에서 탈퇴자와 이어지는 값만 비웁니다.
+     * 행과 수치는 같은 판 다른 참가자의 결과 화면에 쓰이므로 남깁니다.
+     */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+        update GameResultParticipant p
+        set p.userId = null, p.nickname = :nickname
+        where p.userId = :userId
+        """)
+    void anonymizeByUserId(@Param("userId") Long userId, @Param("nickname") String nickname);
 }

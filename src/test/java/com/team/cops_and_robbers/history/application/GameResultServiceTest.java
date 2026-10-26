@@ -42,6 +42,8 @@ import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.AL
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.HOST_PARTICIPANT;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.WAITING_POLICE;
 import static com.team.cops_and_robbers.common.fixture.GameResultFixture.POLICE_WIN_RESULT;
+import static com.team.cops_and_robbers.common.fixture.GameResultParticipantFixture.POLICE_PARTICIPANT;
+import static com.team.cops_and_robbers.common.fixture.GameResultParticipantFixture.ROBBER_PARTICIPANT;
 import static com.team.cops_and_robbers.common.fixture.GameResultFixture.POLICE_WIN_RESULT_POLYGON;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -857,6 +859,32 @@ class GameResultServiceTest extends ServiceUnitTest {
             // then
             assertThat(result.winnerTeam()).isEqualTo(gameResult.getWinnerTeam());
             assertThat(result.durationSeconds()).isEqualTo(gameResult.getDurationSeconds());
+            assertThat(result.totalArrestCount()).isEqualTo(gameResult.getTotalArrestCount());
+            assertThat(result.remainingRobberCount())
+                    .isEqualTo(gameResult.getTotalRobberCount() - gameResult.getArrestedRobberCount());
+        }
+
+        @Test
+        void 탈퇴한_사용자가_MVP면_닉네임만_알수없음으로_나오고_수치는_그대로다() {
+            // given
+            GameResult gameResult = POLICE_WIN_RESULT(TEST_GAME_ID);
+            setId(gameResult, TEST_GAME_RESULT_ID);
+
+            GameResultParticipant withdrawnPoliceMvp = POLICE_PARTICIPANT(gameResult, null, User.UNKNOWN_NICKNAME);
+            GameResultParticipant robberMvp = ROBBER_PARTICIPANT(gameResult, TEST_USER_ID, "도둑");
+            withdrawnPoliceMvp.markMvp();
+            robberMvp.markMvp();
+
+            given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(gameResult));
+            given(gameResultParticipantRepository.findByGameResultIdAndIsMvpTrue(TEST_GAME_RESULT_ID))
+                    .willReturn(List.of(withdrawnPoliceMvp, robberMvp));
+
+            // when
+            GameResultResult result = gameResultService.getGameResult(GameResultCommand.of(TEST_USER_ID, TEST_GAME_RESULT_ID));
+
+            // then
+            assertThat(result.policeMvp().nickname()).isEqualTo(User.UNKNOWN_NICKNAME);
+            assertThat(result.robberMvp().nickname()).isEqualTo("도둑");
             assertThat(result.totalArrestCount()).isEqualTo(gameResult.getTotalArrestCount());
             assertThat(result.remainingRobberCount())
                     .isEqualTo(gameResult.getTotalRobberCount() - gameResult.getArrestedRobberCount());

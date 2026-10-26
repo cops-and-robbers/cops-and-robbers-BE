@@ -137,7 +137,7 @@ type AdminGameHistory {
 }
 
 type AdminGameHistoryParticipant {
-  userId: ID!
+  userId: ID
   nickname: String!
   team: Team!
   status: ParticipantStatus!
