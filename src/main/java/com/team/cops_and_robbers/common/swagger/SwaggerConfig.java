@@ -30,17 +30,15 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("2.40.0")
+                .version("2.41.0")
                 .description("""
-                        ## v2.40.0 업데이트 내역
+                        ## v2.41.0 업데이트 내역
 
-                        ### 🐛 수정 — 회원 탈퇴 시 게임 기록에서 탈퇴자 정보 파기
-                        - 탈퇴하면 게임 기록의 참가자 행에서 탈퇴자를 가리키는 값을 비운다. 행과 수치는 그대로 남는다
-                        - GET /api/game-results/{gameResultId} 의 policeMvp, robberMvp 가 탈퇴한 사용자면 nickname 이 "알수없음"
-                        - 어드민 게임 기록 참가자(AdminGameHistoryParticipant)의 userId 가 nullable (탈퇴자면 null, nickname 은 "알수없음")
-                        - 어드민 게임 기록(AdminGameHistory)의 hostUserId 가 방장이 탈퇴했으면 null
-                        - 이미 탈퇴한 사용자의 기록도 같은 방식으로 정리했다
-                        - **앱 영향** — 응답 형식은 그대로이고, MVP 닉네임이 "알수없음"으로 올 수 있다
+                        ### ✨ 추가 — 어드민 유저 상세에 끝난 게임 이력
+                        - 어드민 유저(AdminUser)에 gameHistories(limit: Int = 20) 추가. 끝난 게임을 최신순으로 내려준다 (limit 최대 100)
+                        - 방에서 나가도 남는 게임 결과 기록에서 읽는다. 기존 participations 는 지금 들어가 있는 방 그대로
+                        - 이벤트 게임에서 나갔다 다시 들어와 같은 판에 기록이 여러 개면 가장 최근 기록 하나만 내려준다
+                        - **앱 영향** — 없음. 어드민 GraphQL 에만 추가했다
                         
                         """);
 
