@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.history.repository;
 
 import com.team.cops_and_robbers.history.domain.GameResultParticipant;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
@@ -28,6 +29,23 @@ public interface GameResultParticipantRepository extends JpaRepository<GameResul
     Optional<GameResultParticipant> findByGameResultIdAndUserIdAndLeftAtIsNull(Long gameResultId, Long userId);
 
     Optional<GameResultParticipant> findFirstByGameResultIdAndUserIdOrderByIdDesc(Long gameResultId, Long userId);
+
+    /**
+     * 유저가 참가한 끝난 게임 기록을 최신순으로 조회합니다.
+     * 이벤트 게임에서 나갔다 다시 들어오면 같은 판에 행이 여러 개라, 개인 기록 조회와 같이 가장 최근 행만 씁니다.
+     */
+    @Query("""
+            select p from GameResultParticipant p
+            join fetch p.gameResult r
+            where p.userId = :userId
+            and r.endReason is not null
+            and p.id = (
+                select max(p2.id) from GameResultParticipant p2
+                where p2.gameResult = r and p2.userId = :userId
+            )
+            order by r.createdAt desc, r.id desc
+            """)
+    List<GameResultParticipant> findLatestCompletedByUserId(@Param("userId") Long userId, Pageable pageable);
 
     /**
      * 탈퇴자의 참가 기록에서 탈퇴자와 이어지는 값만 비웁니다.

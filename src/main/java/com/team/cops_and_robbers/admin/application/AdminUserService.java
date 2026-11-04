@@ -8,12 +8,15 @@ import com.team.cops_and_robbers.admin.application.dto.result.user.AdminUserPage
 import com.team.cops_and_robbers.admin.application.dto.result.user.AdminUserResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.GameParticipationResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.UserDeviceResult;
+import com.team.cops_and_robbers.admin.application.dto.result.user.UserGameHistoryResult;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
+import com.team.cops_and_robbers.history.repository.GameResultParticipantRepository;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.repository.UserDeviceRepository;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +32,7 @@ public class AdminUserService {
     private final UserRepository userRepository;
     private final UserDeviceRepository userDeviceRepository;
     private final GameParticipantRepository gameParticipantRepository;
+    private final GameResultParticipantRepository gameResultParticipantRepository;
 
     public AdminUserPageResult getUserList(AdminUserListCommand command) {
         Page<User> userPage = userRepository.findAllForAdmin(
@@ -84,5 +88,12 @@ public class AdminUserService {
                 user -> user,
                 user -> participationsByUserId.getOrDefault(user.id(), List.of())
         ));
+    }
+
+    public List<UserGameHistoryResult> getGameHistories(Long userId, int limit) {
+        return gameResultParticipantRepository.findLatestCompletedByUserId(userId, PageRequest.of(0, limit))
+                .stream()
+                .map(UserGameHistoryResult::from)
+                .toList();
     }
 }

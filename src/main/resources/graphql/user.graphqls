@@ -41,6 +41,7 @@ type AdminUser {
   createdAt: String!
   device: UserDevice
   participations: [GameParticipation!]!
+  gameHistories(limit: Int = 20): [UserGameHistory!]!
 }
 
 enum TermsType {
@@ -70,4 +71,20 @@ type GameParticipation {
   status: ParticipantStatus!
   isHost: Boolean!
   createdAt: String!
+}
+
+type UserGameHistory {
+  gameResultId: ID!
+  gameId: ID!
+  endedAt: String
+  team: Team!
+  winnerTeam: Team
+  endReason: GameEndReason
+  durationSeconds: Int
+  arrestCount: Int!
+  arrestedCount: Int!
+  isMvp: Boolean!
+  isHost: Boolean!
+  isEventGame: Boolean!
+  leftAt: String
 }

@@ -10,6 +10,7 @@ import com.team.cops_and_robbers.admin.application.dto.result.user.AdminUserPage
 import com.team.cops_and_robbers.admin.application.dto.result.user.AdminUserResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.GameParticipationResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.UserDeviceResult;
+import com.team.cops_and_robbers.admin.application.dto.result.user.UserGameHistoryResult;
 import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.user.domain.SocialType;
 import com.team.cops_and_robbers.user.domain.TermsType;
@@ -20,6 +21,7 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.BatchMapping;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.graphql.data.method.annotation.SchemaMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 
@@ -76,5 +78,12 @@ public class AdminUserResolver {
     public Map<AdminUserResult, List<GameParticipationResult>> participations(
             List<AdminUserResult> users) {
         return adminUserService.getGameParticipationsByUsers(users);
+    }
+
+    @SchemaMapping(typeName = "AdminUser", field = "gameHistories")
+    public List<UserGameHistoryResult> gameHistories(
+            AdminUserResult user,
+            @Argument @Min(1) @Max(100) int limit) {
+        return adminUserService.getGameHistories(user.id(), limit);
     }
 }
