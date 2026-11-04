@@ -9,15 +9,22 @@ import com.team.cops_and_robbers.admin.application.dto.result.user.AdminUserPage
 import com.team.cops_and_robbers.admin.application.dto.result.user.AdminUserResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.GameParticipationResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.UserDeviceResult;
+import com.team.cops_and_robbers.admin.application.dto.result.user.UserGameHistoryResult;
 import com.team.cops_and_robbers.admin.exception.AdminException;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
+import com.team.cops_and_robbers.common.fixture.GameResultFixture;
+import com.team.cops_and_robbers.common.fixture.GameResultParticipantFixture;
 import com.team.cops_and_robbers.common.fixture.UserDeviceFixture;
 import com.team.cops_and_robbers.common.fixture.UserFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
+import com.team.cops_and_robbers.game.participant.domain.Team;
+import com.team.cops_and_robbers.history.domain.GameEndReason;
+import com.team.cops_and_robbers.history.domain.GameResult;
+import com.team.cops_and_robbers.history.domain.GameResultParticipant;
 import com.team.cops_and_robbers.user.domain.TermsType;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.domain.UserDevice;
@@ -349,6 +356,124 @@ class AdminUserServiceTest extends ServiceUnitTest {
 
             // then
             assertThat(result.get(adminUser)).hasSize(2);
+        }
+    }
+
+    @Nested
+    @DisplayName("유저별 끝난 게임 이력 조회")
+    class GetGameHistories {
+
+        @Test
+        void 끝난_게임_기록을_이력으로_변환해_반환한다() {
+            // given
+            GameResult gameResult = GameResultFixture.POLICE_WIN_RESULT(10L);
+            setId(gameResult, 1L);
+            ReflectionTestUtils.setField(gameResult, "hostUserId", 1L);
+            ReflectionTestUtils.setField(gameResult, "eventGame", false);
+
+            GameResultParticipant participant =
+                    GameResultParticipantFixture.POLICE_PARTICIPANT(gameResult, 1L, "user1");
+            participant.incrementArrestCount();
+            participant.markMvp();
+
+            given(gameResultParticipantRepository.findLatestCompletedByUserId(eq(1L), any()))
+                    .willReturn(List.of(participant));
+
+            // when
+            List<UserGameHistoryResult> result = adminUserService.getGameHistories(1L, 20);
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(result).hasSize(1);
+                softly.assertThat(result.get(0).gameResultId()).isEqualTo(1L);
+                softly.assertThat(result.get(0).gameId()).isEqualTo(10L);
+                softly.assertThat(result.get(0).endedAt()).isNotNull();
+                softly.assertThat(result.get(0).team()).isEqualTo(Team.POLICE);
+                softly.assertThat(result.get(0).winnerTeam()).isEqualTo(Team.POLICE);
+                softly.assertThat(result.get(0).endReason()).isEqualTo(GameEndReason.ALL_ARRESTED);
+                softly.assertThat(result.get(0).durationSeconds()).isEqualTo(300);
+                softly.assertThat(result.get(0).arrestCount()).isEqualTo(1);
+                softly.assertThat(result.get(0).arrestedCount()).isZero();
+                softly.assertThat(result.get(0).isMvp()).isTrue();
+                softly.assertThat(result.get(0).isHost()).isTrue();
+                softly.assertThat(result.get(0).isEventGame()).isFalse();
+                softly.assertThat(result.get(0).leftAt()).isNull();
+            });
+        }
+
+        @Test
+        void 방장_정보가_없거나_다른_유저면_방장이_아니다() {
+            // given
+            GameResult noHostResult = GameResultFixture.POLICE_WIN_RESULT(10L);
+            setId(noHostResult, 1L);
+            GameResult otherHostResult = GameResultFixture.ROBBER_WIN_RESULT(11L);
+            setId(otherHostResult, 2L);
+            ReflectionTestUtils.setField(otherHostResult, "hostUserId", 2L);
+
+            given(gameResultParticipantRepository.findLatestCompletedByUserId(eq(1L), any()))
+                    .willReturn(List.of(
+                            GameResultParticipantFixture.POLICE_PARTICIPANT(noHostResult, 1L, "user1"),
+                            GameResultParticipantFixture.ROBBER_PARTICIPANT(otherHostResult, 1L, "user1")
+                    ));
+
+            // when
+            List<UserGameHistoryResult> result = adminUserService.getGameHistories(1L, 20);
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(result.get(0).isHost()).isFalse();
+                softly.assertThat(result.get(1).isHost()).isFalse();
+            });
+        }
+
+        @Test
+        void 이벤트_여부가_기록되기_전_게임은_이벤트_게임이_아니다() {
+            // given
+            GameResult legacyResult = GameResultFixture.LEGACY_RESULT_WITHOUT_AREA(10L);
+            setId(legacyResult, 1L);
+
+            given(gameResultParticipantRepository.findLatestCompletedByUserId(eq(1L), any()))
+                    .willReturn(List.of(GameResultParticipantFixture.POLICE_PARTICIPANT(legacyResult, 1L, "user1")));
+
+            // when
+            List<UserGameHistoryResult> result = adminUserService.getGameHistories(1L, 20);
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(result.get(0).isEventGame()).isFalse();
+                softly.assertThat(result.get(0).endedAt()).isNull();
+            });
+        }
+
+        @Test
+        void 게임_중_나간_기록은_퇴장_시각이_있다() {
+            // given
+            GameResult gameResult = GameResultFixture.POLICE_WIN_RESULT(10L);
+            setId(gameResult, 1L);
+            GameResultParticipant left = GameResultParticipantFixture.ROBBER_PARTICIPANT(gameResult, 1L, "user1");
+            left.markLeft(LocalDateTime.now());
+
+            given(gameResultParticipantRepository.findLatestCompletedByUserId(eq(1L), any()))
+                    .willReturn(List.of(left));
+
+            // when
+            List<UserGameHistoryResult> result = adminUserService.getGameHistories(1L, 20);
+
+            // then
+            assertThat(result.get(0).leftAt()).isNotNull();
+        }
+
+        @Test
+        void 끝난_게임_기록이_없으면_빈_리스트를_반환한다() {
+            // given
+            given(gameResultParticipantRepository.findLatestCompletedByUserId(eq(1L), any()))
+                    .willReturn(List.of());
+
+            // when
+            List<UserGameHistoryResult> result = adminUserService.getGameHistories(1L, 20);
+
+            // then
+            assertThat(result).isEmpty();
         }
     }
 }
