@@ -20,7 +20,6 @@ public enum GameParticipantException implements ExceptionCode {
     NOT_HOST(HttpStatus.FORBIDDEN, "호스트 권한 필요", "게임을 시작할 수 있는 권한이 없습니다. 방장만 게임을 시작할 수 있습니다."),
     INVALID_TEAM_COMPOSITION(HttpStatus.BAD_REQUEST, "팀 구성 오류", "게임을 시작하려면 경찰과 도둑 팀에 각각 최소 1명 이상의 참가자가 필요합니다."),
     NOT_ROBBER_TEAM(HttpStatus.BAD_REQUEST, "도둑 팀이 아님", "도둑 팀만 위치를 전송할 수 있습니다."),
-    HOST_CANNOT_UNREADY(HttpStatus.BAD_REQUEST, "방장 레디 해제 불가", "방장은 항상 준비 상태여야 합니다."),
 
     PARTICIPANT_GAME_MISMATCH(HttpStatus.BAD_REQUEST, "참가자 게임 불일치", "경찰과 도둑이 서로 다른 게임에 참여하고 있습니다."),
     ONLY_POLICE_CAN_ARREST(HttpStatus.BAD_REQUEST, "경찰만이 체포 가능", "경찰 팀만 도둑을 체포할 수 있습니다."),

@@ -10,7 +10,6 @@ public sealed interface LobbyEventData permits
         LobbyEventData.LobbyEnterData,
         LobbyEventData.LobbyExitData,
         LobbyEventData.LobbyTeamUpdateData,
-        LobbyEventData.LobbyReadyUpdateData,
         LobbyEventData.LobbyHostChangedData,
         LobbyEventData.LobbyGameStartData,
         LobbyEventData.LobbyAreaUpdatedData,
@@ -45,12 +44,6 @@ public sealed interface LobbyEventData permits
                                int robberCount) implements LobbyEventData {
         public static LobbyTeamUpdateData of(GameParticipant participant, int policeCount, int robberCount) {
             return new LobbyTeamUpdateData(LobbyParticipantInfo.from(participant), policeCount, robberCount);
-        }
-    }
-
-    record LobbyReadyUpdateData(LobbyParticipantInfo participant) implements LobbyEventData {
-        public static LobbyReadyUpdateData from(GameParticipant participant) {
-            return new LobbyReadyUpdateData(LobbyParticipantInfo.from(participant));
         }
     }
 

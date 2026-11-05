@@ -58,21 +58,13 @@ public class LobbyService {
     }
 
     /**
-     * 준비 상태 변경
+     * 준비 상태 변경 (deprecated)
+     * 준비 상태의 삭제 결정으로, 항상 같은 값을 내림 -> 심사 이후 삭제 예정
      */
-    @Transactional
+    @Deprecated
     public void updateReady(ReadyUpdateCommand command) {
         Game game = getWaitingGame(command.gameId());
-        GameParticipant participant = getWaitingParticipant(game.getId(), command.userId());
-
-        if (participant.isHost()) {
-            throw new ApplicationException(GameParticipantException.HOST_CANNOT_UNREADY);
-        }
-
-        participant.updateReady(command.isReady());
-
-        LobbyEvent event = lobbyEventFactory.createReadyUpdateEvent(command.gameId(), participant);
-        eventPublisher.publishEvent(event);
+        getWaitingParticipant(game.getId(), command.userId());
     }
 
     /**

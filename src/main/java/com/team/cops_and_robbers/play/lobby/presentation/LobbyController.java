@@ -47,7 +47,9 @@ public class LobbyController implements LobbyControllerDocs {
 
     /**
      * 2. 대기실 내 유저의 준비 상태를 변경합니다.
+     * deprecated - 호출해도 아무것도 바뀌지 않습니다
      */
+    @Deprecated
     @PatchMapping("/ready")
     public ResponseEntity<Void> updateReady(
             @AuthUser LoginUser loginUser,
