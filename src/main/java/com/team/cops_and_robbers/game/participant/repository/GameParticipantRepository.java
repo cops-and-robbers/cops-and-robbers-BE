@@ -123,7 +123,7 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
         update GameParticipant gp
-        set gp.status = :status, gp.isReady = false
+        set gp.status = :status
         where gp.game.id = :gameId
         """ )
     void resetAllParticipantsForNextRound(@Param("gameId") Long gameId, @Param("status") ParticipantStatus status);

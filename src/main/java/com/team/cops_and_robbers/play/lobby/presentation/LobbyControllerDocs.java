@@ -23,7 +23,7 @@ public interface LobbyControllerDocs {
 
     @Operation(
             summary = "로비 팀 변경",
-            description = "대기 상태(WAITING)에서만 팀을 변경할 수 있습니다. 팀 변경 시 해당 유저의 준비 상태는 해제됩니다."
+            description = "대기 상태(WAITING)에서만 팀을 변경할 수 있습니다."
     )
     @ApiErrorCode(value = GameParticipantException.class, codes = {"GAME_ALREADY_STARTED", "LOBBY_ACTION_NOT_ALLOWED", "PARTICIPANT_NOT_FOUND"})
     @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_FOUND"})
