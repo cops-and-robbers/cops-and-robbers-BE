@@ -34,6 +34,7 @@ import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.GU
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.HOST_PARTICIPANT;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -123,30 +124,33 @@ class LobbyServiceTest extends ServiceUnitTest {
         }
     }
 
+    /**
+     * 준비 상태가 없어졌지만 구버전 앱이 /ready 를 계속 호출한다. no-op 이고 검증 결과(응답 코드)만 예전과 같다.
+     * 2단계에서 /ready 를 지울 때 이 묶음을 통째로 삭제한다.
+     */
     @Nested
-    @DisplayName("준비 상태 변경")
-    class UpdateReady {
+    @DisplayName("구버전 앱 호환 — 2단계에서 삭제 (#226)")
+    class LegacyReadyCompat {
 
         @Test
-        void 준비_상태_변경에_성공하면_이벤트를_발행한다() {
+        void 준비_상태를_변경해도_아무것도_바뀌지_않고_이벤트를_발행하지_않는다() {
             // given
             GameParticipant participant = GUEST_PARTICIPANT(waitingGame, user);
-            ReadyUpdateCommand command = new ReadyUpdateCommand(user.getId(), waitingGame.getId(), true);
+            ReadyUpdateCommand command = new ReadyUpdateCommand(user.getId(), waitingGame.getId(), false);
 
             given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
             given(gameParticipantRepository.getByGameIdAndUserId(waitingGame.getId(), user.getId())).willReturn(participant);
-            given(lobbyEventFactory.createReadyUpdateEvent(any(), any())).willReturn(lobbyEvent);
 
             // when
             lobbyService.updateReady(command);
 
             // then
-            assertThat(participant.isReady()).isTrue();
-            then(eventPublisher).should().publishEvent(lobbyEvent);
+            assertThat(participant.getTeam()).isEqualTo(Team.ROBBER);
+            then(eventPublisher).shouldHaveNoInteractions();
         }
 
         @Test
-        void 방장은_준비_상태를_해제할_수_없다() {
+        void 방장이_호출해도_예외가_발생하지_않는다() {
             // given
             GameParticipant hostParticipant = HOST_PARTICIPANT(waitingGame, user);
             ReadyUpdateCommand command = new ReadyUpdateCommand(user.getId(), waitingGame.getId(), false);
@@ -155,9 +159,8 @@ class LobbyServiceTest extends ServiceUnitTest {
             given(gameParticipantRepository.getByGameIdAndUserId(waitingGame.getId(), user.getId())).willReturn(hostParticipant);
 
             // when & then
-            assertThatThrownBy(() -> lobbyService.updateReady(command))
-                    .isInstanceOf(ApplicationException.class)
-                    .hasMessageContaining(GameParticipantException.HOST_CANNOT_UNREADY.getDetail());
+            assertThatCode(() -> lobbyService.updateReady(command)).doesNotThrowAnyException();
+            then(eventPublisher).shouldHaveNoInteractions();
         }
 
         @Test
@@ -172,6 +175,21 @@ class LobbyServiceTest extends ServiceUnitTest {
             assertThatThrownBy(() -> lobbyService.updateReady(command))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(GameParticipantException.GAME_ALREADY_STARTED.getDetail());
+        }
+
+        @Test
+        void 참가자가_WAITING_상태가_아니면_예외가_발생한다() {
+            // given
+            GameParticipant aliveParticipant = ALIVE_ROBBER(waitingGame, user);
+            ReadyUpdateCommand command = new ReadyUpdateCommand(user.getId(), waitingGame.getId(), true);
+
+            given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
+            given(gameParticipantRepository.getByGameIdAndUserId(waitingGame.getId(), user.getId())).willReturn(aliveParticipant);
+
+            // when & then
+            assertThatThrownBy(() -> lobbyService.updateReady(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(GameParticipantException.LOBBY_ACTION_NOT_ALLOWED.getDetail());
         }
     }
 
@@ -189,7 +207,6 @@ class LobbyServiceTest extends ServiceUnitTest {
             given(gameParticipantRepository.getByGameIdAndUserId(waitingGame.getId(), user.getId())).willReturn(hostParticipant);
             given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.POLICE)).willReturn(1);
             given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.ROBBER)).willReturn(1);
-            given(gameParticipantRepository.existsNotReadyParticipantByGameId(waitingGame.getId())).willReturn(false);
             given(lobbyEventFactory.createGameStartEvent(any(), any())).willReturn(lobbyEvent);
 
             // when
@@ -247,24 +264,6 @@ class LobbyServiceTest extends ServiceUnitTest {
             assertThatThrownBy(() -> lobbyService.startGame(command))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(GameParticipantException.INVALID_TEAM_COMPOSITION.getDetail());
-        }
-
-        @Test
-        void 준비하지_않은_참가자가_있으면_예외가_발생한다() {
-            // given
-            GameParticipant hostParticipant = HOST_PARTICIPANT(waitingGame, user);
-            GameStartCommand command = new GameStartCommand(user.getId(), waitingGame.getId());
-
-            given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
-            given(gameParticipantRepository.getByGameIdAndUserId(waitingGame.getId(), user.getId())).willReturn(hostParticipant);
-            given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.POLICE)).willReturn(1);
-            given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.ROBBER)).willReturn(1);
-            given(gameParticipantRepository.existsNotReadyParticipantByGameId(waitingGame.getId())).willReturn(true);
-
-            // when & then
-            assertThatThrownBy(() -> lobbyService.startGame(command))
-                    .isInstanceOf(ApplicationException.class)
-                    .hasMessageContaining(GameParticipantException.NOT_ALL_READY.getDetail());
         }
 
         @Test

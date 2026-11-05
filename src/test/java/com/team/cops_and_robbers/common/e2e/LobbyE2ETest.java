@@ -36,7 +36,7 @@ class LobbyE2ETest extends WebSocketE2ETest {
             StompTestClient guestClient
     ) {}
 
-    private LobbySetup givenLobbySetupWithUnreadyGuest() throws Exception {
+    private LobbySetup givenLobbySetup() throws Exception {
         User hostUser = givenUser("host");
         User guestUser = givenUser("guest");
 
@@ -44,18 +44,6 @@ class LobbyE2ETest extends WebSocketE2ETest {
         gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(game));
         gameParticipantRepository.save(GameParticipantFixture.HOST_PARTICIPANT(game, hostUser));
         gameParticipantRepository.save(GameParticipantFixture.GUEST_PARTICIPANT(game, guestUser));
-
-        return connectAndSubscribeLobby(game, hostUser, guestUser);
-    }
-
-    private LobbySetup givenLobbySetupWithReadyGuest() throws Exception {
-        User hostUser = givenUser("host");
-        User guestUser = givenUser("guest");
-
-        Game game = gameRepository.save(GameFixture.WAITING_GAME());
-        gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(game));
-        gameParticipantRepository.save(GameParticipantFixture.HOST_PARTICIPANT(game, hostUser));
-        gameParticipantRepository.save(GameParticipantFixture.READY_PARTICIPANT(game, guestUser));
 
         return connectAndSubscribeLobby(game, hostUser, guestUser);
     }
@@ -76,7 +64,7 @@ class LobbyE2ETest extends WebSocketE2ETest {
     @Test
     void 유저가_로비에_입장하면_ENTER_이벤트를_수신한다() throws Exception {
         // given
-        LobbySetup setup = givenLobbySetupWithUnreadyGuest();
+        LobbySetup setup = givenLobbySetup();
 
         User joinUser = givenUser("joinGuest");
         String joinToken = givenAccessToken(joinUser);
@@ -99,7 +87,7 @@ class LobbyE2ETest extends WebSocketE2ETest {
     @Test
     void 유저가_로비에서_퇴장하면_EXIT_이벤트를_수신한다() throws Exception {
         // given
-        LobbySetup setup = givenLobbySetupWithUnreadyGuest();
+        LobbySetup setup = givenLobbySetup();
 
         // when
         authenticated(setup.guestToken())
@@ -116,7 +104,7 @@ class LobbyE2ETest extends WebSocketE2ETest {
     @Test
     void 팀을_변경하면_TEAM_UPDATE_이벤트를_수신한다() throws Exception {
         // given
-        LobbySetup setup = givenLobbySetupWithUnreadyGuest();
+        LobbySetup setup = givenLobbySetup();
 
         // when: ROBBER -> POLICE
         authenticated(setup.guestToken())
@@ -132,27 +120,9 @@ class LobbyE2ETest extends WebSocketE2ETest {
     }
 
     @Test
-    void 준비_상태를_변경하면_READY_UPDATE_이벤트를_수신한다() throws Exception {
-        // given
-        LobbySetup setup = givenLobbySetupWithUnreadyGuest();
-
-        // when
-        authenticated(setup.guestToken())
-                .body(new ReadyUpdateRequest(true))
-                .patch("/api/games/{gameId}/lobby/ready", setup.game().getId())
-                .then()
-                .statusCode(204);
-
-        // then
-        TestEventResponse hostEvent = setup.hostClient().waitForMessage(setup.lobbyChannel(), 5);
-
-        assertThat(hostEvent.type()).isEqualTo("READY_UPDATE");
-    }
-
-    @Test
     void 방장이_퇴장하면_HOST_CHANGED_이벤트를_수신한다() throws Exception {
         // given
-        LobbySetup setup = givenLobbySetupWithUnreadyGuest();
+        LobbySetup setup = givenLobbySetup();
 
         // when
         authenticated(setup.hostToken())
@@ -165,6 +135,94 @@ class LobbyE2ETest extends WebSocketE2ETest {
         TestEventResponse event2 = setup.guestClient().waitForMessage(setup.lobbyChannel(), 5);
 
         assertThat(List.of(event1.type(), event2.type())).contains("HOST_CHANGED");
+    }
+
+    /**
+     * 준비 상태가 없어졌지만 구버전 앱이 isReady 를 필수 값으로 읽고 /ready 를 계속 호출한다.
+     * 2단계에서 /ready 와 isReady 를 지울 때 이 묶음을 통째로 삭제한다.
+     */
+    @Nested
+    @DisplayName("구버전 앱 호환 — 2단계에서 삭제 (#226)")
+    class LegacyReadyCompat {
+
+        @Test
+        void 유저가_로비에_입장하면_ENTER_이벤트의_isReady는_true다() throws Exception {
+            // given
+            LobbySetup setup = givenLobbySetup();
+
+            User joinUser = givenUser("joinGuest");
+            String joinToken = givenAccessToken(joinUser);
+
+            // when
+            authenticated(joinToken)
+                    .body(new GameJoinRequest(setup.game().getInviteCode()))
+                    .post("/api/games/join")
+                    .then()
+                    .statusCode(200);
+
+            // then
+            TestEventResponse hostEvent = setup.hostClient().waitForMessage(setup.lobbyChannel(), 5);
+
+            assertThat(hostEvent.type()).isEqualTo("ENTER");
+            assertThat(hostEvent.data().get("newParticipant").get("isReady").asBoolean()).isTrue();
+        }
+
+        @Test
+        void 팀을_변경하면_TEAM_UPDATE_이벤트의_isReady는_true다() throws Exception {
+            // given
+            LobbySetup setup = givenLobbySetup();
+
+            // when: ROBBER -> POLICE
+            authenticated(setup.guestToken())
+                    .body(new TeamChangeRequest(Team.POLICE))
+                    .patch("/api/games/{gameId}/lobby/team", setup.game().getId())
+                    .then()
+                    .statusCode(204);
+
+            // then
+            TestEventResponse hostEvent = setup.hostClient().waitForMessage(setup.lobbyChannel(), 5);
+
+            assertThat(hostEvent.type()).isEqualTo("TEAM_UPDATE");
+            assertThat(hostEvent.data().get("participant").get("isReady").asBoolean()).isTrue();
+        }
+
+        @Test
+        void 방장이_퇴장하면_HOST_CHANGED_이벤트의_isReady는_true다() throws Exception {
+            // given
+            LobbySetup setup = givenLobbySetup();
+
+            // when
+            authenticated(setup.hostToken())
+                    .delete("/api/games/{gameId}/leave", setup.game().getId())
+                    .then()
+                    .statusCode(200);
+
+            // then: 방장 퇴장 시 HOST_CHANGED + EXIT 두 이벤트가 발행됨
+            TestEventResponse event1 = setup.guestClient().waitForMessage(setup.lobbyChannel(), 5);
+            TestEventResponse event2 = setup.guestClient().waitForMessage(setup.lobbyChannel(), 5);
+
+            TestEventResponse hostChanged = List.of(event1, event2).stream()
+                    .filter(event -> event.type().equals("HOST_CHANGED"))
+                    .findFirst()
+                    .orElseThrow();
+            assertThat(hostChanged.data().get("newHost").get("isReady").asBoolean()).isTrue();
+        }
+
+        @Test
+        void 준비_상태를_변경해도_이벤트를_발행하지_않는다() throws Exception {
+            // given
+            LobbySetup setup = givenLobbySetup();
+
+            // when
+            authenticated(setup.guestToken())
+                    .body(new ReadyUpdateRequest(true))
+                    .patch("/api/games/{gameId}/lobby/ready", setup.game().getId())
+                    .then()
+                    .statusCode(204);
+
+            // then
+            assertThat(setup.hostClient().<TestEventResponse>waitForMessage(setup.lobbyChannel(), 1)).isNull();
+        }
     }
 
     @Nested
@@ -219,9 +277,9 @@ class LobbyE2ETest extends WebSocketE2ETest {
     }
 
     @Test
-    void 방장이_게임을_시작하면_모든_참가자가_GAME_START_이벤트를_수신한다() throws Exception {
+    void 게스트가_준비하지_않아도_방장이_게임을_시작하면_모든_참가자가_GAME_START_이벤트를_수신한다() throws Exception {
         // given
-        LobbySetup setup = givenLobbySetupWithReadyGuest();
+        LobbySetup setup = givenLobbySetup();
 
         // when
         authenticated(setup.hostToken())
