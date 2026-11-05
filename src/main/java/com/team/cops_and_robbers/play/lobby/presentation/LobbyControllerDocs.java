@@ -60,10 +60,9 @@ public interface LobbyControllerDocs {
 
                     - 방장(Host)만 시작 가능
                     - 경찰/도둑 팀 각각 1명 이상 필요
-                    - 모든 참가자가 준비(Ready) 상태여야 함
                     """
     )
-    @ApiErrorCode(value = GameParticipantException.class, codes = {"NOT_HOST", "INVALID_TEAM_COMPOSITION", "NOT_ALL_READY", "GAME_ALREADY_STARTED", "LOBBY_ACTION_NOT_ALLOWED", "PARTICIPANT_NOT_FOUND"})
+    @ApiErrorCode(value = GameParticipantException.class, codes = {"NOT_HOST", "INVALID_TEAM_COMPOSITION", "GAME_ALREADY_STARTED", "LOBBY_ACTION_NOT_ALLOWED", "PARTICIPANT_NOT_FOUND"})
     @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_FOUND"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "게임 시작 성공")

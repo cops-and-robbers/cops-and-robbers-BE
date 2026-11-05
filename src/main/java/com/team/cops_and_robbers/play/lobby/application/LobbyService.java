@@ -172,7 +172,6 @@ public class LobbyService {
             return;
         }
         validateTeamComposition(game.getId());
-        validateAllParticipantsReady(game.getId());
     }
 
     private void validateHostPermission(GameParticipant participant) {
@@ -192,12 +191,6 @@ public class LobbyService {
         int robberCount = gameParticipantRepository.countByGameIdAndTeam(gameId, Team.ROBBER);
         if (policeCount < MIN_TEAM_SIZE || robberCount < MIN_TEAM_SIZE) {
             throw new ApplicationException(GameParticipantException.INVALID_TEAM_COMPOSITION);
-        }
-    }
-
-    private void validateAllParticipantsReady(Long gameId) {
-        if (gameParticipantRepository.existsNotReadyParticipantByGameId(gameId)) {
-            throw new ApplicationException(GameParticipantException.NOT_ALL_READY);
         }
     }
 }
