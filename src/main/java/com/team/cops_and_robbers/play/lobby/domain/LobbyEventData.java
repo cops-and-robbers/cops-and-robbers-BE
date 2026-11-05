@@ -16,13 +16,16 @@ public sealed interface LobbyEventData permits
         LobbyEventData.LobbySettingsUpdatedData,
         LobbyEventData.LobbyKickedData {
 
+    /**
+     * isReady를 항상 true로 내린다. -> 이후 삭제 예정
+     */
     record LobbyParticipantInfo(Long participantId, String nickname, Team team, boolean isReady) {
         public static LobbyParticipantInfo from(GameParticipant participant) {
             return new LobbyParticipantInfo(
                     participant.getId(),
                     participant.getUser().getNickname(),
                     participant.getTeam(),
-                    participant.isReady()
+                    true
             );
         }
     }

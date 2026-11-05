@@ -20,6 +20,9 @@ public record LobbyInfoResult(
         );
     }
 
+    /**
+     * isReady를 항상 true로 내린다. -> 이후 삭제 예정
+     */
     public record ParticipantInfo(
             Long participantId,
             String nickname,
@@ -31,7 +34,7 @@ public record LobbyInfoResult(
                     participant.getId(),
                     participant.getUser().getNickname(),
                     participant.getTeam(),
-                    participant.isReady()
+                    true
             );
         }
     }
