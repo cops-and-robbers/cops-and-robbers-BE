@@ -137,10 +137,6 @@ class LobbyE2ETest extends WebSocketE2ETest {
         assertThat(List.of(event1.type(), event2.type())).contains("HOST_CHANGED");
     }
 
-    /**
-     * 준비 상태가 없어졌지만 구버전 앱이 isReady 를 필수 값으로 읽고 /ready 를 계속 호출한다.
-     * 2단계에서 /ready 와 isReady 를 지울 때 이 묶음을 통째로 삭제한다.
-     */
     @Nested
     @DisplayName("구버전 앱 호환 — 2단계에서 삭제 (#226)")
     class LegacyReadyCompat {

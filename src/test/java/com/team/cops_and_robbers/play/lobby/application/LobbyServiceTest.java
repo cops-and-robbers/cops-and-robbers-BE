@@ -124,10 +124,6 @@ class LobbyServiceTest extends ServiceUnitTest {
         }
     }
 
-    /**
-     * 준비 상태가 없어졌지만 구버전 앱이 /ready 를 계속 호출한다. no-op 이고 검증 결과(응답 코드)만 예전과 같다.
-     * 2단계에서 /ready 를 지울 때 이 묶음을 통째로 삭제한다.
-     */
     @Nested
     @DisplayName("구버전 앱 호환 — 2단계에서 삭제 (#226)")
     class LegacyReadyCompat {

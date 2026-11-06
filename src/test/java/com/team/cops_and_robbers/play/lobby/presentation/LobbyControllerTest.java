@@ -152,11 +152,6 @@ class LobbyControllerTest extends ControllerTest {
         }
     }
 
-    /**
-     * 준비 상태가 없어졌지만 구버전 앱이 isReady 를 필수 값으로 읽고 /ready 를 계속 호출한다.
-     * /ready 는 no-op 이고, 구버전 앱이 응답 코드로 분기하므로 응답 코드는 예전과 같아야 한다.
-     * 2단계에서 /ready 와 isReady 를 지울 때 이 묶음을 통째로 삭제한다.
-     */
     @Nested
     @DisplayName("구버전 앱 호환 — 2단계에서 삭제 (#226)")
     class LegacyReadyCompat {
@@ -703,7 +698,6 @@ class LobbyControllerTest extends ControllerTest {
         }
     }
 
-    /** 준비 없이 방장이 시작하고, 시간 초과로 끝내 로비로 돌아온다. */
     private void playOneRound() {
         ExtractableResponse<Response> response = authenticated(hostToken)
                 .pathParam(GAME_ID_PARAM, game.getId())
