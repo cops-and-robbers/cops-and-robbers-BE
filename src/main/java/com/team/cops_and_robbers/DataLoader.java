@@ -157,7 +157,6 @@ public class DataLoader implements CommandLineRunner {
     private void joinGame(Game game, User user, Team team, boolean isHost) {
         GameParticipant participant = GameParticipant.createParticipant(game, user, isHost);
         participant.changeTeam(team);
-        participant.updateReady(true);
         gameParticipantRepository.save(participant);
     }
 

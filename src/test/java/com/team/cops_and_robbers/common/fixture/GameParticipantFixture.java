@@ -14,7 +14,6 @@ public class GameParticipantFixture {
                 .user(user)
                 .team(Team.POLICE)
                 .status(ParticipantStatus.WAITING)
-                .isReady(true)
                 .isHost(true)
                 .build();
     }
@@ -25,7 +24,6 @@ public class GameParticipantFixture {
                 .user(user)
                 .team(Team.ROBBER)
                 .status(ParticipantStatus.WAITING)
-                .isReady(false)
                 .isHost(false)
                 .build();
     }
@@ -36,7 +34,6 @@ public class GameParticipantFixture {
                 .user(user)
                 .team(Team.POLICE)
                 .status(ParticipantStatus.WAITING)
-                .isReady(false)
                 .isHost(false)
                 .build();
     }
@@ -47,7 +44,6 @@ public class GameParticipantFixture {
                 .user(user)
                 .team(Team.ROBBER)
                 .status(ParticipantStatus.WAITING)
-                .isReady(false)
                 .isHost(false)
                 .build();
     }
@@ -58,7 +54,6 @@ public class GameParticipantFixture {
                 .user(user)
                 .team(Team.POLICE)
                 .status(ParticipantStatus.ALIVE)
-                .isReady(true)
                 .isHost(false)
                 .build();
     }
@@ -69,7 +64,6 @@ public class GameParticipantFixture {
                 .user(user)
                 .team(Team.POLICE)
                 .status(ParticipantStatus.POLICE_WAITING)
-                .isReady(true)
                 .isHost(false)
                 .build();
     }
@@ -80,18 +74,6 @@ public class GameParticipantFixture {
                 .user(user)
                 .team(Team.ROBBER)
                 .status(ParticipantStatus.ALIVE)
-                .isReady(true)
-                .isHost(false)
-                .build();
-    }
-
-    public static GameParticipant READY_PARTICIPANT(Game game, User user) {
-        return GameParticipant.builder()
-                .game(game)
-                .user(user)
-                .team(Team.ROBBER)
-                .status(ParticipantStatus.WAITING)
-                .isReady(true)
                 .isHost(false)
                 .build();
     }
@@ -102,7 +84,6 @@ public class GameParticipantFixture {
                 .user(user)
                 .team(Team.ROBBER)
                 .status(ParticipantStatus.JAILED)
-                .isReady(true)
                 .isHost(false)
                 .build();
     }
@@ -113,7 +94,6 @@ public class GameParticipantFixture {
                 .user(user)
                 .team(Team.POLICE)
                 .status(ParticipantStatus.POLICE_WAITING)
-                .isReady(true)
                 .isHost(true)
                 .build();
     }
@@ -124,7 +104,6 @@ public class GameParticipantFixture {
                 .user(user)
                 .team(Team.POLICE)
                 .status(ParticipantStatus.POLICE_WAITING)
-                .isReady(true)
                 .isHost(false)
                 .build();
     }
@@ -135,7 +114,6 @@ public class GameParticipantFixture {
                 .user(user)
                 .team(Team.POLICE)
                 .status(ParticipantStatus.ALIVE)
-                .isReady(true)
                 .isHost(false)
                 .build();
     }

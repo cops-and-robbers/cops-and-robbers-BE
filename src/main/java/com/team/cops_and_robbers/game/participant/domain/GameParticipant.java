@@ -34,9 +34,6 @@ public class GameParticipant extends BaseTimeEntity {
     private ParticipantStatus status;
 
     @Column(nullable = false)
-    private boolean isReady;
-
-    @Column(nullable = false)
     private boolean isHost;
 
     public static GameParticipant createParticipant(Game game, User user, boolean isHost) {
@@ -45,7 +42,6 @@ public class GameParticipant extends BaseTimeEntity {
                 .user(user)
                 .team(Team.getRandomTeam())
                 .status(ParticipantStatus.WAITING)
-                .isReady(isHost)
                 .isHost(isHost)
                 .build();
     }
@@ -56,7 +52,6 @@ public class GameParticipant extends BaseTimeEntity {
                 .user(user)
                 .team(Team.POLICE)
                 .status(ParticipantStatus.ALIVE)
-                .isReady(true)
                 .isHost(false)
                 .build();
     }
@@ -91,11 +86,6 @@ public class GameParticipant extends BaseTimeEntity {
 
     public void changeTeam(Team targetTeam) {
         this.team = targetTeam;
-        this.isReady = false;
-    }
-
-    public void updateReady(boolean ready) {
-        this.isReady = ready;
     }
 
     public void updateStatus(ParticipantStatus status) {

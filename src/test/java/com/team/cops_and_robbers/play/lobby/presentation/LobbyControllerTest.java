@@ -89,7 +89,6 @@ class LobbyControllerTest extends ControllerTest {
 
             GameParticipant updatedParticipant = gameParticipantRepository.findById(guestParticipant.getId()).orElseThrow();
             assertThat(updatedParticipant.getTeam()).isEqualTo(Team.POLICE);
-            assertThat(updatedParticipant.isReady()).isFalse();
         }
 
         @Test
@@ -154,11 +153,11 @@ class LobbyControllerTest extends ControllerTest {
     }
 
     @Nested
-    @DisplayName("준비 상태 변경 API")
-    class UpdateReady {
+    @DisplayName("구버전 앱 호환 — 2단계에서 삭제 (#226)")
+    class LegacyReadyCompat {
 
         @Test
-        void 준비_상태_변경_성공() {
+        void 준비_상태를_변경해도_204_No_Content를_응답하고_아무것도_바뀌지_않는다() {
             // given
             ReadyUpdateRequest request = new ReadyUpdateRequest(true);
 
@@ -175,11 +174,12 @@ class LobbyControllerTest extends ControllerTest {
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
 
             GameParticipant updatedParticipant = gameParticipantRepository.findById(guestParticipant.getId()).orElseThrow();
-            assertThat(updatedParticipant.isReady()).isTrue();
+            assertThat(updatedParticipant.getTeam()).isEqualTo(guestParticipant.getTeam());
+            assertThat(updatedParticipant.getStatus()).isEqualTo(guestParticipant.getStatus());
         }
 
         @Test
-        void 방장은_준비_상태를_해제할_수_없으며_400_BadRequest를_응답한다() {
+        void 방장이_호출해도_204_No_Content를_응답한다() {
             // given
             ReadyUpdateRequest request = new ReadyUpdateRequest(false);
 
@@ -193,7 +193,27 @@ class LobbyControllerTest extends ControllerTest {
                     .extract();
 
             // then
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
+        }
+
+        @Test
+        void 해당_게임의_참가자가_아니면_404_NotFound를_응답한다() {
+            // given
+            User another = givenUser("another");
+            String anotherToken = givenAccessToken(another);
+            ReadyUpdateRequest request = new ReadyUpdateRequest(true);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(anotherToken)
+                    .body(request)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .patch(READY_UPDATE_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
         }
 
         @Test
@@ -221,6 +241,42 @@ class LobbyControllerTest extends ControllerTest {
         }
 
         @Test
+        void 준비_상태_값이_없으면_400_BadRequest를_응답한다() {
+            // given
+            ReadyUpdateRequest request = new ReadyUpdateRequest(null);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(guestToken)
+                    .body(request)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .patch(READY_UPDATE_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 존재하지_않는_게임이면_404_NotFound를_응답한다() {
+            // given
+            ReadyUpdateRequest request = new ReadyUpdateRequest(true);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(guestToken)
+                    .body(request)
+                    .pathParam(GAME_ID_PARAM, 9999L)
+                    .when()
+                    .patch(READY_UPDATE_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        }
+
+        @Test
         void 인증_토큰_없이_요청하면_401_Unauthorized를_응답한다() {
             // given
             ReadyUpdateRequest request = new ReadyUpdateRequest(true);
@@ -237,6 +293,43 @@ class LobbyControllerTest extends ControllerTest {
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
         }
+
+        @Test
+        void 로비_조회_응답의_모든_참가자_isReady는_true다() {
+            // when
+            ExtractableResponse<Response> response = authenticated(guestToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .get(LOBBY_INFO_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+            assertThat(response.jsonPath().getList("participants.isReady", Boolean.class))
+                    .hasSize(2)
+                    .containsOnly(true);
+        }
+
+        @Test
+        void 라운드가_끝나고_로비로_돌아와도_모든_참가자의_isReady는_true다() {
+            // given
+            playOneRound();
+
+            // when
+            ExtractableResponse<Response> response = authenticated(hostToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .get(LOBBY_INFO_URL)
+                    .then()
+                    .extract();
+
+            // then: 구버전 앱의 방장 시작 버튼이 이 값으로 켜진다
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+            assertThat(response.jsonPath().getList("participants.isReady", Boolean.class))
+                    .hasSize(2)
+                    .containsOnly(true);
+        }
     }
 
     @Nested
@@ -244,11 +337,7 @@ class LobbyControllerTest extends ControllerTest {
     class StartGame {
 
         @Test
-        void 게임_시작_성공() {
-            // given
-            guestParticipant.updateReady(true); // 방장 제외 모든 인원 준비 완료 시
-            gameParticipantRepository.save(guestParticipant);
-
+        void 게스트가_준비하지_않아도_게임_시작_성공() {
             // when
             ExtractableResponse<Response> response = authenticated(hostToken)
                     .pathParam(GAME_ID_PARAM, game.getId())
@@ -282,7 +371,6 @@ class LobbyControllerTest extends ControllerTest {
         void 경찰이_없으면_400_BadRequest를_응답한다() {
             // given
             guestParticipant.changeTeam(Team.ROBBER);
-            guestParticipant.updateReady(true);
             gameParticipantRepository.save(guestParticipant);
 
             hostParticipant.changeTeam(Team.ROBBER);
@@ -298,6 +386,33 @@ class LobbyControllerTest extends ControllerTest {
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 이벤트_게임은_경찰이_없어도_게임이_시작된다() {
+            // given
+            game.updateEventGame(true);
+            gameRepository.save(game);
+
+            guestParticipant.changeTeam(Team.ROBBER);
+            gameParticipantRepository.save(guestParticipant);
+
+            hostParticipant.changeTeam(Team.ROBBER);
+            gameParticipantRepository.save(hostParticipant);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(hostToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(GAME_START_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
+
+            Game startedGame = gameRepository.findById(game.getId()).orElseThrow();
+            assertThat(startedGame.isInProgress()).isTrue();
         }
 
         @Test
@@ -332,25 +447,8 @@ class LobbyControllerTest extends ControllerTest {
             );
         }
 
-        /** 라운드가 끝나면 준비 상태가 풀리므로, 다음 라운드는 다시 준비를 눌러야 시작된다. */
-        private void playOneRound() {
-            GameParticipant guestInRoom = gameParticipantRepository.getByGameIdAndUserId(game.getId(), guest.getId());
-            guestInRoom.updateReady(true);
-            gameParticipantRepository.save(guestInRoom);
-
-            ExtractableResponse<Response> response = authenticated(hostToken)
-                    .pathParam(GAME_ID_PARAM, game.getId())
-                    .when()
-                    .post(GAME_START_URL)
-                    .then()
-                    .extract();
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
-
-            gameTerminationService.endGameByTimeOver(game.getId());
-        }
-
         @Test
-        void 준비하지_않은_참가자가_있으면_400_BadRequest를_응답한다() {
+        void 팀을_바꾼_뒤에도_준비_없이_게임이_시작된다() {
             // given
             guestParticipant.changeTeam(Team.POLICE);
             gameParticipantRepository.save(guestParticipant);
@@ -367,7 +465,7 @@ class LobbyControllerTest extends ControllerTest {
                     .extract();
 
             // then
-            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
         }
 
         @Test
@@ -598,5 +696,17 @@ class LobbyControllerTest extends ControllerTest {
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
         }
+    }
+
+    private void playOneRound() {
+        ExtractableResponse<Response> response = authenticated(hostToken)
+                .pathParam(GAME_ID_PARAM, game.getId())
+                .when()
+                .post(GAME_START_URL)
+                .then()
+                .extract();
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
+
+        gameTerminationService.endGameByTimeOver(game.getId());
     }
 }
