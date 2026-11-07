@@ -5,6 +5,7 @@ import com.team.cops_and_robbers.auth.presentation.resolver.LoginUser;
 import com.team.cops_and_robbers.play.system.application.SystemService;
 import com.team.cops_and_robbers.play.system.application.dto.command.ArrestCommand;
 import com.team.cops_and_robbers.play.system.application.dto.command.EscapeCommand;
+import com.team.cops_and_robbers.play.system.application.dto.command.ForceArrestCommand;
 import com.team.cops_and_robbers.play.system.application.dto.result.ArrestResult;
 import com.team.cops_and_robbers.play.system.presentation.dto.request.ArrestRequest;
 import com.team.cops_and_robbers.play.system.presentation.dto.response.ArrestResponse;
@@ -39,7 +40,20 @@ public class SystemController implements SystemControllerDocs {
     }
 
     /**
-     * 2. 수감된 도둑이 탈옥합니다.
+     * 2. 구역 밖에 오래 머문 도둑이 스스로 체포됩니다.
+     */
+    @PostMapping("/force-arrest")
+    public ResponseEntity<ArrestResponse> forceArrestRobber(
+            @AuthUser LoginUser loginUser,
+            @PathVariable Long gameId
+    ) {
+        ForceArrestCommand command = ForceArrestCommand.of(gameId, loginUser.userId());
+        ArrestResult result = systemService.forceArrestRobber(command);
+        return ResponseEntity.ok(ArrestResponse.from(result));
+    }
+
+    /**
+     * 3. 수감된 도둑이 탈옥합니다.
      */
     @PostMapping("/escape")
     public ResponseEntity<Void> escapeFromPrison(

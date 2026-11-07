@@ -17,7 +17,8 @@ public record AdminGameDetailResult(
         Integer durationSeconds,
         String startedAt,
         String endedAt,
-        Integer locationRevealIntervalMinutes
+        Integer locationRevealIntervalMinutes,
+        Integer shrinkFinalRadiusInMeters
 ) {
     public static AdminGameDetailResult from(GameResult gameResult) {
         return new AdminGameDetailResult(
@@ -30,7 +31,8 @@ public record AdminGameDetailResult(
                 gameResult.getDurationSeconds(),
                 toIsoOrNull(gameResult.getStartedAt()),
                 toIsoOrNull(gameResult.getEndedAt()),
-                gameResult.getLocationRevealIntervalMinutes()
+                gameResult.getLocationRevealIntervalMinutes(),
+                gameResult.getShrinkFinalRadiusInMeters()
         );
     }
 

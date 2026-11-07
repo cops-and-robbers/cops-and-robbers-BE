@@ -47,6 +47,31 @@ public interface SystemControllerDocs {
     );
 
     @Operation(
+            summary = "도둑 강제 체포",
+            description = """
+                    구역 밖에 오래 머문 도둑이 스스로 체포됩니다.
+
+                    - 구역 이탈 판정과 경고 횟수는 앱이 처리하고, 서버는 위치를 검증하지 않음
+                    - 로그인한 도둑 본인이 체포 대상이므로 요청 본문 없음
+                    - 이미 수감된 도둑은 체포 불가
+                    - 경찰 대기 시간 중에도 요청 가능
+                    - 경찰의 체포 수는 올라가지 않고, ARREST 이벤트의 police 가 null 로 전송됨
+                    """
+    )
+    @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_IN_PROGRESS", "GAME_NOT_FOUND"})
+    @ApiErrorCode(value = GameParticipantException.class, codes = {
+            "ONLY_ROBBER_CAN_BE_ARRESTED", "ALREADY_ARRESTED", "PARTICIPANT_NOT_FOUND"
+    })
+    @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "강제 체포 성공")
+    })
+    ResponseEntity<ArrestResponse> forceArrestRobber(
+            @Parameter(hidden = true) LoginUser loginUser,
+            @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId
+    );
+
+    @Operation(
             summary = "도둑 탈옥",
             description = """
                     수감된 도둑이 탈옥합니다.

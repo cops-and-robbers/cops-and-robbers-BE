@@ -57,6 +57,7 @@ type AdminGame {
   locationRevealIntervalMinutes: Int!
   policeWaitMinutes: Int!
   maxParticipants: Int!
+  shrinkFinalRadiusInMeters: Int
   isEventGame: Boolean!
   roundNumber: Int!
   createdAt: String!
@@ -86,6 +87,7 @@ type GameResult {
   startedAt: String
   endedAt: String
   locationRevealIntervalMinutes: Int
+  shrinkFinalRadiusInMeters: Int
 }
 
 type GameArea {
@@ -128,6 +130,7 @@ type AdminGameHistory {
   startedAt: String
   endedAt: String
   locationRevealIntervalMinutes: Int
+  shrinkFinalRadiusInMeters: Int
   isEventGame: Boolean
   hostUserId: ID
   areaType: AreaType!

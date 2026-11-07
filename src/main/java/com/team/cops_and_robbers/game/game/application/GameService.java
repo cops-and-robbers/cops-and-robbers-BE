@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.game.game.application;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.area.application.GameAreaService;
 import com.team.cops_and_robbers.game.area.domain.GameArea;
+import com.team.cops_and_robbers.game.area.domain.GameAreaDomainService;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameAreaUpdateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameCreateCommand;
@@ -39,6 +40,7 @@ public class GameService {
     private final GameParticipantRepository gameParticipantRepository;
     private final UserRepository userRepository;
     private final GameAreaService gameAreaService;
+    private final GameAreaDomainService gameAreaDomainService;
     private final ApplicationEventPublisher eventPublisher;
     private final LobbyEventFactory lobbyEventFactory;
 
@@ -102,7 +104,9 @@ public class GameService {
         validateGameEditable(participant);
 
         GameArea gameArea = gameAreaRepository.getByGameId(command.gameId());
-        gameAreaService.applyAreaUpdate(gameArea, command.areaData());
+        gameAreaService.applyAreaUpdate(
+                gameArea, command.areaData(), participant.getGame().getShrinkFinalRadiusInMeters()
+        );
 
         GameAreaUpdateResult result = GameAreaUpdateResult.from(gameArea);
 
@@ -120,12 +124,16 @@ public class GameService {
         );
         validateGameEditable(participant);
 
+        GameArea gameArea = gameAreaRepository.getByGameId(command.gameId());
+        gameAreaDomainService.validateShrinkFinalRadius(gameArea, command.shrinkFinalRadiusInMeters());
+
         Game game = participant.getGame();
         game.updateSettings(
                 command.roundDurationMinutes(),
                 command.locationRevealIntervalMinutes(),
                 command.policeWaitMinutes(),
-                command.maxParticipants()
+                command.maxParticipants(),
+                command.shrinkFinalRadiusInMeters()
         );
 
         GameSettingsUpdateResult result = GameSettingsUpdateResult.from(game);

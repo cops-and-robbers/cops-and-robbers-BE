@@ -132,7 +132,7 @@ public class DataLoader implements CommandLineRunner {
         GameCreateCommand command = new GameCreateCommand(
                 host.getId(),
                 new GameAreaData.CircleAreaData(37.5665, 126.978, 1000, 37.5665, 126.978, 100),
-                30, 5, 3, 10
+                30, 5, 3, 10, null
         );
 
         Game game = Game.createGame("TEST12", command);

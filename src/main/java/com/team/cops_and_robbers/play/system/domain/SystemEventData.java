@@ -48,6 +48,10 @@ public sealed interface SystemEventData permits
         public static ArrestData of(GameParticipant police, GameParticipant robber, int remainingThieves) {
             return new ArrestData(SystemParticipantInfo.from(police), SystemParticipantInfo.from(robber), remainingThieves);
         }
+
+        public static ArrestData ofForced(GameParticipant robber, int remainingThieves) {
+            return new ArrestData(null, SystemParticipantInfo.from(robber), remainingThieves);
+        }
     }
 
     record EscapeData(SystemParticipantInfo escapedThief, int remainingThieves) implements SystemEventData {

@@ -16,7 +16,8 @@ public record GameCreateCommand(
         Integer roundDurationMinutes,
         Integer locationRevealIntervalMinutes,
         Integer policeWaitMinutes,
-        Integer maxParticipants
+        Integer maxParticipants,
+        Integer shrinkFinalRadiusInMeters
 ) {
 
     public GameCreateCommand {
@@ -35,7 +36,8 @@ public record GameCreateCommand(
                 settings.roundDurationMinutes(),
                 settings.locationRevealIntervalMinutes(),
                 settings.policeWaitMinutes(),
-                settings.maxParticipants()
+                settings.maxParticipants(),
+                settings.shrinkFinalRadiusInMeters()
         );
     }
 

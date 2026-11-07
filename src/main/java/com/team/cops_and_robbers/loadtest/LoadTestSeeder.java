@@ -85,7 +85,8 @@ public class LoadTestSeeder {
                 ROUND_DURATION_MINUTES,
                 LOCATION_REVEAL_INTERVAL_MINUTES,
                 POLICE_WAIT_MINUTES,
-                size
+                size,
+                null
         );
 
         Game game = Game.createGame(inviteCode, command);
