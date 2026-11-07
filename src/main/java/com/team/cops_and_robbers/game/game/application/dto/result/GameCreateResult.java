@@ -11,6 +11,7 @@ public record GameCreateResult(
         Integer locationRevealIntervalMinutes,
         Integer policeWaitMinutes,
         Integer maxParticipants,
+        Integer shrinkFinalRadiusInMeters,
         String createdAt
 ) {
 
@@ -23,6 +24,7 @@ public record GameCreateResult(
                 game.getLocationRevealIntervalMinutes(),
                 game.getPoliceWaitMinutes(),
                 game.getMaxParticipants(),
+                game.getShrinkFinalRadiusInMeters(),
                 TimestampUtil.toIsoString(game.getCreatedAt())
         );
     }

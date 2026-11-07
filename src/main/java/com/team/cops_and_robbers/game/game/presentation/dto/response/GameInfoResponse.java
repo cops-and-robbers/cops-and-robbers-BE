@@ -14,6 +14,8 @@ public record GameInfoResponse(
         Integer policeWaitMinutes,
         @Schema(description = "최대 참가 인원", example = "10")
         Integer maxParticipants,
+        @Schema(description = "구역 축소의 최종 반경(m). null 이면 축소를 쓰지 않는다", example = "200")
+        Integer shrinkFinalRadiusInMeters,
         @Schema(description = "게임 시작 여부", example = "false")
         boolean isStarted,
         @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -28,6 +30,7 @@ public record GameInfoResponse(
                 result.locationRevealIntervalMinutes(),
                 result.policeWaitMinutes(),
                 result.maxParticipants(),
+                result.shrinkFinalRadiusInMeters(),
                 result.isStarted(),
                 result.gameStartTime() != null ? TimestampUtil.toIsoString(result.gameStartTime()) : null,
                 result.isEventGame()
