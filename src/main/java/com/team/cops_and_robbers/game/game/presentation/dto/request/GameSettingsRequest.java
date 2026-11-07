@@ -25,7 +25,11 @@ public record GameSettingsRequest(
         @Schema(description = "최대 참가 인원", example = "10")
         @NotNull(message = "최대 참가 인원을 입력해주세요.")
         @Min(value = 2) @Max(value = 150)
-        Integer maxParticipants
+        Integer maxParticipants,
+
+        @Schema(description = "구역 축소의 최종 반경(m). null 이면 축소를 쓰지 않는다", example = "200")
+        @Min(value = 1, message = "최종 반경은 1m 이상이어야 합니다.")
+        Integer shrinkFinalRadiusInMeters
 ) {
 
 }

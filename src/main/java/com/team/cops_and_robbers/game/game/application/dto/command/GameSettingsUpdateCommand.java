@@ -10,7 +10,8 @@ public record GameSettingsUpdateCommand(
         Integer roundDurationMinutes,
         Integer locationRevealIntervalMinutes,
         Integer policeWaitMinutes,
-        Integer maxParticipants
+        Integer maxParticipants,
+        Integer shrinkFinalRadiusInMeters
 ) {
 
     public GameSettingsUpdateCommand {
@@ -29,7 +30,8 @@ public record GameSettingsUpdateCommand(
                 settings.roundDurationMinutes(),
                 settings.locationRevealIntervalMinutes(),
                 settings.policeWaitMinutes(),
-                settings.maxParticipants()
+                settings.maxParticipants(),
+                settings.shrinkFinalRadiusInMeters()
         );
     }
 }
