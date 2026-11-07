@@ -30,8 +30,27 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("3.0.0")
+                .version("3.1.0")
                 .description("""
+                        ## v3.1.0 업데이트 내역
+
+                        ### ✨ 추가 — 구역 축소 최종 반경, 강제 체포 API
+                        - 게임 설정에 shrinkFinalRadiusInMeters(Integer, nullable) 추가. null 이면 축소 꺼짐
+                          - 요청: POST /api/games 의 settings, PUT /api/games/{gameId}/settings
+                          - 응답: POST /api/games, GET /api/games/{gameId}, PUT /api/games/{gameId}/settings, 로비 SETTINGS_UPDATED 이벤트
+                        - 값이 있을 때만 검증한다. 구역 타입이 CIRCLE 이고, 감옥 반경보다 크고 플레이그라운드 반경보다 작아야 한다
+                        - ⚠️ 에러코드 추가 — SHRINK_REQUIRES_CIRCLE_AREA, INVALID_SHRINK_FINAL_RADIUS
+                          - POST /api/games, PUT /api/games/{gameId}/settings, PUT /api/games/{gameId}/area 세 곳에서 발생한다
+                          - PUT /api/games/{gameId}/settings 는 구역을 함께 조회하므로 기존 GAME_AREA_NOT_FOUND(404) 도 새로 발생할 수 있다
+                          - 구역을 바꿀 때 저장된 최종 반경이 조건에 안 맞으면 PUT /area 가 400 이다. 앱이 축소를 먼저 끄고 구역을 저장하면 된다
+                        - 강제 체포 POST /api/games/{gameId}/system/force-arrest 추가. 구역 밖에 오래 머문 도둑이 스스로 체포된다
+                          - 요청 본문 없음(로그인한 도둑 본인), 응답은 /system/arrest 와 같다
+                          - 경찰 대기 시간 중에도 호출할 수 있고, 경찰의 체포 수는 올라가지 않는다
+                        - ⚠️ ARREST 이벤트의 police 가 null 가능으로 전환 — 강제 체포일 때 null 이다
+                          - 앱은 police 가 null 이면 "구역 밖에 오래 있어서 잡혔다"로 표시한다
+                        - 게임이 끝나도 남도록 GameResult 에 최종 반경을 함께 복사한다. 어드민 GraphQL 의 AdminGame, GameResult, AdminGameHistory 에 shrinkFinalRadiusInMeters(Int, nullable) 추가
+                        - 앱 영향 — 최종 반경 계산, 축소 표시, 구역 이탈 판정과 경고 횟수는 앱이 처리한다. 서버는 위치를 검증하지 않는다
+
                         ## v3.0.0 업데이트 내역
 
                         ### 변경 — 준비(Ready) 상태 제거, 방장이 시작하면 바로 게임 시작
