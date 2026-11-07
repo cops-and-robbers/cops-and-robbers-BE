@@ -74,6 +74,50 @@ class GameControllerTest extends ControllerTest {
         }
 
         @Test
+        void 최종_반경을_함께_보내면_응답에_그대로_내려준다() {
+            // given (플레이그라운드 1000m, 감옥 100m)
+            GameCreateRequest request = new GameCreateRequest(
+                    createAreaRequest(),
+                    new GameSettingsRequest(30, 5, 3, 10, 500)
+            );
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
+
+            // then
+            GameCreateResponse result = response.as(GameCreateResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(201);
+                softly.assertThat(result.shrinkFinalRadiusInMeters()).isEqualTo(500);
+            });
+        }
+
+        @Test
+        void 최종_반경이_감옥과_플레이그라운드_사이가_아니면_400_BadRequest를_응답한다() {
+            // given (플레이그라운드 1000m, 감옥 100m - 경계값은 GameAreaDomainServiceTest 가 본다)
+            GameCreateRequest request = new GameCreateRequest(
+                    createAreaRequest(),
+                    new GameSettingsRequest(30, 5, 3, 10, 1000)
+            );
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(400);
+        }
+
+        @Test
         void 감옥이_플레이그라운드_범위_밖에_위치하면_400_BadRequest를_응답한다() {
             // given
             CoordinatesRequest playgroundCenter = new CoordinatesRequest(37.5665, 126.978);
@@ -156,7 +200,7 @@ class GameControllerTest extends ControllerTest {
         @Test
         void 위치_공개_주기가_라운드_시간보다_길면_400_BadRequest를_응답한다() {
             // given (10분 라운드 < 15분 주기)
-            GameSettingsRequest invalidSettings = new GameSettingsRequest(10, 15, 3, 10);
+            GameSettingsRequest invalidSettings = new GameSettingsRequest(10, 15, 3, 10, null);
             GameCreateRequest request = new GameCreateRequest(createAreaRequest(), invalidSettings);
 
             // when
@@ -174,7 +218,7 @@ class GameControllerTest extends ControllerTest {
         @Test
         void 최대_참가_인원이_150명이면_생성된다() {
             // given
-            GameSettingsRequest settings = new GameSettingsRequest(30, 5, 3, 150);
+            GameSettingsRequest settings = new GameSettingsRequest(30, 5, 3, 150, null);
             GameCreateRequest request = new GameCreateRequest(createAreaRequest(), settings);
 
             // when
@@ -195,7 +239,7 @@ class GameControllerTest extends ControllerTest {
         @Test
         void 최대_참가_인원이_151명이면_400_BadRequest를_응답한다() {
             // given
-            GameSettingsRequest settings = new GameSettingsRequest(30, 5, 3, 151);
+            GameSettingsRequest settings = new GameSettingsRequest(30, 5, 3, 151, null);
             GameCreateRequest request = new GameCreateRequest(createAreaRequest(), settings);
 
             // when
@@ -371,6 +415,16 @@ class GameControllerTest extends ControllerTest {
             givenHost(waitingGame, host);
         }
 
+        private void saveShrinkFinalRadius(int shrinkFinalRadiusInMeters) {
+            authenticated(accessToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(new GameSettingsRequest(30, 5, 3, 10, shrinkFinalRadiusInMeters))
+                    .when()
+                    .put(SETTINGS_URL)
+                    .then()
+                    .statusCode(HttpStatus.OK.value());
+        }
+
         @Test
         void 영역_수정_성공() {
             // given
@@ -392,6 +446,90 @@ class GameControllerTest extends ControllerTest {
                 softly.assertThat(result.circle().playgroundRadiusInMeters()).isEqualTo(request.circle().playgroundRadiusInMeters());
                 softly.assertThat(result.circle().jailRadiusInMeters()).isEqualTo(request.circle().jailRadiusInMeters());
             });
+        }
+
+        @Test
+        void 저장된_최종_반경보다_작은_구역으로_바꾸면_400_BadRequest를_응답한다() {
+            // given (플레이그라운드 500m 구역에 최종 반경 200m 를 저장해 둔다)
+            saveShrinkFinalRadius(200);
+
+            GameAreaRequest request = new GameAreaRequest(
+                    AreaType.CIRCLE,
+                    new GameAreaRequest.CircleAreaRequest(
+                            new CoordinatesRequest(37.4979, 127.0276),
+                            150,
+                            new CoordinatesRequest(37.4979, 127.0276),
+                            100
+                    ),
+                    null
+            );
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(request)
+                    .when()
+                    .put(AREA_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 최종_반경이_저장된_상태에서_POLYGON으로_바꾸면_400_BadRequest를_응답한다() {
+            // given
+            saveShrinkFinalRadius(200);
+
+            List<CoordinatesRequest> playgroundPolygon = List.of(
+                    new CoordinatesRequest(37.4979, 127.0276),
+                    new CoordinatesRequest(37.4979, 127.0296),
+                    new CoordinatesRequest(37.4999, 127.0296),
+                    new CoordinatesRequest(37.4999, 127.0276)
+            );
+            List<CoordinatesRequest> jailPolygon = List.of(
+                    new CoordinatesRequest(37.4983, 127.0280),
+                    new CoordinatesRequest(37.4983, 127.0285),
+                    new CoordinatesRequest(37.4988, 127.0285),
+                    new CoordinatesRequest(37.4988, 127.0280)
+            );
+
+            GameAreaRequest request = new GameAreaRequest(
+                    AreaType.POLYGON,
+                    null,
+                    new GameAreaRequest.PolygonAreaRequest(playgroundPolygon, jailPolygon)
+            );
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(request)
+                    .when()
+                    .put(AREA_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 저장된_최종_반경이_새_구역에도_맞으면_영역_수정에_성공한다() {
+            // given
+            saveShrinkFinalRadius(200);
+
+            // when (플레이그라운드 1000m, 감옥 100m - 200m 가 그대로 유효하다)
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(createAreaRequest())
+                    .when()
+                    .put(AREA_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
         }
 
         @Test
@@ -567,7 +705,7 @@ class GameControllerTest extends ControllerTest {
         @Test
         void 설정_수정_성공() {
             // given
-            GameSettingsRequest request = new GameSettingsRequest(60, 10, 5, 20);
+            GameSettingsRequest request = new GameSettingsRequest(60, 10, 5, 20, null);
 
             // when
             ExtractableResponse<Response> response = authenticated(accessToken)
@@ -590,9 +728,113 @@ class GameControllerTest extends ControllerTest {
         }
 
         @Test
+        void 최종_반경을_함께_수정하면_응답에_그대로_내려준다() {
+            // given (플레이그라운드 500m, 감옥 50m)
+            GameSettingsRequest request = new GameSettingsRequest(60, 10, 5, 20, 200);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(request)
+                    .when()
+                    .put(SETTINGS_URL)
+                    .then()
+                    .extract();
+
+            // then
+            GameSettingsUpdateResponse result = response.as(GameSettingsUpdateResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                softly.assertThat(result.shrinkFinalRadiusInMeters()).isEqualTo(200);
+            });
+        }
+
+        @Test
+        void 최종_반경을_null로_보내면_축소가_꺼진_상태로_내려온다() {
+            // given
+            GameSettingsRequest request = new GameSettingsRequest(60, 10, 5, 20, null);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(request)
+                    .when()
+                    .put(SETTINGS_URL)
+                    .then()
+                    .extract();
+
+            // then
+            GameSettingsUpdateResponse result = response.as(GameSettingsUpdateResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                softly.assertThat(result.shrinkFinalRadiusInMeters()).isNull();
+            });
+        }
+
+        @Test
+        void 최종_반경이_감옥과_플레이그라운드_사이가_아니면_400_BadRequest를_응답한다() {
+            // given (플레이그라운드 500m, 감옥 50m - 경계값은 GameAreaDomainServiceTest 가 본다)
+            GameSettingsRequest request = new GameSettingsRequest(30, 5, 3, 10, 500);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(request)
+                    .when()
+                    .put(SETTINGS_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 최종_반경이_0이면_400_BadRequest를_응답한다() {
+            // given
+            GameSettingsRequest request = new GameSettingsRequest(30, 5, 3, 10, 0);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(request)
+                    .when()
+                    .put(SETTINGS_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void POLYGON_구역이면_최종_반경을_저장할_수_없으며_400_BadRequest를_응답한다() {
+            // given
+            Game polygonGame = gameRepository.save(GameFixture.WAITING_GAME("POLYGN"));
+            gameAreaRepository.save(GameAreaFixture.POLYGON_GAME_AREA(polygonGame));
+            User polygonHost = givenUser("polygonHost");
+            String polygonHostToken = givenAccessToken(polygonHost);
+            givenHost(polygonGame, polygonHost);
+
+            GameSettingsRequest request = new GameSettingsRequest(30, 5, 3, 10, 200);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(polygonHostToken)
+                    .pathParam(GAME_ID_PARAM, polygonGame.getId())
+                    .body(request)
+                    .when()
+                    .put(SETTINGS_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
         void 위치_공개_주기가_라운드_시간_이상이면_400_BadRequest를_응답한다() {
             // given (30분 라운드, 30분 주기 - 같아도 불가)
-            GameSettingsRequest request = new GameSettingsRequest(30, 30, 5, 10);
+            GameSettingsRequest request = new GameSettingsRequest(30, 30, 5, 10, null);
 
             // when
             ExtractableResponse<Response> response = authenticated(accessToken)
@@ -610,7 +852,7 @@ class GameControllerTest extends ControllerTest {
         @Test
         void 경찰_대기_시간이_라운드_시간_이상이면_400_BadRequest를_응답한다() {
             // given (30분 라운드, 30분 대기 - 같아도 불가)
-            GameSettingsRequest request = new GameSettingsRequest(30, 5, 30, 10);
+            GameSettingsRequest request = new GameSettingsRequest(30, 5, 30, 10, null);
 
             // when
             ExtractableResponse<Response> response = authenticated(accessToken)
@@ -790,6 +1032,6 @@ class GameControllerTest extends ControllerTest {
     }
 
     private GameSettingsRequest createSettingsRequest() {
-        return new GameSettingsRequest(30, 5, 3, 10);
+        return new GameSettingsRequest(30, 5, 3, 10, null);
     }
 }
