@@ -63,6 +63,8 @@ public class GameResult extends BaseTimeEntity {
 
     private Integer locationRevealIntervalMinutes;
 
+    private Integer shrinkFinalRadiusInMeters;
+
     @Column(name = "is_event_game")
     private Boolean eventGame;
 
@@ -97,6 +99,7 @@ public class GameResult extends BaseTimeEntity {
                 .roundNumber(game.getRoundNumber())
                 .startedAt(game.getStartedAt())
                 .locationRevealIntervalMinutes(game.getLocationRevealIntervalMinutes())
+                .shrinkFinalRadiusInMeters(game.getShrinkFinalRadiusInMeters())
                 .eventGame(game.isEventGame())
                 .hostUserId(hostUserId)
                 .areaType(gameArea.getAreaType());

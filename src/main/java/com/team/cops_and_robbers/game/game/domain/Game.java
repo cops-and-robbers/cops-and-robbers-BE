@@ -49,6 +49,8 @@ public class Game extends BaseTimeEntity {
     @Column(nullable = false)
     private Integer maxParticipants;
 
+    private Integer shrinkFinalRadiusInMeters;
+
     private LocalDateTime startedAt;
 
     private LocalDateTime lastEndedAt;
@@ -92,6 +94,7 @@ public class Game extends BaseTimeEntity {
                 .locationRevealIntervalMinutes(command.locationRevealIntervalMinutes())
                 .policeWaitMinutes(command.policeWaitMinutes())
                 .maxParticipants(command.maxParticipants())
+                .shrinkFinalRadiusInMeters(command.shrinkFinalRadiusInMeters())
                 .build();
     }
 
@@ -103,12 +106,14 @@ public class Game extends BaseTimeEntity {
             Integer roundDurationMinutes,
             Integer locationRevealIntervalMinutes,
             Integer policeWaitMinutes,
-            Integer maxParticipants
+            Integer maxParticipants,
+            Integer shrinkFinalRadiusInMeters
     ) {
         this.roundDurationMinutes = roundDurationMinutes;
         this.locationRevealIntervalMinutes = locationRevealIntervalMinutes;
         this.policeWaitMinutes = policeWaitMinutes;
         this.maxParticipants = maxParticipants;
+        this.shrinkFinalRadiusInMeters = shrinkFinalRadiusInMeters;
     }
 
     public void updateEventGame(boolean isEventGame) {
