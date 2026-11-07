@@ -27,7 +27,7 @@ public record GameSettingsRequest(
         @Min(value = 2) @Max(value = 150)
         Integer maxParticipants,
 
-        @Schema(description = "구역 축소의 최종 반경(m). null 이면 축소를 쓰지 않는다", example = "200")
+        @Schema(description = "구역 축소의 최종 반경(m). null 이면 축소를 쓰지 않는다", example = "200", nullable = true)
         @Min(value = 1, message = "최종 반경은 1m 이상이어야 합니다.")
         Integer shrinkFinalRadiusInMeters
 ) {

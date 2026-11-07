@@ -17,7 +17,7 @@ public record GameCreateResponse(
         Integer policeWaitMinutes,
         @Schema(description = "최대 참가 인원", example = "10")
         Integer maxParticipants,
-        @Schema(description = "구역 축소의 최종 반경(m). null 이면 축소를 쓰지 않는다", example = "200")
+        @Schema(description = "구역 축소의 최종 반경(m). null 이면 축소를 쓰지 않는다", example = "200", nullable = true)
         Integer shrinkFinalRadiusInMeters,
         @Schema(description = "생성 시각", example = "2026-01-16T01:25:37+09:00")
         String createdAt

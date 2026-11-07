@@ -12,7 +12,7 @@ public record GameSettingsUpdateResponse(
         Integer policeWaitMinutes,
         @Schema(description = "최대 참가 인원", example = "20")
         Integer maxParticipants,
-        @Schema(description = "구역 축소의 최종 반경(m). null 이면 축소를 쓰지 않는다", example = "200")
+        @Schema(description = "구역 축소의 최종 반경(m). null 이면 축소를 쓰지 않는다", example = "200", nullable = true)
         Integer shrinkFinalRadiusInMeters
 ) {
 
