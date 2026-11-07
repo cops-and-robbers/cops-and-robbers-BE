@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class GameAreaDomainService {
 
+    private static final int NO_JAIL_RADIUS = 0;
+
     private final GameAreaRepository gameAreaRepository;
 
     /**
@@ -53,6 +55,49 @@ public class GameAreaDomainService {
 
         if (!isContained) {
             throw new ApplicationException(GameAreaException.JAIL_OUTSIDE_PLAYGROUND);
+        }
+    }
+
+    /**
+     * 원형 구역의 축소 최종 반경을 검증합니다.
+     *
+     * 1. null 이면 축소를 쓰지 않으므로 검증하지 않음
+     * 2. 감옥 반지름 < 최종 반경 < 플레이그라운드 반지름
+     * 감옥이 없는 구역(술래잡기)은 감옥 반지름을 0으로 본다
+     */
+    public void validateCircleShrinkFinalRadius(
+            Integer playgroundRadiusInMeters, Integer jailRadiusInMeters, Integer shrinkFinalRadiusInMeters
+    ) {
+        if (shrinkFinalRadiusInMeters == null) {
+            return;
+        }
+
+        int jailRadius = jailRadiusInMeters == null ? NO_JAIL_RADIUS : jailRadiusInMeters;
+        if (shrinkFinalRadiusInMeters <= jailRadius || shrinkFinalRadiusInMeters >= playgroundRadiusInMeters) {
+            throw new ApplicationException(GameAreaException.INVALID_SHRINK_FINAL_RADIUS);
+        }
+    }
+
+    /**
+     * 폴리곤 구역은 구역 축소를 지원하지 않습니다.
+     */
+    public void validatePolygonShrinkFinalRadius(Integer shrinkFinalRadiusInMeters) {
+        if (shrinkFinalRadiusInMeters != null) {
+            throw new ApplicationException(GameAreaException.SHRINK_REQUIRES_CIRCLE_AREA);
+        }
+    }
+
+    /**
+     * 저장된 구역을 기준으로 축소 최종 반경을 검증합니다.
+     * 구역 타입(CIRCLE/POLYGON)에 따라 내부적으로 분기합니다.
+     */
+    public void validateShrinkFinalRadius(GameArea gameArea, Integer shrinkFinalRadiusInMeters) {
+        switch (gameArea.getAreaType()) {
+            case CIRCLE -> validateCircleShrinkFinalRadius(
+                    gameArea.getPlaygroundRadiusInMeters(), gameArea.getJailRadiusInMeters(),
+                    shrinkFinalRadiusInMeters
+            );
+            case POLYGON -> validatePolygonShrinkFinalRadius(shrinkFinalRadiusInMeters);
         }
     }
 

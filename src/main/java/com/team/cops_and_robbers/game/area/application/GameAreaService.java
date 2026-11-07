@@ -63,6 +63,9 @@ public class GameAreaService {
                         c.playgroundLongitude(), c.playgroundLatitude(), c.playgroundRadiusInMeters(),
                         c.jailLongitude(), c.jailLatitude(), c.jailRadiusInMeters()
                 );
+                gameAreaDomainService.validateCircleShrinkFinalRadius(
+                        c.playgroundRadiusInMeters(), c.jailRadiusInMeters(), game.getShrinkFinalRadiusInMeters()
+                );
                 Point playgroundCenter = geometryFactory.createPoint(new Coordinate(c.playgroundLongitude(), c.playgroundLatitude()));
                 Point jailCenter = geometryFactory.createPoint(new Coordinate(c.jailLongitude(), c.jailLatitude()));
                 yield GameArea.createCircleGameArea(game, playgroundCenter, c.playgroundRadiusInMeters(), jailCenter, c.jailRadiusInMeters());
@@ -71,6 +74,7 @@ public class GameAreaService {
                 Polygon playgroundPolygon = createPolygon(p.playgroundPolygon());
                 Polygon jailPolygon = createPolygon(p.jailPolygon());
                 gameAreaDomainService.validatePolygonAreaContainment(playgroundPolygon, jailPolygon);
+                gameAreaDomainService.validatePolygonShrinkFinalRadius(game.getShrinkFinalRadiusInMeters());
                 yield GameArea.createPolygonGameArea(game, playgroundPolygon, jailPolygon);
             }
         };
@@ -80,12 +84,15 @@ public class GameAreaService {
      * 검증 후 기존 GameArea 엔티티를 수정합니다.
      * 구역 타입(CIRCLE/POLYGON)에 따라 내부적으로 분기합니다.
      */
-    public void applyAreaUpdate(GameArea gameArea, GameAreaData areaData) {
+    public void applyAreaUpdate(GameArea gameArea, GameAreaData areaData, Integer shrinkFinalRadiusInMeters) {
         switch (areaData) {
             case GameAreaData.CircleAreaData c -> {
                 gameAreaDomainService.validateCircleAreaContainment(
                         c.playgroundLongitude(), c.playgroundLatitude(), c.playgroundRadiusInMeters(),
                         c.jailLongitude(), c.jailLatitude(), c.jailRadiusInMeters()
+                );
+                gameAreaDomainService.validateCircleShrinkFinalRadius(
+                        c.playgroundRadiusInMeters(), c.jailRadiusInMeters(), shrinkFinalRadiusInMeters
                 );
                 Point playgroundCenter = geometryFactory.createPoint(new Coordinate(c.playgroundLongitude(), c.playgroundLatitude()));
                 Point jailCenter = geometryFactory.createPoint(new Coordinate(c.jailLongitude(), c.jailLatitude()));
@@ -95,6 +102,7 @@ public class GameAreaService {
                 Polygon playgroundPolygon = createPolygon(p.playgroundPolygon());
                 Polygon jailPolygon = createPolygon(p.jailPolygon());
                 gameAreaDomainService.validatePolygonAreaContainment(playgroundPolygon, jailPolygon);
+                gameAreaDomainService.validatePolygonShrinkFinalRadius(shrinkFinalRadiusInMeters);
                 gameArea.updatePolygon(playgroundPolygon, jailPolygon);
             }
         }
