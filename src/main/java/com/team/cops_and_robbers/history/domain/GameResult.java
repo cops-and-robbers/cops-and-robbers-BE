@@ -39,7 +39,6 @@ public class GameResult extends BaseTimeEntity {
     @Column(nullable = false)
     private Long gameId;
 
-    /** 같은 방에서 몇 번째 게임인지. */
     private Integer roundNumber;
 
     @Enumerated(EnumType.STRING)
@@ -62,7 +61,6 @@ public class GameResult extends BaseTimeEntity {
 
     private LocalDateTime endedAt;
 
-    /** 이 게임에 적용된 위치 공개 주기. 방 설정은 게임 사이에 바뀌므로 그때 값을 복사해 둔다. */
     private Integer locationRevealIntervalMinutes;
 
     @Column(name = "is_event_game")
@@ -117,9 +115,6 @@ public class GameResult extends BaseTimeEntity {
         return builder.build();
     }
 
-    /**
-     * 게임 종료 시점의 승패와 통계를 채웁니다.
-     */
     public void complete(
             LocalDateTime endTime,
             Team winningTeam,
@@ -141,9 +136,6 @@ public class GameResult extends BaseTimeEntity {
         this.totalArrestCount = totalArrestCount;
     }
 
-    /**
-     * 진행 중에 이벤트 게임으로 전환되면 시작 시점에 복사해 둔 값을 따라 바꿉니다.
-     */
     public void updateEventGame(boolean eventGame) {
         this.eventGame = eventGame;
     }
