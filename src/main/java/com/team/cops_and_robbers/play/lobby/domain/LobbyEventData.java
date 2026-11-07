@@ -72,12 +72,14 @@ public sealed interface LobbyEventData permits
             Integer roundDurationMinutes,
             Integer locationRevealIntervalMinutes,
             Integer policeWaitMinutes,
-            Integer maxParticipants
+            Integer maxParticipants,
+            Integer shrinkFinalRadiusInMeters
     ) implements LobbyEventData {
         public static LobbySettingsUpdatedData from(GameSettingsUpdateResult result) {
             return new LobbySettingsUpdatedData(
                     result.roundDurationMinutes(), result.locationRevealIntervalMinutes(),
-                    result.policeWaitMinutes(), result.maxParticipants()
+                    result.policeWaitMinutes(), result.maxParticipants(),
+                    result.shrinkFinalRadiusInMeters()
             );
         }
     }
