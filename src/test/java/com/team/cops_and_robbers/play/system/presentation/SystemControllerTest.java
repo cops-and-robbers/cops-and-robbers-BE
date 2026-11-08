@@ -27,6 +27,7 @@ class SystemControllerTest extends ControllerTest {
 
     private static final String GAME_ID_PARAM = "gameId";
     private static final String ARREST_URL = "/api/games/{gameId}/system/arrest";
+    private static final String FORCE_ARREST_URL = "/api/games/{gameId}/system/force-arrest";
     private static final String ESCAPE_URL = "/api/games/{gameId}/system/escape";
 
     private User police;
@@ -274,6 +275,187 @@ class SystemControllerTest extends ControllerTest {
     }
 
     @Nested
+    @DisplayName("도둑 강제 체포 API")
+    class ForceArrestRobber {
+
+        @Test
+        void 강제_체포_성공() {
+            // given
+            User secondRobber = givenUser("robber2");
+            givenRobber(game, secondRobber);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(robberToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(FORCE_ARREST_URL)
+                    .then()
+                    .extract();
+
+            // then
+            ArrestResponse result = response.as(ArrestResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                softly.assertThat(result.robberNickname()).isEqualTo(robber.getNickname());
+                softly.assertThat(result.remainingThieves()).isEqualTo(1);
+
+                GameParticipant jailedRobber = gameParticipantRepository.findById(robberParticipant.getId()).orElseThrow();
+                softly.assertThat(jailedRobber.isJailed()).isTrue();
+            });
+        }
+
+        @Test
+        void 경찰이_대기_상태여도_강제_체포할_수_있다() {
+            // given
+            User secondRobber = givenUser("robber2");
+            givenRobber(game, secondRobber);
+            policeParticipant.updateStatus(ParticipantStatus.POLICE_WAITING);
+            gameParticipantRepository.save(policeParticipant);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(robberToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(FORCE_ARREST_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+        }
+
+        @Test
+        void 마지막_도둑이_강제_체포되면_게임이_종료된다() {
+            // when
+            ExtractableResponse<Response> response = authenticated(robberToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(FORCE_ARREST_URL)
+                    .then()
+                    .extract();
+
+            // then
+            ArrestResponse result = response.as(ArrestResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                softly.assertThat(result.remainingThieves()).isEqualTo(0);
+
+                GameParticipant endedRobber = gameParticipantRepository.findById(robberParticipant.getId()).orElseThrow();
+                softly.assertThat(endedRobber.isWaiting()).isTrue();
+                softly.assertThat(gameRepository.findById(game.getId()).orElseThrow().getStatus())
+                        .isEqualTo(GameStatus.WAITING);
+            });
+        }
+
+        @Test
+        void 게임이_진행_중이_아니면_강제_체포할_수_없으며_400_BadRequest를_응답한다() {
+            // given
+            Game waitingGame = gameRepository.save(GameFixture.WAITING_GAME());
+            User waitingRobber = givenUser("waitingRobber");
+            String waitingRobberToken = givenAccessToken(waitingRobber);
+            givenRobber(waitingGame, waitingRobber);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(waitingRobberToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .when()
+                    .post(FORCE_ARREST_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 이벤트_게임에서는_강제_체포할_수_없으며_400_BadRequest를_응답한다() {
+            // given
+            game.updateEventGame(true);
+            gameRepository.save(game);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(robberToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(FORCE_ARREST_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+
+                Game savedGame = gameRepository.findById(game.getId()).orElseThrow();
+                softly.assertThat(savedGame.getTotalArrestCount()).isZero();
+            });
+        }
+
+        @Test
+        void 도둑이_아니면_강제_체포할_수_없으며_400_BadRequest를_응답한다() {
+            // when (경찰이 요청)
+            ExtractableResponse<Response> response = authenticated(policeToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(FORCE_ARREST_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 이미_수감된_도둑은_강제_체포할_수_없으며_400_BadRequest를_응답한다() {
+            // given
+            robberParticipant.updateStatus(ParticipantStatus.JAILED);
+            gameParticipantRepository.save(robberParticipant);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(robberToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(FORCE_ARREST_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        }
+
+        @Test
+        void 게임_참가자가_아니면_404_NotFound를_응답한다() {
+            // given
+            User outsider = givenUser("outsider");
+            String outsiderToken = givenAccessToken(outsider);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(outsiderToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(FORCE_ARREST_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        }
+
+        @Test
+        void 인증_토큰_없이_요청하면_401_Unauthorized를_응답한다() {
+            // when
+            ExtractableResponse<Response> response = unauthenticated()
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(FORCE_ARREST_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+        }
+    }
+
+    @Nested
     @DisplayName("체포 개인 기록")
     class ArrestPersonalRecord {
 
@@ -295,6 +477,34 @@ class SystemControllerTest extends ControllerTest {
                     .post(ARREST_URL)
                     .then()
                     .statusCode(HttpStatus.OK.value());
+        }
+
+        @Test
+        void 강제_체포는_도둑의_잡힌_횟수만_올리고_경찰의_체포_수는_올리지_않는다() {
+            // given - 도둑을 하나 더 두어 전원 체포로 게임이 끝나지 않게 한다
+            User secondRobber = givenUser("robber2");
+            givenRobber(game, secondRobber);
+            GameResult openedResult = openResultWithSnapshots(game, policeParticipant, robberParticipant);
+
+            // when
+            authenticated(robberToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(FORCE_ARREST_URL)
+                    .then()
+                    .statusCode(HttpStatus.OK.value());
+
+            // then
+            GameResultParticipant policeRecord = gameResultParticipantRepository
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(openedResult.getId(), police.getId()).orElseThrow();
+            GameResultParticipant robberRecord = gameResultParticipantRepository
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(openedResult.getId(), robber.getId()).orElseThrow();
+            assertSoftly(softly -> {
+                softly.assertThat(robberRecord.getArrestedCount()).isEqualTo(1);
+                softly.assertThat(policeRecord.getArrestCount()).isZero();
+                softly.assertThat(gameRepository.findById(game.getId()).orElseThrow().getTotalArrestCount())
+                        .isEqualTo(1);
+            });
         }
 
         @Test

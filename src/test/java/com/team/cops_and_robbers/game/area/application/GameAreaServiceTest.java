@@ -222,7 +222,7 @@ class GameAreaServiceTest extends ServiceUnitTest {
             );
 
             // when
-            gameAreaService.applyAreaUpdate(polygonArea, circleData);
+            gameAreaService.applyAreaUpdate(polygonArea, circleData, null);
 
             // then
             assertThat(polygonArea.getAreaType()).isEqualTo(AreaType.CIRCLE);
@@ -239,7 +239,7 @@ class GameAreaServiceTest extends ServiceUnitTest {
             GameAreaData.PolygonAreaData polygonData = createPolygonAreaData();
 
             // when
-            gameAreaService.applyAreaUpdate(circleArea, polygonData);
+            gameAreaService.applyAreaUpdate(circleArea, polygonData, null);
 
             // then
             assertThat(circleArea.getAreaType()).isEqualTo(AreaType.POLYGON);

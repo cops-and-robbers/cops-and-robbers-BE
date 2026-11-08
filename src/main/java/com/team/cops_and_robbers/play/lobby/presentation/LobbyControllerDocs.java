@@ -23,7 +23,7 @@ public interface LobbyControllerDocs {
 
     @Operation(
             summary = "로비 팀 변경",
-            description = "대기 상태(WAITING)에서만 팀을 변경할 수 있습니다. 팀 변경 시 해당 유저의 준비 상태는 해제됩니다."
+            description = "대기 상태(WAITING)에서만 팀을 변경할 수 있습니다."
     )
     @ApiErrorCode(value = GameParticipantException.class, codes = {"GAME_ALREADY_STARTED", "LOBBY_ACTION_NOT_ALLOWED", "PARTICIPANT_NOT_FOUND"})
     @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_FOUND"})
@@ -37,15 +37,21 @@ public interface LobbyControllerDocs {
             @RequestBody @Valid TeamChangeRequest request
     );
 
+    @Deprecated
     @Operation(
-            summary = "로비 준비 상태 변경",
-            description = "대기 상태(WAITING)에서만 준비 상태를 변경할 수 있습니다."
+            summary = "로비 준비 상태 변경 (deprecated)",
+            description = """
+                    준비 상태가 없어져 호출해도 아무것도 바뀌지 않고, 이벤트도 발행하지 않습니다.
+                    - 대기 상태의 게임·참가자 검증은 예전과 같아 응답 코드가 같습니다.
+                    - Deprecated: 구버전 앱 호환용으로만 남김, 다음 작업에서 삭제 예정
+                    """,
+            deprecated = true
     )
-    @ApiErrorCode(value = GameParticipantException.class, codes = {"HOST_CANNOT_UNREADY", "GAME_ALREADY_STARTED", "LOBBY_ACTION_NOT_ALLOWED", "PARTICIPANT_NOT_FOUND"})
+    @ApiErrorCode(value = GameParticipantException.class, codes = {"GAME_ALREADY_STARTED", "LOBBY_ACTION_NOT_ALLOWED", "PARTICIPANT_NOT_FOUND"})
     @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_FOUND"})
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "준비 상태 변경 성공")
+            @ApiResponse(responseCode = "204", description = "성공 (아무것도 바뀌지 않음)")
     })
     ResponseEntity<Void> updateReady(
             @Parameter(hidden = true) LoginUser loginUser,
@@ -60,10 +66,9 @@ public interface LobbyControllerDocs {
 
                     - 방장(Host)만 시작 가능
                     - 경찰/도둑 팀 각각 1명 이상 필요
-                    - 모든 참가자가 준비(Ready) 상태여야 함
                     """
     )
-    @ApiErrorCode(value = GameParticipantException.class, codes = {"NOT_HOST", "INVALID_TEAM_COMPOSITION", "NOT_ALL_READY", "GAME_ALREADY_STARTED", "LOBBY_ACTION_NOT_ALLOWED", "PARTICIPANT_NOT_FOUND"})
+    @ApiErrorCode(value = GameParticipantException.class, codes = {"NOT_HOST", "INVALID_TEAM_COMPOSITION", "GAME_ALREADY_STARTED", "LOBBY_ACTION_NOT_ALLOWED", "PARTICIPANT_NOT_FOUND"})
     @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_FOUND"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "게임 시작 성공")

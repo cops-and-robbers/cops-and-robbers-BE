@@ -9,6 +9,7 @@ public record GameInfoResult(
         Integer locationRevealIntervalMinutes,
         Integer policeWaitMinutes,
         Integer maxParticipants,
+        Integer shrinkFinalRadiusInMeters,
         boolean isStarted,
         LocalDateTime gameStartTime,
         boolean isEventGame
@@ -19,6 +20,7 @@ public record GameInfoResult(
                 game.getLocationRevealIntervalMinutes(),
                 game.getPoliceWaitMinutes(),
                 game.getMaxParticipants(),
+                game.getShrinkFinalRadiusInMeters(),
                 game.isInProgress(),
                 game.getStartedAt(),
                 game.isEventGame()

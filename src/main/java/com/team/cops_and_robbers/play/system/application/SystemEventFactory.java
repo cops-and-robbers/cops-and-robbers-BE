@@ -28,6 +28,11 @@ public class SystemEventFactory {
         return SystemEvent.of(gameId, SystemEventType.ARREST, data);
     }
 
+    public SystemEvent createForceArrestEvent(Long gameId, GameParticipant robber, int remainingThieves) {
+        SystemEventData.ArrestData data = SystemEventData.ArrestData.ofForced(robber, remainingThieves);
+        return SystemEvent.of(gameId, SystemEventType.ARREST, data);
+    }
+
     public SystemEvent createEscapeEvent(Long gameId, GameParticipant escapedThief, int remainingThieves) {
         SystemEventData.EscapeData data = SystemEventData.EscapeData.of(escapedThief, remainingThieves);
         return SystemEvent.of(gameId, SystemEventType.ESCAPE, data);

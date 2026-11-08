@@ -6,6 +6,7 @@ import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.area.application.GameAreaService;
 import com.team.cops_and_robbers.game.area.application.dto.GameAreaData;
 import com.team.cops_and_robbers.game.area.domain.GameArea;
+import com.team.cops_and_robbers.game.area.domain.GameAreaDomainService;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameAreaUpdateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameCreateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameInfoCommand;
@@ -54,6 +55,9 @@ class GameServiceTest extends ServiceUnitTest {
 
     @Mock
     private GameAreaService gameAreaService;
+
+    @Mock
+    private GameAreaDomainService gameAreaDomainService;
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
@@ -254,7 +258,7 @@ class GameServiceTest extends ServiceUnitTest {
             GameAreaUpdateResult result = gameService.updateGameArea(circleCommand);
 
             // then
-            then(gameAreaService).should().applyAreaUpdate(any(GameArea.class), any(GameAreaData.class));
+            then(gameAreaService).should().applyAreaUpdate(any(GameArea.class), any(GameAreaData.class), any());
             then(eventPublisher).should().publishEvent(lobbyEvent);
             assertThat(result).isNotNull();
         }
@@ -271,7 +275,7 @@ class GameServiceTest extends ServiceUnitTest {
             GameAreaUpdateResult result = gameService.updateGameArea(polygonCommand);
 
             // then
-            then(gameAreaService).should().applyAreaUpdate(any(GameArea.class), any(GameAreaData.class));
+            then(gameAreaService).should().applyAreaUpdate(any(GameArea.class), any(GameAreaData.class), any());
             then(eventPublisher).should().publishEvent(lobbyEvent);
             assertThat(result).isNotNull();
         }
@@ -320,7 +324,8 @@ class GameServiceTest extends ServiceUnitTest {
                     60,
                     10,
                     5,
-                    20
+                    20,
+                    null
             );
         }
 
@@ -329,6 +334,7 @@ class GameServiceTest extends ServiceUnitTest {
             // given
             GameParticipant hostParticipant = HOST_PARTICIPANT(game, host);
             given(gameParticipantRepository.getByGameIdAndUserIdWithGame(TEST_GAME_ID, TEST_HOST_ID)).willReturn(hostParticipant);
+            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(CIRCLE_GAME_AREA(game));
             given(lobbyEventFactory.createSettingsUpdatedEvent(any(), any())).willReturn(lobbyEvent);
 
             // when
@@ -372,7 +378,7 @@ class GameServiceTest extends ServiceUnitTest {
         return new GameCreateCommand(
                 hostId,
                 new GameAreaData.CircleAreaData(37.5665, 126.978, 1000, 37.5665, 126.978, 100),
-                30, 5, 3, 10
+                30, 5, 3, 10, null
         );
     }
 
@@ -380,7 +386,7 @@ class GameServiceTest extends ServiceUnitTest {
         return new GameCreateCommand(
                 hostId,
                 createPolygonAreaData(),
-                30, 5, 3, 10
+                30, 5, 3, 10, null
         );
     }
 

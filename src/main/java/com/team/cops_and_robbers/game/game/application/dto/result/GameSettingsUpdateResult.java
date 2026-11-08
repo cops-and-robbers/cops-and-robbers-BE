@@ -6,7 +6,8 @@ public record GameSettingsUpdateResult(
         Integer roundDurationMinutes,
         Integer locationRevealIntervalMinutes,
         Integer policeWaitMinutes,
-        Integer maxParticipants
+        Integer maxParticipants,
+        Integer shrinkFinalRadiusInMeters
 ) {
 
     public static GameSettingsUpdateResult from(Game game) {
@@ -14,7 +15,8 @@ public record GameSettingsUpdateResult(
                 game.getRoundDurationMinutes(),
                 game.getLocationRevealIntervalMinutes(),
                 game.getPoliceWaitMinutes(),
-                game.getMaxParticipants()
+                game.getMaxParticipants(),
+                game.getShrinkFinalRadiusInMeters()
         );
     }
 }

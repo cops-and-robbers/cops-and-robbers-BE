@@ -24,7 +24,7 @@ public record LobbyInfoResponse(
             String nickname,
             @Schema(description = "팀", example = "POLICE")
             Team team,
-            @Schema(description = "준비 여부", example = "true")
+            @Schema(description = "준비 여부", example = "true", deprecated = true)
             boolean isReady
     ) {
     }

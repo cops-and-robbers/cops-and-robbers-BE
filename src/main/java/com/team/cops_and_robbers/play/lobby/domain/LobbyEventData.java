@@ -10,20 +10,22 @@ public sealed interface LobbyEventData permits
         LobbyEventData.LobbyEnterData,
         LobbyEventData.LobbyExitData,
         LobbyEventData.LobbyTeamUpdateData,
-        LobbyEventData.LobbyReadyUpdateData,
         LobbyEventData.LobbyHostChangedData,
         LobbyEventData.LobbyGameStartData,
         LobbyEventData.LobbyAreaUpdatedData,
         LobbyEventData.LobbySettingsUpdatedData,
         LobbyEventData.LobbyKickedData {
 
+    /**
+     * isReady를 항상 true로 내린다. -> 이후 삭제 예정
+     */
     record LobbyParticipantInfo(Long participantId, String nickname, Team team, boolean isReady) {
         public static LobbyParticipantInfo from(GameParticipant participant) {
             return new LobbyParticipantInfo(
                     participant.getId(),
                     participant.getUser().getNickname(),
                     participant.getTeam(),
-                    participant.isReady()
+                    true
             );
         }
     }
@@ -45,12 +47,6 @@ public sealed interface LobbyEventData permits
                                int robberCount) implements LobbyEventData {
         public static LobbyTeamUpdateData of(GameParticipant participant, int policeCount, int robberCount) {
             return new LobbyTeamUpdateData(LobbyParticipantInfo.from(participant), policeCount, robberCount);
-        }
-    }
-
-    record LobbyReadyUpdateData(LobbyParticipantInfo participant) implements LobbyEventData {
-        public static LobbyReadyUpdateData from(GameParticipant participant) {
-            return new LobbyReadyUpdateData(LobbyParticipantInfo.from(participant));
         }
     }
 
@@ -76,12 +72,14 @@ public sealed interface LobbyEventData permits
             Integer roundDurationMinutes,
             Integer locationRevealIntervalMinutes,
             Integer policeWaitMinutes,
-            Integer maxParticipants
+            Integer maxParticipants,
+            Integer shrinkFinalRadiusInMeters
     ) implements LobbyEventData {
         public static LobbySettingsUpdatedData from(GameSettingsUpdateResult result) {
             return new LobbySettingsUpdatedData(
                     result.roundDurationMinutes(), result.locationRevealIntervalMinutes(),
-                    result.policeWaitMinutes(), result.maxParticipants()
+                    result.policeWaitMinutes(), result.maxParticipants(),
+                    result.shrinkFinalRadiusInMeters()
             );
         }
     }

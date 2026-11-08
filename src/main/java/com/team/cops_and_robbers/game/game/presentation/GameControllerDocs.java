@@ -30,7 +30,9 @@ public interface GameControllerDocs {
     @Operation(summary = "게임 방 생성",
             description = "새로운 게임 방을 생성하고 초대 코드를 발급받습니다. 게임 영역(플레이그라운드, 감옥)과 게임 규칙을 설정할 수 있습니다. 방을 생성한 사용자는 자동으로 방장이 됩니다."
     )
-    @ApiErrorCode(value = GameAreaException.class, codes = {"INVALID_JAIL_RADIUS", "JAIL_OUTSIDE_PLAYGROUND"})
+    @ApiErrorCode(value = GameAreaException.class, codes = {
+            "INVALID_JAIL_RADIUS", "JAIL_OUTSIDE_PLAYGROUND", "SHRINK_REQUIRES_CIRCLE_AREA", "INVALID_SHRINK_FINAL_RADIUS"
+    })
     @ApiErrorCode(value = UserException.class, codes = {"REQUIRED_TERMS_NOT_AGREED"})
     @ApiErrorCode(value = GameException.class, codes = {"INVALID_LOCATION_INTERVAL", "INVALID_POLICE_WAIT_TIME"})
     @ApiErrorCode(value = GameParticipantException.class, codes = {"ALREADY_PARTICIPATING"})
@@ -79,7 +81,9 @@ public interface GameControllerDocs {
     )
     @ApiErrorCode(value = GameParticipantException.class, codes = {"NOT_HOST"})
     @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_WAITING"})
-    @ApiErrorCode(value = GameAreaException.class, codes = {"INVALID_JAIL_RADIUS", "JAIL_OUTSIDE_PLAYGROUND"})
+    @ApiErrorCode(value = GameAreaException.class, codes = {
+            "INVALID_JAIL_RADIUS", "JAIL_OUTSIDE_PLAYGROUND", "SHRINK_REQUIRES_CIRCLE_AREA", "INVALID_SHRINK_FINAL_RADIUS"
+    })
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "영역 수정 성공")
@@ -107,6 +111,9 @@ public interface GameControllerDocs {
     )
     @ApiErrorCode(value = GameParticipantException.class, codes = {"NOT_HOST"})
     @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_WAITING", "INVALID_LOCATION_INTERVAL", "INVALID_POLICE_WAIT_TIME"})
+    @ApiErrorCode(value = GameAreaException.class, codes = {
+            "GAME_AREA_NOT_FOUND", "SHRINK_REQUIRES_CIRCLE_AREA", "INVALID_SHRINK_FINAL_RADIUS"
+    })
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "설정 수정 성공")

@@ -4,7 +4,6 @@ public enum LobbyEventType {
     ENTER,
     EXIT,
     TEAM_UPDATE,
-    READY_UPDATE,
     HOST_CHANGED,
     GAME_START,
     AREA_UPDATED,

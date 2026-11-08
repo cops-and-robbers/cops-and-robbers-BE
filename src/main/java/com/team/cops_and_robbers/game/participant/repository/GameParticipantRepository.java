@@ -95,20 +95,6 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
     Set<Long> findAliveRobberIdsByGameId(@Param("gameId") Long gameId);
 
     /**
-     * 게임에서 준비하지 않은 참가자가 있는지 확인
-     */
-    @Query("""
-        select exists(
-            select 1
-            from GameParticipant gp
-            where gp.game.id = :gameId
-            and gp.isReady = false
-            and gp.isHost = false
-        )
-        """)
-    boolean existsNotReadyParticipantByGameId(@Param("gameId") Long gameId);
-
-    /**
      * 게임의 모든 참가자 상태를 업데이트
      */
     @Modifying(flushAutomatically = true, clearAutomatically = true)
@@ -137,7 +123,7 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
         update GameParticipant gp
-        set gp.status = :status, gp.isReady = false
+        set gp.status = :status
         where gp.game.id = :gameId
         """ )
     void resetAllParticipantsForNextRound(@Param("gameId") Long gameId, @Param("status") ParticipantStatus status);

@@ -156,6 +156,33 @@ class GameResultServiceTest extends ServiceUnitTest {
         }
 
         @Test
+        void 축소를_쓴_게임이면_최종_반경이_그대로_복사된다() {
+            // given
+            inProgressGame.updateSettings(30, 5, 3, 10, 200);
+            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(gameArea);
+            given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
+
+            // when
+            GameResult result = gameResultService.openGameResult(inProgressGame);
+
+            // then
+            assertThat(result.getShrinkFinalRadiusInMeters()).isEqualTo(200);
+        }
+
+        @Test
+        void 축소를_쓰지_않은_게임이면_최종_반경이_null_로_열린다() {
+            // given
+            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(gameArea);
+            given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
+
+            // when
+            GameResult result = gameResultService.openGameResult(inProgressGame);
+
+            // then
+            assertThat(result.getShrinkFinalRadiusInMeters()).isNull();
+        }
+
+        @Test
         void 열린_결과는_아직_완료되지_않은_상태다() {
             // given
             given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(gameArea);
@@ -654,7 +681,7 @@ class GameResultServiceTest extends ServiceUnitTest {
             Integer recordedInterval = result.getLocationRevealIntervalMinutes();
 
             // when
-            inProgressGame.updateSettings(30, 1, 3, 10);
+            inProgressGame.updateSettings(30, 1, 3, 10, null);
 
             // then
             assertThat(recordedInterval).isEqualTo(5);
