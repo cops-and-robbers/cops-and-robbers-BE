@@ -120,6 +120,10 @@ public class Game extends BaseTimeEntity {
         this.isEventGame = isEventGame;
     }
 
+    public GameRules rules() {
+        return isEventGame ? GameRules.EVENT : GameRules.COPS_AND_ROBBERS;
+    }
+
     public boolean isSameRound(int eventRound) {
         return this.roundNumber == eventRound;
     }
