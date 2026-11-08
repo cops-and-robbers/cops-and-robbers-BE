@@ -368,6 +368,29 @@ class SystemControllerTest extends ControllerTest {
         }
 
         @Test
+        void 이벤트_게임에서는_강제_체포할_수_없으며_400_BadRequest를_응답한다() {
+            // given
+            game.updateEventGame(true);
+            gameRepository.save(game);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(robberToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(FORCE_ARREST_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+
+                Game savedGame = gameRepository.findById(game.getId()).orElseThrow();
+                softly.assertThat(savedGame.getTotalArrestCount()).isZero();
+            });
+        }
+
+        @Test
         void 도둑이_아니면_강제_체포할_수_없으며_400_BadRequest를_응답한다() {
             // when (경찰이 요청)
             ExtractableResponse<Response> response = authenticated(policeToken)
