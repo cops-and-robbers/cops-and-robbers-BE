@@ -15,6 +15,14 @@ public record GameRules(
             true
     );
 
+    public static final GameRules TAG = new GameRules(
+            CatchOutcome.CAPTURE,
+            true,
+            true,
+            true,
+            true
+    );
+
     public static final GameRules EVENT = new GameRules(
             CatchOutcome.NONE,
             false,
