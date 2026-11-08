@@ -144,6 +144,9 @@ public class SystemService {
         if (!game.isInProgress()) {
             throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
         }
+        if (game.isEventGame()) {
+            throw new ApplicationException(GameException.FORCE_ARREST_NOT_ALLOWED_IN_EVENT_GAME);
+        }
         if (!robber.isRobber()) {
             throw new ApplicationException(GameParticipantException.ONLY_ROBBER_CAN_BE_ARRESTED);
         }
