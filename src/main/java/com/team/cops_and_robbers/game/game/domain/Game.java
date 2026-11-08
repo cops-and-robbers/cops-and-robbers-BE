@@ -37,6 +37,11 @@ public class Game extends BaseTimeEntity {
     @Column(nullable = false)
     private GameStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private GameMode gameMode = GameMode.COPS_AND_ROBBERS;
+
     @Column(nullable = false)
     private Integer roundDurationMinutes;
 

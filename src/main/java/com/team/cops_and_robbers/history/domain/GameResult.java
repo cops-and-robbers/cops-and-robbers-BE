@@ -4,6 +4,7 @@ import com.team.cops_and_robbers.common.BaseTimeEntity;
 import com.team.cops_and_robbers.game.area.domain.AreaType;
 import com.team.cops_and_robbers.game.area.domain.GameArea;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -38,6 +39,11 @@ public class GameResult extends BaseTimeEntity {
 
     @Column(nullable = false)
     private Long gameId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private GameMode gameMode = GameMode.COPS_AND_ROBBERS;
 
     private Integer roundNumber;
 
@@ -96,6 +102,7 @@ public class GameResult extends BaseTimeEntity {
     public static GameResult openSnapshot(Game game, GameArea gameArea, Long hostUserId) {
         GameResultBuilder builder = GameResult.builder()
                 .gameId(game.getId())
+                .gameMode(game.getGameMode())
                 .roundNumber(game.getRoundNumber())
                 .startedAt(game.getStartedAt())
                 .locationRevealIntervalMinutes(game.getLocationRevealIntervalMinutes())
