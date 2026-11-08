@@ -1,10 +1,13 @@
 package com.team.cops_and_robbers.history.presentation.dto.response;
 
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.history.application.dto.result.GameResultResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record GameResultResponse(
+        @Schema(description = "게임 모드", example = "COPS_AND_ROBBERS")
+        GameMode gameMode,
         @Schema(description = "승리 팀", example = "POLICE")
         Team winnerTeam,
         @Schema(description = "게임 진행 시간(초)", example = "300")
@@ -27,6 +30,7 @@ public record GameResultResponse(
 
     public static GameResultResponse from(GameResultResult result) {
         return new GameResultResponse(
+                result.gameMode(),
                 result.winnerTeam(),
                 result.durationSeconds(),
                 result.totalArrestCount(),
