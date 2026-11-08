@@ -46,6 +46,7 @@ public class SwaggerConfig {
                         - 강제 체포 POST /api/games/{gameId}/system/force-arrest 추가. 구역 밖에 오래 머문 도둑이 스스로 체포된다
                           - 요청 본문 없음(로그인한 도둑 본인), 응답은 /system/arrest 와 같다
                           - 경찰 대기 시간 중에도 호출할 수 있고, 경찰의 체포 수는 올라가지 않는다
+                          - ⚠️ 에러코드 추가 — FORCE_ARREST_NOT_ALLOWED_IN_EVENT_GAME. 이벤트 게임에서 호출하면 400 이다
                         - ⚠️ ARREST 이벤트의 police 가 null 가능으로 전환 — 강제 체포일 때 null 이다
                           - 앱은 police 가 null 이면 "구역 밖에 오래 있어서 잡혔다"로 표시한다
                         - 게임이 끝나도 남도록 GameResult 에 최종 반경을 함께 복사한다. 어드민 GraphQL 의 AdminGame, GameResult, AdminGameHistory 에 shrinkFinalRadiusInMeters(Int, nullable) 추가
