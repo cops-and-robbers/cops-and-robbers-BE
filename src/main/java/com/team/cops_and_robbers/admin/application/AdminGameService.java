@@ -146,6 +146,9 @@ public class AdminGameService {
      * 마지막 경찰이 나갈 때 기권패가 다시 적용되기 때문입니다.
      */
     private void validateEventGameChangeable(Game game, boolean isEventGame) {
+        if (isEventGame && !game.getGameMode().supportsEventGame()) {
+            throw new ApplicationException(GameException.EVENT_GAME_NOT_SUPPORTED_IN_MODE);
+        }
         if (!isEventGame && !game.isWaiting()) {
             throw new ApplicationException(GameException.GAME_NOT_WAITING);
         }
