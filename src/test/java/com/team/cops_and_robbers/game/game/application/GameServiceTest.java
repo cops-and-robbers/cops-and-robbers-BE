@@ -14,6 +14,7 @@ import com.team.cops_and_robbers.game.game.application.dto.command.GameSettingsU
 import com.team.cops_and_robbers.game.game.application.dto.result.GameAreaUpdateResult;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameSettingsUpdateResult;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
@@ -378,7 +379,7 @@ class GameServiceTest extends ServiceUnitTest {
         return new GameCreateCommand(
                 hostId,
                 new GameAreaData.CircleAreaData(37.5665, 126.978, 1000, 37.5665, 126.978, 100),
-                30, 5, 3, 10, null
+                30, 5, 3, 10, null, GameMode.COPS_AND_ROBBERS
         );
     }
 
@@ -386,7 +387,7 @@ class GameServiceTest extends ServiceUnitTest {
         return new GameCreateCommand(
                 hostId,
                 createPolygonAreaData(),
-                30, 5, 3, 10, null
+                30, 5, 3, 10, null, GameMode.COPS_AND_ROBBERS
         );
     }
 

@@ -95,6 +95,7 @@ public class Game extends BaseTimeEntity {
         return Game.builder()
                 .inviteCode(inviteCode)
                 .status(GameStatus.WAITING)
+                .gameMode(command.gameMode())
                 .roundDurationMinutes(command.roundDurationMinutes())
                 .locationRevealIntervalMinutes(command.locationRevealIntervalMinutes())
                 .policeWaitMinutes(command.policeWaitMinutes())

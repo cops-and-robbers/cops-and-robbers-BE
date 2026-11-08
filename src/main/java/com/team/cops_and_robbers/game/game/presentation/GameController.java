@@ -45,7 +45,9 @@ public class GameController implements GameControllerDocs {
             @AuthUser LoginUser loginUser,
             @RequestBody @Valid GameCreateRequest request
     ) {
-        GameCreateCommand command = GameCreateCommand.of(loginUser.userId(), request.area(), request.settings());
+        GameCreateCommand command = GameCreateCommand.of(
+                loginUser.userId(), request.area(), request.settings(), request.gameMode()
+        );
         GameCreateResult result = gameService.createGame(command);
         GameCreateResponse response = GameCreateResponse.from(result);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

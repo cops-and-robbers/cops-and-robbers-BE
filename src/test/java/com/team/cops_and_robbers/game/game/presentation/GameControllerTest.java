@@ -78,7 +78,8 @@ class GameControllerTest extends ControllerTest {
             // given (플레이그라운드 1000m, 감옥 100m)
             GameCreateRequest request = new GameCreateRequest(
                     createAreaRequest(),
-                    new GameSettingsRequest(30, 5, 3, 10, 500)
+                    new GameSettingsRequest(30, 5, 3, 10, 500),
+                    null
             );
 
             // when
@@ -102,7 +103,8 @@ class GameControllerTest extends ControllerTest {
             // given (플레이그라운드 1000m, 감옥 100m - 경계값은 GameAreaDomainServiceTest 가 본다)
             GameCreateRequest request = new GameCreateRequest(
                     createAreaRequest(),
-                    new GameSettingsRequest(30, 5, 3, 10, 1000)
+                    new GameSettingsRequest(30, 5, 3, 10, 1000),
+                    null
             );
 
             // when
@@ -129,7 +131,7 @@ class GameControllerTest extends ControllerTest {
                     null
             );
 
-            GameCreateRequest request = new GameCreateRequest(invalidArea, createSettingsRequest());
+            GameCreateRequest request = new GameCreateRequest(invalidArea, createSettingsRequest(), null);
 
             // when
             ExtractableResponse<Response> response = authenticated(accessToken)
@@ -165,7 +167,7 @@ class GameControllerTest extends ControllerTest {
                     new GameAreaRequest.PolygonAreaRequest(playgroundPolygon, farAwayJailPolygon)
             );
 
-            GameCreateRequest request = new GameCreateRequest(invalidArea, createSettingsRequest());
+            GameCreateRequest request = new GameCreateRequest(invalidArea, createSettingsRequest(), null);
 
             // when
             ExtractableResponse<Response> response = authenticated(accessToken)
@@ -183,7 +185,7 @@ class GameControllerTest extends ControllerTest {
         void areaType과_데이터가_불일치하면_400_BadRequest를_응답한다() {
             // given: CIRCLE 타입인데 circle 데이터 없음
             GameAreaRequest invalidArea = new GameAreaRequest(AreaType.CIRCLE, null, null);
-            GameCreateRequest request = new GameCreateRequest(invalidArea, createSettingsRequest());
+            GameCreateRequest request = new GameCreateRequest(invalidArea, createSettingsRequest(), null);
 
             // when
             ExtractableResponse<Response> response = authenticated(accessToken)
@@ -201,7 +203,7 @@ class GameControllerTest extends ControllerTest {
         void 위치_공개_주기가_라운드_시간보다_길면_400_BadRequest를_응답한다() {
             // given (10분 라운드 < 15분 주기)
             GameSettingsRequest invalidSettings = new GameSettingsRequest(10, 15, 3, 10, null);
-            GameCreateRequest request = new GameCreateRequest(createAreaRequest(), invalidSettings);
+            GameCreateRequest request = new GameCreateRequest(createAreaRequest(), invalidSettings, null);
 
             // when
             ExtractableResponse<Response> response = authenticated(accessToken)
@@ -219,7 +221,7 @@ class GameControllerTest extends ControllerTest {
         void 최대_참가_인원이_150명이면_생성된다() {
             // given
             GameSettingsRequest settings = new GameSettingsRequest(30, 5, 3, 150, null);
-            GameCreateRequest request = new GameCreateRequest(createAreaRequest(), settings);
+            GameCreateRequest request = new GameCreateRequest(createAreaRequest(), settings, null);
 
             // when
             ExtractableResponse<Response> response = authenticated(accessToken)
@@ -240,7 +242,7 @@ class GameControllerTest extends ControllerTest {
         void 최대_참가_인원이_151명이면_400_BadRequest를_응답한다() {
             // given
             GameSettingsRequest settings = new GameSettingsRequest(30, 5, 3, 151, null);
-            GameCreateRequest request = new GameCreateRequest(createAreaRequest(), settings);
+            GameCreateRequest request = new GameCreateRequest(createAreaRequest(), settings, null);
 
             // when
             ExtractableResponse<Response> response = authenticated(accessToken)
@@ -958,7 +960,7 @@ class GameControllerTest extends ControllerTest {
                     new CoordinatesRequest(37.5665, 126.978),
                     100
             );
-            GameCreateRequest request = new GameCreateRequest(legacyArea, createSettingsRequest());
+            GameCreateRequest request = new GameCreateRequest(legacyArea, createSettingsRequest(), null);
 
             // when
             ExtractableResponse<Response> response = authenticated(accessToken)
@@ -1015,7 +1017,7 @@ class GameControllerTest extends ControllerTest {
     }
 
     private GameCreateRequest createGameCreateRequest() {
-        return new GameCreateRequest(createAreaRequest(), createSettingsRequest());
+        return new GameCreateRequest(createAreaRequest(), createSettingsRequest(), null);
     }
 
     private GameAreaRequest createAreaRequest() {
