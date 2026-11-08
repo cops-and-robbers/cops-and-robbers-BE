@@ -508,6 +508,19 @@ class AdminGameServiceTest extends ServiceUnitTest {
         }
 
         @Test
+        void 술래잡기_게임은_이벤트_게임으로_켤_수_없다() {
+            // given
+            Game tagGame = GameFixture.WAITING_TAG_GAME();
+            given(gameRepository.getByGameIdForUpdate(3L)).willReturn(tagGame);
+
+            // when & then
+            assertThatThrownBy(() -> adminGameService.updateEventGame(
+                    new AdminUpdateEventGameCommand(3L, true)))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(GameException.EVENT_GAME_NOT_SUPPORTED_IN_MODE.getDetail());
+        }
+
+        @Test
         void 종료된_게임은_이벤트_게임으로_켤_수_없다() {
             // given
             given(gameRepository.getByGameIdForUpdate(1L)).willReturn(game1);

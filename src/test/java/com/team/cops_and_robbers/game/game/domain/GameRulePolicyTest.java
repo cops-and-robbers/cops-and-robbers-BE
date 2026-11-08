@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import static com.team.cops_and_robbers.common.fixture.GameFixture.EVENT_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
+import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_TAG_GAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -22,12 +23,17 @@ class GameRulePolicyTest {
 
         @Test
         void 일반_게임은_경찰과도둑_규칙을_따른다() {
-            assertThat(IN_PROGRESS_GAME().rules()).isEqualTo(GameRules.COPS_AND_ROBBERS);
+            assertThat(IN_PROGRESS_GAME().rules()).isSameAs(GameRules.COPS_AND_ROBBERS);
+        }
+
+        @Test
+        void 술래잡기_게임은_술래잡기_규칙을_따른다() {
+            assertThat(IN_PROGRESS_TAG_GAME().rules()).isSameAs(GameRules.TAG);
         }
 
         @Test
         void 이벤트_게임은_이벤트_규칙을_따른다() {
-            assertThat(EVENT_GAME().rules()).isEqualTo(GameRules.EVENT);
+            assertThat(EVENT_GAME().rules()).isSameAs(GameRules.EVENT);
         }
     }
 

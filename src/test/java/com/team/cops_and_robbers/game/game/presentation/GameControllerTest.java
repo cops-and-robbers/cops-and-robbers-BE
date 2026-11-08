@@ -6,6 +6,7 @@ import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.common.fixture.UserFixture;
 import com.team.cops_and_robbers.game.area.domain.AreaType;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.CoordinatesRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameAreaRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameCreateRequest;
@@ -70,6 +71,54 @@ class GameControllerTest extends ControllerTest {
                 softly.assertThat(result.gameId()).isNotNull();
                 softly.assertThat(result.inviteCode()).hasSize(6);
                 softly.assertThat(result.status()).isEqualTo("WAITING");
+            });
+        }
+
+        @Test
+        void 게임_모드를_보내지_않으면_경찰과도둑으로_생성된다() {
+            // given
+            GameCreateRequest request = createGameCreateRequest();
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
+
+            // then
+            GameCreateResponse result = response.as(GameCreateResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(201);
+                softly.assertThat(result.gameMode()).isEqualTo(GameMode.COPS_AND_ROBBERS);
+            });
+        }
+
+        @Test
+        void 게임_모드를_보내면_그_모드로_생성된다() {
+            // given
+            GameCreateRequest request = new GameCreateRequest(
+                    createAreaRequest(),
+                    createSettingsRequest(),
+                    GameMode.TAG
+            );
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
+
+            // then
+            GameCreateResponse result = response.as(GameCreateResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(201);
+                softly.assertThat(result.gameMode()).isEqualTo(GameMode.TAG);
+                softly.assertThat(gameRepository.findById(result.gameId()).orElseThrow().getGameMode())
+                        .isEqualTo(GameMode.TAG);
             });
         }
 
