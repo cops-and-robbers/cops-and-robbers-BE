@@ -11,6 +11,7 @@ import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepo
 import com.team.cops_and_robbers.history.application.GameResultService;
 import com.team.cops_and_robbers.play.system.application.dto.command.ArrestCommand;
 import com.team.cops_and_robbers.play.system.application.dto.command.EscapeCommand;
+import com.team.cops_and_robbers.play.system.application.dto.command.ForceArrestCommand;
 import com.team.cops_and_robbers.play.system.application.dto.result.ArrestResult;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
 import com.team.cops_and_robbers.play.system.domain.SystemEventData;
@@ -67,6 +68,35 @@ public class SystemService {
         return ArrestResult.from((SystemEventData.ArrestData) event.data());
     }
 
+    @Transactional
+    public ArrestResult forceArrestRobber(ForceArrestCommand command) {
+        Game game = gameRepository.getByGameId(command.gameId());
+        GameParticipant robber = gameParticipantRepository.getByGameIdAndUserId(
+                command.gameId(), command.robberUserId()
+        );
+
+        validateForceArrest(game, robber);
+
+        if (!game.isEventGame()) {
+            robber.updateStatus(ParticipantStatus.JAILED);
+        }
+        game.incrementArrestCount();
+        gameResultService.recordArrested(game.getId(), robber.getUser().getId());
+
+        int remainingThieves = gameParticipantRepository.countByGameIdAndRobberStatus(
+                game.getId(), ParticipantStatus.ALIVE
+        );
+
+        SystemEvent event = systemEventFactory.createForceArrestEvent(game.getId(), robber, remainingThieves);
+        eventPublisher.publishEvent(event);
+
+        if (!game.isEventGame() && remainingThieves == 0) {
+            gameTerminationService.endGameByAllArrested(game.getId());
+        }
+
+        return ArrestResult.from((SystemEventData.ArrestData) event.data());
+    }
+
     /**
      * 수감된 도둑이 탈옥합니다.
      */
@@ -104,6 +134,21 @@ public class SystemService {
         }
         if (!robber.isInGame(game.getId())) {
             throw new ApplicationException(GameParticipantException.PARTICIPANT_GAME_MISMATCH);
+        }
+        if (robber.isJailed()) {
+            throw new ApplicationException(GameParticipantException.ALREADY_ARRESTED);
+        }
+    }
+
+    private void validateForceArrest(Game game, GameParticipant robber) {
+        if (!game.isInProgress()) {
+            throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
+        }
+        if (game.isEventGame()) {
+            throw new ApplicationException(GameException.FORCE_ARREST_NOT_ALLOWED_IN_EVENT_GAME);
+        }
+        if (!robber.isRobber()) {
+            throw new ApplicationException(GameParticipantException.ONLY_ROBBER_CAN_BE_ARRESTED);
         }
         if (robber.isJailed()) {
             throw new ApplicationException(GameParticipantException.ALREADY_ARRESTED);
