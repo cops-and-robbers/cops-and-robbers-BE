@@ -160,10 +160,9 @@ public class LobbyService {
 
     private void validateGameStart(Game game, GameParticipant participant) {
         validateHostPermission(participant);
-        if (game.isEventGame()) {
-            return;
+        if (game.rules().validatesTeamComposition()) {
+            validateTeamComposition(game.getId());
         }
-        validateTeamComposition(game.getId());
     }
 
     private void validateHostPermission(GameParticipant participant) {
