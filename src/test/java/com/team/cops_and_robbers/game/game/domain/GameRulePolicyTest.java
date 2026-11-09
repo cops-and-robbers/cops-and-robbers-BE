@@ -98,6 +98,24 @@ class GameRulePolicyTest {
     }
 
     @Nested
+    @DisplayName("탈옥 검증")
+    class ValidateEscape {
+
+        @Test
+        void 경찰과도둑_게임은_탈옥할_수_있다() {
+            assertThatCode(() -> gameRulePolicy.validateEscape(IN_PROGRESS_GAME()))
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        void 술래잡기_게임은_탈옥할_수_없다() {
+            assertThatThrownBy(() -> gameRulePolicy.validateEscape(IN_PROGRESS_TAG_GAME()))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasFieldOrPropertyWithValue("code", GameException.ESCAPE_NOT_ALLOWED_IN_MODE);
+        }
+    }
+
+    @Nested
     @DisplayName("모드 변경 검증")
     class ValidateModeChange {
 
