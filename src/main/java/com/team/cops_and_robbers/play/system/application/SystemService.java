@@ -160,6 +160,7 @@ public class SystemService {
         if (!game.isInProgress()) {
             throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
         }
+        gameRulePolicy.validateEscape(game);
         if (!escapedThief.isJailed()) {
             throw new ApplicationException(GameParticipantException.NOT_JAILED);
         }

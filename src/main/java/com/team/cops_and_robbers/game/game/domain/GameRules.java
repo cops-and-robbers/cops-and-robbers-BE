@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.game.game.domain;
 public record GameRules(
         CatchOutcome catchOutcome,
         boolean usesJailArea,
+        boolean allowsEscape,
         boolean allowsForceArrest,
         boolean endsWhenAllRobbersArrested,
         boolean endsWhenPoliceLeave,
@@ -14,11 +15,13 @@ public record GameRules(
             true,
             true,
             true,
+            true,
             true
     );
 
     public static final GameRules TAG = new GameRules(
             CatchOutcome.CAPTURE,
+            false,
             false,
             true,
             true,
@@ -28,6 +31,7 @@ public record GameRules(
 
     public static final GameRules EVENT = new GameRules(
             CatchOutcome.NONE,
+            true,
             true,
             false,
             false,

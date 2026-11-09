@@ -18,6 +18,12 @@ public class GameRulePolicy {
         }
     }
 
+    public void validateEscape(Game game) {
+        if (!game.rules().allowsEscape()) {
+            throw new ApplicationException(GameException.ESCAPE_NOT_ALLOWED_IN_MODE);
+        }
+    }
+
     public void validateModeChange(Game game, GameMode gameMode) {
         if (game.isEventGame() && !gameMode.supportsEventGame()) {
             throw new ApplicationException(GameException.EVENT_GAME_NOT_SUPPORTED_IN_MODE);
