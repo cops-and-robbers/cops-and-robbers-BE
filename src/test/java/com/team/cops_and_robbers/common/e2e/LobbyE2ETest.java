@@ -14,7 +14,6 @@ import com.team.cops_and_robbers.game.game.presentation.dto.request.GameAreaRequ
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameModeUpdateRequest;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.presentation.dto.request.GameJoinRequest;
-import com.team.cops_and_robbers.play.lobby.presentation.dto.request.ReadyUpdateRequest;
 import com.team.cops_and_robbers.play.lobby.presentation.dto.request.TeamChangeRequest;
 import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
@@ -233,22 +232,6 @@ class LobbyE2ETest extends WebSocketE2ETest {
                     .findFirst()
                     .orElseThrow();
             assertThat(hostChanged.data().get("newHost").get("isReady").asBoolean()).isTrue();
-        }
-
-        @Test
-        void 준비_상태를_변경해도_이벤트를_발행하지_않는다() throws Exception {
-            // given
-            LobbySetup setup = givenLobbySetup();
-
-            // when
-            authenticated(setup.guestToken())
-                    .body(new ReadyUpdateRequest(true))
-                    .patch("/api/games/{gameId}/lobby/ready", setup.game().getId())
-                    .then()
-                    .statusCode(204);
-
-            // then
-            assertThat(setup.hostClient().<TestEventResponse>waitForMessage(setup.lobbyChannel(), 1)).isNull();
         }
     }
 

@@ -12,7 +12,6 @@ import com.team.cops_and_robbers.history.application.GameResultService;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.GameStartCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.KickCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.LobbyInfoCommand;
-import com.team.cops_and_robbers.play.lobby.application.dto.command.ReadyUpdateCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.TeamChangeCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.result.LobbyInfoResult;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
@@ -55,16 +54,6 @@ public class LobbyService {
 
         LobbyEvent event = lobbyEventFactory.createTeamUpdateEvent(game.getId(), participant, policeCount, robberCount);
         eventPublisher.publishEvent(event);
-    }
-
-    /**
-     * 준비 상태 변경 (deprecated)
-     * 준비 상태의 삭제 결정으로, 항상 같은 값을 내림 -> 심사 이후 삭제 예정
-     */
-    @Deprecated
-    public void updateReady(ReadyUpdateCommand command) {
-        Game game = getWaitingGame(command.gameId());
-        getWaitingParticipant(game.getId(), command.userId());
     }
 
     /**
