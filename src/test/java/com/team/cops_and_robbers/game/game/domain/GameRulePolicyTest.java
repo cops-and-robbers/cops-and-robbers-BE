@@ -96,4 +96,28 @@ class GameRulePolicyTest {
                     .hasFieldOrPropertyWithValue("code", GameAreaException.JAIL_AREA_NOT_ALLOWED);
         }
     }
+
+    @Nested
+    @DisplayName("모드 변경 검증")
+    class ValidateModeChange {
+
+        @Test
+        void 일반_게임은_술래잡기로_바꿀_수_있다() {
+            assertThatCode(() -> gameRulePolicy.validateModeChange(WAITING_GAME(), GameMode.TAG))
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        void 이벤트_게임은_경찰과도둑을_유지할_수_있다() {
+            assertThatCode(() -> gameRulePolicy.validateModeChange(EVENT_GAME(), GameMode.COPS_AND_ROBBERS))
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        void 이벤트_게임은_술래잡기로_바꿀_수_없다() {
+            assertThatThrownBy(() -> gameRulePolicy.validateModeChange(EVENT_GAME(), GameMode.TAG))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasFieldOrPropertyWithValue("code", GameException.EVENT_GAME_NOT_SUPPORTED_IN_MODE);
+        }
+    }
 }

@@ -6,7 +6,12 @@ import com.team.cops_and_robbers.common.WebSocketE2ETest;
 import com.team.cops_and_robbers.common.fixture.GameAreaFixture;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
+import com.team.cops_and_robbers.game.area.domain.AreaType;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
+import com.team.cops_and_robbers.game.game.presentation.dto.request.CoordinatesRequest;
+import com.team.cops_and_robbers.game.game.presentation.dto.request.GameAreaRequest;
+import com.team.cops_and_robbers.game.game.presentation.dto.request.GameModeUpdateRequest;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.presentation.dto.request.GameJoinRequest;
 import com.team.cops_and_robbers.play.lobby.presentation.dto.request.ReadyUpdateRequest;
@@ -135,6 +140,32 @@ class LobbyE2ETest extends WebSocketE2ETest {
         TestEventResponse event2 = setup.guestClient().waitForMessage(setup.lobbyChannel(), 5);
 
         assertThat(List.of(event1.type(), event2.type())).contains("HOST_CHANGED");
+    }
+
+    @Test
+    void 게임_모드를_바꾸면_MODE_UPDATED_이벤트로_모드와_구역을_수신한다() throws Exception {
+        // given
+        LobbySetup setup = givenLobbySetup();
+        GameAreaRequest area = new GameAreaRequest(
+                AreaType.CIRCLE,
+                new GameAreaRequest.CircleAreaRequest(new CoordinatesRequest(37.4979, 127.0276), 500, null, null),
+                null
+        );
+
+        // when
+        authenticated(setup.hostToken())
+                .body(new GameModeUpdateRequest(GameMode.TAG, area))
+                .put("/api/games/{gameId}/mode", setup.game().getId())
+                .then()
+                .statusCode(200);
+
+        // then
+        TestEventResponse guestEvent = setup.guestClient().waitForMessage(setup.lobbyChannel(), 5);
+
+        assertThat(guestEvent.type()).isEqualTo("MODE_UPDATED");
+        assertThat(guestEvent.data().get("gameMode").asText()).isEqualTo("TAG");
+        assertThat(guestEvent.data().get("areaData").get("playgroundRadiusInMeters").asInt()).isEqualTo(500);
+        assertThat(guestEvent.data().get("areaData").get("jailLatitude").isNull()).isTrue();
     }
 
     @Nested

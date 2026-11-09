@@ -10,8 +10,10 @@ import com.team.cops_and_robbers.game.area.domain.GameAreaDomainService;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameAreaUpdateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameCreateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameInfoCommand;
+import com.team.cops_and_robbers.game.game.application.dto.command.GameModeUpdateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameSettingsUpdateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameAreaUpdateResult;
+import com.team.cops_and_robbers.game.game.application.dto.result.GameModeUpdateResult;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameSettingsUpdateResult;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameMode;
@@ -312,6 +314,66 @@ class GameServiceTest extends ServiceUnitTest {
                     .hasMessage(GameException.GAME_NOT_WAITING.getDetail());
 
             then(gameAreaRepository).should(never()).getByGameId(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("게임 모드 변경")
+    class UpdateGameMode {
+
+        private final GameModeUpdateCommand tagCommand = new GameModeUpdateCommand(
+                TEST_GAME_ID,
+                TEST_HOST_ID,
+                GameMode.TAG,
+                new GameAreaData.CircleAreaData(37.4979, 127.0276, 1000, null, null, null)
+        );
+
+        @Test
+        void 모드를_바꾸고_영역을_수정한_뒤_이벤트를_발행한다() {
+            // given
+            GameParticipant hostParticipant = HOST_PARTICIPANT(game, host);
+            given(gameParticipantRepository.getByGameIdAndUserIdWithGame(TEST_GAME_ID, TEST_HOST_ID)).willReturn(hostParticipant);
+            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(CIRCLE_GAME_AREA(game));
+            given(lobbyEventFactory.createModeUpdatedEvent(any(), any())).willReturn(lobbyEvent);
+
+            // when
+            GameModeUpdateResult result = gameService.updateGameMode(tagCommand);
+
+            // then
+            assertThat(game.getGameMode()).isEqualTo(GameMode.TAG);
+            assertThat(result.gameMode()).isEqualTo(GameMode.TAG);
+            then(gameRulePolicy).should().validateModeChange(game, GameMode.TAG);
+            then(gameRulePolicy).should().validateArea(game, tagCommand.areaData());
+            then(gameAreaService).should().applyAreaUpdate(any(GameArea.class), any(GameAreaData.class), any());
+            then(eventPublisher).should().publishEvent(lobbyEvent);
+        }
+
+        @Test
+        void 방장이_아닌_참여자가_요청하면_예외가_발생한다() {
+            // given
+            GameParticipant guest = GUEST_PARTICIPANT(game, host);
+            given(gameParticipantRepository.getByGameIdAndUserIdWithGame(TEST_GAME_ID, TEST_HOST_ID)).willReturn(guest);
+
+            // when & then
+            assertThatThrownBy(() -> gameService.updateGameMode(tagCommand))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessage(GameParticipantException.NOT_HOST.getDetail());
+
+            assertThat(game.getGameMode()).isEqualTo(GameMode.COPS_AND_ROBBERS);
+        }
+
+        @Test
+        void 게임이_대기_상태가_아니라면_예외가_발생한다() {
+            // given
+            GameParticipant hostParticipant = HOST_PARTICIPANT(inProgressGame, host);
+            given(gameParticipantRepository.getByGameIdAndUserIdWithGame(TEST_GAME_ID, TEST_HOST_ID)).willReturn(hostParticipant);
+
+            // when & then
+            assertThatThrownBy(() -> gameService.updateGameMode(tagCommand))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessage(GameException.GAME_NOT_WAITING.getDetail());
+
+            assertThat(inProgressGame.getGameMode()).isEqualTo(GameMode.COPS_AND_ROBBERS);
         }
     }
 
