@@ -17,16 +17,6 @@ public record GameAreaUpdateCommand(
     }
 
     static GameAreaData resolveAreaData(GameAreaRequest area) {
-        if (area.areaType() == null) {
-            return new GameAreaData.CircleAreaData(
-                    area.playgroundCenter().latitude(),
-                    area.playgroundCenter().longitude(),
-                    area.playgroundRadiusInMeters(),
-                    area.jailCenter().latitude(),
-                    area.jailCenter().longitude(),
-                    area.jailRadiusInMeters()
-            );
-        }
         return switch (area.areaType()) {
             case CIRCLE -> new GameAreaData.CircleAreaData(
                     area.circle().playgroundCenter().latitude(),

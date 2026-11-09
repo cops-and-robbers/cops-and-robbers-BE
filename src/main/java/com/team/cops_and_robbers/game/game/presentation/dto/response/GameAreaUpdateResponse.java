@@ -16,13 +16,7 @@ public record GameAreaUpdateResponse(
         CircleAreaResponse circle,
 
         @Schema(description = "다각형 구역 데이터 (POLYGON 전용)")
-        PolygonAreaResponse polygon,
-
-        // Deprecated: 구버전 앱(v2.12.0) 하위호환용. CIRCLE일 때만 값이 있음
-        Coordinates playgroundCenter,
-        Integer playgroundRadiusInMeters,
-        Coordinates jailCenter,
-        Integer jailRadiusInMeters
+        PolygonAreaResponse polygon
 ) {
     public record CircleAreaResponse(
             @Schema(description = "플레이그라운드 중심 좌표")
@@ -55,9 +49,7 @@ public record GameAreaUpdateResponse(
         return new GameAreaUpdateResponse(
                 AreaType.CIRCLE,
                 new CircleAreaResponse(pgCenter, c.playgroundRadiusInMeters(), jCenter, c.jailRadiusInMeters()),
-                null,
-                pgCenter, c.playgroundRadiusInMeters(),
-                jCenter,  c.jailRadiusInMeters()
+                null
         );
     }
 
@@ -65,8 +57,7 @@ public record GameAreaUpdateResponse(
         return new GameAreaUpdateResponse(
                 AreaType.POLYGON,
                 null,
-                new PolygonAreaResponse(p.playgroundPolygon(), p.jailPolygon()),
-                null, null, null, null
+                new PolygonAreaResponse(p.playgroundPolygon(), p.jailPolygon())
         );
     }
 }
