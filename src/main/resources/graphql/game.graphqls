@@ -147,4 +147,5 @@ type AdminGameHistoryParticipant {
   leftAt: String
   arrestCount: Int!
   arrestedCount: Int!
+  radioSeconds: Int!
 }
