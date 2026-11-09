@@ -30,10 +30,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface GameControllerDocs {
 
     @Operation(summary = "게임 방 생성",
-            description = "새로운 게임 방을 생성하고 초대 코드를 발급받습니다. 게임 영역(플레이그라운드, 감옥)과 게임 규칙을 설정할 수 있습니다. 방을 생성한 사용자는 자동으로 방장이 됩니다."
+            description = "새로운 게임 방을 생성하고 초대 코드를 발급받습니다. 게임 영역(플레이그라운드, 경찰과도둑은 감옥 포함)과 게임 규칙을 설정할 수 있습니다. 방을 생성한 사용자는 자동으로 방장이 됩니다."
     )
     @ApiErrorCode(value = GameAreaException.class, codes = {
-            "INVALID_JAIL_RADIUS", "JAIL_OUTSIDE_PLAYGROUND", "SHRINK_REQUIRES_CIRCLE_AREA", "INVALID_SHRINK_FINAL_RADIUS"
+            "INVALID_JAIL_RADIUS", "JAIL_OUTSIDE_PLAYGROUND", "SHRINK_REQUIRES_CIRCLE_AREA", "INVALID_SHRINK_FINAL_RADIUS",
+            "JAIL_AREA_REQUIRED", "JAIL_AREA_NOT_ALLOWED"
     })
     @ApiErrorCode(value = UserException.class, codes = {"REQUIRED_TERMS_NOT_AGREED"})
     @ApiErrorCode(value = GameException.class, codes = {"INVALID_LOCATION_INTERVAL", "INVALID_POLICE_WAIT_TIME"})
@@ -73,7 +74,8 @@ public interface GameControllerDocs {
                     **제약 조건**
                     - 방장만 호출 가능
                     - 게임이 WAITING 상태일 때만 가능
-                    - 플레이그라운드와 감옥을 반드시 세트로 전송 (부분 수정 불가)
+                    - 영역 전체를 전송 (부분 수정 불가)
+                    - 경찰과도둑은 감옥 필수, 술래잡기는 감옥을 보내지 않음
                     - 감옥은 플레이그라운드 내부에 완전히 포함되어야 함
                     - 감옥 반경 < 플레이그라운드 반경
 
@@ -84,7 +86,8 @@ public interface GameControllerDocs {
     @ApiErrorCode(value = GameParticipantException.class, codes = {"NOT_HOST"})
     @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_WAITING"})
     @ApiErrorCode(value = GameAreaException.class, codes = {
-            "INVALID_JAIL_RADIUS", "JAIL_OUTSIDE_PLAYGROUND", "SHRINK_REQUIRES_CIRCLE_AREA", "INVALID_SHRINK_FINAL_RADIUS"
+            "INVALID_JAIL_RADIUS", "JAIL_OUTSIDE_PLAYGROUND", "SHRINK_REQUIRES_CIRCLE_AREA", "INVALID_SHRINK_FINAL_RADIUS",
+            "JAIL_AREA_REQUIRED", "JAIL_AREA_NOT_ALLOWED"
     })
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
