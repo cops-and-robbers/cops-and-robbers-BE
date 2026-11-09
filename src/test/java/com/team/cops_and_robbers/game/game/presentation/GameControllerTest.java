@@ -216,9 +216,9 @@ class GameControllerTest extends ControllerTest {
         }
 
         @Test
-        void 최대_참가_인원이_150명이면_생성된다() {
+        void 최대_참가_인원이_50명이면_생성된다() {
             // given
-            GameSettingsRequest settings = new GameSettingsRequest(30, 5, 3, 150, null);
+            GameSettingsRequest settings = new GameSettingsRequest(30, 5, 3, 50, null);
             GameCreateRequest request = new GameCreateRequest(createAreaRequest(), settings);
 
             // when
@@ -232,14 +232,14 @@ class GameControllerTest extends ControllerTest {
             // then
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(201);
-                softly.assertThat(response.jsonPath().getInt("maxParticipants")).isEqualTo(150);
+                softly.assertThat(response.jsonPath().getInt("maxParticipants")).isEqualTo(50);
             });
         }
 
         @Test
-        void 최대_참가_인원이_151명이면_400_BadRequest를_응답한다() {
+        void 최대_참가_인원이_51명이면_400_BadRequest를_응답한다() {
             // given
-            GameSettingsRequest settings = new GameSettingsRequest(30, 5, 3, 151, null);
+            GameSettingsRequest settings = new GameSettingsRequest(30, 5, 3, 51, null);
             GameCreateRequest request = new GameCreateRequest(createAreaRequest(), settings);
 
             // when
