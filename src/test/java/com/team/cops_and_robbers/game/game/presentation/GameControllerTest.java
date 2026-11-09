@@ -5,6 +5,7 @@ import com.team.cops_and_robbers.common.fixture.GameAreaFixture;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.common.fixture.UserFixture;
 import com.team.cops_and_robbers.game.area.domain.AreaType;
+import com.team.cops_and_robbers.game.area.domain.GameArea;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.CoordinatesRequest;
@@ -99,7 +100,7 @@ class GameControllerTest extends ControllerTest {
         void 게임_모드를_보내면_그_모드로_생성된다() {
             // given
             GameCreateRequest request = new GameCreateRequest(
-                    createAreaRequest(),
+                    createAreaRequestWithoutJail(),
                     createSettingsRequest(),
                     GameMode.TAG
             );
@@ -120,6 +121,132 @@ class GameControllerTest extends ControllerTest {
                 softly.assertThat(gameRepository.findById(result.gameId()).orElseThrow().getGameMode())
                         .isEqualTo(GameMode.TAG);
             });
+        }
+
+        @Test
+        void 술래잡기는_감옥_없이_생성된다() {
+            // given
+            GameCreateRequest request = new GameCreateRequest(
+                    createAreaRequestWithoutJail(),
+                    createSettingsRequest(),
+                    GameMode.TAG
+            );
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
+
+            // then
+            GameCreateResponse result = response.as(GameCreateResponse.class);
+            GameArea gameArea = gameAreaRepository.getByGameId(result.gameId());
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(201);
+                softly.assertThat(gameArea.getJailCenter()).isNull();
+                softly.assertThat(gameArea.getJailRadiusInMeters()).isNull();
+            });
+        }
+
+        @Test
+        void 술래잡기는_POLYGON_구역도_감옥_없이_생성된다() {
+            // given
+            GameAreaRequest area = new GameAreaRequest(
+                    AreaType.POLYGON,
+                    null,
+                    new GameAreaRequest.PolygonAreaRequest(createPlaygroundPolygon(), null)
+            );
+            GameCreateRequest request = new GameCreateRequest(area, createSettingsRequest(), GameMode.TAG);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
+
+            // then
+            GameCreateResponse result = response.as(GameCreateResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(201);
+                softly.assertThat(gameAreaRepository.getByGameId(result.gameId()).getJailPolygon()).isNull();
+            });
+        }
+
+        @Test
+        void 술래잡기에서_감옥을_보내면_400_BadRequest를_응답한다() {
+            // given
+            GameCreateRequest request = new GameCreateRequest(
+                    createAreaRequest(),
+                    createSettingsRequest(),
+                    GameMode.TAG
+            );
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(400);
+                softly.assertThat(response.jsonPath().getString("errorCode")).isEqualTo("JAIL_AREA_NOT_ALLOWED");
+            });
+        }
+
+        @Test
+        void 경찰과도둑에서_감옥을_보내지_않으면_400_BadRequest를_응답한다() {
+            // given
+            GameCreateRequest request = new GameCreateRequest(
+                    createAreaRequestWithoutJail(),
+                    createSettingsRequest(),
+                    GameMode.COPS_AND_ROBBERS
+            );
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(400);
+                softly.assertThat(response.jsonPath().getString("errorCode")).isEqualTo("JAIL_AREA_REQUIRED");
+            });
+        }
+
+        @Test
+        void 감옥_중심과_반경_중_하나만_보내면_400_BadRequest를_응답한다() {
+            // given
+            GameAreaRequest area = new GameAreaRequest(
+                    AreaType.CIRCLE,
+                    new GameAreaRequest.CircleAreaRequest(
+                            new CoordinatesRequest(37.5665, 126.978), 1000,
+                            new CoordinatesRequest(37.5665, 126.978), null
+                    ),
+                    null
+            );
+            GameCreateRequest request = new GameCreateRequest(area, createSettingsRequest(), null);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .post(GAME_API_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(400);
         }
 
         @Test
@@ -664,6 +791,50 @@ class GameControllerTest extends ControllerTest {
         }
 
         @Test
+        void 술래잡기_게임은_감옥_없이_영역을_수정한다() {
+            // given
+            Game tagGame = gameRepository.save(GameFixture.WAITING_TAG_GAME());
+            gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA_WITHOUT_JAIL(tagGame));
+            User tagHost = givenUser("술래방장");
+            givenHost(tagGame, tagHost);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(givenAccessToken(tagHost))
+                    .pathParam(GAME_ID_PARAM, tagGame.getId())
+                    .body(createAreaRequestWithoutJail())
+                    .when()
+                    .put(AREA_URL)
+                    .then()
+                    .extract();
+
+            // then
+            GameAreaUpdateResponse result = response.as(GameAreaUpdateResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                softly.assertThat(result.circle().jailCenter()).isNull();
+                softly.assertThat(result.circle().jailRadiusInMeters()).isNull();
+            });
+        }
+
+        @Test
+        void 경찰과도둑_게임에서_감옥을_빼고_수정하면_400_BadRequest를_응답한다() {
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .pathParam(GAME_ID_PARAM, waitingGame.getId())
+                    .body(createAreaRequestWithoutJail())
+                    .when()
+                    .put(AREA_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+                softly.assertThat(response.jsonPath().getString("errorCode")).isEqualTo("JAIL_AREA_REQUIRED");
+            });
+        }
+
+        @Test
         void 방장이_아닌_참여자가_요청하면_403_Forbidden을_응답한다() {
             // given
             User guest = givenUser("guest");
@@ -1079,6 +1250,28 @@ class GameControllerTest extends ControllerTest {
                         100     // jailRadius
                 ),
                 null
+        );
+    }
+
+    private GameAreaRequest createAreaRequestWithoutJail() {
+        return new GameAreaRequest(
+                AreaType.CIRCLE,
+                new GameAreaRequest.CircleAreaRequest(
+                        new CoordinatesRequest(37.5665, 126.978),   // playgroundCenter
+                        1000,   // playgroundRadius
+                        null,
+                        null
+                ),
+                null
+        );
+    }
+
+    private List<CoordinatesRequest> createPlaygroundPolygon() {
+        return List.of(
+                new CoordinatesRequest(37.4979, 127.0276),
+                new CoordinatesRequest(37.4979, 127.0296),
+                new CoordinatesRequest(37.4999, 127.0296),
+                new CoordinatesRequest(37.4999, 127.0276)
         );
     }
 
