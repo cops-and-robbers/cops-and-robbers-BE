@@ -60,17 +60,8 @@ public class SwaggerConfig {
                         - 팀을 바꾸거나 라운드가 끝나도 풀릴 준비 상태가 없다
                         - 로비 이벤트 READY_UPDATE 는 더 이상 발행하지 않는다
                         - 앱 영향
-                          1. 구버전 앱은 그대로 동작한다(아래 Deprecated 항목 유지)
+                          1. 구버전 앱은 그대로 동작한다
                           2. 신버전은 준비 UI 와 시작 버튼의 준비 조건을 빼면 된다
-
-                        ### Deprecated API
-
-                        로비 준비 상태 변경 `PATCH /api/games/{gameId}/lobby/ready`
-                        - 호출해도 아무것도 바뀌지 않고 이벤트도 없다. 응답 코드는 예전과 같고, 방장이 호출했을 때만 400 대신 204
-                        - 구버전 앱 호환용으로만 남겨 두고, 다음 메이저에서 삭제 예정
-
-                        참가자 isReady
-                          - 로비 조회 API(GET /api/games/{gameId}/lobby), 로비 이벤트(ENTER, TEAM_UPDATE, HOST_CHANGED)에서 항상 true 반환
                         """);
 
         return new OpenAPI()
