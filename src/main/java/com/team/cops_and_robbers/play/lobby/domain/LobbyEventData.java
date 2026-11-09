@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.play.lobby.domain;
 import com.team.cops_and_robbers.game.area.application.dto.GameAreaData;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameAreaUpdateResult;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameSettingsUpdateResult;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 
@@ -69,6 +70,7 @@ public sealed interface LobbyEventData permits
     }
 
     record LobbySettingsUpdatedData(
+            GameMode gameMode,
             Integer roundDurationMinutes,
             Integer locationRevealIntervalMinutes,
             Integer policeWaitMinutes,
@@ -77,6 +79,7 @@ public sealed interface LobbyEventData permits
     ) implements LobbyEventData {
         public static LobbySettingsUpdatedData from(GameSettingsUpdateResult result) {
             return new LobbySettingsUpdatedData(
+                    result.gameMode(),
                     result.roundDurationMinutes(), result.locationRevealIntervalMinutes(),
                     result.policeWaitMinutes(), result.maxParticipants(),
                     result.shrinkFinalRadiusInMeters()

@@ -1,5 +1,6 @@
 package com.team.cops_and_robbers.play.location.application.dto.result;
 
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
@@ -8,6 +9,7 @@ import com.team.cops_and_robbers.play.system.domain.SystemEventData;
 import java.util.List;
 
 public record GameStateResult(
+        GameMode gameMode,
         List<RobberLocationInfo> robberLocations,
         List<ParticipantInfo> participants
 ) {

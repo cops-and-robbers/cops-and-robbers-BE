@@ -1,5 +1,6 @@
 package com.team.cops_and_robbers.play.location.presentation.dto;
 
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.play.location.application.dto.result.GameStateResult;
@@ -8,6 +9,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
 public record GameStateResponse(
+        @Schema(description = "게임 모드", example = "COPS_AND_ROBBERS")
+        GameMode gameMode,
+
         @Schema(description = "마지막 공개된 생존 도둑 위치 목록")
         List<RobberLocationInfo> robberLocations,
 
@@ -48,6 +52,7 @@ public record GameStateResponse(
 
     public static GameStateResponse from(GameStateResult result) {
         return new GameStateResponse(
+                result.gameMode(),
                 result.robberLocations().stream().map(RobberLocationInfo::from).toList(),
                 result.participants().stream().map(ParticipantInfo::from).toList()
         );
