@@ -15,6 +15,7 @@ import com.team.cops_and_robbers.game.game.application.dto.result.GameAreaUpdate
 import com.team.cops_and_robbers.game.game.application.dto.result.GameSettingsUpdateResult;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameMode;
+import com.team.cops_and_robbers.game.game.domain.GameRulePolicy;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
@@ -59,6 +60,9 @@ class GameServiceTest extends ServiceUnitTest {
 
     @Mock
     private GameAreaDomainService gameAreaDomainService;
+
+    @Mock
+    private GameRulePolicy gameRulePolicy;
 
     @Mock
     private ApplicationEventPublisher eventPublisher;

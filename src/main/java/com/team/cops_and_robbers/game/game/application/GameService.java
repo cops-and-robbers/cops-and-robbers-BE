@@ -14,6 +14,7 @@ import com.team.cops_and_robbers.game.game.application.dto.result.GameCreateResu
 import com.team.cops_and_robbers.game.game.application.dto.result.GameInfoResult;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameSettingsUpdateResult;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameRulePolicy;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
@@ -41,6 +42,7 @@ public class GameService {
     private final UserRepository userRepository;
     private final GameAreaService gameAreaService;
     private final GameAreaDomainService gameAreaDomainService;
+    private final GameRulePolicy gameRulePolicy;
     private final ApplicationEventPublisher eventPublisher;
     private final LobbyEventFactory lobbyEventFactory;
 
@@ -76,6 +78,7 @@ public class GameService {
     }
 
     private void saveGameArea(Game game, GameCreateCommand command) {
+        gameRulePolicy.validateArea(game, command.areaData());
         GameArea gameArea = gameAreaService.buildGameArea(game, command.areaData());
         gameAreaRepository.save(gameArea);
     }
@@ -103,6 +106,7 @@ public class GameService {
         );
         validateGameEditable(participant);
 
+        gameRulePolicy.validateArea(participant.getGame(), command.areaData());
         GameArea gameArea = gameAreaRepository.getByGameId(command.gameId());
         gameAreaService.applyAreaUpdate(
                 gameArea, command.areaData(), participant.getGame().getShrinkFinalRadiusInMeters()
