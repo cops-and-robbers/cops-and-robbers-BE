@@ -578,6 +578,45 @@ class GameResultServiceTest extends ServiceUnitTest {
     }
 
     @Nested
+    @DisplayName("무전 사용 기록")
+    class RecordRadioUsage {
+
+        @Test
+        void 무전_토큰을_발급하면_해당_경찰의_사용_기록이_시작된다() {
+            // given
+            GameResultParticipant snapshot =
+                    GameResultParticipant.createSnapshot(openedResult, policeParticipant);
+
+            given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
+                    .willReturn(Optional.of(openedResult));
+            given(gameResultParticipantRepository
+                    .findByGameResultIdAndUserIdAndLeftAtIsNull(TEST_GAME_RESULT_ID, POLICE_USER_ID))
+                    .willReturn(Optional.of(snapshot));
+
+            // when
+            gameResultService.recordRadioUsage(TEST_GAME_ID, POLICE_USER_ID, Duration.ofMinutes(2));
+
+            // then
+            assertThat(snapshot.getRadioLastIssuedAt()).isEqualTo(NOW);
+            assertThat(snapshot.getRadioSeconds()).isZero();
+        }
+
+        @Test
+        void 열린_확인자료가_없으면_아무것도_하지_않는다() {
+            // given
+            given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
+                    .willReturn(Optional.empty());
+
+            // when
+            gameResultService.recordRadioUsage(TEST_GAME_ID, POLICE_USER_ID, Duration.ofMinutes(2));
+
+            // then
+            then(gameResultParticipantRepository).should(never())
+                    .findByGameResultIdAndUserIdAndLeftAtIsNull(any(), any());
+        }
+    }
+
+    @Nested
     @DisplayName("게임 시작 후 입장 기록")
     class RecordParticipantJoined {
 
