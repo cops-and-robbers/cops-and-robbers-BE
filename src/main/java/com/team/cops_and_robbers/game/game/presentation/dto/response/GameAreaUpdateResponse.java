@@ -29,16 +29,16 @@ public record GameAreaUpdateResponse(
             Coordinates playgroundCenter,
             @Schema(description = "플레이그라운드 반경(m)", example = "1000")
             Integer playgroundRadiusInMeters,
-            @Schema(description = "감옥 중심 좌표")
+            @Schema(description = "감옥 중심 좌표. 술래잡기에서는 null", nullable = true)
             Coordinates jailCenter,
-            @Schema(description = "감옥 반경(m)", example = "100")
+            @Schema(description = "감옥 반경(m). 술래잡기에서는 null", example = "100", nullable = true)
             Integer jailRadiusInMeters
     ) {}
 
     public record PolygonAreaResponse(
             @Schema(description = "플레이그라운드 꼭짓점 좌표 목록")
             List<Coordinates> playgroundPolygon,
-            @Schema(description = "감옥 꼭짓점 좌표 목록")
+            @Schema(description = "감옥 꼭짓점 좌표 목록. 술래잡기에서는 null", nullable = true)
             List<Coordinates> jailPolygon
     ) {}
 
@@ -51,7 +51,7 @@ public record GameAreaUpdateResponse(
 
     private static GameAreaUpdateResponse fromCircle(GameAreaData.CircleAreaData c) {
         Coordinates pgCenter = new Coordinates(c.playgroundLatitude(), c.playgroundLongitude());
-        Coordinates jCenter  = new Coordinates(c.jailLatitude(), c.jailLongitude());
+        Coordinates jCenter  = c.hasJail() ? new Coordinates(c.jailLatitude(), c.jailLongitude()) : null;
         return new GameAreaUpdateResponse(
                 AreaType.CIRCLE,
                 new CircleAreaResponse(pgCenter, c.playgroundRadiusInMeters(), jCenter, c.jailRadiusInMeters()),

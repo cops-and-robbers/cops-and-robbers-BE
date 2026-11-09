@@ -32,13 +32,13 @@ public record GameAreaUpdateCommand(
                     area.circle().playgroundCenter().latitude(),
                     area.circle().playgroundCenter().longitude(),
                     area.circle().playgroundRadiusInMeters(),
-                    area.circle().jailCenter().latitude(),
-                    area.circle().jailCenter().longitude(),
+                    area.circle().jailCenter() == null ? null : area.circle().jailCenter().latitude(),
+                    area.circle().jailCenter() == null ? null : area.circle().jailCenter().longitude(),
                     area.circle().jailRadiusInMeters()
             );
             case POLYGON -> new GameAreaData.PolygonAreaData(
                     toCoordinatesList(area.polygon().playgroundPolygon()),
-                    toCoordinatesList(area.polygon().jailPolygon())
+                    area.polygon().jailPolygon() == null ? null : toCoordinatesList(area.polygon().jailPolygon())
             );
         };
     }

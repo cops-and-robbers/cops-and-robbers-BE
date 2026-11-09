@@ -17,13 +17,13 @@ public record GameAreaUpdateResult(GameAreaData areaData) {
                     gameArea.getPlaygroundCenter().getY(),
                     gameArea.getPlaygroundCenter().getX(),
                     gameArea.getPlaygroundRadiusInMeters(),
-                    gameArea.getJailCenter().getY(),
-                    gameArea.getJailCenter().getX(),
+                    gameArea.getJailCenter() == null ? null : gameArea.getJailCenter().getY(),
+                    gameArea.getJailCenter() == null ? null : gameArea.getJailCenter().getX(),
                     gameArea.getJailRadiusInMeters()
             );
             case POLYGON -> new GameAreaData.PolygonAreaData(
                     toCoordinatesList(gameArea.getPlaygroundPolygon()),
-                    toCoordinatesList(gameArea.getJailPolygon())
+                    gameArea.getJailPolygon() == null ? null : toCoordinatesList(gameArea.getJailPolygon())
             );
         };
         return new GameAreaUpdateResult(areaData);

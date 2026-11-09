@@ -63,15 +63,20 @@ public record GameAreaRequest(
             @Min(value = 10, message = "반경은 최소 10m 이상이어야 합니다.")
             Integer playgroundRadiusInMeters,
 
-            @Schema(description = "감옥 중심 좌표")
-            @Valid @NotNull(message = "감옥 중심 좌표를 입력해주세요.")
+            @Schema(description = "감옥 중심 좌표. 술래잡기에서는 보내지 않음", nullable = true)
+            @Valid
             CoordinatesRequest jailCenter,
 
-            @Schema(description = "감옥 반경(m)", example = "100")
-            @NotNull(message = "감옥 반경을 입력해주세요.")
+            @Schema(description = "감옥 반경(m). 술래잡기에서는 보내지 않음", example = "100", nullable = true)
             @Min(value = 5, message = "감옥 반경은 최소 5m 이상이어야 합니다.")
             Integer jailRadiusInMeters
-    ) {}
+    ) {
+
+        @AssertTrue(message = "감옥 중심 좌표와 반경은 함께 입력해주세요.")
+        public boolean isJailDataComplete() {
+            return (jailCenter == null) == (jailRadiusInMeters == null);
+        }
+    }
 
     public record PolygonAreaRequest(
             @Schema(description = "플레이그라운드 꼭짓점 좌표 목록 (최소 3개)")
@@ -79,8 +84,8 @@ public record GameAreaRequest(
             @Size(min = 3, message = "플레이그라운드 꼭짓점은 최소 3개 이상이어야 합니다.")
             List<CoordinatesRequest> playgroundPolygon,
 
-            @Schema(description = "감옥 꼭짓점 좌표 목록 (최소 3개)")
-            @Valid @NotNull(message = "감옥 꼭짓점 좌표를 입력해주세요.")
+            @Schema(description = "감옥 꼭짓점 좌표 목록 (최소 3개). 술래잡기에서는 보내지 않음", nullable = true)
+            @Valid
             @Size(min = 3, message = "감옥 꼭짓점은 최소 3개 이상이어야 합니다.")
             List<CoordinatesRequest> jailPolygon
     ) {}

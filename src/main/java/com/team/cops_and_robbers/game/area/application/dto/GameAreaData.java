@@ -6,6 +6,8 @@ import java.util.List;
 
 public sealed interface GameAreaData permits GameAreaData.CircleAreaData, GameAreaData.PolygonAreaData {
 
+    boolean hasJail();
+
     record CircleAreaData(
             Double playgroundLatitude,
             Double playgroundLongitude,
@@ -13,10 +15,21 @@ public sealed interface GameAreaData permits GameAreaData.CircleAreaData, GameAr
             Double jailLatitude,
             Double jailLongitude,
             Integer jailRadiusInMeters
-    ) implements GameAreaData {}
+    ) implements GameAreaData {
 
+        @Override
+        public boolean hasJail() {
+            return jailLatitude != null && jailLongitude != null && jailRadiusInMeters != null;
+        }
+    }
     record PolygonAreaData(
             List<Coordinates> playgroundPolygon,
             List<Coordinates> jailPolygon
-    ) implements GameAreaData {}
+    ) implements GameAreaData {
+
+        @Override
+        public boolean hasJail() {
+            return jailPolygon != null;
+        }
+    }
 }
