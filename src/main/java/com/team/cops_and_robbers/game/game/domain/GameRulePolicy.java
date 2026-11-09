@@ -18,6 +18,12 @@ public class GameRulePolicy {
         }
     }
 
+    public void validateModeChange(Game game, GameMode gameMode) {
+        if (game.isEventGame() && !gameMode.supportsEventGame()) {
+            throw new ApplicationException(GameException.EVENT_GAME_NOT_SUPPORTED_IN_MODE);
+        }
+    }
+
     public void validateArea(Game game, GameAreaData areaData) {
         boolean usesJailArea = game.rules().usesJailArea();
         if (usesJailArea && !areaData.hasJail()) {

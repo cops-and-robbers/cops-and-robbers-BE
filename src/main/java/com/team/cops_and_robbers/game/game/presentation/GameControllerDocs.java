@@ -7,10 +7,12 @@ import com.team.cops_and_robbers.game.area.exception.GameAreaException;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameAreaRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameCreateRequest;
+import com.team.cops_and_robbers.game.game.presentation.dto.request.GameModeUpdateRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameSettingsRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameAreaUpdateResponse;
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameCreateResponse;
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameInfoResponse;
+import com.team.cops_and_robbers.game.game.presentation.dto.response.GameModeUpdateResponse;
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameSettingsUpdateResponse;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
 import com.team.cops_and_robbers.user.exception.UserException;
@@ -122,5 +124,38 @@ public interface GameControllerDocs {
             @Parameter(hidden = true) LoginUser loginUser,
             @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId,
             @RequestBody @Valid GameSettingsRequest request
+    );
+
+    @Operation(summary = "게임 모드 변경 (방장 전용)",
+            description = """
+                    대기실에서 게임 모드를 바꾸고, 새 모드에 맞는 영역으로 함께 수정합니다.
+
+                    **제약 조건**
+                    - 방장만 호출 가능
+                    - 게임이 WAITING 상태일 때만 가능
+                    - 영역은 `PUT /area` 와 같은 형식으로 전체를 전송 (모드와 무관한 플레이그라운드도 다시 전송)
+                    - 경찰과도둑은 감옥 필수, 술래잡기는 감옥을 보내지 않음
+                    - 저장된 축소 최종 반경은 새 감옥 반경 기준으로 다시 검증
+                    - 이벤트 게임은 술래잡기로 바꿀 수 없음
+                    - 게임 설정은 바꾸지 않음
+
+                    **WebSocket**
+                    성공 시 대기실 구독자 전체에게 `MODE_UPDATED` 이벤트가 브로드캐스트됩니다. (gameMode + 영역)
+                    """
+    )
+    @ApiErrorCode(value = GameParticipantException.class, codes = {"NOT_HOST"})
+    @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_WAITING", "EVENT_GAME_NOT_SUPPORTED_IN_MODE"})
+    @ApiErrorCode(value = GameAreaException.class, codes = {
+            "INVALID_JAIL_RADIUS", "JAIL_OUTSIDE_PLAYGROUND", "SHRINK_REQUIRES_CIRCLE_AREA", "INVALID_SHRINK_FINAL_RADIUS",
+            "JAIL_AREA_REQUIRED", "JAIL_AREA_NOT_ALLOWED"
+    })
+    @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "모드 변경 성공")
+    })
+    ResponseEntity<GameModeUpdateResponse> updateGameMode(
+            @Parameter(hidden = true) LoginUser loginUser,
+            @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId,
+            @RequestBody @Valid GameModeUpdateRequest request
     );
 }

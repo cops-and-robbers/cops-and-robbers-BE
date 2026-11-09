@@ -8,10 +8,12 @@ import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameAreaUpdateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameCreateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameInfoCommand;
+import com.team.cops_and_robbers.game.game.application.dto.command.GameModeUpdateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameSettingsUpdateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameAreaUpdateResult;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameCreateResult;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameInfoResult;
+import com.team.cops_and_robbers.game.game.application.dto.result.GameModeUpdateResult;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameSettingsUpdateResult;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameRulePolicy;
@@ -116,6 +118,30 @@ public class GameService {
 
         LobbyEvent areaEvent = lobbyEventFactory.createAreaUpdatedEvent(command.gameId(), result);
         eventPublisher.publishEvent(areaEvent);
+
+        return result;
+    }
+
+    @Transactional
+    public GameModeUpdateResult updateGameMode(GameModeUpdateCommand command) {
+        GameParticipant participant = gameParticipantRepository.getByGameIdAndUserIdWithGame(
+                command.gameId(),
+                command.userId()
+        );
+        validateGameEditable(participant);
+
+        Game game = participant.getGame();
+        gameRulePolicy.validateModeChange(game, command.gameMode());
+        game.updateGameMode(command.gameMode());
+
+        gameRulePolicy.validateArea(game, command.areaData());
+        GameArea gameArea = gameAreaRepository.getByGameId(command.gameId());
+        gameAreaService.applyAreaUpdate(gameArea, command.areaData(), game.getShrinkFinalRadiusInMeters());
+
+        GameModeUpdateResult result = GameModeUpdateResult.of(game, gameArea);
+
+        LobbyEvent modeEvent = lobbyEventFactory.createModeUpdatedEvent(command.gameId(), result);
+        eventPublisher.publishEvent(modeEvent);
 
         return result;
     }

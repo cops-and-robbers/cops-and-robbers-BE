@@ -6,17 +6,21 @@ import com.team.cops_and_robbers.game.game.application.GameService;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameAreaUpdateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameCreateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameInfoCommand;
+import com.team.cops_and_robbers.game.game.application.dto.command.GameModeUpdateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameSettingsUpdateCommand;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameAreaUpdateResult;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameCreateResult;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameInfoResult;
+import com.team.cops_and_robbers.game.game.application.dto.result.GameModeUpdateResult;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameSettingsUpdateResult;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameAreaRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameCreateRequest;
+import com.team.cops_and_robbers.game.game.presentation.dto.request.GameModeUpdateRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameSettingsRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameAreaUpdateResponse;
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameCreateResponse;
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameInfoResponse;
+import com.team.cops_and_robbers.game.game.presentation.dto.response.GameModeUpdateResponse;
 import com.team.cops_and_robbers.game.game.presentation.dto.response.GameSettingsUpdateResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -94,6 +98,21 @@ public class GameController implements GameControllerDocs {
         GameSettingsUpdateCommand command = GameSettingsUpdateCommand.of(gameId, loginUser.userId(), request);
         GameSettingsUpdateResult result = gameService.updateGameSettings(command);
         GameSettingsUpdateResponse response = GameSettingsUpdateResponse.from(result);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 5. 대기실에서 게임 모드를 바꾸고, 새 모드에 맞는 영역으로 함께 수정합니다. (방장 권한)
+     */
+    @PutMapping("/{gameId}/mode")
+    public ResponseEntity<GameModeUpdateResponse> updateGameMode(
+            @AuthUser LoginUser loginUser,
+            @PathVariable Long gameId,
+            @RequestBody @Valid GameModeUpdateRequest request
+    ) {
+        GameModeUpdateCommand command = GameModeUpdateCommand.of(gameId, loginUser.userId(), request);
+        GameModeUpdateResult result = gameService.updateGameMode(command);
+        GameModeUpdateResponse response = GameModeUpdateResponse.from(result);
         return ResponseEntity.ok(response);
     }
 }

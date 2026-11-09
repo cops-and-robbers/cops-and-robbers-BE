@@ -16,7 +16,7 @@ public record GameAreaUpdateCommand(
         return new GameAreaUpdateCommand(gameId, userId, resolveAreaData(area));
     }
 
-    private static GameAreaData resolveAreaData(GameAreaRequest area) {
+    static GameAreaData resolveAreaData(GameAreaRequest area) {
         if (area.areaType() == null) {
             return new GameAreaData.CircleAreaData(
                     area.playgroundCenter().latitude(),

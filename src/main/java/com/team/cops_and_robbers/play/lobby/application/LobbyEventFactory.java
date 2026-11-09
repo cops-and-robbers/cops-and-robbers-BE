@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.play.lobby.application;
 
 import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameAreaUpdateResult;
+import com.team.cops_and_robbers.game.game.application.dto.result.GameModeUpdateResult;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameSettingsUpdateResult;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
@@ -43,6 +44,11 @@ public class LobbyEventFactory {
     public LobbyEvent createAreaUpdatedEvent(Long gameId, GameAreaUpdateResult result) {
         LobbyEventData.LobbyAreaUpdatedData data = LobbyEventData.LobbyAreaUpdatedData.from(result);
         return LobbyEvent.of(gameId, LobbyEventType.AREA_UPDATED, data);
+    }
+
+    public LobbyEvent createModeUpdatedEvent(Long gameId, GameModeUpdateResult result) {
+        LobbyEventData.LobbyModeUpdatedData data = LobbyEventData.LobbyModeUpdatedData.from(result);
+        return LobbyEvent.of(gameId, LobbyEventType.MODE_UPDATED, data);
     }
 
     public LobbyEvent createSettingsUpdatedEvent(Long gameId, GameSettingsUpdateResult result) {

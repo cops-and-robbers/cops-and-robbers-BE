@@ -122,6 +122,10 @@ public class Game extends BaseTimeEntity {
         this.shrinkFinalRadiusInMeters = shrinkFinalRadiusInMeters;
     }
 
+    public void updateGameMode(GameMode gameMode) {
+        this.gameMode = gameMode;
+    }
+
     public void updateEventGame(boolean isEventGame) {
         this.isEventGame = isEventGame;
     }

@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.play.lobby.domain;
 
 import com.team.cops_and_robbers.game.area.application.dto.GameAreaData;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameAreaUpdateResult;
+import com.team.cops_and_robbers.game.game.application.dto.result.GameModeUpdateResult;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameSettingsUpdateResult;
 import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
@@ -15,6 +16,7 @@ public sealed interface LobbyEventData permits
         LobbyEventData.LobbyGameStartData,
         LobbyEventData.LobbyAreaUpdatedData,
         LobbyEventData.LobbySettingsUpdatedData,
+        LobbyEventData.LobbyModeUpdatedData,
         LobbyEventData.LobbyKickedData {
 
     /**
@@ -66,6 +68,12 @@ public sealed interface LobbyEventData permits
     record LobbyAreaUpdatedData(GameAreaData areaData) implements LobbyEventData {
         public static LobbyAreaUpdatedData from(GameAreaUpdateResult result) {
             return new LobbyAreaUpdatedData(result.areaData());
+        }
+    }
+
+    record LobbyModeUpdatedData(GameMode gameMode, GameAreaData areaData) implements LobbyEventData {
+        public static LobbyModeUpdatedData from(GameModeUpdateResult result) {
+            return new LobbyModeUpdatedData(result.gameMode(), result.area().areaData());
         }
     }
 
