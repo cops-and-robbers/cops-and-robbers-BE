@@ -25,6 +25,7 @@ import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.history.domain.GameEndReason;
 import com.team.cops_and_robbers.history.domain.GameResult;
 import com.team.cops_and_robbers.history.domain.GameResultParticipant;
+import com.team.cops_and_robbers.history.repository.RadioUsageProjection;
 import com.team.cops_and_robbers.user.domain.TermsType;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.domain.UserDevice;
@@ -360,6 +361,29 @@ class AdminUserServiceTest extends ServiceUnitTest {
     }
 
     @Nested
+    @DisplayName("유저별 무전 사용 시간 배치 조회")
+    class GetRadioSecondsByUsers {
+
+        @Test
+        void 무전_기록이_있는_유저는_합계를_없는_유저는_0을_반환한다() {
+            // given
+            AdminUserResult adminUser1 = AdminUserResult.from(user1);
+            AdminUserResult adminUser2 = AdminUserResult.from(user2);
+            given(gameResultParticipantRepository.sumRadioSecondsGroupByUserIdIn(List.of(1L, 2L)))
+                    .willReturn(List.of(radioUsage(1L, 150L)));
+
+            // when
+            Map<AdminUserResult, Long> result = adminUserService.getRadioSecondsByUsers(List.of(adminUser1, adminUser2));
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(result.get(adminUser1)).isEqualTo(150L);
+                softly.assertThat(result.get(adminUser2)).isZero();
+            });
+        }
+    }
+
+    @Nested
     @DisplayName("유저별 끝난 게임 이력 조회")
     class GetGameHistories {
 
@@ -475,5 +499,19 @@ class AdminUserServiceTest extends ServiceUnitTest {
             // then
             assertThat(result).isEmpty();
         }
+    }
+
+    private RadioUsageProjection radioUsage(Long userId, Long radioSeconds) {
+        return new RadioUsageProjection() {
+            @Override
+            public Long getUserId() {
+                return userId;
+            }
+
+            @Override
+            public Long getRadioSeconds() {
+                return radioSeconds;
+            }
+        };
     }
 }
