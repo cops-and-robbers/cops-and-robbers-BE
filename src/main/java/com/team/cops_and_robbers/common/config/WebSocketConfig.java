@@ -20,11 +20,6 @@ import org.springframework.web.socket.config.annotation.WebSocketTransportRegist
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private static final String SOCKET_PATH_PREFIX = "/connection";
-    /**
-     * 구버전 앱 호환용. 게임 / 커뮤니티가 같은 소켓을 공유하므로 이름을 /connection으로 바꿨으나,
-     * 이미 배포된 앱은 이 경로로 접속하므로 유지한다. 구버전 사용률이 없어지면 제거할 것.
-     */
-    private static final String LEGACY_SOCKET_PATH_PREFIX = "/game-connection";
     private static final String PUBLISH_PATH_PREFIX = "/publish";
     private static final String SUBSCRIBE_PATH_PREFIX = "/subscribe";
 
@@ -59,7 +54,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.setErrorHandler(stompExceptionHandler)
-                .addEndpoint(SOCKET_PATH_PREFIX, LEGACY_SOCKET_PATH_PREFIX)
+                .addEndpoint(SOCKET_PATH_PREFIX)
                 .setAllowedOriginPatterns("*");
     }
 
