@@ -50,6 +50,7 @@ type AdminGameSummary {
   participantCount: Int!
   roundNumber: Int!
   createdAt: String!
+  placeName: String
 }
 
 type AdminGame {
@@ -104,6 +105,7 @@ type GameArea {
   jailRadiusInMeters: Int
   playgroundPolygon: [Coordinate!]
   jailPolygon: [Coordinate!]
+  placeName: String
 }
 
 type Coordinate {

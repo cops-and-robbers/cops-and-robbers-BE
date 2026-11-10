@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.admin.presentation;
 
 import com.team.cops_and_robbers.admin.application.AdminGameHistoryService;
 import com.team.cops_and_robbers.admin.application.AdminGameService;
+import com.team.cops_and_robbers.admin.application.AdminPlaceNameService;
 import com.team.cops_and_robbers.admin.application.dto.SortDirection;
 import com.team.cops_and_robbers.admin.application.dto.command.game.AdminGameHistoryListCommand;
 import com.team.cops_and_robbers.admin.application.dto.command.game.AdminGameListCommand;
@@ -13,6 +14,7 @@ import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameHist
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameHistoryResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGamePageResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameResult;
+import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameSummaryResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminParticipantResult;
 import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
@@ -37,6 +39,7 @@ public class AdminGameResolver {
 
     private final AdminGameService adminGameService;
     private final AdminGameHistoryService adminGameHistoryService;
+    private final AdminPlaceNameService adminPlaceNameService;
 
     @QueryMapping
     public AdminGamePageResult adminGames(
@@ -87,6 +90,18 @@ public class AdminGameResolver {
     public Map<AdminGameResult, AdminGameAreaResult> area(
             List<AdminGameResult> games) {
         return adminGameService.getAreasByGame(games);
+    }
+
+    @BatchMapping(typeName = "AdminGameSummary", field = "placeName")
+    public Map<AdminGameSummaryResult, String> summaryPlaceName(
+            List<AdminGameSummaryResult> games) {
+        return adminPlaceNameService.getPlaceNamesByGame(games);
+    }
+
+    @BatchMapping(typeName = "GameArea", field = "placeName")
+    public Map<AdminGameAreaResult, String> placeName(
+            List<AdminGameAreaResult> areas) {
+        return adminPlaceNameService.getPlaceNamesByArea(areas);
     }
 
     @QueryMapping
