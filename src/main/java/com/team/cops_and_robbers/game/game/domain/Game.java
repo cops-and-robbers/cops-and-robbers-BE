@@ -131,13 +131,7 @@ public class Game extends BaseTimeEntity {
     }
 
     public GameRules rules() {
-        if (isEventGame) {
-            return GameRules.EVENT;
-        }
-        return switch (gameMode) {
-            case COPS_AND_ROBBERS -> GameRules.COPS_AND_ROBBERS;
-            case TAG -> GameRules.TAG;
-        };
+        return isEventGame ? GameRules.EVENT : gameMode.rules();
     }
 
     public boolean isSameRound(int eventRound) {
