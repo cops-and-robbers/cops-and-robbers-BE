@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.game.game.repository;
 
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
@@ -42,6 +43,9 @@ public interface GameRepository extends JpaRepository<Game, Long> {
             @Param("status") GameStatus status,
             Pageable pageable
     );
+
+    @Query("select g.gameMode from Game g where g.id = :gameId")
+    Optional<GameMode> findGameModeById(@Param("gameId") Long gameId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select g from Game g where g.id = :gameId")
