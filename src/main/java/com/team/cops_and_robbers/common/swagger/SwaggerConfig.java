@@ -30,38 +30,56 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("3.1.0")
+                .version("4.0.0")
                 .description("""
-                        ## v3.1.0 업데이트 내역
+                        ## v4.0.0 업데이트 내역
 
-                        ### ✨ 추가 — 구역 축소 최종 반경, 강제 체포 API
-                        - 게임 설정에 shrinkFinalRadiusInMeters(Integer, nullable) 추가. null 이면 축소 꺼짐
-                          - 요청: POST /api/games 의 settings, PUT /api/games/{gameId}/settings
-                          - 응답: POST /api/games, GET /api/games/{gameId}, PUT /api/games/{gameId}/settings, 로비 SETTINGS_UPDATED 이벤트
-                        - 값이 있을 때만 검증한다. 구역 타입이 CIRCLE 이고, 감옥 반경보다 크고 플레이그라운드 반경보다 작아야 한다
-                        - ⚠️ 에러코드 추가 — SHRINK_REQUIRES_CIRCLE_AREA, INVALID_SHRINK_FINAL_RADIUS
-                          - POST /api/games, PUT /api/games/{gameId}/settings, PUT /api/games/{gameId}/area 세 곳에서 발생한다
-                          - PUT /api/games/{gameId}/settings 는 구역을 함께 조회하므로 기존 GAME_AREA_NOT_FOUND(404) 도 새로 발생할 수 있다
-                          - 구역을 바꿀 때 저장된 최종 반경이 조건에 안 맞으면 PUT /area 가 400 이다. 앱이 축소를 먼저 끄고 구역을 저장하면 된다
-                        - 강제 체포 POST /api/games/{gameId}/system/force-arrest 추가. 구역 밖에 오래 머문 도둑이 스스로 체포된다
-                          - 요청 본문 없음(로그인한 도둑 본인), 응답은 /system/arrest 와 같다
-                          - 경찰 대기 시간 중에도 호출할 수 있고, 경찰의 체포 수는 올라가지 않는다
-                          - ⚠️ 에러코드 추가 — FORCE_ARREST_NOT_ALLOWED_IN_EVENT_GAME. 이벤트 게임에서 호출하면 400 이다
-                        - ⚠️ ARREST 이벤트의 police 가 null 가능으로 전환 — 강제 체포일 때 null 이다
-                          - 앱은 police 가 null 이면 "구역 밖에 오래 있어서 잡혔다"로 표시한다
-                        - 게임이 끝나도 남도록 GameResult 에 최종 반경을 함께 복사한다. 어드민 GraphQL 의 AdminGame, GameResult, AdminGameHistory 에 shrinkFinalRadiusInMeters(Int, nullable) 추가
-                        - 앱 영향 — 최종 반경 계산, 축소 표시, 구역 이탈 판정과 경고 횟수는 앱이 처리한다. 서버는 위치를 검증하지 않는다
+                        ### ✨ 추가 — 술래잡기 모드
+                        - 게임 모드 gameMode(COPS_AND_ROBBERS | TAG) 추가
+                          - 술래잡기는 감옥과 탈옥이 없고, 나머지 규칙은 경찰과도둑과 같다
+                          - 요청: POST /api/games 에 gameMode(optional). 없으면 COPS_AND_ROBBERS
+                          - 응답
+                            - POST /api/games, GET /api/games/{gameId}, POST /api/games/join
+                            - PUT /api/games/{gameId}/settings, GET /api/games/{gameId}/state
+                            - 게임 결과, 로비 SETTINGS_UPDATED 이벤트
+                            - 어드민 GraphQL 의 AdminGameSummary, AdminGame, AdminGameHistory, UserGameHistory
+             
+                        - 대기실 모드 변경 PUT /api/games/{gameId}/mode 추가
+                          - 방장만 호출할 수 있고, 모드와 구역을 함께 보낸다
+                          - 로비 이벤트 MODE_UPDATED(gameMode, areaData) 발행
+                          - ⚠️ 에러코드 추가 — EVENT_GAME_NOT_SUPPORTED_IN_MODE(400)
+                            - 이벤트 게임을 술래잡기로 바꿀 때
+                            - 어드민에서 술래잡기 게임을 이벤트로 전환할 때
+                            
+                        - 구역의 감옥(jail) 필드가 선택 값으로 바뀜
+                          - 술래잡기는 감옥을 보내지 않고, 응답의 감옥 필드는 null 이다
+                          - CIRCLE 의 감옥 중심과 반경은 둘 다 보내거나 둘 다 빼야 한다
+                          - ⚠️ 에러코드 추가 — JAIL_AREA_REQUIRED, JAIL_AREA_NOT_ALLOWED
+                            - 경찰과도둑에 감옥이 없거나, 술래잡기에 감옥이 있을 때
+                            - POST /api/games, PUT /api/games/{gameId}/area, PUT /api/games/{gameId}/mode
+                            
+                        - 술래잡기에서 탈옥 POST /api/games/{gameId}/system/escape 거절
+                          - ⚠️ 에러코드 추가 — ESCAPE_NOT_ALLOWED_IN_MODE(400)
+                          
+                        - FCM 시스템 알림 문구가 모드별로 바뀜
+                          - 술래잡기는 "술래", "도망자", "잡힘" 문구를 쓴다
+                        - 식별자는 그대로다
+                          - POLICE 는 술래, ROBBER 는 도망자, JAILED 는 잡힌 상태로 해석한다
 
-                        ## v3.0.0 업데이트 내역
-
-                        ### 변경 — 준비(Ready) 상태 제거, 방장이 시작하면 바로 게임 시작
-                        - POST /api/games/{gameId}/lobby/start 는 방장 권한과 팀 구성만 확인, 준비 여부는 보지 않는다
-                        - 에러코드 NOT_ALL_READY, HOST_CANNOT_UNREADY 삭제
-                        - 팀을 바꾸거나 라운드가 끝나도 풀릴 준비 상태가 없다
-                        - 로비 이벤트 READY_UPDATE 는 더 이상 발행하지 않는다
+                        ### 🧹 삭제 — Deprecated API
+                        - 로비 준비 상태 변경 PATCH /api/games/{gameId}/lobby/ready
+                        - 참가자 isReady
+                          - 로비 조회 GET /api/games/{gameId}/lobby
+                          - 로비 이벤트 ENTER, TEAM_UPDATE, HOST_CHANGED
+                        - 구역 평면 필드 (요청, 응답 모두)
+                          - playgroundCenter, playgroundRadiusInMeters, jailCenter, jailRadiusInMeters
+                          - circle / polygon 을 쓴다. 요청에 areaType 이 필수가 된다
+                        - 도둑 위치 조회 GET /api/games/{gameId}/robbers/location
+                        - 구버전 소켓 경로 /game-connection
                         - 앱 영향
-                          1. 구버전 앱은 그대로 동작한다
-                          2. 신버전은 준비 UI 와 시작 버튼의 준비 조건을 빼면 된다
+                          - 이 API 를 쓰는 구버전 앱은 동작하지 않는다
+                          - 배포 전에 강제 업데이트 최소 버전을 올려야 한다
+                          
                         """);
 
         return new OpenAPI()
