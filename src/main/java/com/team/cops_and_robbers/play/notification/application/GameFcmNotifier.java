@@ -64,7 +64,7 @@ public class GameFcmNotifier {
     private FcmPayload resolveSystemPayload(SystemEvent event) {
         SystemEventType type = event.type();
         Map<String, String> data = Map.of("type", type.name(), "gameId", String.valueOf(event.gameId()));
-        Wording wording = Wording.of(findGameMode(event.gameId()));
+        GameFcmWording wording = GameFcmWording.of(findGameMode(event.gameId()));
         return switch (type) {
             case ARREST -> new FcmPayload(wording.arrestTitle(), wording.arrestBody(), data);
             case ESCAPE -> new FcmPayload(wording.robber() + " 탈옥!", wording.robberSubject() + " 감옥에서 탈옥했습니다!", data);
@@ -131,21 +131,4 @@ public class GameFcmNotifier {
     }
 
     private record FcmPayload(String title, String body, Map<String, String> data) {}
-
-    private record Wording(String police, String policeSubject, String robber, String robberSubject, String arrestTitle, String arrestBody) {
-
-        static Wording of(GameMode gameMode) {
-            return switch (gameMode) {
-                case COPS_AND_ROBBERS -> new Wording("경찰", "경찰이", "도둑", "도둑이", "도둑 체포!", "도둑이 체포되었습니다.");
-                case TAG -> new Wording("술래", "술래가", "도망자", "도망자가", "도망자 잡힘!", "도망자가 잡혔습니다.");
-            };
-        }
-
-        String teamName(Team team) {
-            return switch (team) {
-                case POLICE -> police;
-                case ROBBER -> robber;
-            };
-        }
-    }
 }
