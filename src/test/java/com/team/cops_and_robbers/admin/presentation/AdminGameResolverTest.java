@@ -5,6 +5,7 @@ import com.team.cops_and_robbers.common.fixture.GameAreaFixture;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.common.fixture.GameResultFixture;
+import com.team.cops_and_robbers.community.post.infrastructure.GeocodingResult;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.history.domain.GameResult;
@@ -19,6 +20,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 class AdminGameResolverTest extends ControllerTest {
 
@@ -279,6 +284,97 @@ class AdminGameResolverTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(200);
                 softly.assertThat((Object) response.jsonPath().get("data.adminGame.area")).isNull();
+            });
+        }
+    }
+
+    @Nested
+    @DisplayName("구역 동네 이름 조회")
+    class PlaceName {
+
+        private static final String PLACE_NAME = "서울특별시 광진구 화양동";
+
+        @Test
+        void 게임_목록에_구역의_동네_이름이_내려온다() {
+            // given
+            Game game = gameRepository.save(GameFixture.WAITING_GAME());
+            gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(game));
+            Game gameWithoutArea = gameRepository.save(GameFixture.WAITING_GAME());
+
+            // when
+            ExtractableResponse<Response> response = executeQuery(
+                    adminToken,
+                    "{ adminGames { content { id placeName } } }");
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(200);
+                softly.assertThat((Object) response.jsonPath().get("errors")).isNull();
+                softly.assertThat(response.jsonPath().getString(
+                        "data.adminGames.content.find { it.id == '" + game.getId() + "' }.placeName")).isEqualTo(PLACE_NAME);
+                softly.assertThat(response.jsonPath().getString(
+                        "data.adminGames.content.find { it.id == '" + gameWithoutArea.getId() + "' }.placeName")).isNull();
+            });
+        }
+
+        @Test
+        void 한_번_찾은_동네_이름은_저장해_두고_다시_조회하지_않는다() {
+            // given
+            Game game = gameRepository.save(GameFixture.WAITING_GAME());
+            gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(game));
+            String query = "{ adminGame(id: " + game.getId() + ") { area { placeName } } }";
+
+            // when
+            ExtractableResponse<Response> first = executeQuery(adminToken, query);
+            ExtractableResponse<Response> second = executeQuery(adminToken, query);
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(first.jsonPath().getString("data.adminGame.area.placeName")).isEqualTo(PLACE_NAME);
+                softly.assertThat(second.jsonPath().getString("data.adminGame.area.placeName")).isEqualTo(PLACE_NAME);
+                softly.assertThat(areaPlaceNameRepository.findAll()).hasSize(1);
+            });
+            verify(geocodingClient, times(1)).reverseGeocode(any(), any());
+        }
+
+        @Test
+        void 지난_게임_기록의_구역에도_동네_이름이_내려온다() {
+            // given
+            Game game = gameRepository.save(GameFixture.FINISHED_GAME());
+            GameResult gameResult = gameResultRepository.save(GameResultFixture.POLICE_WIN_RESULT(game.getId()));
+
+            // when
+            ExtractableResponse<Response> response = executeQuery(
+                    adminToken,
+                    "{ adminGameHistory(id: " + gameResult.getId() + ") { id area { placeName } } }");
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(200);
+                softly.assertThat(response.jsonPath().getString("data.adminGameHistory.area.placeName")).isEqualTo(PLACE_NAME);
+            });
+        }
+
+        @Test
+        void 주소_조회에_실패하면_동네_이름만_비우고_저장하지_않는다() {
+            // given
+            // 실패한 좌표는 서비스가 10분 동안 기억하므로, 다른 테스트와 겹치지 않는 좌표를 쓴다
+            doReturn(GeocodingResult.failed()).when(geocodingClient).reverseGeocode(any(), any());
+            Game game = gameRepository.save(GameFixture.WAITING_GAME());
+            gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(game, 126.9780, 37.5665));
+
+            // when
+            ExtractableResponse<Response> response = executeQuery(
+                    adminToken,
+                    "{ adminGame(id: " + game.getId() + ") { id area { playgroundRadiusInMeters placeName } } }");
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(200);
+                softly.assertThat((Object) response.jsonPath().get("errors")).isNull();
+                softly.assertThat((Integer) response.jsonPath().get("data.adminGame.area.playgroundRadiusInMeters")).isEqualTo(500);
+                softly.assertThat((Object) response.jsonPath().get("data.adminGame.area.placeName")).isNull();
+                softly.assertThat(areaPlaceNameRepository.findAll()).isEmpty();
             });
         }
     }

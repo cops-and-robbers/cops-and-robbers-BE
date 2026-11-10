@@ -12,6 +12,7 @@ TRUNCATE TABLE
     notices,
     reports,
     bug_reports,
+    area_place_names,
     game_areas,
     participants,
     user_devices,

@@ -7,6 +7,7 @@ import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameArea
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameDetailResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGamePageResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameResult;
+import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameSummaryResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminParticipantResult;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
@@ -408,6 +409,34 @@ class AdminGameServiceTest extends ServiceUnitTest {
 
             // then
             assertThat(result).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("게임 목록의 구역 배치 조회")
+    class GetAreasByGameSummary {
+
+        @Test
+        void 구역이_있는_게임만_구역_맵에_포함된다() {
+            // given
+            GameArea gameArea = GameAreaFixture.CIRCLE_GAME_AREA(game1);
+
+            AdminGameSummaryResult summary1 = AdminGameSummaryResult.from(game1, 0);
+            AdminGameSummaryResult summary2 = AdminGameSummaryResult.from(game2, 0);
+
+            given(gameAreaRepository.findByGameIdIn(List.of(1L, 2L)))
+                    .willReturn(List.of(gameArea));
+
+            // when
+            Map<AdminGameSummaryResult, AdminGameAreaResult> result =
+                    adminGameService.getAreasByGameSummary(List.of(summary1, summary2));
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(result).hasSize(1);
+                softly.assertThat(result.get(summary1).playgroundCenterLat()).isEqualTo(37.4979);
+                softly.assertThat(result).doesNotContainKey(summary2);
+            });
         }
     }
 

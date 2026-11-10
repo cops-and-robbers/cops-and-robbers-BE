@@ -26,6 +26,7 @@ import com.team.cops_and_robbers.community.post.infrastructure.GeocodingResult;
 import com.team.cops_and_robbers.community.post.repository.CommunityPostRepository;
 import com.team.cops_and_robbers.community.reaction.repository.CommunityPostLikeRepository;
 import com.team.cops_and_robbers.community.reaction.repository.CommunityPostScrapRepository;
+import com.team.cops_and_robbers.game.area.repository.AreaPlaceNameRepository;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
@@ -105,6 +106,9 @@ public abstract class ControllerTest {
 
     @Autowired
     protected GameAreaRepository gameAreaRepository;
+
+    @Autowired
+    protected AreaPlaceNameRepository areaPlaceNameRepository;
 
     @Autowired
     protected GameResultRepository gameResultRepository;
