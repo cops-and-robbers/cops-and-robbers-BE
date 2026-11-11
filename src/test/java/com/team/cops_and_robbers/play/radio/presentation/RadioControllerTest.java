@@ -61,7 +61,7 @@ class RadioControllerTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
                 softly.assertThat(result.url()).isEqualTo("wss://dummy.livekit.cloud");
-                softly.assertThat(result.room()).isEqualTo("game-" + game.getId() + "-police");
+                softly.assertThat(result.room()).isEqualTo("dev-game-" + game.getId() + "-police");
                 softly.assertThat(result.identity()).isEqualTo(policeParticipant.getId().toString());
                 softly.assertThat(result.token()).isNotBlank();
                 softly.assertThat(result.expiresAt()).endsWith("+09:00");

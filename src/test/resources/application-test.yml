@@ -53,6 +53,7 @@ livekit:
   api-key: "dummy-livekit-key"
   api-secret: "dummy-livekit-secret-0123456789abcdef"
   token-ttl: 2m
+  room-prefix: dev
 
 discord:
   webhook:

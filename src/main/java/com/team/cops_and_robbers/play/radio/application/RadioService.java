@@ -48,7 +48,7 @@ public class RadioService {
         );
 
         return RadioTokenResult.of(
-                radioTokenProvider.serverUrl(), room, police.getId(), token.token(), token.expiresAt()
+                radioTokenProvider.serverUrl(), token.room(), police.getId(), token.token(), token.expiresAt()
         );
     }
 

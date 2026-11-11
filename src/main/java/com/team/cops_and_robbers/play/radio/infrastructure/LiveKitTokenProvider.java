@@ -37,10 +37,11 @@ public class LiveKitTokenProvider implements RadioTokenProvider {
     public RadioToken createJoinToken(String room, Long participantId, String nickname) {
         Instant now = clock.instant();
         Instant expiration = now.plus(liveKitProperties.tokenTtl());
+        String prefixedRoom = liveKitProperties.prefixedRoom(room);
 
         Map<String, Object> grant = Map.of(
                 "roomJoin", true,
-                "room", room,
+                "room", prefixedRoom,
                 "canPublish", true,
                 "canSubscribe", true,
                 "canPublishData", false
@@ -56,7 +57,7 @@ public class LiveKitTokenProvider implements RadioTokenProvider {
                 .signWith(signingKey, SignatureAlgorithm.HS256)
                 .compact();
 
-        return new RadioToken(token, LocalDateTime.ofInstant(expiration, clock.getZone()));
+        return new RadioToken(prefixedRoom, token, LocalDateTime.ofInstant(expiration, clock.getZone()));
     }
 
     public String createRoomManageToken() {

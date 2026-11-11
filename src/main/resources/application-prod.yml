@@ -32,3 +32,6 @@ decorator:
   datasource:
     p6spy:
       enabled: false
+
+livekit:
+  room-prefix: prod

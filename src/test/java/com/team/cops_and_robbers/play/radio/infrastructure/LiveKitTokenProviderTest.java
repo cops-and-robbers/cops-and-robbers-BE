@@ -22,9 +22,10 @@ class LiveKitTokenProviderTest {
     private static final String API_SECRET = "test-livekit-secret-0123456789abcdef";
     private static final Duration TOKEN_TTL = Duration.ofMinutes(2);
     private static final Instant NOW = Instant.parse("2026-11-09T08:00:00Z");
+    private static final String ROOM_PREFIX = "dev";
 
     private final LiveKitTokenProvider liveKitTokenProvider = new LiveKitTokenProvider(
-            new LiveKitProperties("wss://test.livekit.cloud", API_KEY, API_SECRET, TOKEN_TTL),
+            new LiveKitProperties("wss://test.livekit.cloud", API_KEY, API_SECRET, TOKEN_TTL, ROOM_PREFIX),
             Clock.fixed(NOW, ZoneId.of("Asia/Seoul"))
     );
 
@@ -44,7 +45,8 @@ class LiveKitTokenProviderTest {
             softly.assertThat(claims.getSubject()).isEqualTo("101");
             softly.assertThat(claims.get("name", String.class)).isEqualTo("경찰1");
             softly.assertThat(grant.get("roomJoin")).isEqualTo(true);
-            softly.assertThat(grant.get("room")).isEqualTo("game-1-police");
+            softly.assertThat(grant.get("room")).isEqualTo("dev-game-1-police");
+            softly.assertThat(token.room()).isEqualTo("dev-game-1-police");
             softly.assertThat(grant.get("canPublish")).isEqualTo(true);
             softly.assertThat(grant.get("canSubscribe")).isEqualTo(true);
             softly.assertThat(claims.getExpiration().getTime() - claims.getIssuedAt().getTime())

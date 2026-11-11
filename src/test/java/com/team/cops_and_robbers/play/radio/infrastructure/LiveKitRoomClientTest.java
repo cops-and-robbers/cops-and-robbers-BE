@@ -35,7 +35,7 @@ class LiveKitRoomClientTest {
     void setUp() {
         LiveKitProperties properties = new LiveKitProperties(
                 "wss://test.livekit.cloud", "test-livekit-key",
-                "test-livekit-secret-0123456789abcdef", Duration.ofMinutes(2));
+                "test-livekit-secret-0123456789abcdef", Duration.ofMinutes(2), "dev");
         RestClient.Builder builder = RestClient.builder();
         server = MockRestServiceServer.bindTo(builder).build();
         client = new LiveKitRoomClient(properties, new LiveKitTokenProvider(properties, Clock.systemUTC()), builder);
@@ -46,7 +46,7 @@ class LiveKitRoomClientTest {
         server.expect(requestTo(DELETE_ROOM_URL))
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(header("Authorization", startsWith("Bearer ")))
-                .andExpect(content().json("{\"room\":\"game-1-police\"}"))
+                .andExpect(content().json("{\"room\":\"dev-game-1-police\"}"))
                 .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
 
         client.closeRoom(ROOM);

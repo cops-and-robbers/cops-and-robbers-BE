@@ -19,6 +19,7 @@ public class LiveKitRoomClient implements RadioRoomClient {
     private static final String HTTP_SCHEME = "http";
 
     private final RestClient restClient;
+    private final LiveKitProperties liveKitProperties;
     private final LiveKitTokenProvider liveKitTokenProvider;
 
     public LiveKitRoomClient(
@@ -26,6 +27,7 @@ public class LiveKitRoomClient implements RadioRoomClient {
             LiveKitTokenProvider liveKitTokenProvider,
             RestClient.Builder builder
     ) {
+        this.liveKitProperties = liveKitProperties;
         this.liveKitTokenProvider = liveKitTokenProvider;
         this.restClient = builder
                 .baseUrl(liveKitProperties.url().replaceFirst(WEBSOCKET_SCHEME_PATTERN, HTTP_SCHEME))
@@ -40,7 +42,7 @@ public class LiveKitRoomClient implements RadioRoomClient {
                     .uri(DELETE_ROOM_PATH)
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + liveKitTokenProvider.createRoomManageToken())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of("room", room))
+                    .body(Map.of("room", liveKitProperties.prefixedRoom(room)))
                     .retrieve()
                     .toBodilessEntity();
             log.info("[Radio] 무전 방 닫기 완료 | room={}", room);

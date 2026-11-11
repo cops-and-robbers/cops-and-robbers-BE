@@ -12,6 +12,13 @@ public record LiveKitProperties(
         @NotBlank String url,
         @NotBlank String apiKey,
         @NotBlank String apiSecret,
-        Duration tokenTtl
+        Duration tokenTtl,
+        @NotBlank String roomPrefix
 ) {
+
+    private static final String PREFIXED_ROOM_FORMAT = "%s-%s";
+
+    public String prefixedRoom(String room) {
+        return String.format(PREFIXED_ROOM_FORMAT, roomPrefix, room);
+    }
 }

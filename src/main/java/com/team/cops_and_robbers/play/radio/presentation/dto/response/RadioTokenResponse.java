@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record RadioTokenResponse(
         @Schema(description = "무전 서버 접속 주소", example = "wss://voice.copsnro66ers.site")
         String url,
-        @Schema(description = "접속할 무전 방 이름", example = "game-1-police")
+        @Schema(description = "접속할 무전 방 이름", example = "dev-game-1-police")
         String room,
         @Schema(description = "무전 방에서의 식별자. 참가자 ID 입니다", example = "101")
         String identity,
