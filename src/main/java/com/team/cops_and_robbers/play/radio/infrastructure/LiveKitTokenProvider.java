@@ -19,6 +19,7 @@ public class LiveKitTokenProvider implements RadioTokenProvider {
 
     private static final String GRANT_CLAIM = "video";
     private static final String NAME_CLAIM = "name";
+    private static final Map<String, Object> ROOM_MANAGE_GRANT = Map.of("roomCreate", true);
 
     private final LiveKitProperties liveKitProperties;
     private final Clock clock;
@@ -56,6 +57,18 @@ public class LiveKitTokenProvider implements RadioTokenProvider {
                 .compact();
 
         return new RadioToken(token, LocalDateTime.ofInstant(expiration, clock.getZone()));
+    }
+
+    public String createRoomManageToken() {
+        Instant now = clock.instant();
+
+        return Jwts.builder()
+                .setIssuer(liveKitProperties.apiKey())
+                .claim(GRANT_CLAIM, ROOM_MANAGE_GRANT)
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(now.plus(liveKitProperties.tokenTtl())))
+                .signWith(signingKey, SignatureAlgorithm.HS256)
+                .compact();
     }
 
     @Override
