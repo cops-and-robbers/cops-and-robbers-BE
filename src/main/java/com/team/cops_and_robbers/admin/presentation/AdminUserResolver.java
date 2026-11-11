@@ -80,6 +80,11 @@ public class AdminUserResolver {
         return adminUserService.getGameParticipationsByUsers(users);
     }
 
+    @BatchMapping(typeName = "AdminUser", field = "radioSeconds")
+    public Map<AdminUserResult, Long> radioSeconds(List<AdminUserResult> users) {
+        return adminUserService.getRadioSecondsByUsers(users);
+    }
+
     @SchemaMapping(typeName = "AdminUser", field = "gameHistories")
     public List<UserGameHistoryResult> gameHistories(
             AdminUserResult user,

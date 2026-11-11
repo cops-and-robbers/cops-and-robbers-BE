@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -202,6 +203,56 @@ class AdminUserResolverTest extends ControllerTest {
                         .isEqualTo(String.valueOf(game.getId()));
                 softly.assertThat((Boolean) response.jsonPath().get("data.adminUser.participations[0].isHost")).isTrue();
             });
+        }
+    }
+
+    @Nested
+    @DisplayName("유저 무전 사용 시간 조회")
+    class RadioSeconds {
+
+        @Test
+        void 라운드별_무전_사용_시간을_합쳐서_조회한다() {
+            // given
+            User user = givenUser("radioUser");
+            Game game = gameRepository.save(GameFixture.FINISHED_GAME());
+            givenRadioUsage(gameResultRepository.save(GameResultFixture.POLICE_WIN_RESULT(game.getId())), user, 60);
+            givenRadioUsage(gameResultRepository.save(GameResultFixture.POLICE_WIN_RESULT(game.getId())), user, 90);
+
+            // when
+            ExtractableResponse<Response> response = executeQuery(
+                    adminToken,
+                    "{ adminUser(id: " + user.getId() + ") { radioSeconds } }");
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(200);
+                softly.assertThat(response.jsonPath().getInt("data.adminUser.radioSeconds")).isEqualTo(150);
+            });
+        }
+
+        @Test
+        void 무전_기록이_없으면_0이다() {
+            // given
+            User user = givenUser("noRadioUser");
+
+            // when
+            ExtractableResponse<Response> response = executeQuery(
+                    adminToken,
+                    "{ adminUser(id: " + user.getId() + ") { radioSeconds } }");
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(200);
+                softly.assertThat(response.jsonPath().getInt("data.adminUser.radioSeconds")).isZero();
+            });
+        }
+
+        private void givenRadioUsage(GameResult gameResult, User user, int seconds) {
+            GameResultParticipant participant = GameResultParticipantFixture.POLICE_PARTICIPANT(
+                    gameResult, user.getId(), user.getNickname());
+            participant.accumulateRadioSeconds(GameResultFixture.STARTED_AT, Duration.ofMinutes(2));
+            participant.accumulateRadioSeconds(GameResultFixture.STARTED_AT.plusSeconds(seconds), Duration.ofMinutes(2));
+            gameResultParticipantRepository.save(participant);
         }
     }
 

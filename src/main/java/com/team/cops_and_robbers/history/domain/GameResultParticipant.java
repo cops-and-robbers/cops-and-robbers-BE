@@ -21,6 +21,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Entity
@@ -65,6 +66,11 @@ public class GameResultParticipant extends BaseTimeEntity {
 
     private Double distanceMeters;
 
+    @Column(nullable = false)
+    private Integer radioSeconds;
+
+    private LocalDateTime radioLastIssuedAt;
+
     public static GameResultParticipant createSnapshot(
             GameResult gameResult,
             GameParticipant participant
@@ -78,6 +84,7 @@ public class GameResultParticipant extends BaseTimeEntity {
                 .arrestCount(0)
                 .arrestedCount(0)
                 .isMvp(false)
+                .radioSeconds(0)
                 .build();
     }
 
@@ -107,6 +114,21 @@ public class GameResultParticipant extends BaseTimeEntity {
 
     public void markMvp() {
         this.isMvp = true;
+    }
+
+    /** 직전 발급 이후 흐른 시간을 더합니다. 토큰 수명을 넘긴 구간은 수명만큼만 셉니다. */
+    public void accumulateRadioSeconds(LocalDateTime issuedAt, Duration tokenTtl) {
+        if (this.radioLastIssuedAt == null) {
+            this.radioLastIssuedAt = issuedAt;
+            return;
+        }
+
+        long elapsedSeconds = Duration.between(this.radioLastIssuedAt, issuedAt).getSeconds();
+        if (elapsedSeconds <= 0) {
+            return;
+        }
+        this.radioSeconds += (int) Math.min(elapsedSeconds, tokenTtl.getSeconds());
+        this.radioLastIssuedAt = issuedAt;
     }
 
     public boolean hasLeft() {

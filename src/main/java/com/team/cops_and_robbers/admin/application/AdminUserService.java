@@ -11,6 +11,7 @@ import com.team.cops_and_robbers.admin.application.dto.result.user.UserDeviceRes
 import com.team.cops_and_robbers.admin.application.dto.result.user.UserGameHistoryResult;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.history.repository.GameResultParticipantRepository;
+import com.team.cops_and_robbers.history.repository.RadioUsageProjection;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.repository.UserDeviceRepository;
 import com.team.cops_and_robbers.user.repository.UserRepository;
@@ -87,6 +88,21 @@ public class AdminUserService {
         return users.stream().collect(Collectors.toMap(
                 user -> user,
                 user -> participationsByUserId.getOrDefault(user.id(), List.of())
+        ));
+    }
+
+    public Map<AdminUserResult, Long> getRadioSecondsByUsers(List<AdminUserResult> users) {
+        List<Long> userIds = users.stream().map(AdminUserResult::id).toList();
+        Map<Long, Long> radioSecondsByUserId = gameResultParticipantRepository.sumRadioSecondsGroupByUserIdIn(userIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        RadioUsageProjection::getUserId,
+                        RadioUsageProjection::getRadioSeconds
+                ));
+
+        return users.stream().collect(Collectors.toMap(
+                user -> user,
+                user -> radioSecondsByUserId.getOrDefault(user.id(), 0L)
         ));
     }
 

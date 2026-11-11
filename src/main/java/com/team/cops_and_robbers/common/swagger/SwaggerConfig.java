@@ -30,8 +30,24 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("3.1.0")
+                .version("3.2.0")
                 .description("""
+                        ## v3.2.0 업데이트 내역
+
+                        ### ✨ 추가 — 경찰 무전 접속 토큰 API
+                        - 무전 접속 토큰 발급 POST /api/games/{gameId}/radio/token 추가. 경찰이 무전 서버에 들어갈 토큰을 받는다
+                          - 요청 본문 없음(로그인한 경찰 본인). 응답은 url, room, identity, token, expiresAt
+                          - 토큰 수명은 2분이다. 앱은 수명의 70~90% 지점에서 랜덤하게 다시 호출해 재발급받는다
+                          - 재발급 때마다 자격을 다시 검증한다. 게임이 끝났거나 나갔으면 거절된다
+                          - 음성은 서버를 거치지 않고 무전 서버와 앱 사이에서만 흐른다. 앱은 url 을 하드코딩하지 않는다
+                          - ⚠️ 에러코드 추가 — ONLY_POLICE_CAN_USE_RADIO(403), RADIO_POLICE_WAITING_TIME(400), RADIO_NOT_ALLOWED_IN_EVENT_GAME(400)
+                        - 무전 사용 시간을 라운드별 참가자 기록에 누적한다. 어드민 GraphQL 의 AdminGameHistoryParticipant 에 radioSeconds(Int!), AdminUser 에 누적 radioSeconds(Int!) 추가
+
+                        ### 변경 — 최대 참가 인원 150명 → 50명
+                        - ⚠️ maxParticipants 상한이 50 으로 내려간다. 51 이상이면 400 이다
+                          - POST /api/games 의 settings, PUT /api/games/{gameId}/settings
+                        - 앱 영향 — 방 생성 인원 슬라이더 최대값을 50 으로 맞춘다
+
                         ## v3.1.0 업데이트 내역
 
                         ### ✨ 추가 — 구역 축소 최종 반경, 강제 체포 API

@@ -37,6 +37,7 @@ import com.team.cops_and_robbers.history.repository.GameResultRepository;
 import com.team.cops_and_robbers.notice.repository.NoticeRepository;
 import com.team.cops_and_robbers.notice.repository.NoticeTranslationRepository;
 import com.team.cops_and_robbers.play.notification.application.GameFcmNotifier;
+import com.team.cops_and_robbers.play.radio.infrastructure.RadioRoomClient;
 import com.team.cops_and_robbers.report.repository.ReportRepository;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.domain.UserDevice;
@@ -89,6 +90,9 @@ public abstract class ControllerTest {
 
     @MockitoBean
     protected GeocodingClient geocodingClient;
+
+    @MockitoBean
+    protected RadioRoomClient radioRoomClient;
 
     @Autowired
     protected UserRepository userRepository;
