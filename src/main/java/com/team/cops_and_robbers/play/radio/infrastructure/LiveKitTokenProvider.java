@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.play.radio.infrastructure;
 
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
@@ -51,7 +52,7 @@ public class LiveKitTokenProvider implements RadioTokenProvider {
                 .claim(GRANT_CLAIM, grant)
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(expiration))
-                .signWith(signingKey)
+                .signWith(signingKey, SignatureAlgorithm.HS256)
                 .compact();
 
         return new RadioToken(token, LocalDateTime.ofInstant(expiration, clock.getZone()));
