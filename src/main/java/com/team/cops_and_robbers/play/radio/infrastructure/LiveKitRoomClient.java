@@ -15,7 +15,7 @@ import java.util.Map;
 public class LiveKitRoomClient implements RadioRoomClient {
 
     private static final String DELETE_ROOM_PATH = "/twirp/livekit.RoomService/DeleteRoom";
-    private static final String WEBSOCKET_SCHEME = "^ws";
+    private static final String WEBSOCKET_SCHEME_PATTERN = "^ws";
     private static final String HTTP_SCHEME = "http";
 
     private final RestClient restClient;
@@ -28,7 +28,7 @@ public class LiveKitRoomClient implements RadioRoomClient {
     ) {
         this.liveKitTokenProvider = liveKitTokenProvider;
         this.restClient = builder
-                .baseUrl(liveKitProperties.url().replaceFirst(WEBSOCKET_SCHEME, HTTP_SCHEME))
+                .baseUrl(liveKitProperties.url().replaceFirst(WEBSOCKET_SCHEME_PATTERN, HTTP_SCHEME))
                 .build();
     }
 
@@ -43,11 +43,11 @@ public class LiveKitRoomClient implements RadioRoomClient {
                     .body(Map.of("room", room))
                     .retrieve()
                     .toBodilessEntity();
-            log.info("[Radio] Room closed | room={}", room);
+            log.info("[Radio] 무전 방 닫기 완료 | room={}", room);
         } catch (HttpClientErrorException.NotFound e) {
-            log.info("[Radio] Room already closed | room={}", room);
+            log.info("[Radio] 닫을 무전 방 없음 | room={}", room);
         } catch (Exception e) {
-            log.error("[Radio] Failed to close room | room={}", room, e);
+            log.error("[Radio] 무전 방 닫기 실패 | room={}", room, e);
         }
     }
 }
