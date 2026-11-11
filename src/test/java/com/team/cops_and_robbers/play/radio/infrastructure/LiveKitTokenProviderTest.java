@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.play.radio.infrastructure;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.Test;
 
@@ -33,15 +34,12 @@ class LiveKitTokenProviderTest {
         RadioToken token = liveKitTokenProvider.createJoinToken("game-1-police", 101L, "경찰1");
 
         // then
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(API_SECRET.getBytes(StandardCharsets.UTF_8))
-                .setClock(() -> Date.from(NOW))
-                .build()
-                .parseClaimsJws(token.token())
-                .getBody();
+        Jws<Claims> jws = parse(token.token());
+        Claims claims = jws.getBody();
         Map<?, ?> grant = claims.get("video", Map.class);
 
         assertSoftly(softly -> {
+            softly.assertThat(jws.getHeader().getAlgorithm()).isEqualTo("HS256");
             softly.assertThat(claims.getIssuer()).isEqualTo(API_KEY);
             softly.assertThat(claims.getSubject()).isEqualTo("101");
             softly.assertThat(claims.get("name", String.class)).isEqualTo("경찰1");
@@ -53,5 +51,29 @@ class LiveKitTokenProviderTest {
                     .isEqualTo(TOKEN_TTL.toMillis());
             softly.assertThat(token.expiresAt()).isEqualTo(LocalDateTime.of(2026, 11, 9, 17, 2));
         });
+    }
+
+    @Test
+    void 방_관리_토큰은_방_생성_삭제_권한만_담는다() {
+        // when
+        String token = liveKitTokenProvider.createRoomManageToken();
+
+        // then
+        Jws<Claims> jws = parse(token);
+        Claims claims = jws.getBody();
+
+        assertSoftly(softly -> {
+            softly.assertThat(jws.getHeader().getAlgorithm()).isEqualTo("HS256");
+            softly.assertThat(claims.getIssuer()).isEqualTo(API_KEY);
+            softly.assertThat(claims.get("video", Map.class)).isEqualTo(Map.of("roomCreate", true));
+        });
+    }
+
+    private Jws<Claims> parse(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(API_SECRET.getBytes(StandardCharsets.UTF_8))
+                .setClock(() -> Date.from(NOW))
+                .build()
+                .parseClaimsJws(token);
     }
 }
