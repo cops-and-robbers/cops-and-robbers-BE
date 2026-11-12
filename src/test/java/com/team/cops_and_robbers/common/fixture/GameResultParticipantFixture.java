@@ -16,6 +16,7 @@ public class GameResultParticipantFixture {
                 .status(ParticipantStatus.ALIVE)
                 .arrestCount(0)
                 .arrestedCount(0)
+                .radioSeconds(0)
                 .build();
     }
 
@@ -28,6 +29,7 @@ public class GameResultParticipantFixture {
                 .status(ParticipantStatus.JAILED)
                 .arrestCount(0)
                 .arrestedCount(0)
+                .radioSeconds(0)
                 .build();
     }
 }

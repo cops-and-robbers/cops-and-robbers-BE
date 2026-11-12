@@ -6,30 +6,44 @@ import com.team.cops_and_robbers.auth.presentation.dto.request.AdminLoginRequest
 import com.team.cops_and_robbers.auth.presentation.dto.request.LoginRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.request.LogoutRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.request.ReissueRequest;
+import com.team.cops_and_robbers.auth.presentation.dto.request.WithdrawalRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.response.AdminLoginResponse;
 import com.team.cops_and_robbers.auth.presentation.dto.response.LoginResponse;
 import com.team.cops_and_robbers.auth.presentation.dto.response.ReissueResponse;
+import com.team.cops_and_robbers.auth.presentation.dto.response.WithdrawalPreviewResponse;
 import com.team.cops_and_robbers.common.ControllerTest;
+import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.exception.CommonException;
 import com.team.cops_and_robbers.common.exception.ErrorResponse;
+import com.team.cops_and_robbers.common.fixture.GameFixture;
+import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.user.domain.DeviceType;
 import com.team.cops_and_robbers.user.domain.Role;
 import com.team.cops_and_robbers.user.domain.SocialType;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.domain.UserDevice;
+import com.team.cops_and_robbers.user.exception.UserException;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 
 class AuthControllerTest extends ControllerTest {
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Nested
     @DisplayName("소셜 로그인 API")
@@ -406,4 +420,193 @@ class AuthControllerTest extends ControllerTest {
         }
     }
 
+    @Nested
+    @DisplayName("웹 회원 탈퇴 API")
+    class Withdrawal {
+
+        private static final String PREVIEW_URL = "/api/auth/withdrawal/preview";
+        private static final String WITHDRAWAL_URL = "/api/auth/withdrawal";
+
+        private final WithdrawalRequest request = new WithdrawalRequest(SocialType.GOOGLE, "valid_token");
+
+        private void givenFirebaseUser(String socialId) {
+            doReturn(socialId)
+                    .when(googleLoginStrategy)
+                    .validateAndGetSocialId(anyString());
+        }
+
+        private ExtractableResponse<Response> post(String url, Object body) {
+            return unauthenticated()
+                    .body(body)
+                    .when()
+                    .post(url)
+                    .then()
+                    .extract();
+        }
+
+        @Test
+        void 가입된_유저라면_닉네임과_게임_참여_여부를_200_OK로_응답해야_한다() {
+            // given
+            User user = givenUser();
+            givenFirebaseUser(user.getSocialId());
+
+            // when
+            ExtractableResponse<Response> extract = post(PREVIEW_URL, request);
+
+            // then
+            WithdrawalPreviewResponse response = extract.as(WithdrawalPreviewResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(response.nickname()).isEqualTo(user.getNickname());
+                softly.assertThat(response.inActiveGame()).isFalse();
+            });
+        }
+
+        @Test
+        void 계정_확인은_유저를_삭제하지_않는다() {
+            // given
+            User user = givenUser();
+            givenFirebaseUser(user.getSocialId());
+
+            // when
+            post(PREVIEW_URL, request);
+
+            // then
+            assertSoftly(softly -> softly.assertThat(userRepository.findById(user.getId())).isPresent());
+        }
+
+        @Test
+        void 참여중인_게임이_있으면_계정_확인에서_게임_참여_중으로_응답해야_한다() {
+            // given
+            User user = givenUser();
+            givenFirebaseUser(user.getSocialId());
+            givenGame(user);
+
+            // when
+            ExtractableResponse<Response> extract = post(PREVIEW_URL, request);
+
+            // then
+            WithdrawalPreviewResponse response = extract.as(WithdrawalPreviewResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(response.inActiveGame()).isTrue();
+            });
+        }
+
+        @Test
+        void 만료된_대기실만_있으면_정리하고_게임_참여_중이_아니라고_응답해야_한다() {
+            // given
+            User user = givenUser();
+            givenFirebaseUser(user.getSocialId());
+            Game game = givenGame(user);
+            jdbcTemplate.update(
+                    "UPDATE games SET created_at = ? WHERE id = ?",
+                    Timestamp.valueOf(LocalDateTime.now().minusHours(25)),
+                    game.getId()
+            );
+
+            // when
+            ExtractableResponse<Response> extract = post(PREVIEW_URL, request);
+
+            // then
+            WithdrawalPreviewResponse response = extract.as(WithdrawalPreviewResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(response.inActiveGame()).isFalse();
+                softly.assertThat(gameRepository.findById(game.getId())).isEmpty();
+            });
+        }
+
+        @Test
+        void 탈퇴하면_유저와_리프레시_토큰을_삭제하고_200_OK를_응답해야_한다() {
+            // given
+            User user = givenUser();
+            givenTokens(user);
+            givenFirebaseUser(user.getSocialId());
+
+            // when
+            ExtractableResponse<Response> extract = post(WITHDRAWAL_URL, request);
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(userRepository.findById(user.getId())).isEmpty();
+                softly.assertThat(refreshTokenRepository.findByUserId(user.getId())).isNull();
+            });
+        }
+
+        @Test
+        void 미가입_유저라면_유저를_만들지_않고_404_NOT_FOUND를_응답해야_한다() {
+            // given
+            givenFirebaseUser("unknown_social_id");
+
+            // when
+            ExtractableResponse<Response> preview = post(PREVIEW_URL, request);
+            ExtractableResponse<Response> withdrawal = post(WITHDRAWAL_URL, request);
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(preview.statusCode()).isEqualTo(404);
+                softly.assertThat(withdrawal.statusCode()).isEqualTo(404);
+                softly.assertThat(withdrawal.as(ErrorResponse.class).title())
+                        .isEqualTo(AuthException.WITHDRAWAL_USER_NOT_FOUND.getTitle());
+                softly.assertThat(userRepository.count()).isZero();
+            });
+        }
+
+        @Test
+        void 유효하지_않은_토큰이면_401_UNAUTHORIZED를_응답해야_한다() {
+            // given
+            doThrow(new ApplicationException(AuthException.INVALID_FIREBASE_TOKEN))
+                    .when(googleLoginStrategy)
+                    .validateAndGetSocialId(anyString());
+
+            // when
+            ExtractableResponse<Response> extract = post(WITHDRAWAL_URL, request);
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(401);
+                softly.assertThat(extract.as(ErrorResponse.class).title())
+                        .isEqualTo(AuthException.INVALID_FIREBASE_TOKEN.getTitle());
+            });
+        }
+
+        @Test
+        void 참여중인_게임이_있으면_탈퇴에_실패하고_409_CONFLICT를_응답해야_한다() {
+            // given
+            User user = givenUser();
+            givenFirebaseUser(user.getSocialId());
+            givenGame(user);
+
+            // when
+            ExtractableResponse<Response> extract = post(WITHDRAWAL_URL, request);
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(409);
+                softly.assertThat(extract.as(ErrorResponse.class).title())
+                        .isEqualTo(UserException.CANNOT_WITHDRAW.getTitle());
+                softly.assertThat(userRepository.findById(user.getId())).isPresent();
+            });
+        }
+
+        @Test
+        void 토큰이_없으면_400_BAD_REQUEST를_응답해야_한다() {
+            // given
+            WithdrawalRequest invalid = new WithdrawalRequest(SocialType.GOOGLE, " ");
+
+            // when
+            ExtractableResponse<Response> extract = post(WITHDRAWAL_URL, invalid);
+
+            // then
+            assertSoftly(softly -> softly.assertThat(extract.statusCode()).isEqualTo(400));
+        }
+
+        private Game givenGame(User user) {
+            Game game = gameRepository.save(GameFixture.WAITING_GAME());
+            givenHost(game, user);
+            return game;
+        }
+    }
 }

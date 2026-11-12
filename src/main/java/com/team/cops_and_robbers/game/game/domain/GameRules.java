@@ -5,12 +5,14 @@ public record GameRules(
         boolean usesJailArea,
         boolean allowsEscape,
         boolean allowsForceArrest,
+        boolean allowsRadio,
         boolean endsWhenAllRobbersArrested,
         boolean endsWhenPoliceLeave,
         boolean validatesTeamComposition
 ) {
     public static final GameRules COPS_AND_ROBBERS = new GameRules(
             CatchOutcome.CAPTURE,
+            true,
             true,
             true,
             true,
@@ -26,6 +28,7 @@ public record GameRules(
             true,
             true,
             true,
+            true,
             true
     );
 
@@ -33,6 +36,7 @@ public record GameRules(
             CatchOutcome.NONE,
             true,
             true,
+            false,
             false,
             false,
             false,

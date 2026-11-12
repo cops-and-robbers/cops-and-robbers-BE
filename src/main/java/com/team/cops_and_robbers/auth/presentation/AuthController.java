@@ -3,14 +3,18 @@ package com.team.cops_and_robbers.auth.presentation;
 import com.team.cops_and_robbers.auth.application.AuthService;
 import com.team.cops_and_robbers.auth.application.dto.result.AdminLoginResult;
 import com.team.cops_and_robbers.auth.application.dto.result.LoginResult;
+import com.team.cops_and_robbers.auth.application.dto.result.WithdrawalPreviewResult;
 import com.team.cops_and_robbers.auth.domain.Tokens;
 import com.team.cops_and_robbers.auth.presentation.dto.request.AdminLoginRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.request.LoginRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.request.ReissueRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.request.LogoutRequest;
+import com.team.cops_and_robbers.auth.presentation.dto.request.WithdrawalRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.response.AdminLoginResponse;
 import com.team.cops_and_robbers.auth.presentation.dto.response.LoginResponse;
 import com.team.cops_and_robbers.auth.presentation.dto.response.ReissueResponse;
+import com.team.cops_and_robbers.auth.presentation.dto.response.WithdrawalPreviewResponse;
+import com.team.cops_and_robbers.user.presentation.dto.response.DeleteAccountResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -77,6 +81,24 @@ public class AuthController implements AuthControllerDocs {
     public ResponseEntity<Void> adminLogout(@RequestBody @Valid LogoutRequest request) {
         authService.adminLogout(request.refreshToken());
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 6. 웹 회원 탈퇴 전 계정을 확인합니다.
+     */
+    @PostMapping("/withdrawal/preview")
+    public ResponseEntity<WithdrawalPreviewResponse> previewWithdrawal(@RequestBody @Valid WithdrawalRequest request) {
+        WithdrawalPreviewResult result = authService.previewWithdrawal(request.toCommand());
+        return ResponseEntity.ok(WithdrawalPreviewResponse.from(result));
+    }
+
+    /**
+     * 7. 웹에서 회원 탈퇴를 진행합니다.
+     */
+    @PostMapping("/withdrawal")
+    public ResponseEntity<DeleteAccountResponse> withdraw(@RequestBody @Valid WithdrawalRequest request) {
+        authService.withdraw(request.toCommand());
+        return ResponseEntity.ok(DeleteAccountResponse.from());
     }
 
 }

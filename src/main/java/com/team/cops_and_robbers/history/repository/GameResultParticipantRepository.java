@@ -47,6 +47,14 @@ public interface GameResultParticipantRepository extends JpaRepository<GameResul
             """)
     List<GameResultParticipant> findLatestCompletedByUserId(@Param("userId") Long userId, Pageable pageable);
 
+    @Query("""
+            select p.userId as userId, sum(p.radioSeconds) as radioSeconds
+            from GameResultParticipant p
+            where p.userId in :userIds
+            group by p.userId
+            """)
+    List<RadioUsageProjection> sumRadioSecondsGroupByUserIdIn(@Param("userIds") List<Long> userIds);
+
     /**
      * 탈퇴자의 참가 기록에서 탈퇴자와 이어지는 값만 비웁니다.
      * 행과 수치는 같은 판 다른 참가자의 결과 화면에 쓰이므로 남깁니다.

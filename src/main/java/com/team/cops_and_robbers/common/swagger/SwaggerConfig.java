@@ -43,6 +43,7 @@ public class SwaggerConfig {
                             - PUT /api/games/{gameId}/settings, GET /api/games/{gameId}/state
                             - 게임 결과, 로비 SETTINGS_UPDATED 이벤트
                             - 어드민 GraphQL 의 AdminGameSummary, AdminGame, AdminGameHistory, UserGameHistory
+                          - 어드민 GraphQL 필터: adminGames, adminGameHistories 에 gameMode(optional) 추가
              
                         - 대기실 모드 변경 PUT /api/games/{gameId}/mode 추가
                           - 방장만 호출할 수 있고, 모드와 구역을 함께 보낸다
@@ -79,7 +80,31 @@ public class SwaggerConfig {
                         - 앱 영향
                           - 이 API 를 쓰는 구버전 앱은 동작하지 않는다
                           - 배포 전에 강제 업데이트 최소 버전을 올려야 한다
-                          
+
+                        ## v3.3.0 업데이트 내역
+
+                        ### ✨ 추가 — 웹 회원 탈퇴 API
+                        - POST /api/auth/withdrawal/preview 추가. Firebase ID 토큰으로 계정을 확인하고 닉네임과 게임 참여 여부를 응답한다.
+                        - POST /api/auth/withdrawal 추가. DELETE /api/user/me 와 같은 탈퇴 처리를 한다.
+                        - 두 API 모두 회원가입을 하지 않고 JWT 도 발급하지 않는다.
+                        - ⚠️ 에러코드 추가 — WITHDRAWAL_USER_NOT_FOUND. 가입되지 않은 계정이면 404 를 응답한다.
+                        - 앱 영향 — 없음. 웹사이트의 계정 삭제 페이지에서만 사용한다.
+
+                        ## v3.2.0 업데이트 내역
+
+                        ### ✨ 추가 — 경찰 무전 접속 토큰 API
+                        - 무전 접속 토큰 발급 POST /api/games/{gameId}/radio/token 추가. 경찰이 무전 서버에 들어갈 토큰을 받는다
+                          - 요청 본문 없음(로그인한 경찰 본인). 응답은 url, room, identity, token, expiresAt
+                          - 토큰 수명은 2분이다. 앱은 수명의 70~90% 지점에서 랜덤하게 다시 호출해 재발급받는다
+                          - 재발급 때마다 자격을 다시 검증한다. 게임이 끝났거나 나갔으면 거절된다
+                          - 음성은 서버를 거치지 않고 무전 서버와 앱 사이에서만 흐른다. 앱은 url 을 하드코딩하지 않는다
+                          - ⚠️ 에러코드 추가 — ONLY_POLICE_CAN_USE_RADIO(403), RADIO_POLICE_WAITING_TIME(400), RADIO_NOT_ALLOWED_IN_EVENT_GAME(400)
+                        - 무전 사용 시간을 라운드별 참가자 기록에 누적한다. 어드민 GraphQL 의 AdminGameHistoryParticipant 에 radioSeconds(Int!), AdminUser 에 누적 radioSeconds(Int!) 추가
+
+                        ### 변경 — 최대 참가 인원 150명 → 50명
+                        - ⚠️ maxParticipants 상한이 50 으로 내려간다. 51 이상이면 400 이다
+                          - POST /api/games 의 settings, PUT /api/games/{gameId}/settings
+                        - 앱 영향 — 방 생성 인원 슬라이더 최대값을 50 으로 맞춘다
                         """);
 
         return new OpenAPI()

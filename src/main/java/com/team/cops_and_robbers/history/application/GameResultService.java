@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -97,6 +98,17 @@ public class GameResultService {
                 .flatMap(result -> gameResultParticipantRepository
                         .findByGameResultIdAndUserIdAndLeftAtIsNull(result.getId(), robberUserId))
                 .ifPresent(GameResultParticipant::incrementArrestedCount);
+    }
+
+    /**
+     * 무전 토큰을 발급받은 경찰의 무전 사용 시간을 누적합니다.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void recordRadioUsage(Long gameId, Long policeUserId, Duration tokenTtl) {
+        findInProgressResult(gameId)
+                .flatMap(result -> gameResultParticipantRepository
+                        .findByGameResultIdAndUserIdAndLeftAtIsNull(result.getId(), policeUserId))
+                .ifPresent(snapshot -> snapshot.accumulateRadioSeconds(LocalDateTime.now(clock), tokenTtl));
     }
 
     /**

@@ -60,6 +60,13 @@ discord:
     bug: ${DISCORD_WEBHOOK_BUG}
     alert: ${DISCORD_WEBHOOK_ALERT:}
 
+livekit:
+  url: ${LIVEKIT_URL}
+  api-key: ${LIVEKIT_API_KEY}
+  api-secret: ${LIVEKIT_API_SECRET}
+  token-ttl: ${LIVEKIT_TOKEN_TTL:2m}
+  room-prefix: dev
+
 server:
   shutdown: graceful
 

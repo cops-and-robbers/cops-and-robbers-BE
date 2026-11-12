@@ -4,10 +4,14 @@ import com.team.cops_and_robbers.auth.exception.AuthException;
 import com.team.cops_and_robbers.auth.presentation.dto.request.LoginRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.request.LogoutRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.request.ReissueRequest;
+import com.team.cops_and_robbers.auth.presentation.dto.request.WithdrawalRequest;
 import com.team.cops_and_robbers.auth.presentation.dto.response.LoginResponse;
 import com.team.cops_and_robbers.auth.presentation.dto.response.ReissueResponse;
+import com.team.cops_and_robbers.auth.presentation.dto.response.WithdrawalPreviewResponse;
 import com.team.cops_and_robbers.common.exception.CommonException;
 import com.team.cops_and_robbers.common.swagger.ApiErrorCode;
+import com.team.cops_and_robbers.user.exception.UserException;
+import com.team.cops_and_robbers.user.presentation.dto.response.DeleteAccountResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -96,4 +100,28 @@ public interface AuthControllerDocs {
             @ApiResponse(responseCode = "204", description = "로그아웃 성공 (항상 204 응답)")
     })
     ResponseEntity<Void> logout(@RequestBody @Valid LogoutRequest request);
+
+    @Operation(summary = "웹 회원 탈퇴 전 계정 확인",
+            description = "Firebase ID 토큰으로 탈퇴할 계정을 확인합니다. 회원가입을 하지 않고 JWT도 발급하지 않습니다.\n\n"
+                    + "`inActiveGame` 이 `true` 면 대기 중이거나 진행 중인 게임이 있어 탈퇴할 수 없습니다."
+    )
+    @ApiErrorCode(value = AuthException.class, codes = {"INVALID_FIREBASE_TOKEN", "EXPIRED_FIREBASE_TOKEN", "WITHDRAWAL_USER_NOT_FOUND"})
+    @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "확인 성공")
+    })
+    ResponseEntity<WithdrawalPreviewResponse> previewWithdrawal(@RequestBody @Valid WithdrawalRequest request);
+
+
+    @Operation(summary = "웹 회원 탈퇴",
+            description = "Firebase ID 토큰으로 본인을 확인한 뒤 회원 탈퇴를 진행합니다. 처리 내용은 `DELETE /api/user/me` 와 같습니다."
+    )
+    @ApiErrorCode(value = AuthException.class, codes = {"INVALID_FIREBASE_TOKEN", "EXPIRED_FIREBASE_TOKEN", "WITHDRAWAL_USER_NOT_FOUND"})
+    @ApiErrorCode(value = UserException.class, codes = {"CANNOT_WITHDRAW"})
+    @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "탈퇴 성공")
+    })
+    ResponseEntity<DeleteAccountResponse> withdraw(@RequestBody @Valid WithdrawalRequest request);
+
 }

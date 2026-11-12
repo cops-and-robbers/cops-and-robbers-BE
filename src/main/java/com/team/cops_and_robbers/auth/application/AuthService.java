@@ -3,8 +3,10 @@ package com.team.cops_and_robbers.auth.application;
 
 import com.team.cops_and_robbers.auth.application.dto.command.AdminLoginCommand;
 import com.team.cops_and_robbers.auth.application.dto.command.LoginCommand;
+import com.team.cops_and_robbers.auth.application.dto.command.WithdrawalCommand;
 import com.team.cops_and_robbers.auth.application.dto.result.AdminLoginResult;
 import com.team.cops_and_robbers.auth.application.dto.result.LoginResult;
+import com.team.cops_and_robbers.auth.application.dto.result.WithdrawalPreviewResult;
 import com.team.cops_and_robbers.auth.application.event.UserFcmTokenUpdatedEvent;
 import com.team.cops_and_robbers.auth.domain.NicknameLanguage;
 import com.team.cops_and_robbers.auth.domain.Tokens;
@@ -13,6 +15,7 @@ import com.team.cops_and_robbers.auth.infrastructure.jwt.JwtTokenProvider;
 import com.team.cops_and_robbers.auth.infrastructure.social.strategy.SocialLoginStrategy;
 import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.user.application.UserService;
 import com.team.cops_and_robbers.user.domain.SocialType;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.domain.UserDevice;
@@ -42,6 +45,7 @@ public class AuthService {
     private final RandomNicknameGenerator randomNicknameGenerator;
     private final Map<SocialType, SocialLoginStrategy> socialLoginStrategies;
     private final ApplicationEventPublisher eventPublisher;
+    private final UserService userService;
 
     /**
      * 1. 소셜 로그인 진행
@@ -194,6 +198,32 @@ public class AuthService {
     public void adminLogout(String refreshToken) {
         jwtTokenProvider.getUserIdFromRefreshTokenLogout(refreshToken)
                 .ifPresent(refreshTokenRepository::delete);
+    }
+
+    /**
+     * 7. 웹 회원 탈퇴 전 계정 확인
+     * - 회원가입 없이 조회만 하고 토큰을 발급하지 않음 (취소해도 앱 로그인에 영향 없음)
+     * - 만료된 대기실은 앱 진입 때만 정리되므로 여기서도 정리
+     */
+    public WithdrawalPreviewResult previewWithdrawal(WithdrawalCommand command) {
+        User user = findWithdrawalUser(command);
+        boolean inActiveGame = userService.getUserGameInfo(user.getId()).isPresent();
+        return WithdrawalPreviewResult.of(user, inActiveGame);
+    }
+
+    /**
+     * 8. 웹 회원 탈퇴
+     * - 앱의 회원 탈퇴와 같은 처리를 사용
+     */
+    public void withdraw(WithdrawalCommand command) {
+        User user = findWithdrawalUser(command);
+        userService.deleteAccount(user.getId());
+    }
+
+    private User findWithdrawalUser(WithdrawalCommand command) {
+        String socialId = getSocialId(command.socialType(), command.idToken());
+        return userRepository.findBySocialIdAndSocialType(socialId, command.socialType())
+                .orElseThrow(() -> new ApplicationException(AuthException.WITHDRAWAL_USER_NOT_FOUND));
     }
 
     private record AuthUserData(
