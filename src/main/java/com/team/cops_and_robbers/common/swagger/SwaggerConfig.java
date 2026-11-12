@@ -30,8 +30,17 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("3.2.0")
+                .version("3.3.0")
                 .description("""
+                        ## v3.3.0 업데이트 내역
+
+                        ### ✨ 추가 — 웹 회원 탈퇴 API
+                        - POST /api/auth/withdrawal/preview 추가. Firebase ID 토큰으로 계정을 확인하고 닉네임과 게임 참여 여부를 응답한다.
+                        - POST /api/auth/withdrawal 추가. DELETE /api/user/me 와 같은 탈퇴 처리를 한다.
+                        - 두 API 모두 회원가입을 하지 않고 JWT 도 발급하지 않는다.
+                        - ⚠️ 에러코드 추가 — WITHDRAWAL_USER_NOT_FOUND. 가입되지 않은 계정이면 404 를 응답한다.
+                        - 앱 영향 — 없음. 웹사이트의 계정 삭제 페이지에서만 사용한다.
+
                         ## v3.2.0 업데이트 내역
 
                         ### ✨ 추가 — 경찰 무전 접속 토큰 API

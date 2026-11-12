@@ -2,8 +2,10 @@ package com.team.cops_and_robbers.auth.application;
 
 import com.team.cops_and_robbers.auth.application.dto.command.AdminLoginCommand;
 import com.team.cops_and_robbers.auth.application.dto.command.LoginCommand;
+import com.team.cops_and_robbers.auth.application.dto.command.WithdrawalCommand;
 import com.team.cops_and_robbers.auth.application.dto.result.AdminLoginResult;
 import com.team.cops_and_robbers.auth.application.dto.result.LoginResult;
+import com.team.cops_and_robbers.auth.application.dto.result.WithdrawalPreviewResult;
 import com.team.cops_and_robbers.auth.application.event.UserFcmTokenUpdatedEvent;
 import com.team.cops_and_robbers.auth.domain.NicknameLanguage;
 import com.team.cops_and_robbers.auth.domain.Tokens;
@@ -12,6 +14,8 @@ import com.team.cops_and_robbers.auth.infrastructure.social.strategy.SocialLogin
 import com.team.cops_and_robbers.auth.repository.RefreshTokenRepository;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.user.application.UserService;
+import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.DeviceType;
 import com.team.cops_and_robbers.user.domain.Role;
 import com.team.cops_and_robbers.user.domain.SocialType;
@@ -29,6 +33,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.mockito.ArgumentMatchers.any;
@@ -52,6 +57,8 @@ class AuthServiceTest extends ServiceUnitTest {
     private SocialLoginStrategy socialLoginStrategy;
     @Mock
     private ApplicationEventPublisher eventPublisher;
+    @Mock
+    private UserService userService;
 
     @BeforeEach
     void setUp() {
@@ -372,4 +379,110 @@ class AuthServiceTest extends ServiceUnitTest {
         return new LoginCommand(type, "token", "fcm", DeviceType.IOS, "device123");
     }
 
+    @Nested
+    @DisplayName("웹 회원 탈퇴")
+    class Withdrawal {
+
+        private final WithdrawalCommand command = new WithdrawalCommand(SocialType.KAKAO, "id_token");
+        private final String socialId = "social_123";
+
+        private User givenSignedUpUser() {
+            User user = User.signUp(socialId, SocialType.KAKAO, "tester");
+            setId(user, 1L);
+            when(socialLoginStrategy.validateAndGetSocialId(anyString())).thenReturn(socialId);
+            when(userRepository.findBySocialIdAndSocialType(socialId, SocialType.KAKAO))
+                    .thenReturn(Optional.of(user));
+            return user;
+        }
+
+        private void givenNotSignedUp() {
+            when(socialLoginStrategy.validateAndGetSocialId(anyString())).thenReturn(socialId);
+            when(userRepository.findBySocialIdAndSocialType(socialId, SocialType.KAKAO))
+                    .thenReturn(Optional.empty());
+        }
+
+        @Test
+        void 게임에_참여하지_않은_유저라면_닉네임과_탈퇴_가능_여부를_반환한다() {
+            // given
+            User user = givenSignedUpUser();
+            when(userService.getUserGameInfo(user.getId())).thenReturn(Optional.empty());
+
+            // when
+            WithdrawalPreviewResult result = authService.previewWithdrawal(command);
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(result.nickname()).isEqualTo("tester");
+                softly.assertThat(result.inActiveGame()).isFalse();
+            });
+        }
+
+        @Test
+        void 게임에_참여_중인_유저라면_게임_참여_중으로_반환한다() {
+            // given
+            User user = givenSignedUpUser();
+            when(userService.getUserGameInfo(user.getId()))
+                    .thenReturn(Optional.of(new UserGameInfoResult(1L, 1L, null, null)));
+
+            // when
+            WithdrawalPreviewResult result = authService.previewWithdrawal(command);
+
+            // then
+            assertThat(result.inActiveGame()).isTrue();
+        }
+
+        @Test
+        void 계정_확인은_토큰을_발급하지_않는다() {
+            // given
+            User user = givenSignedUpUser();
+            when(userService.getUserGameInfo(user.getId())).thenReturn(Optional.empty());
+
+            // when
+            authService.previewWithdrawal(command);
+
+            // then
+            then(jwtTokenProvider).shouldHaveNoInteractions();
+            then(refreshTokenRepository).shouldHaveNoInteractions();
+        }
+
+        @Test
+        void 미가입_유저의_계정_확인은_회원가입_없이_예외가_발생한다() {
+            // given
+            givenNotSignedUp();
+
+            // when & then
+            assertThatThrownBy(() -> authService.previewWithdrawal(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessage(AuthException.WITHDRAWAL_USER_NOT_FOUND.getDetail());
+
+            then(userRepository).should(never()).save(any());
+        }
+
+        @Test
+        void 탈퇴는_앱과_같은_회원_탈퇴_처리를_사용한다() {
+            // given
+            User user = givenSignedUpUser();
+
+            // when
+            authService.withdraw(command);
+
+            // then
+            then(userService).should().deleteAccount(user.getId());
+            then(jwtTokenProvider).shouldHaveNoInteractions();
+        }
+
+        @Test
+        void 미가입_유저의_탈퇴는_회원가입_없이_예외가_발생한다() {
+            // given
+            givenNotSignedUp();
+
+            // when & then
+            assertThatThrownBy(() -> authService.withdraw(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessage(AuthException.WITHDRAWAL_USER_NOT_FOUND.getDetail());
+
+            then(userService).should(never()).deleteAccount(any());
+            then(userRepository).should(never()).save(any());
+        }
+    }
 }
