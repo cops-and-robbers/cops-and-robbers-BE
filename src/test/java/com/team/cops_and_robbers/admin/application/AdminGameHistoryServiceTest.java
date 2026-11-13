@@ -63,14 +63,14 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
         void 필터_없이_히스토리_목록을_조회하면_전체_페이지를_반환한다() {
             // given
             AdminGameHistoryListCommand command = new AdminGameHistoryListCommand(
-                    0, 10, null, SortDirection.DESC);
+                    0, 10, null, null, SortDirection.DESC);
 
             GameResult result1 = createGameResult(1L, 10L);
             GameResult result2 = createGameResult(2L, 11L);
 
             Page<GameResult> resultPage = new PageImpl<>(
                     List.of(result1, result2), PageRequest.of(0, 10), 2);
-            given(gameResultRepository.findAllForAdmin(isNull(), any())).willReturn(resultPage);
+            given(gameResultRepository.findAllForAdmin(isNull(), isNull(), any())).willReturn(resultPage);
 
             // when
             AdminGameHistoryPageResult result = adminGameHistoryService.getGameHistoryList(command);
@@ -86,13 +86,13 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
         void 종료_사유_필터로_히스토리를_조회하면_해당_사유만_반환한다() {
             // given
             AdminGameHistoryListCommand command = new AdminGameHistoryListCommand(
-                    0, 10, GameEndReason.ALL_ARRESTED, SortDirection.DESC);
+                    0, 10, GameEndReason.ALL_ARRESTED, null, SortDirection.DESC);
 
             GameResult result1 = createGameResult(1L, 10L);
 
             Page<GameResult> resultPage = new PageImpl<>(
                     List.of(result1), PageRequest.of(0, 10), 1);
-            given(gameResultRepository.findAllForAdmin(any(GameEndReason.class), any()))
+            given(gameResultRepository.findAllForAdmin(any(GameEndReason.class), isNull(), any()))
                     .willReturn(resultPage);
 
             // when
@@ -111,11 +111,11 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
         void 위치_수집_시작_종료_시각과_공개_주기가_매핑된다() {
             // given
             AdminGameHistoryListCommand command = new AdminGameHistoryListCommand(
-                    0, 10, null, SortDirection.DESC);
+                    0, 10, null, null, SortDirection.DESC);
 
             Page<GameResult> resultPage = new PageImpl<>(
                     List.of(createGameResult(1L, 10L)), PageRequest.of(0, 10), 1);
-            given(gameResultRepository.findAllForAdmin(isNull(), any())).willReturn(resultPage);
+            given(gameResultRepository.findAllForAdmin(isNull(), isNull(), any())).willReturn(resultPage);
 
             // when
             AdminGameHistoryPageResult result = adminGameHistoryService.getGameHistoryList(command);
@@ -136,12 +136,12 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
         void 원형_구역_기록이면_area에_중심_좌표와_반경이_매핑된다() {
             // given
             AdminGameHistoryListCommand command = new AdminGameHistoryListCommand(
-                    0, 10, null, SortDirection.DESC);
+                    0, 10, null, null, SortDirection.DESC);
 
             GameResult circleResult = createGameResult(1L, 10L);
             Page<GameResult> resultPage = new PageImpl<>(
                     List.of(circleResult), PageRequest.of(0, 10), 1);
-            given(gameResultRepository.findAllForAdmin(isNull(), any())).willReturn(resultPage);
+            given(gameResultRepository.findAllForAdmin(isNull(), isNull(), any())).willReturn(resultPage);
 
             // when
             AdminGameHistoryPageResult result = adminGameHistoryService.getGameHistoryList(command);
@@ -164,12 +164,12 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
         void 다각형_구역_기록이면_area에_폴리곤_좌표가_매핑된다() {
             // given
             AdminGameHistoryListCommand command = new AdminGameHistoryListCommand(
-                    0, 10, null, SortDirection.DESC);
+                    0, 10, null, null, SortDirection.DESC);
 
             GameResult polygonResult = prepare(GameResultFixture.POLICE_WIN_RESULT_POLYGON(1L), 10L);
             Page<GameResult> resultPage = new PageImpl<>(
                     List.of(polygonResult), PageRequest.of(0, 10), 1);
-            given(gameResultRepository.findAllForAdmin(isNull(), any())).willReturn(resultPage);
+            given(gameResultRepository.findAllForAdmin(isNull(), isNull(), any())).willReturn(resultPage);
 
             // when
             AdminGameHistoryPageResult result = adminGameHistoryService.getGameHistoryList(command);
@@ -192,12 +192,12 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
         void 감옥_좌표가_없는_기록은_jail_필드만_null이다() {
             // given
             AdminGameHistoryListCommand command = new AdminGameHistoryListCommand(
-                    0, 10, null, SortDirection.DESC);
+                    0, 10, null, null, SortDirection.DESC);
 
             GameResult withoutJailResult = prepare(GameResultFixture.POLICE_WIN_RESULT_WITHOUT_JAIL(1L), 10L);
             Page<GameResult> resultPage = new PageImpl<>(
                     List.of(withoutJailResult), PageRequest.of(0, 10), 1);
-            given(gameResultRepository.findAllForAdmin(isNull(), any())).willReturn(resultPage);
+            given(gameResultRepository.findAllForAdmin(isNull(), isNull(), any())).willReturn(resultPage);
 
             // when
             AdminGameHistoryPageResult result = adminGameHistoryService.getGameHistoryList(command);
@@ -216,12 +216,12 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
         void 좌표가_없는_과거_기록이면_area가_null이다() {
             // given
             AdminGameHistoryListCommand command = new AdminGameHistoryListCommand(
-                    0, 10, null, SortDirection.DESC);
+                    0, 10, null, null, SortDirection.DESC);
 
             GameResult legacyResult = prepare(GameResultFixture.LEGACY_RESULT_WITHOUT_AREA(1L), 10L);
             Page<GameResult> resultPage = new PageImpl<>(
                     List.of(legacyResult), PageRequest.of(0, 10), 1);
-            given(gameResultRepository.findAllForAdmin(isNull(), any())).willReturn(resultPage);
+            given(gameResultRepository.findAllForAdmin(isNull(), isNull(), any())).willReturn(resultPage);
 
             // when
             AdminGameHistoryPageResult result = adminGameHistoryService.getGameHistoryList(command);
@@ -234,11 +234,11 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
         void 결과가_없으면_빈_페이지를_반환한다() {
             // given
             AdminGameHistoryListCommand command = new AdminGameHistoryListCommand(
-                    0, 10, null, SortDirection.ASC);
+                    0, 10, null, null, SortDirection.ASC);
 
             Page<GameResult> emptyPage = new PageImpl<>(
                     List.of(), PageRequest.of(0, 10), 0);
-            given(gameResultRepository.findAllForAdmin(isNull(), any())).willReturn(emptyPage);
+            given(gameResultRepository.findAllForAdmin(isNull(), isNull(), any())).willReturn(emptyPage);
 
             // when
             AdminGameHistoryPageResult result = adminGameHistoryService.getGameHistoryList(command);

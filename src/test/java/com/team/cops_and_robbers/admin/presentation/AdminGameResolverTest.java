@@ -6,6 +6,8 @@ import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
 import com.team.cops_and_robbers.common.fixture.GameResultFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
+import com.team.cops_and_robbers.history.domain.GameResult;
 import com.team.cops_and_robbers.user.domain.User;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
@@ -13,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
@@ -100,6 +103,26 @@ class AdminGameResolverTest extends ControllerTest {
         }
 
         @Test
+        void 게임_모드로_게임을_필터링한다() {
+            // given
+            gameRepository.save(GameFixture.WAITING_GAME());
+            gameRepository.save(GameFixture.WAITING_TAG_GAME());
+
+            // when
+            ExtractableResponse<Response> response = executeQuery(
+                    adminToken,
+                    "{ adminGames(gameMode: TAG) { totalElements content { id gameMode } } }");
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(200);
+                softly.assertThat(response.jsonPath().getList("data.adminGames.content.gameMode", String.class))
+                        .isNotEmpty()
+                        .containsOnly("TAG");
+            });
+        }
+
+        @Test
         void 결과가_없으면_빈_목록을_반환한다() {
             // when
             ExtractableResponse<Response> response = executeQuery(
@@ -111,6 +134,35 @@ class AdminGameResolverTest extends ControllerTest {
                 softly.assertThat(response.statusCode()).isEqualTo(200);
                 softly.assertThat((Integer) response.jsonPath().get("data.adminGames.totalElements")).isZero();
                 softly.assertThat(response.jsonPath().getList("data.adminGames.content")).isEmpty();
+            });
+        }
+    }
+
+    @Nested
+    @DisplayName("게임 기록 목록 조회")
+    class AdminGameHistories {
+
+        @Test
+        void 게임_모드로_게임_기록을_필터링한다() {
+            // given
+            Game game = gameRepository.save(GameFixture.FINISHED_GAME());
+            Game tagGame = gameRepository.save(GameFixture.FINISHED_GAME());
+            GameResult tagResult = GameResultFixture.POLICE_WIN_RESULT_WITHOUT_JAIL(tagGame.getId());
+            ReflectionTestUtils.setField(tagResult, "gameMode", GameMode.TAG);
+            gameResultRepository.save(GameResultFixture.POLICE_WIN_RESULT(game.getId()));
+            gameResultRepository.save(tagResult);
+
+            // when
+            ExtractableResponse<Response> response = executeQuery(
+                    adminToken,
+                    "{ adminGameHistories(gameMode: TAG) { totalElements content { gameId gameMode } } }");
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(200);
+                softly.assertThat(response.jsonPath().getList("data.adminGameHistories.content.gameMode", String.class))
+                        .isNotEmpty()
+                        .containsOnly("TAG");
             });
         }
     }
