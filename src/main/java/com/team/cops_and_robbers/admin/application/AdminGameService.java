@@ -39,7 +39,7 @@ public class AdminGameService {
     private final GameResultRepository gameResultRepository;
 
     public AdminGamePageResult getGameList(AdminGameListCommand command) {
-        Page<Game> gamePage = gameRepository.findAllForAdmin(command.status(), command.toPageable());
+        Page<Game> gamePage = gameRepository.findAllForAdmin(command.status(), command.gameMode(), command.toPageable());
         List<Long> gameIds = gamePage.getContent().stream().map(Game::getId).toList();
         Map<Long, Integer> countByGameId = gameParticipantRepository.countByGameIdIn(gameIds)
                 .stream()

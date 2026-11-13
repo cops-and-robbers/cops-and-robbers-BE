@@ -38,9 +38,11 @@ public interface GameRepository extends JpaRepository<Game, Long> {
     @Query("""
             select g from Game g
             where (:status is null or g.status = :status)
+            and (:gameMode is null or g.gameMode = :gameMode)
             """)
     Page<Game> findAllForAdmin(
             @Param("status") GameStatus status,
+            @Param("gameMode") GameMode gameMode,
             Pageable pageable
     );
 

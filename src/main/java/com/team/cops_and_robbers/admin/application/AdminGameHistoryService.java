@@ -26,7 +26,7 @@ public class AdminGameHistoryService {
 
     public AdminGameHistoryPageResult getGameHistoryList(AdminGameHistoryListCommand command) {
         Page<GameResult> resultPage = gameResultRepository.findAllForAdmin(
-                command.endReason(), command.toPageable());
+                command.endReason(), command.gameMode(), command.toPageable());
         Page<AdminGameHistoryResult> historyPage = resultPage.map(AdminGameHistoryResult::from);
         return AdminGameHistoryPageResult.from(historyPage);
     }
