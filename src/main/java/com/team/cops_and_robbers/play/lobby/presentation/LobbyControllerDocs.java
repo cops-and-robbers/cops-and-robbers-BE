@@ -5,7 +5,6 @@ import com.team.cops_and_robbers.common.exception.CommonException;
 import com.team.cops_and_robbers.common.swagger.ApiErrorCode;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
-import com.team.cops_and_robbers.play.lobby.presentation.dto.request.ReadyUpdateRequest;
 import com.team.cops_and_robbers.play.lobby.presentation.dto.request.TeamChangeRequest;
 import com.team.cops_and_robbers.play.lobby.presentation.dto.response.LobbyInfoResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,28 +34,6 @@ public interface LobbyControllerDocs {
             @Parameter(hidden = true) LoginUser loginUser,
             @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId,
             @RequestBody @Valid TeamChangeRequest request
-    );
-
-    @Deprecated
-    @Operation(
-            summary = "로비 준비 상태 변경 (deprecated)",
-            description = """
-                    준비 상태가 없어져 호출해도 아무것도 바뀌지 않고, 이벤트도 발행하지 않습니다.
-                    - 대기 상태의 게임·참가자 검증은 예전과 같아 응답 코드가 같습니다.
-                    - Deprecated: 구버전 앱 호환용으로만 남김, 다음 작업에서 삭제 예정
-                    """,
-            deprecated = true
-    )
-    @ApiErrorCode(value = GameParticipantException.class, codes = {"GAME_ALREADY_STARTED", "LOBBY_ACTION_NOT_ALLOWED", "PARTICIPANT_NOT_FOUND"})
-    @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_FOUND"})
-    @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "성공 (아무것도 바뀌지 않음)")
-    })
-    ResponseEntity<Void> updateReady(
-            @Parameter(hidden = true) LoginUser loginUser,
-            @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId,
-            @RequestBody @Valid ReadyUpdateRequest request
     );
 
     @Operation(

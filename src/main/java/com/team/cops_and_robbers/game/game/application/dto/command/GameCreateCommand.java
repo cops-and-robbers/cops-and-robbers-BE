@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.game.game.application.dto.command;
 import com.team.cops_and_robbers.common.dto.Coordinates;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.area.application.dto.GameAreaData;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.CoordinatesRequest;
 import com.team.cops_and_robbers.game.game.presentation.dto.request.GameAreaRequest;
@@ -17,7 +18,8 @@ public record GameCreateCommand(
         Integer locationRevealIntervalMinutes,
         Integer policeWaitMinutes,
         Integer maxParticipants,
-        Integer shrinkFinalRadiusInMeters
+        Integer shrinkFinalRadiusInMeters,
+        GameMode gameMode
 ) {
 
     public GameCreateCommand {
@@ -27,9 +29,17 @@ public record GameCreateCommand(
         if (policeWaitMinutes >= roundDurationMinutes) {
             throw new ApplicationException(GameException.INVALID_POLICE_WAIT_TIME);
         }
+        if (gameMode == null) {
+            gameMode = GameMode.COPS_AND_ROBBERS;
+        }
     }
 
-    public static GameCreateCommand of(Long hostUserId, GameAreaRequest area, GameSettingsRequest settings) {
+    public static GameCreateCommand of(
+            Long hostUserId,
+            GameAreaRequest area,
+            GameSettingsRequest settings,
+            GameMode gameMode
+    ) {
         return new GameCreateCommand(
                 hostUserId,
                 resolveAreaData(area),
@@ -37,33 +47,24 @@ public record GameCreateCommand(
                 settings.locationRevealIntervalMinutes(),
                 settings.policeWaitMinutes(),
                 settings.maxParticipants(),
-                settings.shrinkFinalRadiusInMeters()
+                settings.shrinkFinalRadiusInMeters(),
+                gameMode
         );
     }
 
     private static GameAreaData resolveAreaData(GameAreaRequest area) {
-        if (area.areaType() == null) {
-            return new GameAreaData.CircleAreaData(
-                    area.playgroundCenter().latitude(),
-                    area.playgroundCenter().longitude(),
-                    area.playgroundRadiusInMeters(),
-                    area.jailCenter().latitude(),
-                    area.jailCenter().longitude(),
-                    area.jailRadiusInMeters()
-            );
-        }
         return switch (area.areaType()) {
             case CIRCLE -> new GameAreaData.CircleAreaData(
                     area.circle().playgroundCenter().latitude(),
                     area.circle().playgroundCenter().longitude(),
                     area.circle().playgroundRadiusInMeters(),
-                    area.circle().jailCenter().latitude(),
-                    area.circle().jailCenter().longitude(),
+                    area.circle().jailCenter() == null ? null : area.circle().jailCenter().latitude(),
+                    area.circle().jailCenter() == null ? null : area.circle().jailCenter().longitude(),
                     area.circle().jailRadiusInMeters()
             );
             case POLYGON -> new GameAreaData.PolygonAreaData(
                     toCoordinatesList(area.polygon().playgroundPolygon()),
-                    toCoordinatesList(area.polygon().jailPolygon())
+                    area.polygon().jailPolygon() == null ? null : toCoordinatesList(area.polygon().jailPolygon())
             );
         };
     }

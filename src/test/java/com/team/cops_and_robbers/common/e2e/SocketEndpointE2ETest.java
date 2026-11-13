@@ -1,6 +1,5 @@
 package com.team.cops_and_robbers.common.e2e;
 
-import com.team.cops_and_robbers.common.StompTestClient;
 import com.team.cops_and_robbers.common.WebSocketE2ETest;
 import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
@@ -19,15 +18,6 @@ class SocketEndpointE2ETest extends WebSocketE2ETest {
         String token = givenAccessToken(user);
 
         assertThatCode(() -> connect(token))
-                .doesNotThrowAnyException();
-    }
-
-    @Test
-    void 구버전_앱_호환을_위해_레거시_경로로도_연결할_수_있다() {
-        User user = givenUser("legacyConnector");
-        String token = givenAccessToken(user);
-
-        assertThatCode(() -> connect(token, StompTestClient.LEGACY_SOCKET_PATH))
                 .doesNotThrowAnyException();
     }
 }

@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.admin.application.dto.result.game;
 
 import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 
 public record AdminGameResult(
@@ -13,6 +14,7 @@ public record AdminGameResult(
         Integer policeWaitMinutes,
         Integer maxParticipants,
         Integer shrinkFinalRadiusInMeters,
+        GameMode gameMode,
         Boolean isEventGame,
         Integer roundNumber,
         String createdAt,
@@ -31,6 +33,7 @@ public record AdminGameResult(
                 game.getPoliceWaitMinutes(),
                 game.getMaxParticipants(),
                 game.getShrinkFinalRadiusInMeters(),
+                game.getGameMode(),
                 game.isEventGame(),
                 game.getRoundNumber(),
                 TimestampUtil.toIsoString(game.getCreatedAt()),

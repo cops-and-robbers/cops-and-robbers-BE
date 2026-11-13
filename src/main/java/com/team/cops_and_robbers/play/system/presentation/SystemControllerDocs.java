@@ -79,9 +79,10 @@ public interface SystemControllerDocs {
 
                     - 도둑만 요청 가능
                     - 수감된 상태(JAILED)에서만 탈옥 가능
+                    - 술래잡기에서는 탈옥할 수 없음
                     """
     )
-    @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_IN_PROGRESS", "GAME_NOT_FOUND"})
+    @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_IN_PROGRESS", "GAME_NOT_FOUND", "ESCAPE_NOT_ALLOWED_IN_MODE"})
     @ApiErrorCode(value = GameParticipantException.class, codes = {"NOT_JAILED", "PARTICIPANT_NOT_FOUND"})
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {

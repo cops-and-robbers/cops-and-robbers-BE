@@ -39,7 +39,7 @@ public class AdminGameService {
     private final GameResultRepository gameResultRepository;
 
     public AdminGamePageResult getGameList(AdminGameListCommand command) {
-        Page<Game> gamePage = gameRepository.findAllForAdmin(command.status(), command.toPageable());
+        Page<Game> gamePage = gameRepository.findAllForAdmin(command.status(), command.gameMode(), command.toPageable());
         List<Long> gameIds = gamePage.getContent().stream().map(Game::getId).toList();
         Map<Long, Integer> countByGameId = gameParticipantRepository.countByGameIdIn(gameIds)
                 .stream()
@@ -146,6 +146,9 @@ public class AdminGameService {
      * 마지막 경찰이 나갈 때 기권패가 다시 적용되기 때문입니다.
      */
     private void validateEventGameChangeable(Game game, boolean isEventGame) {
+        if (isEventGame && !game.getGameMode().supportsEventGame()) {
+            throw new ApplicationException(GameException.EVENT_GAME_NOT_SUPPORTED_IN_MODE);
+        }
         if (!isEventGame && !game.isWaiting()) {
             throw new ApplicationException(GameException.GAME_NOT_WAITING);
         }

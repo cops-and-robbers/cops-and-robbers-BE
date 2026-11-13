@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.admin.application.dto.result.user;
 
 import com.team.cops_and_robbers.common.util.TimestampUtil;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.history.domain.GameEndReason;
 import com.team.cops_and_robbers.history.domain.GameResult;
@@ -21,6 +22,7 @@ public record UserGameHistoryResult(
         Integer arrestedCount,
         Boolean isMvp,
         Boolean isHost,
+        GameMode gameMode,
         Boolean isEventGame,
         String leftAt
 ) {
@@ -39,6 +41,7 @@ public record UserGameHistoryResult(
                 participant.getArrestedCount(),
                 participant.isMvp(),
                 Objects.equals(participant.getUserId(), gameResult.getHostUserId()),
+                gameResult.getGameMode(),
                 Boolean.TRUE.equals(gameResult.getEventGame()),
                 toIsoOrNull(participant.getLeftAt())
         );

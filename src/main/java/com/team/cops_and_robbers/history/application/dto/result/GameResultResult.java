@@ -1,5 +1,6 @@
 package com.team.cops_and_robbers.history.application.dto.result;
 
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.history.domain.GameResult;
 import com.team.cops_and_robbers.history.domain.GameResultParticipant;
@@ -7,6 +8,7 @@ import com.team.cops_and_robbers.history.domain.GameResultParticipant;
 import java.util.List;
 
 public record GameResultResult(
+        GameMode gameMode,
         Team winnerTeam,
         Integer durationSeconds,
         Integer totalArrestCount,
@@ -17,6 +19,7 @@ public record GameResultResult(
     public static GameResultResult from(GameResult gameResult, List<GameResultParticipant> mvps) {
         int remaining = gameResult.getTotalRobberCount() - gameResult.getArrestedRobberCount();
         return new GameResultResult(
+                gameResult.getGameMode(),
                 gameResult.getWinnerTeam(),
                 gameResult.getDurationSeconds(),
                 gameResult.getTotalArrestCount(),

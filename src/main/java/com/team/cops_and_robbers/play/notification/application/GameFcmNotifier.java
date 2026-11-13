@@ -2,6 +2,8 @@ package com.team.cops_and_robbers.play.notification.application;
 
 import com.team.cops_and_robbers.common.fcm.FcmMessage;
 import com.team.cops_and_robbers.common.fcm.FcmService;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
+import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.play.chat.domain.ChatMessage;
 import com.team.cops_and_robbers.play.chat.domain.ChatScope;
@@ -33,6 +35,7 @@ public class GameFcmNotifier {
     private final FcmService fcmService;
     private final InGameParticipantCacheRepository inGameParticipantCacheRepository;
     private final ChatPushDebouncer chatPushDebouncer;
+    private final GameRepository gameRepository;
 
     @Async("fcmExecutor")
     public CompletableFuture<Void> notifySystemEvent(SystemEvent event) {
@@ -61,17 +64,22 @@ public class GameFcmNotifier {
     private FcmPayload resolveSystemPayload(SystemEvent event) {
         SystemEventType type = event.type();
         Map<String, String> data = Map.of("type", type.name(), "gameId", String.valueOf(event.gameId()));
+        GameFcmWording wording = GameFcmWording.of(findGameMode(event.gameId()));
         return switch (type) {
-            case ARREST -> new FcmPayload("도둑 체포!", "도둑이 체포되었습니다.", data);
-            case ESCAPE -> new FcmPayload("도둑 탈옥!", "도둑이 감옥에서 탈옥했습니다!", data);
+            case ARREST -> new FcmPayload(wording.arrestTitle(), wording.arrestBody(), data);
+            case ESCAPE -> new FcmPayload(wording.robber() + " 탈옥!", wording.robberSubject() + " 감옥에서 탈옥했습니다!", data);
             case GAME_OVER -> new FcmPayload("게임 종료", "게임이 종료되었습니다. 결과를 확인하세요!", data);
-            case ROBBER_LOCATION_REVEAL -> new FcmPayload("도둑 위치 공개!", "도둑의 현재 위치가 공개되었습니다!", data);
-            case POLICE_MOVE_START -> new FcmPayload("경찰 이동 시작!", "경찰이 이동을 시작했습니다!", data);
+            case ROBBER_LOCATION_REVEAL -> new FcmPayload(wording.robber() + " 위치 공개!", wording.robber() + "의 현재 위치가 공개되었습니다!", data);
+            case POLICE_MOVE_START -> new FcmPayload(wording.police() + " 이동 시작!", wording.policeSubject() + " 이동을 시작했습니다!", data);
             case PLAYER_LEFT -> {
                 SystemEventData.PlayerLeftData playerLeft = (SystemEventData.PlayerLeftData) event.data();
-                yield new FcmPayload(playerLeft.team().getDisplayName() + " 참가자 퇴장", playerLeft.nickname() + "님이 게임에서 퇴장했습니다.", data);
+                yield new FcmPayload(wording.teamName(playerLeft.team()) + " 참가자 퇴장", playerLeft.nickname() + "님이 게임에서 퇴장했습니다.", data);
             }
         };
+    }
+
+    private GameMode findGameMode(Long gameId) {
+        return gameRepository.findGameModeById(gameId).orElse(GameMode.COPS_AND_ROBBERS);
     }
 
     @Async("fcmExecutor")

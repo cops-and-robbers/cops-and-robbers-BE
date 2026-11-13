@@ -56,7 +56,7 @@ public class RadioService {
         if (!game.isInProgress()) {
             throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
         }
-        if (game.isEventGame()) {
+        if (!game.rules().allowsRadio()) {
             throw new ApplicationException(RadioException.RADIO_NOT_ALLOWED_IN_EVENT_GAME);
         }
         if (!police.isPolice()) {

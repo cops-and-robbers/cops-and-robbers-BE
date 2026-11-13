@@ -7,6 +7,7 @@ import com.team.cops_and_robbers.game.area.domain.GameArea;
 import com.team.cops_and_robbers.game.area.repository.GameAreaRepository;
 import com.team.cops_and_robbers.game.game.application.dto.command.GameCreateCommand;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
@@ -86,7 +87,8 @@ public class LoadTestSeeder {
                 LOCATION_REVEAL_INTERVAL_MINUTES,
                 POLICE_WAIT_MINUTES,
                 size,
-                null
+                null,
+                GameMode.COPS_AND_ROBBERS
         );
 
         Game game = Game.createGame(inviteCode, command);

@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.admin.application.dto.command.game;
 
 import com.team.cops_and_robbers.admin.application.dto.SortDirection;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -10,6 +11,7 @@ public record AdminGameListCommand(
         int page,
         int size,
         GameStatus status,
+        GameMode gameMode,
         SortDirection sortDirection
 ) {
 

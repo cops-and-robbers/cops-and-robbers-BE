@@ -20,21 +20,16 @@ public record LobbyInfoResult(
         );
     }
 
-    /**
-     * isReady를 항상 true로 내린다. -> 이후 삭제 예정
-     */
     public record ParticipantInfo(
             Long participantId,
             String nickname,
-            Team team,
-            boolean isReady
+            Team team
     ) {
         public static ParticipantInfo from(GameParticipant participant) {
             return new ParticipantInfo(
                     participant.getId(),
                     participant.getUser().getNickname(),
-                    participant.getTeam(),
-                    true
+                    participant.getTeam()
             );
         }
     }

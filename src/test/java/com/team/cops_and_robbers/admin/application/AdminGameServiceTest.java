@@ -69,9 +69,9 @@ class AdminGameServiceTest extends ServiceUnitTest {
         @Test
         void 필터_없이_게임_목록을_조회하면_전체_게임_페이지를_반환한다() {
             // given
-            AdminGameListCommand command = new AdminGameListCommand(0, 10, null, SortDirection.DESC);
+            AdminGameListCommand command = new AdminGameListCommand(0, 10, null, null, SortDirection.DESC);
             Page<Game> gamePage = new PageImpl<>(List.of(game1, game2), PageRequest.of(0, 10), 2);
-            given(gameRepository.findAllForAdmin(isNull(), any())).willReturn(gamePage);
+            given(gameRepository.findAllForAdmin(isNull(), isNull(), any())).willReturn(gamePage);
             given(gameParticipantRepository.countByGameIdIn(List.of(1L, 2L)))
                     .willReturn(List.of(
                             new GameParticipantCountProjection(1L, 3L),
@@ -93,9 +93,9 @@ class AdminGameServiceTest extends ServiceUnitTest {
         @Test
         void 상태_필터로_게임_목록을_조회하면_해당_상태_게임만_반환한다() {
             // given
-            AdminGameListCommand command = new AdminGameListCommand(0, 10, GameStatus.FINISHED, SortDirection.DESC);
+            AdminGameListCommand command = new AdminGameListCommand(0, 10, GameStatus.FINISHED, null, SortDirection.DESC);
             Page<Game> gamePage = new PageImpl<>(List.of(game1), PageRequest.of(0, 10), 1);
-            given(gameRepository.findAllForAdmin(any(GameStatus.class), any())).willReturn(gamePage);
+            given(gameRepository.findAllForAdmin(any(GameStatus.class), isNull(), any())).willReturn(gamePage);
             given(gameParticipantRepository.countByGameIdIn(List.of(1L)))
                     .willReturn(List.of(new GameParticipantCountProjection(1L, 3L)));
 
@@ -112,9 +112,9 @@ class AdminGameServiceTest extends ServiceUnitTest {
         @Test
         void 참여자가_없는_게임은_참여자_수가_0으로_반환된다() {
             // given
-            AdminGameListCommand command = new AdminGameListCommand(0, 10, null, SortDirection.DESC);
+            AdminGameListCommand command = new AdminGameListCommand(0, 10, null, null, SortDirection.DESC);
             Page<Game> gamePage = new PageImpl<>(List.of(game1), PageRequest.of(0, 10), 1);
-            given(gameRepository.findAllForAdmin(isNull(), any())).willReturn(gamePage);
+            given(gameRepository.findAllForAdmin(isNull(), isNull(), any())).willReturn(gamePage);
             given(gameParticipantRepository.countByGameIdIn(List.of(1L))).willReturn(List.of());
 
             // when
@@ -127,9 +127,9 @@ class AdminGameServiceTest extends ServiceUnitTest {
         @Test
         void 결과가_없으면_빈_페이지를_반환한다() {
             // given
-            AdminGameListCommand command = new AdminGameListCommand(0, 10, GameStatus.IN_PROGRESS, SortDirection.ASC);
+            AdminGameListCommand command = new AdminGameListCommand(0, 10, GameStatus.IN_PROGRESS, null, SortDirection.ASC);
             Page<Game> emptyPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
-            given(gameRepository.findAllForAdmin(any(GameStatus.class), any())).willReturn(emptyPage);
+            given(gameRepository.findAllForAdmin(any(GameStatus.class), isNull(), any())).willReturn(emptyPage);
             given(gameParticipantRepository.countByGameIdIn(List.of())).willReturn(List.of());
 
             // when
@@ -505,6 +505,19 @@ class AdminGameServiceTest extends ServiceUnitTest {
                     new AdminUpdateEventGameCommand(IN_PROGRESS_GAME_ID, false)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(GameException.GAME_NOT_WAITING.getDetail());
+        }
+
+        @Test
+        void 술래잡기_게임은_이벤트_게임으로_켤_수_없다() {
+            // given
+            Game tagGame = GameFixture.WAITING_TAG_GAME();
+            given(gameRepository.getByGameIdForUpdate(3L)).willReturn(tagGame);
+
+            // when & then
+            assertThatThrownBy(() -> adminGameService.updateEventGame(
+                    new AdminUpdateEventGameCommand(3L, true)))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessageContaining(GameException.EVENT_GAME_NOT_SUPPORTED_IN_MODE.getDetail());
         }
 
         @Test

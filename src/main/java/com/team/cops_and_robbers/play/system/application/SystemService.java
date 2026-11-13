@@ -1,7 +1,9 @@
 package com.team.cops_and_robbers.play.system.application;
 
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.game.game.domain.CatchOutcome;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameRulePolicy;
 import com.team.cops_and_robbers.game.game.exception.GameException;
 import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
@@ -32,6 +34,7 @@ public class SystemService {
     private final SystemEventFactory systemEventFactory;
     private final GameTerminationService gameTerminationService;
     private final GameResultService gameResultService;
+    private final GameRulePolicy gameRulePolicy;
 
     /**
      * 경찰이 도둑을 체포합니다.
@@ -45,7 +48,7 @@ public class SystemService {
 
         validateArrest(game, police, robber);
 
-        if (!game.isEventGame()) {
+        if (game.rules().catchOutcome() == CatchOutcome.CAPTURE) {
             robber.updateStatus(ParticipantStatus.JAILED);
         }
         game.incrementArrestCount();
@@ -61,7 +64,7 @@ public class SystemService {
         );
         eventPublisher.publishEvent(event);
 
-        if (!game.isEventGame() && remainingThieves == 0) {
+        if (game.rules().endsWhenAllRobbersArrested() && remainingThieves == 0) {
             gameTerminationService.endGameByAllArrested(game.getId());
         }
 
@@ -77,7 +80,7 @@ public class SystemService {
 
         validateForceArrest(game, robber);
 
-        if (!game.isEventGame()) {
+        if (game.rules().catchOutcome() == CatchOutcome.CAPTURE) {
             robber.updateStatus(ParticipantStatus.JAILED);
         }
         game.incrementArrestCount();
@@ -90,7 +93,7 @@ public class SystemService {
         SystemEvent event = systemEventFactory.createForceArrestEvent(game.getId(), robber, remainingThieves);
         eventPublisher.publishEvent(event);
 
-        if (!game.isEventGame() && remainingThieves == 0) {
+        if (game.rules().endsWhenAllRobbersArrested() && remainingThieves == 0) {
             gameTerminationService.endGameByAllArrested(game.getId());
         }
 
@@ -144,9 +147,7 @@ public class SystemService {
         if (!game.isInProgress()) {
             throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
         }
-        if (game.isEventGame()) {
-            throw new ApplicationException(GameException.FORCE_ARREST_NOT_ALLOWED_IN_EVENT_GAME);
-        }
+        gameRulePolicy.validateForceArrest(game);
         if (!robber.isRobber()) {
             throw new ApplicationException(GameParticipantException.ONLY_ROBBER_CAN_BE_ARRESTED);
         }
@@ -159,6 +160,7 @@ public class SystemService {
         if (!game.isInProgress()) {
             throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
         }
+        gameRulePolicy.validateEscape(game);
         if (!escapedThief.isJailed()) {
             throw new ApplicationException(GameParticipantException.NOT_JAILED);
         }

@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.game.game.presentation.dto.response;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameInfoResult;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record GameInfoResponse(
@@ -22,7 +23,9 @@ public record GameInfoResponse(
         @Schema(description = "게임 시작 시간 (진행 중일 때만 포함)", example = "2026-03-21T15:30:00+09:00")
         String gameStartTime,
         @Schema(description = "이벤트 게임 여부", example = "false")
-        boolean isEventGame
+        boolean isEventGame,
+        @Schema(description = "게임 모드", example = "COPS_AND_ROBBERS")
+        GameMode gameMode
 ) {
     public static GameInfoResponse from(GameInfoResult result) {
         return new GameInfoResponse(
@@ -33,7 +36,8 @@ public record GameInfoResponse(
                 result.shrinkFinalRadiusInMeters(),
                 result.isStarted(),
                 result.gameStartTime() != null ? TimestampUtil.toIsoString(result.gameStartTime()) : null,
-                result.isEventGame()
+                result.isEventGame(),
+                result.gameMode()
         );
     }
 }

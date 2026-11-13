@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.game.game.presentation.dto.response;
 
 import com.team.cops_and_robbers.game.game.application.dto.result.GameCreateResult;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import io.swagger.v3.oas.annotations.media.Schema;
 public record GameCreateResponse(
         @Schema(description = "게임 ID", example = "1")
@@ -9,6 +10,8 @@ public record GameCreateResponse(
         String inviteCode,
         @Schema(description = "게임 상태", example = "WAITING")
         String status,
+        @Schema(description = "게임 모드", example = "COPS_AND_ROBBERS")
+        GameMode gameMode,
         @Schema(description = "라운드 시간(분)", example = "30")
         Integer roundDurationMinutes,
         @Schema(description = "위치 공개 주기(분)", example = "5")
@@ -28,6 +31,7 @@ public record GameCreateResponse(
                 result.gameId(),
                 result.inviteCode(),
                 result.status(),
+                result.gameMode(),
                 result.roundDurationMinutes(),
                 result.locationRevealIntervalMinutes(),
                 result.policeWaitMinutes(),

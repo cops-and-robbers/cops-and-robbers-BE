@@ -13,7 +13,9 @@ public enum GameAreaException implements ExceptionCode {
     JAIL_OUTSIDE_PLAYGROUND(HttpStatus.BAD_REQUEST, "감옥 영역 벗어남", "감옥은 플레이그라운드 내부에 완전히 포함되어야 합니다."),
     GAME_AREA_NOT_FOUND(HttpStatus.NOT_FOUND, "게임 구역을 찾을 수 없음", "해당 게임 구역을 찾을 수 없습니다."),
     SHRINK_REQUIRES_CIRCLE_AREA(HttpStatus.BAD_REQUEST, "구역 축소 미지원 구역", "구역 축소는 원형 구역에서만 설정할 수 있습니다."),
-    INVALID_SHRINK_FINAL_RADIUS(HttpStatus.BAD_REQUEST, "유효하지 않은 최종 반경", "최종 반경은 감옥 반지름보다 크고 플레이그라운드 반지름보다 작아야 합니다.")
+    INVALID_SHRINK_FINAL_RADIUS(HttpStatus.BAD_REQUEST, "유효하지 않은 최종 반경", "최종 반경은 감옥 반지름보다 크고 플레이그라운드 반지름보다 작아야 합니다."),
+    JAIL_AREA_REQUIRED(HttpStatus.BAD_REQUEST, "감옥 구역 필요", "이 게임 모드는 감옥 구역을 입력해야 합니다."),
+    JAIL_AREA_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "감옥 구역 사용 불가", "이 게임 모드는 감옥 구역을 사용하지 않습니다.")
     ;
 
     private final HttpStatus httpStatus;

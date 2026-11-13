@@ -86,6 +86,7 @@ type UserGameHistory {
   arrestedCount: Int!
   isMvp: Boolean!
   isHost: Boolean!
+  gameMode: GameMode!
   isEventGame: Boolean!
   leftAt: String
 }

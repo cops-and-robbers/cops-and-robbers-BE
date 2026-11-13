@@ -59,21 +59,18 @@ public class GameAreaService {
     public GameArea buildGameArea(Game game, GameAreaData areaData) {
         return switch (areaData) {
             case GameAreaData.CircleAreaData c -> {
-                gameAreaDomainService.validateCircleAreaContainment(
-                        c.playgroundLongitude(), c.playgroundLatitude(), c.playgroundRadiusInMeters(),
-                        c.jailLongitude(), c.jailLatitude(), c.jailRadiusInMeters()
-                );
+                validateCircleJailContainment(c);
                 gameAreaDomainService.validateCircleShrinkFinalRadius(
                         c.playgroundRadiusInMeters(), c.jailRadiusInMeters(), game.getShrinkFinalRadiusInMeters()
                 );
-                Point playgroundCenter = geometryFactory.createPoint(new Coordinate(c.playgroundLongitude(), c.playgroundLatitude()));
-                Point jailCenter = geometryFactory.createPoint(new Coordinate(c.jailLongitude(), c.jailLatitude()));
+                Point playgroundCenter = createPoint(c.playgroundLongitude(), c.playgroundLatitude());
+                Point jailCenter = c.hasJail() ? createPoint(c.jailLongitude(), c.jailLatitude()) : null;
                 yield GameArea.createCircleGameArea(game, playgroundCenter, c.playgroundRadiusInMeters(), jailCenter, c.jailRadiusInMeters());
             }
             case GameAreaData.PolygonAreaData p -> {
                 Polygon playgroundPolygon = createPolygon(p.playgroundPolygon());
-                Polygon jailPolygon = createPolygon(p.jailPolygon());
-                gameAreaDomainService.validatePolygonAreaContainment(playgroundPolygon, jailPolygon);
+                Polygon jailPolygon = p.hasJail() ? createPolygon(p.jailPolygon()) : null;
+                validatePolygonJailContainment(playgroundPolygon, jailPolygon);
                 gameAreaDomainService.validatePolygonShrinkFinalRadius(game.getShrinkFinalRadiusInMeters());
                 yield GameArea.createPolygonGameArea(game, playgroundPolygon, jailPolygon);
             }
@@ -87,25 +84,43 @@ public class GameAreaService {
     public void applyAreaUpdate(GameArea gameArea, GameAreaData areaData, Integer shrinkFinalRadiusInMeters) {
         switch (areaData) {
             case GameAreaData.CircleAreaData c -> {
-                gameAreaDomainService.validateCircleAreaContainment(
-                        c.playgroundLongitude(), c.playgroundLatitude(), c.playgroundRadiusInMeters(),
-                        c.jailLongitude(), c.jailLatitude(), c.jailRadiusInMeters()
-                );
+                validateCircleJailContainment(c);
                 gameAreaDomainService.validateCircleShrinkFinalRadius(
                         c.playgroundRadiusInMeters(), c.jailRadiusInMeters(), shrinkFinalRadiusInMeters
                 );
-                Point playgroundCenter = geometryFactory.createPoint(new Coordinate(c.playgroundLongitude(), c.playgroundLatitude()));
-                Point jailCenter = geometryFactory.createPoint(new Coordinate(c.jailLongitude(), c.jailLatitude()));
+                Point playgroundCenter = createPoint(c.playgroundLongitude(), c.playgroundLatitude());
+                Point jailCenter = c.hasJail() ? createPoint(c.jailLongitude(), c.jailLatitude()) : null;
                 gameArea.updateCircle(playgroundCenter, c.playgroundRadiusInMeters(), jailCenter, c.jailRadiusInMeters());
             }
             case GameAreaData.PolygonAreaData p -> {
                 Polygon playgroundPolygon = createPolygon(p.playgroundPolygon());
-                Polygon jailPolygon = createPolygon(p.jailPolygon());
-                gameAreaDomainService.validatePolygonAreaContainment(playgroundPolygon, jailPolygon);
+                Polygon jailPolygon = p.hasJail() ? createPolygon(p.jailPolygon()) : null;
+                validatePolygonJailContainment(playgroundPolygon, jailPolygon);
                 gameAreaDomainService.validatePolygonShrinkFinalRadius(shrinkFinalRadiusInMeters);
                 gameArea.updatePolygon(playgroundPolygon, jailPolygon);
             }
         }
+    }
+
+    private void validateCircleJailContainment(GameAreaData.CircleAreaData c) {
+        if (!c.hasJail()) {
+            return;
+        }
+        gameAreaDomainService.validateCircleAreaContainment(
+                c.playgroundLongitude(), c.playgroundLatitude(), c.playgroundRadiusInMeters(),
+                c.jailLongitude(), c.jailLatitude(), c.jailRadiusInMeters()
+        );
+    }
+
+    private void validatePolygonJailContainment(Polygon playgroundPolygon, Polygon jailPolygon) {
+        if (jailPolygon == null) {
+            return;
+        }
+        gameAreaDomainService.validatePolygonAreaContainment(playgroundPolygon, jailPolygon);
+    }
+
+    private Point createPoint(double longitude, double latitude) {
+        return geometryFactory.createPoint(new Coordinate(longitude, latitude));
     }
 
     private Polygon createPolygon(List<Coordinates> coordinatesList) {

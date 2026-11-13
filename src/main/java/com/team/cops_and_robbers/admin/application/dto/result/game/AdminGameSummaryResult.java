@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.admin.application.dto.result.game;
 
 import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 
 public record AdminGameSummaryResult(
@@ -11,6 +12,7 @@ public record AdminGameSummaryResult(
         Integer roundDurationMinutes,
         Integer locationRevealIntervalMinutes,
         Integer maxParticipants,
+        GameMode gameMode,
         Boolean isEventGame,
         Integer participantCount,
         Integer roundNumber,
@@ -24,6 +26,7 @@ public record AdminGameSummaryResult(
                 game.getRoundDurationMinutes(),
                 game.getLocationRevealIntervalMinutes(),
                 game.getMaxParticipants(),
+                game.getGameMode(),
                 game.isEventGame(),
                 participantCount,
                 game.getRoundNumber(),

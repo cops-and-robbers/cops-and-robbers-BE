@@ -25,6 +25,7 @@ import org.mockito.Mock;
 import java.util.List;
 
 import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.CIRCLE_GAME_AREA;
+import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.CIRCLE_GAME_AREA_WITHOUT_JAIL;
 import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.POLYGON_GAME_AREA;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.FINISHED_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
@@ -38,6 +39,7 @@ import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
 class GameAreaServiceTest extends ServiceUnitTest {
 
@@ -138,6 +140,26 @@ class GameAreaServiceTest extends ServiceUnitTest {
         }
 
         @Test
+        void 감옥이_없는_구역은_감옥_정보를_null로_조회한다() {
+            // given
+            GameAreaCommand command = GameAreaCommand.of(TEST_USER_ID, TEST_GAME_ID);
+
+            given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(waitingGame);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_USER_ID)).willReturn(participant);
+            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(CIRCLE_GAME_AREA_WITHOUT_JAIL(waitingGame));
+
+            // when
+            GameAreaResult result = gameAreaService.getGameArea(command);
+
+            // then
+            assertThat(result.areaData()).isInstanceOfSatisfying(GameAreaData.CircleAreaData.class, data -> {
+                assertThat(data.jailLatitude()).isNull();
+                assertThat(data.jailLongitude()).isNull();
+                assertThat(data.jailRadiusInMeters()).isNull();
+            });
+        }
+
+        @Test
         void 게임이_비활성_상태이면_예외가_발생한다() {
             // given
             GameAreaCommand command = GameAreaCommand.of(TEST_USER_ID, TEST_GAME_ID);
@@ -205,6 +227,41 @@ class GameAreaServiceTest extends ServiceUnitTest {
             then(gameAreaDomainService).should().validatePolygonAreaContainment(
                     any(Polygon.class), any(Polygon.class)
             );
+        }
+
+        @Test
+        void 감옥이_없는_CIRCLE_타입은_감옥_포함_검증_없이_생성한다() {
+            // given
+            GameAreaData.CircleAreaData circleData = new GameAreaData.CircleAreaData(
+                    37.4979, 127.0276, 1000,
+                    null, null, null
+            );
+
+            // when
+            GameArea result = gameAreaService.buildGameArea(waitingGame, circleData);
+
+            // then
+            assertThat(result.getJailCenter()).isNull();
+            assertThat(result.getJailRadiusInMeters()).isNull();
+            then(gameAreaDomainService).should(never()).validateCircleAreaContainment(
+                    anyDouble(), anyDouble(), anyInt(), anyDouble(), anyDouble(), anyInt()
+            );
+        }
+
+        @Test
+        void 감옥이_없는_POLYGON_타입은_감옥_포함_검증_없이_생성한다() {
+            // given
+            GameAreaData.PolygonAreaData polygonData = new GameAreaData.PolygonAreaData(
+                    createPolygonAreaData().playgroundPolygon(), null
+            );
+
+            // when
+            GameArea result = gameAreaService.buildGameArea(waitingGame, polygonData);
+
+            // then
+            assertThat(result.getPlaygroundPolygon()).isNotNull();
+            assertThat(result.getJailPolygon()).isNull();
+            then(gameAreaDomainService).should(never()).validatePolygonAreaContainment(any(), any());
         }
     }
 

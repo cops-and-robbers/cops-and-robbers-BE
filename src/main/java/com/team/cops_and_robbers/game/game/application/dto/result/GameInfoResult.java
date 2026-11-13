@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.game.game.application.dto.result;
 
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 
 import java.time.LocalDateTime;
 
@@ -12,7 +13,8 @@ public record GameInfoResult(
         Integer shrinkFinalRadiusInMeters,
         boolean isStarted,
         LocalDateTime gameStartTime,
-        boolean isEventGame
+        boolean isEventGame,
+        GameMode gameMode
 ) {
     public static GameInfoResult from(Game game) {
         return new GameInfoResult(
@@ -23,7 +25,8 @@ public record GameInfoResult(
                 game.getShrinkFinalRadiusInMeters(),
                 game.isInProgress(),
                 game.getStartedAt(),
-                game.isEventGame()
+                game.isEventGame(),
+                game.getGameMode()
         );
     }
 }

@@ -57,6 +57,15 @@ public class GameAreaFixture {
                 .build();
     }
 
+    public static GameArea CIRCLE_GAME_AREA_WITHOUT_JAIL(Game game) {
+        return GameArea.builder()
+                .game(game)
+                .areaType(AreaType.CIRCLE)
+                .playgroundCenter(createPoint(DEFAULT_LONGITUDE, DEFAULT_LATITUDE))
+                .playgroundRadiusInMeters(500)
+                .build();
+    }
+
     public static GameArea LARGE_CIRCLE_GAME_AREA(Game game) {
         Point playgroundCenter = createPoint(DEFAULT_LONGITUDE, DEFAULT_LATITUDE);
         Point jailCenter = createPoint(DEFAULT_LONGITUDE + 0.002, DEFAULT_LATITUDE + 0.002);

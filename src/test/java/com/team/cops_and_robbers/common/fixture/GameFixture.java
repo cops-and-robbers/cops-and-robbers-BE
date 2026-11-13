@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.common.fixture;
 
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -118,6 +119,36 @@ public class GameFixture {
                 .policeWaitMinutes(3)
                 .maxParticipants(10)
                 .isEventGame(true)
+                .startedAt(LocalDateTime.now())
+                .roundNumber(1)
+                .build();
+        ReflectionTestUtils.setField(game, "createdAt", LocalDateTime.now());
+        return game;
+    }
+
+    public static Game WAITING_TAG_GAME() {
+        Game game = Game.builder()
+                .inviteCode(UUID.randomUUID().toString().substring(0, 6))
+                .status(GameStatus.WAITING)
+                .gameMode(GameMode.TAG)
+                .roundDurationMinutes(30)
+                .locationRevealIntervalMinutes(5)
+                .policeWaitMinutes(3)
+                .maxParticipants(10)
+                .build();
+        ReflectionTestUtils.setField(game, "createdAt", LocalDateTime.now());
+        return game;
+    }
+
+    public static Game IN_PROGRESS_TAG_GAME() {
+        Game game = Game.builder()
+                .inviteCode(UUID.randomUUID().toString().substring(0, 6))
+                .status(GameStatus.IN_PROGRESS)
+                .gameMode(GameMode.TAG)
+                .roundDurationMinutes(30)
+                .locationRevealIntervalMinutes(5)
+                .policeWaitMinutes(3)
+                .maxParticipants(10)
                 .startedAt(LocalDateTime.now())
                 .roundNumber(1)
                 .build();

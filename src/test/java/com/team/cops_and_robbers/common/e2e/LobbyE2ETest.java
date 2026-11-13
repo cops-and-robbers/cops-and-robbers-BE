@@ -6,10 +6,14 @@ import com.team.cops_and_robbers.common.WebSocketE2ETest;
 import com.team.cops_and_robbers.common.fixture.GameAreaFixture;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.common.fixture.GameParticipantFixture;
+import com.team.cops_and_robbers.game.area.domain.AreaType;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
+import com.team.cops_and_robbers.game.game.presentation.dto.request.CoordinatesRequest;
+import com.team.cops_and_robbers.game.game.presentation.dto.request.GameAreaRequest;
+import com.team.cops_and_robbers.game.game.presentation.dto.request.GameModeUpdateRequest;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.presentation.dto.request.GameJoinRequest;
-import com.team.cops_and_robbers.play.lobby.presentation.dto.request.ReadyUpdateRequest;
 import com.team.cops_and_robbers.play.lobby.presentation.dto.request.TeamChangeRequest;
 import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
@@ -137,88 +141,30 @@ class LobbyE2ETest extends WebSocketE2ETest {
         assertThat(List.of(event1.type(), event2.type())).contains("HOST_CHANGED");
     }
 
-    @Nested
-    @DisplayName("구버전 앱 호환 — 2단계에서 삭제 (#226)")
-    class LegacyReadyCompat {
+    @Test
+    void 게임_모드를_바꾸면_MODE_UPDATED_이벤트로_모드와_구역을_수신한다() throws Exception {
+        // given
+        LobbySetup setup = givenLobbySetup();
+        GameAreaRequest area = new GameAreaRequest(
+                AreaType.CIRCLE,
+                new GameAreaRequest.CircleAreaRequest(new CoordinatesRequest(37.4979, 127.0276), 500, null, null),
+                null
+        );
 
-        @Test
-        void 유저가_로비에_입장하면_ENTER_이벤트의_isReady는_true다() throws Exception {
-            // given
-            LobbySetup setup = givenLobbySetup();
+        // when
+        authenticated(setup.hostToken())
+                .body(new GameModeUpdateRequest(GameMode.TAG, area))
+                .put("/api/games/{gameId}/mode", setup.game().getId())
+                .then()
+                .statusCode(200);
 
-            User joinUser = givenUser("joinGuest");
-            String joinToken = givenAccessToken(joinUser);
+        // then
+        TestEventResponse guestEvent = setup.guestClient().waitForMessage(setup.lobbyChannel(), 5);
 
-            // when
-            authenticated(joinToken)
-                    .body(new GameJoinRequest(setup.game().getInviteCode()))
-                    .post("/api/games/join")
-                    .then()
-                    .statusCode(200);
-
-            // then
-            TestEventResponse hostEvent = setup.hostClient().waitForMessage(setup.lobbyChannel(), 5);
-
-            assertThat(hostEvent.type()).isEqualTo("ENTER");
-            assertThat(hostEvent.data().get("newParticipant").get("isReady").asBoolean()).isTrue();
-        }
-
-        @Test
-        void 팀을_변경하면_TEAM_UPDATE_이벤트의_isReady는_true다() throws Exception {
-            // given
-            LobbySetup setup = givenLobbySetup();
-
-            // when: ROBBER -> POLICE
-            authenticated(setup.guestToken())
-                    .body(new TeamChangeRequest(Team.POLICE))
-                    .patch("/api/games/{gameId}/lobby/team", setup.game().getId())
-                    .then()
-                    .statusCode(204);
-
-            // then
-            TestEventResponse hostEvent = setup.hostClient().waitForMessage(setup.lobbyChannel(), 5);
-
-            assertThat(hostEvent.type()).isEqualTo("TEAM_UPDATE");
-            assertThat(hostEvent.data().get("participant").get("isReady").asBoolean()).isTrue();
-        }
-
-        @Test
-        void 방장이_퇴장하면_HOST_CHANGED_이벤트의_isReady는_true다() throws Exception {
-            // given
-            LobbySetup setup = givenLobbySetup();
-
-            // when
-            authenticated(setup.hostToken())
-                    .delete("/api/games/{gameId}/leave", setup.game().getId())
-                    .then()
-                    .statusCode(200);
-
-            // then: 방장 퇴장 시 HOST_CHANGED + EXIT 두 이벤트가 발행됨
-            TestEventResponse event1 = setup.guestClient().waitForMessage(setup.lobbyChannel(), 5);
-            TestEventResponse event2 = setup.guestClient().waitForMessage(setup.lobbyChannel(), 5);
-
-            TestEventResponse hostChanged = List.of(event1, event2).stream()
-                    .filter(event -> event.type().equals("HOST_CHANGED"))
-                    .findFirst()
-                    .orElseThrow();
-            assertThat(hostChanged.data().get("newHost").get("isReady").asBoolean()).isTrue();
-        }
-
-        @Test
-        void 준비_상태를_변경해도_이벤트를_발행하지_않는다() throws Exception {
-            // given
-            LobbySetup setup = givenLobbySetup();
-
-            // when
-            authenticated(setup.guestToken())
-                    .body(new ReadyUpdateRequest(true))
-                    .patch("/api/games/{gameId}/lobby/ready", setup.game().getId())
-                    .then()
-                    .statusCode(204);
-
-            // then
-            assertThat(setup.hostClient().<TestEventResponse>waitForMessage(setup.lobbyChannel(), 1)).isNull();
-        }
+        assertThat(guestEvent.type()).isEqualTo("MODE_UPDATED");
+        assertThat(guestEvent.data().get("gameMode").asText()).isEqualTo("TAG");
+        assertThat(guestEvent.data().get("areaData").get("playgroundRadiusInMeters").asInt()).isEqualTo(500);
+        assertThat(guestEvent.data().get("areaData").get("jailLatitude").isNull()).isTrue();
     }
 
     @Nested

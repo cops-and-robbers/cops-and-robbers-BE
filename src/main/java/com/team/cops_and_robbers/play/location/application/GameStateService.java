@@ -38,6 +38,7 @@ public class GameStateService {
         validateIsParticipant(allParticipants, command.userId());
 
         return new GameStateResult(
+                game.getGameMode(),
                 buildRobberLocations(command.gameId(), allParticipants),
                 buildParticipantInfos(allParticipants)
         );

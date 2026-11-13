@@ -4,6 +4,7 @@ extend type Query {
     page: Int = 0
     size: Int = 20
     status: GameStatus
+    gameMode: GameMode
     sortDirection: SortDirection = DESC
   ): AdminGamePage!
 
@@ -13,6 +14,7 @@ extend type Query {
     page: Int = 0
     size: Int = 20
     endReason: GameEndReason
+    gameMode: GameMode
     sortDirection: SortDirection = DESC
   ): AdminGameHistoryPage!
 
@@ -43,6 +45,7 @@ type AdminGameSummary {
   roundDurationMinutes: Int!
   locationRevealIntervalMinutes: Int!
   maxParticipants: Int!
+  gameMode: GameMode!
   isEventGame: Boolean!
   participantCount: Int!
   roundNumber: Int!
@@ -58,6 +61,7 @@ type AdminGame {
   policeWaitMinutes: Int!
   maxParticipants: Int!
   shrinkFinalRadiusInMeters: Int
+  gameMode: GameMode!
   isEventGame: Boolean!
   roundNumber: Int!
   createdAt: String!
@@ -131,6 +135,7 @@ type AdminGameHistory {
   endedAt: String
   locationRevealIntervalMinutes: Int
   shrinkFinalRadiusInMeters: Int
+  gameMode: GameMode!
   isEventGame: Boolean
   hostUserId: ID
   areaType: AreaType!

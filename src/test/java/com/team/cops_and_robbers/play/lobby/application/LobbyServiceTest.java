@@ -10,7 +10,6 @@ import com.team.cops_and_robbers.history.application.GameResultService;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.GameStartCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.KickCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.LobbyInfoCommand;
-import com.team.cops_and_robbers.play.lobby.application.dto.command.ReadyUpdateCommand;
 import com.team.cops_and_robbers.play.lobby.application.dto.command.TeamChangeCommand;
 import com.team.cops_and_robbers.play.lobby.domain.LobbyEvent;
 import com.team.cops_and_robbers.user.domain.User;
@@ -119,71 +118,6 @@ class LobbyServiceTest extends ServiceUnitTest {
 
             // when & then
             assertThatThrownBy(() -> lobbyService.changeTeam(command))
-                    .isInstanceOf(ApplicationException.class)
-                    .hasMessageContaining(GameParticipantException.LOBBY_ACTION_NOT_ALLOWED.getDetail());
-        }
-    }
-
-    @Nested
-    @DisplayName("구버전 앱 호환 — 2단계에서 삭제 (#226)")
-    class LegacyReadyCompat {
-
-        @Test
-        void 준비_상태를_변경해도_아무것도_바뀌지_않고_이벤트를_발행하지_않는다() {
-            // given
-            GameParticipant participant = GUEST_PARTICIPANT(waitingGame, user);
-            ReadyUpdateCommand command = new ReadyUpdateCommand(user.getId(), waitingGame.getId(), false);
-
-            given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
-            given(gameParticipantRepository.getByGameIdAndUserId(waitingGame.getId(), user.getId())).willReturn(participant);
-
-            // when
-            lobbyService.updateReady(command);
-
-            // then
-            assertThat(participant.getTeam()).isEqualTo(Team.ROBBER);
-            then(eventPublisher).shouldHaveNoInteractions();
-        }
-
-        @Test
-        void 방장이_호출해도_예외가_발생하지_않는다() {
-            // given
-            GameParticipant hostParticipant = HOST_PARTICIPANT(waitingGame, user);
-            ReadyUpdateCommand command = new ReadyUpdateCommand(user.getId(), waitingGame.getId(), false);
-
-            given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
-            given(gameParticipantRepository.getByGameIdAndUserId(waitingGame.getId(), user.getId())).willReturn(hostParticipant);
-
-            // when & then
-            assertThatCode(() -> lobbyService.updateReady(command)).doesNotThrowAnyException();
-            then(eventPublisher).shouldHaveNoInteractions();
-        }
-
-        @Test
-        void 게임이_WAITING_상태가_아니면_예외가_발생한다() {
-            // given
-            Game inProgressGame = IN_PROGRESS_GAME();
-            ReadyUpdateCommand command = new ReadyUpdateCommand(user.getId(), inProgressGame.getId(), true);
-
-            given(gameRepository.getByGameId(inProgressGame.getId())).willReturn(inProgressGame);
-
-            // when & then
-            assertThatThrownBy(() -> lobbyService.updateReady(command))
-                    .isInstanceOf(ApplicationException.class)
-                    .hasMessageContaining(GameParticipantException.GAME_ALREADY_STARTED.getDetail());
-        }
-
-        @Test
-        void 참가자가_WAITING_상태가_아니면_예외가_발생한다() {
-            // given
-            GameParticipant aliveParticipant = ALIVE_ROBBER(waitingGame, user);
-            ReadyUpdateCommand command = new ReadyUpdateCommand(user.getId(), waitingGame.getId(), true);
-
-            given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
-            given(gameParticipantRepository.getByGameIdAndUserId(waitingGame.getId(), user.getId())).willReturn(aliveParticipant);
-
-            // when & then
-            assertThatThrownBy(() -> lobbyService.updateReady(command))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(GameParticipantException.LOBBY_ACTION_NOT_ALLOWED.getDetail());
         }

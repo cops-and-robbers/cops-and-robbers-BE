@@ -2,7 +2,9 @@ package com.team.cops_and_robbers.play.lobby.domain;
 
 import com.team.cops_and_robbers.game.area.application.dto.GameAreaData;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameAreaUpdateResult;
+import com.team.cops_and_robbers.game.game.application.dto.result.GameModeUpdateResult;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameSettingsUpdateResult;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 
@@ -14,18 +16,15 @@ public sealed interface LobbyEventData permits
         LobbyEventData.LobbyGameStartData,
         LobbyEventData.LobbyAreaUpdatedData,
         LobbyEventData.LobbySettingsUpdatedData,
+        LobbyEventData.LobbyModeUpdatedData,
         LobbyEventData.LobbyKickedData {
 
-    /**
-     * isReady를 항상 true로 내린다. -> 이후 삭제 예정
-     */
-    record LobbyParticipantInfo(Long participantId, String nickname, Team team, boolean isReady) {
+    record LobbyParticipantInfo(Long participantId, String nickname, Team team) {
         public static LobbyParticipantInfo from(GameParticipant participant) {
             return new LobbyParticipantInfo(
                     participant.getId(),
                     participant.getUser().getNickname(),
-                    participant.getTeam(),
-                    true
+                    participant.getTeam()
             );
         }
     }
@@ -68,7 +67,14 @@ public sealed interface LobbyEventData permits
         }
     }
 
+    record LobbyModeUpdatedData(GameMode gameMode, GameAreaData areaData) implements LobbyEventData {
+        public static LobbyModeUpdatedData from(GameModeUpdateResult result) {
+            return new LobbyModeUpdatedData(result.gameMode(), result.area().areaData());
+        }
+    }
+
     record LobbySettingsUpdatedData(
+            GameMode gameMode,
             Integer roundDurationMinutes,
             Integer locationRevealIntervalMinutes,
             Integer policeWaitMinutes,
@@ -77,6 +83,7 @@ public sealed interface LobbyEventData permits
     ) implements LobbyEventData {
         public static LobbySettingsUpdatedData from(GameSettingsUpdateResult result) {
             return new LobbySettingsUpdatedData(
+                    result.gameMode(),
                     result.roundDurationMinutes(), result.locationRevealIntervalMinutes(),
                     result.policeWaitMinutes(), result.maxParticipants(),
                     result.shrinkFinalRadiusInMeters()

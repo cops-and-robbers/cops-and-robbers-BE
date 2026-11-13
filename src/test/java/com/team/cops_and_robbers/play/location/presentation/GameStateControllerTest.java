@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.play.location.presentation;
 import com.team.cops_and_robbers.common.ControllerTest;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.play.common.application.InGameParticipantCacheService;
@@ -85,6 +86,7 @@ class GameStateControllerTest extends ControllerTest {
             GameStateResponse result = response.as(GameStateResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(200);
+                softly.assertThat(result.gameMode()).isEqualTo(GameMode.COPS_AND_ROBBERS);
                 softly.assertThat(result.robberLocations()).hasSize(2);
                 softly.assertThat(result.participants()).hasSize(3);
             });

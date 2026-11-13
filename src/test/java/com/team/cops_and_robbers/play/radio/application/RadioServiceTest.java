@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.EVENT_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.FINISHED_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
+import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_TAG_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_POLICE;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_ROBBER;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.WAITING_POLICE;
@@ -89,6 +90,21 @@ class RadioServiceTest extends ServiceUnitTest {
                 softly.assertThat(result.token()).isEqualTo("signed-token");
             });
             then(gameResultService).should().recordRadioUsage(TEST_GAME_ID, TEST_USER_ID, TOKEN_TTL);
+        }
+
+        @Test
+        void 술래잡기_게임의_술래도_토큰을_발급받는다() {
+            // given
+            Game tagGame = IN_PROGRESS_TAG_GAME();
+            setId(tagGame, TEST_GAME_ID);
+            givenGameAndParticipant(tagGame, createParticipant(ALIVE_POLICE(tagGame, user)));
+            givenToken();
+
+            // when
+            RadioTokenResult result = radioService.issueToken(command);
+
+            // then
+            assertSoftly(softly -> softly.assertThat(result.token()).isEqualTo("signed-token"));
         }
 
         @Test

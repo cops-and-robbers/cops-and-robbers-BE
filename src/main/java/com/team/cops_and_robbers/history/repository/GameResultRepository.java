@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.history.repository;
 
 import com.team.cops_and_robbers.common.exception.ApplicationException;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.history.domain.GameEndReason;
 import com.team.cops_and_robbers.history.domain.GameResult;
@@ -64,9 +65,11 @@ public interface GameResultRepository extends JpaRepository<GameResult, Long> {
             select r from GameResult r
             where r.endReason is not null
             and (:endReason is null or r.endReason = :endReason)
+            and (:gameMode is null or r.gameMode = :gameMode)
             """)
     Page<GameResult> findAllForAdmin(
             @Param("endReason") GameEndReason endReason,
+            @Param("gameMode") GameMode gameMode,
             Pageable pageable
     );
 

@@ -5,6 +5,7 @@ import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.area.domain.AreaType;
 import com.team.cops_and_robbers.game.area.domain.GameArea;
 import com.team.cops_and_robbers.game.game.domain.Game;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
@@ -38,6 +39,7 @@ import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.CIRCLE_GA
 import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.POLYGON_GAME_AREA;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.EVENT_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
+import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_TAG_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_ROBBER;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.HOST_PARTICIPANT;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.WAITING_POLICE;
@@ -238,6 +240,22 @@ class GameResultServiceTest extends ServiceUnitTest {
             // then
             assertThat(result.getEventGame()).isTrue();
             assertThat(result.getHostUserId()).isEqualTo(POLICE_USER_ID);
+        }
+
+        @Test
+        void 술래잡기_게임이_시작되면_게임_모드가_복사된다() {
+            // given
+            Game tagGame = IN_PROGRESS_TAG_GAME();
+            setId(tagGame, TEST_GAME_ID);
+
+            given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(CIRCLE_GAME_AREA(tagGame));
+            given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
+
+            // when
+            GameResult result = gameResultService.openGameResult(tagGame);
+
+            // then
+            assertThat(result.getGameMode()).isEqualTo(GameMode.TAG);
         }
 
         @Test

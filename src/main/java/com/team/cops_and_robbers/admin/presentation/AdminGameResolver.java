@@ -14,6 +14,7 @@ import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameHist
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGamePageResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminGameResult;
 import com.team.cops_and_robbers.admin.application.dto.result.game.AdminParticipantResult;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.history.domain.GameEndReason;
 import jakarta.validation.constraints.Max;
@@ -42,10 +43,11 @@ public class AdminGameResolver {
             @Argument @Min(0) int page,
             @Argument @Min(1) @Max(100) int size,
             @Argument GameStatus status,
+            @Argument GameMode gameMode,
             @Argument SortDirection sortDirection
     ) {
         AdminGameListCommand command = new AdminGameListCommand(
-                page, size, status, sortDirection != null ? sortDirection : SortDirection.DESC);
+                page, size, status, gameMode, sortDirection != null ? sortDirection : SortDirection.DESC);
         return adminGameService.getGameList(command);
     }
 
@@ -92,10 +94,11 @@ public class AdminGameResolver {
             @Argument @Min(0) int page,
             @Argument @Min(1) @Max(100) int size,
             @Argument GameEndReason endReason,
+            @Argument GameMode gameMode,
             @Argument SortDirection sortDirection
     ) {
         AdminGameHistoryListCommand command = new AdminGameHistoryListCommand(
-                page, size, endReason, sortDirection != null ? sortDirection : SortDirection.DESC);
+                page, size, endReason, gameMode, sortDirection != null ? sortDirection : SortDirection.DESC);
         return adminGameHistoryService.getGameHistoryList(command);
     }
 

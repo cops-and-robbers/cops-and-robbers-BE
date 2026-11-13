@@ -7,6 +7,7 @@ import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.game.domain.GameStatus;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
+import com.team.cops_and_robbers.history.domain.GameEndReason;
 import com.team.cops_and_robbers.history.domain.GameResult;
 import com.team.cops_and_robbers.history.domain.GameResultParticipant;
 import com.team.cops_and_robbers.play.system.presentation.dto.request.ArrestRequest;
@@ -112,6 +113,36 @@ class SystemControllerTest extends ControllerTest {
                 softly.assertThat(game.getStatus() == GameStatus.WAITING);
 
                 softly.assertThat(gameResultRepository.existsById(1L)).isTrue();    // 게임 결과 또한 저장되어야 한다.
+            });
+        }
+
+        @Test
+        void 술래잡기_게임도_모든_도둑이_잡히면_전원_체포로_종료된다() {
+            // given
+            Game tagGame = gameRepository.save(GameFixture.IN_PROGRESS_TAG_GAME());
+            gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA_WITHOUT_JAIL(tagGame));
+            User tagPolice = givenUser("tagPolice");
+            User tagRobber = givenUser("tagRobber");
+            givenPolice(tagGame, tagPolice);
+            GameParticipant tagRobberParticipant = givenRobber(tagGame, tagRobber);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(givenAccessToken(tagPolice))
+                    .body(new ArrestRequest(tagRobberParticipant.getId()))
+                    .pathParam(GAME_ID_PARAM, tagGame.getId())
+                    .when()
+                    .post(ARREST_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                softly.assertThat(response.as(ArrestResponse.class).remainingThieves()).isZero();
+                softly.assertThat(gameRepository.findById(tagGame.getId()).orElseThrow().getStatus())
+                        .isEqualTo(GameStatus.WAITING);
+                softly.assertThat(gameResultRepository.findByGameId(tagGame.getId()).orElseThrow().getEndReason())
+                        .isEqualTo(GameEndReason.ALL_ARRESTED);
             });
         }
 
@@ -684,6 +715,30 @@ class SystemControllerTest extends ControllerTest {
             GameParticipant escapedRobber = gameParticipantRepository.findById(robberParticipant.getId()).orElseThrow();
             assertThat(escapedRobber.isJailed()).isFalse();
             assertThat(escapedRobber.isRobber()).isTrue();
+        }
+
+        @Test
+        void 술래잡기_게임에서는_탈옥할_수_없으며_400_BadRequest를_응답한다() {
+            // given
+            Game tagGame = gameRepository.save(GameFixture.IN_PROGRESS_TAG_GAME());
+            User tagRobber = givenUser("tagRobber");
+            GameParticipant jailedRobber = givenJailedRobber(tagGame, tagRobber);
+
+            // when
+            ExtractableResponse<Response> response = authenticated(givenAccessToken(tagRobber))
+                    .pathParam(GAME_ID_PARAM, tagGame.getId())
+                    .when()
+                    .post(ESCAPE_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+                softly.assertThat(response.jsonPath().getString("errorCode")).isEqualTo("ESCAPE_NOT_ALLOWED_IN_MODE");
+                softly.assertThat(gameParticipantRepository.findById(jailedRobber.getId()).orElseThrow().isJailed())
+                        .isTrue();
+            });
         }
 
         @Test

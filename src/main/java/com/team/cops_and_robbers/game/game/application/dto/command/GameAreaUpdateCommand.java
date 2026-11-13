@@ -16,29 +16,19 @@ public record GameAreaUpdateCommand(
         return new GameAreaUpdateCommand(gameId, userId, resolveAreaData(area));
     }
 
-    private static GameAreaData resolveAreaData(GameAreaRequest area) {
-        if (area.areaType() == null) {
-            return new GameAreaData.CircleAreaData(
-                    area.playgroundCenter().latitude(),
-                    area.playgroundCenter().longitude(),
-                    area.playgroundRadiusInMeters(),
-                    area.jailCenter().latitude(),
-                    area.jailCenter().longitude(),
-                    area.jailRadiusInMeters()
-            );
-        }
+    static GameAreaData resolveAreaData(GameAreaRequest area) {
         return switch (area.areaType()) {
             case CIRCLE -> new GameAreaData.CircleAreaData(
                     area.circle().playgroundCenter().latitude(),
                     area.circle().playgroundCenter().longitude(),
                     area.circle().playgroundRadiusInMeters(),
-                    area.circle().jailCenter().latitude(),
-                    area.circle().jailCenter().longitude(),
+                    area.circle().jailCenter() == null ? null : area.circle().jailCenter().latitude(),
+                    area.circle().jailCenter() == null ? null : area.circle().jailCenter().longitude(),
                     area.circle().jailRadiusInMeters()
             );
             case POLYGON -> new GameAreaData.PolygonAreaData(
                     toCoordinatesList(area.polygon().playgroundPolygon()),
-                    toCoordinatesList(area.polygon().jailPolygon())
+                    area.polygon().jailPolygon() == null ? null : toCoordinatesList(area.polygon().jailPolygon())
             );
         };
     }

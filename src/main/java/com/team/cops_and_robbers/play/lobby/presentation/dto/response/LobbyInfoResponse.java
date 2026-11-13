@@ -23,9 +23,7 @@ public record LobbyInfoResponse(
             @Schema(description = "닉네임", example = "방장닉네임")
             String nickname,
             @Schema(description = "팀", example = "POLICE")
-            Team team,
-            @Schema(description = "준비 여부", example = "true", deprecated = true)
-            boolean isReady
+            Team team
     ) {
     }
 
@@ -34,8 +32,7 @@ public record LobbyInfoResponse(
                 .map(participantInfo -> new LobbyParticipantResponse(
                         participantInfo.participantId(),
                         participantInfo.nickname(),
-                        participantInfo.team(),
-                        participantInfo.isReady()
+                        participantInfo.team()
                 ))
                 .toList();
         return new LobbyInfoResponse(

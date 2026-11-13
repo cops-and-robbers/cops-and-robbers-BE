@@ -189,7 +189,7 @@ public class GameParticipantService {
     }
 
     private boolean tryEndGameByForfeit(Game game, Long gameId, Team team, ParticipantStatus status) {
-        if (team == Team.POLICE && !game.isEventGame() && isLastPolice(gameId)) {
+        if (team == Team.POLICE && game.rules().endsWhenPoliceLeave() && isLastPolice(gameId)) {
             gameTerminationService.endGameByPoliceForfeited(gameId);
             return true;
         }

@@ -37,6 +37,11 @@ public class Game extends BaseTimeEntity {
     @Column(nullable = false)
     private GameStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private GameMode gameMode = GameMode.COPS_AND_ROBBERS;
+
     @Column(nullable = false)
     private Integer roundDurationMinutes;
 
@@ -90,6 +95,7 @@ public class Game extends BaseTimeEntity {
         return Game.builder()
                 .inviteCode(inviteCode)
                 .status(GameStatus.WAITING)
+                .gameMode(command.gameMode())
                 .roundDurationMinutes(command.roundDurationMinutes())
                 .locationRevealIntervalMinutes(command.locationRevealIntervalMinutes())
                 .policeWaitMinutes(command.policeWaitMinutes())
@@ -116,8 +122,16 @@ public class Game extends BaseTimeEntity {
         this.shrinkFinalRadiusInMeters = shrinkFinalRadiusInMeters;
     }
 
+    public void updateGameMode(GameMode gameMode) {
+        this.gameMode = gameMode;
+    }
+
     public void updateEventGame(boolean isEventGame) {
         this.isEventGame = isEventGame;
+    }
+
+    public GameRules rules() {
+        return isEventGame ? GameRules.EVENT : gameMode.rules();
     }
 
     public boolean isSameRound(int eventRound) {

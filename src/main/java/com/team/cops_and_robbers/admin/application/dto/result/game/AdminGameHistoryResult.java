@@ -2,6 +2,7 @@ package com.team.cops_and_robbers.admin.application.dto.result.game;
 
 import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.game.area.domain.AreaType;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.history.domain.GameEndReason;
 import com.team.cops_and_robbers.history.domain.GameResult;
@@ -23,6 +24,7 @@ public record AdminGameHistoryResult(
         String endedAt,
         Integer locationRevealIntervalMinutes,
         Integer shrinkFinalRadiusInMeters,
+        GameMode gameMode,
         Boolean isEventGame,
         Long hostUserId,
         AreaType areaType,
@@ -46,6 +48,7 @@ public record AdminGameHistoryResult(
                 toIsoOrNull(gameResult.getEndedAt()),
                 gameResult.getLocationRevealIntervalMinutes(),
                 gameResult.getShrinkFinalRadiusInMeters(),
+                gameResult.getGameMode(),
                 gameResult.getEventGame(),
                 gameResult.getHostUserId(),
                 gameResult.getAreaType(),

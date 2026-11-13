@@ -8,5 +8,6 @@ public enum LobbyEventType {
     GAME_START,
     AREA_UPDATED,
     SETTINGS_UPDATED,
+    MODE_UPDATED,
     KICKED
 }

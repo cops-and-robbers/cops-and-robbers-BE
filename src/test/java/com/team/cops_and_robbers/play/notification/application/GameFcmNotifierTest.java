@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.play.notification.application;
 import com.team.cops_and_robbers.common.ServiceUnitTest;
 import com.team.cops_and_robbers.common.fcm.FcmMessage;
 import com.team.cops_and_robbers.common.fcm.FcmService;
+import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.play.chat.domain.ChatMessage;
 import com.team.cops_and_robbers.play.chat.domain.ChatScope;
@@ -10,6 +11,7 @@ import com.team.cops_and_robbers.play.chat.domain.ChatSender;
 import com.team.cops_and_robbers.play.common.domain.InGameParticipantCache;
 import com.team.cops_and_robbers.play.common.repository.InGameParticipantCacheRepository;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
+import com.team.cops_and_robbers.play.system.domain.SystemEventData;
 import com.team.cops_and_robbers.play.system.domain.SystemEventType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +23,7 @@ import org.mockito.Mock;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
@@ -87,6 +90,103 @@ class GameFcmNotifierTest extends ServiceUnitTest {
 
             // then
             then(fcmService).should(never()).send(any(FcmMessage.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("모드별 시스템 알림 문구")
+    class SystemPayloadWording {
+
+        @BeforeEach
+        void setUp() {
+            given(inGameParticipantCacheRepository.findAllByGameId(TEST_GAME_ID))
+                    .willReturn(List.of(new InGameParticipantCache("nick1", Team.POLICE, "token1")));
+        }
+
+        private FcmMessage sendAndCapture(GameMode gameMode, SystemEventType type, SystemEventData data) {
+            given(gameRepository.findGameModeById(TEST_GAME_ID)).willReturn(Optional.of(gameMode));
+            gameFcmNotifier.notifySystemEvent(SystemEvent.of(TEST_GAME_ID, type, data));
+
+            ArgumentCaptor<FcmMessage> captor = ArgumentCaptor.forClass(FcmMessage.class);
+            then(fcmService).should().send(captor.capture());
+            return captor.getValue();
+        }
+
+        @Test
+        void 경찰과도둑_게임의_체포_알림은_도둑_문구를_쓴다() {
+            // when
+            FcmMessage sent = sendAndCapture(GameMode.COPS_AND_ROBBERS, SystemEventType.ARREST, null);
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(sent.title()).isEqualTo("도둑 체포!");
+                softly.assertThat(sent.body()).isEqualTo("도둑이 체포되었습니다.");
+            });
+        }
+
+        @Test
+        void 술래잡기_게임의_체포_알림은_도망자_문구를_쓴다() {
+            // when
+            FcmMessage sent = sendAndCapture(GameMode.TAG, SystemEventType.ARREST, null);
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(sent.title()).isEqualTo("도망자 잡힘!");
+                softly.assertThat(sent.body()).isEqualTo("도망자가 잡혔습니다.");
+            });
+        }
+
+        @Test
+        void 술래잡기_게임의_이동_시작_알림은_술래_문구를_쓴다() {
+            // when
+            FcmMessage sent = sendAndCapture(GameMode.TAG, SystemEventType.POLICE_MOVE_START, null);
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(sent.title()).isEqualTo("술래 이동 시작!");
+                softly.assertThat(sent.body()).isEqualTo("술래가 이동을 시작했습니다!");
+            });
+        }
+
+        @Test
+        void 술래잡기_게임의_위치_공개_알림은_도망자_문구를_쓴다() {
+            // when
+            FcmMessage sent = sendAndCapture(GameMode.TAG, SystemEventType.ROBBER_LOCATION_REVEAL, null);
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(sent.title()).isEqualTo("도망자 위치 공개!");
+                softly.assertThat(sent.body()).isEqualTo("도망자의 현재 위치가 공개되었습니다!");
+            });
+        }
+
+        @Test
+        void 술래잡기_게임의_퇴장_알림은_모드별_팀_이름을_쓴다() {
+            // given
+            SystemEventData data = new SystemEventData.PlayerLeftData(1L, "도망가는사람", Team.ROBBER);
+
+            // when
+            FcmMessage sent = sendAndCapture(GameMode.TAG, SystemEventType.PLAYER_LEFT, data);
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(sent.title()).isEqualTo("도망자 참가자 퇴장");
+                softly.assertThat(sent.body()).isEqualTo("도망가는사람님이 게임에서 퇴장했습니다.");
+            });
+        }
+
+        @Test
+        void 게임을_찾지_못하면_경찰과도둑_문구를_쓴다() {
+            // given
+            given(gameRepository.findGameModeById(TEST_GAME_ID)).willReturn(Optional.empty());
+
+            // when
+            gameFcmNotifier.notifySystemEvent(SystemEvent.of(TEST_GAME_ID, SystemEventType.POLICE_MOVE_START, null));
+
+            // then
+            ArgumentCaptor<FcmMessage> captor = ArgumentCaptor.forClass(FcmMessage.class);
+            then(fcmService).should().send(captor.capture());
+            assertThat(captor.getValue().title()).isEqualTo("경찰 이동 시작!");
         }
     }
 
