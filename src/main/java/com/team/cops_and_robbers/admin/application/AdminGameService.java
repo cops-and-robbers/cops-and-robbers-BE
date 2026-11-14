@@ -127,17 +127,35 @@ public class AdminGameService {
 
     public Map<AdminGameResult, AdminGameAreaResult> getAreasByGame(List<AdminGameResult> games) {
         List<Long> gameIds = games.stream().map(AdminGameResult::id).toList();
-        Map<Long, AdminGameAreaResult> areaByGameId = gameAreaRepository.findByGameIdIn(gameIds)
-                .stream()
-                .collect(Collectors.toMap(
-                        ga -> ga.getGame().getId(),
-                        AdminGameAreaResult::from
-                ));
+        Map<Long, AdminGameAreaResult> areaByGameId = findAreaByGameId(gameIds);
         return games.stream()
                 .filter(game -> areaByGameId.containsKey(game.id()))
                 .collect(Collectors.toMap(
                         game -> game,
                         game -> areaByGameId.get(game.id())
+                ));
+    }
+
+    /**
+     * 게임 목록에는 구역 필드가 없어 동네 이름을 붙일 때 따로 구역을 조회합니다.
+     */
+    public Map<AdminGameSummaryResult, AdminGameAreaResult> getAreasByGameSummary(List<AdminGameSummaryResult> games) {
+        List<Long> gameIds = games.stream().map(AdminGameSummaryResult::id).toList();
+        Map<Long, AdminGameAreaResult> areaByGameId = findAreaByGameId(gameIds);
+        return games.stream()
+                .filter(game -> areaByGameId.containsKey(game.id()))
+                .collect(Collectors.toMap(
+                        game -> game,
+                        game -> areaByGameId.get(game.id())
+                ));
+    }
+
+    private Map<Long, AdminGameAreaResult> findAreaByGameId(List<Long> gameIds) {
+        return gameAreaRepository.findByGameIdIn(gameIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        ga -> ga.getGame().getId(),
+                        AdminGameAreaResult::from
                 ));
     }
 
