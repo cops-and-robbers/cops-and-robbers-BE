@@ -54,6 +54,7 @@ public class GameParticipantService {
     @Transactional
     public GameJoinResult joinGame(GameJoinCommand command) {
         Game game = gameRepository.getByInviteCode(command.inviteCode());
+        User user = userRepository.getByUserIdForUpdate(command.userId());
 
         if (game.isEventGame()) {
             if (gameParticipantRepository.existsActiveGameByUserId(command.userId())) {
@@ -62,8 +63,7 @@ public class GameParticipantService {
             if (!game.isInProgress()) {
                 throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
             }
-            User eventUser = userRepository.getByUserId(command.userId());
-            GameParticipant eventParticipant = GameParticipant.createEventModeParticipant(game, eventUser);
+            GameParticipant eventParticipant = GameParticipant.createEventModeParticipant(game, user);
             gameParticipantRepository.save(eventParticipant);
             gameResultService.recordParticipantJoined(game.getId(), eventParticipant);
             loadEventParticipantCache(game.getId(), eventParticipant.getId());
@@ -71,8 +71,6 @@ public class GameParticipantService {
         }
 
         validateJoinable(command.userId(), game);
-
-        User user = userRepository.getByUserId(command.userId());
 
         GameParticipant participant = GameParticipant.createParticipant(game, user, false);
         gameParticipantRepository.save(participant);

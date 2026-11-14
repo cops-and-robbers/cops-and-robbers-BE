@@ -104,7 +104,7 @@ class GameServiceTest extends ServiceUnitTest {
             // given
             GameCreateCommand command = createCircleGameCommand(host.getId());
 
-            given(userRepository.getByUserId(host.getId())).willReturn(host);
+            given(userRepository.getByUserIdForUpdate(host.getId())).willReturn(host);
             given(gameParticipantRepository.existsActiveGameByUserId(host.getId())).willReturn(false);
             given(gameRepository.save(any(Game.class))).willReturn(game);
             given(gameRepository.existsByInviteCode(anyString())).willReturn(false);
@@ -125,7 +125,7 @@ class GameServiceTest extends ServiceUnitTest {
             // given
             GameCreateCommand command = createPolygonGameCommand(host.getId());
 
-            given(userRepository.getByUserId(host.getId())).willReturn(host);
+            given(userRepository.getByUserIdForUpdate(host.getId())).willReturn(host);
             given(gameParticipantRepository.existsActiveGameByUserId(host.getId())).willReturn(false);
             given(gameRepository.save(any(Game.class))).willReturn(game);
             given(gameRepository.existsByInviteCode(anyString())).willReturn(false);
@@ -146,7 +146,7 @@ class GameServiceTest extends ServiceUnitTest {
             // given
             GameCreateCommand command = createCircleGameCommand(host.getId());
 
-            given(userRepository.getByUserId(host.getId())).willReturn(host);
+            given(userRepository.getByUserIdForUpdate(host.getId())).willReturn(host);
             given(gameParticipantRepository.existsActiveGameByUserId(host.getId())).willReturn(true);
 
             // when & then
