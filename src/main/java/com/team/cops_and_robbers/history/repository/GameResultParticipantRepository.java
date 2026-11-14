@@ -47,6 +47,18 @@ public interface GameResultParticipantRepository extends JpaRepository<GameResul
             """)
     List<GameResultParticipant> findLatestCompletedByUserId(@Param("userId") Long userId, Pageable pageable);
 
+    /**
+     * 유저들이 참가한 끝난 게임 기록을 판과 함께 읽습니다. 어드민에서 유저가 주로 플레이하는 국가를 셀 때 씁니다.
+     * 이벤트 게임에서 나갔다 다시 들어오면 같은 판에 행이 여러 개라, 판 단위로 세는 쪽에서 같은 판을 한 번만 셉니다.
+     */
+    @Query("""
+            select p from GameResultParticipant p
+            join fetch p.gameResult r
+            where p.userId in :userIds
+            and r.endReason is not null
+            """)
+    List<GameResultParticipant> findCompletedWithResultByUserIdIn(@Param("userIds") List<Long> userIds);
+
     @Query("""
             select p.userId as userId, sum(p.radioSeconds) as radioSeconds
             from GameResultParticipant p

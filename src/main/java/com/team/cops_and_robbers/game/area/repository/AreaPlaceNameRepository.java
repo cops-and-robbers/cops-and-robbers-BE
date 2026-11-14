@@ -22,13 +22,14 @@ public interface AreaPlaceNameRepository extends JpaRepository<AreaPlaceName, Lo
     @Transactional
     @Modifying
     @Query(value = """
-            INSERT INTO area_place_names (coordinate_key, place_name, created_at, updated_at)
-            VALUES (:coordinateKey, :placeName, :now, :now)
+            INSERT INTO area_place_names (coordinate_key, place_name, country_code, created_at, updated_at)
+            VALUES (:coordinateKey, :placeName, :countryCode, :now, :now)
             ON CONFLICT (coordinate_key) DO NOTHING
             """, nativeQuery = true)
     void insertIfAbsent(
             @Param("coordinateKey") String coordinateKey,
             @Param("placeName") String placeName,
+            @Param("countryCode") String countryCode,
             @Param("now") LocalDateTime now
     );
 }

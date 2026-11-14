@@ -98,10 +98,22 @@ public class AdminGameResolver {
         return adminPlaceNameService.getPlaceNamesByGame(games);
     }
 
+    @BatchMapping(typeName = "AdminGameSummary", field = "countryCode")
+    public Map<AdminGameSummaryResult, String> summaryCountryCode(
+            List<AdminGameSummaryResult> games) {
+        return adminPlaceNameService.getCountryCodesByGame(games);
+    }
+
     @BatchMapping(typeName = "GameArea", field = "placeName")
     public Map<AdminGameAreaResult, String> placeName(
             List<AdminGameAreaResult> areas) {
         return adminPlaceNameService.getPlaceNamesByArea(areas);
+    }
+
+    @BatchMapping(typeName = "GameArea", field = "countryCode")
+    public Map<AdminGameAreaResult, String> countryCode(
+            List<AdminGameAreaResult> areas) {
+        return adminPlaceNameService.getCountryCodesByArea(areas);
     }
 
     @QueryMapping
