@@ -42,6 +42,13 @@ public class SwaggerConfig {
                         - 커뮤니티 주소 조회를 그대로 쓰고, 찾은 이름은 좌표(약 100m 단위)별로 저장해 같은 곳은 다시 조회하지 않는다
                           - placeName 필드 하나를 조회할 때 새로 찾는 곳은 최대 5곳이고, 3초 안에 못 찾으면 이번 응답은 null 이다. 나머지는 다음 조회에서 채워진다
                           - 주소가 없거나 조회에 실패하면 null 이고, 실패한 곳은 10분 동안 다시 조회하지 않는다. 어드민 조회는 실패하지 않는다
+                        - GameArea, AdminGameSummary 에 countryCode(String, nullable) 추가. ISO 3166-1 alpha-2 대문자 국가 코드다 (예: KR, JP)
+                          - 동네 이름과 같은 주소 조회 결과에서 받아 함께 저장한다. 주소 조회가 국가를 주지 않은 곳은 null 이다
+                        - AdminUser 에 playCountries([PlayCountry!]!) 추가. 유저가 끝까지 마친 게임을 플레이 구역의 국가로 묶어 센다
+                          - PlayCountry 는 countryCode(String, nullable), games(Int!), lastPlayedAt(String, KST ISO)
+                          - 많이 한 국가가 앞이고, 판 수가 같으면 최근에 한 국가가 앞이다
+                          - 국가를 아직 찾지 못한 판은 countryCode 가 null 인 줄 하나로 묶어 맨 뒤에 둔다. 좌표가 없는 옛 기록은 세지 않는다
+                          - 이벤트 게임에서 다시 들어와 같은 판에 기록이 여러 개여도 한 판으로 센다
                         - **앱 영향** — 없음. 어드민 GraphQL 에만 추가했다
 
                         ## v4.0.0 업데이트 내역
