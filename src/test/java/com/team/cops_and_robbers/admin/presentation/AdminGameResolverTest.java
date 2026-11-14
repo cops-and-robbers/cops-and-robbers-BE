@@ -338,6 +338,30 @@ class AdminGameResolverTest extends ControllerTest {
         }
 
         @Test
+        void 게임_목록과_구역에_국가가_함께_내려온다() {
+            // given
+            Game game = gameRepository.save(GameFixture.WAITING_GAME());
+            gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(game));
+
+            // when
+            ExtractableResponse<Response> list = executeQuery(adminToken, "{ adminGames { content { id countryCode } } }");
+            ExtractableResponse<Response> detail = executeQuery(
+                    adminToken,
+                    "{ adminGame(id: " + game.getId() + ") { area { placeName countryCode } } }");
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat((Object) list.jsonPath().get("errors")).isNull();
+                softly.assertThat(list.jsonPath().getString(
+                        "data.adminGames.content.find { it.id == '" + game.getId() + "' }.countryCode")).isEqualTo("KR");
+                softly.assertThat(detail.jsonPath().getString("data.adminGame.area.placeName")).isEqualTo(PLACE_NAME);
+                softly.assertThat(detail.jsonPath().getString("data.adminGame.area.countryCode")).isEqualTo("KR");
+            });
+            // placeName 과 countryCode 를 함께 물어도 같은 곳은 한 번만 조회한다
+            verify(geocodingClient, times(1)).reverseGeocode(any(), any());
+        }
+
+        @Test
         void 지난_게임_기록의_구역에도_동네_이름이_내려온다() {
             // given
             Game game = gameRepository.save(GameFixture.FINISHED_GAME());
