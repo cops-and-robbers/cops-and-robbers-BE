@@ -30,8 +30,20 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("4.0.0")
+                .version("4.1.0")
                 .description("""
+                        ## v4.1.0 업데이트 내역
+
+                        ### ✨ 추가 — 어드민 게임 구역 동네 이름
+                        - 어드민 GraphQL 의 GameArea 에 placeName(String, nullable) 추가. 플레이 구역의 시도·시군구·읍면동이다 (예: 서울특별시 광진구 화양동)
+                          - AdminGame.area, AdminGameHistory.area 양쪽에 내려간다
+                        - AdminGameSummary 에 placeName(String, nullable) 추가. 게임 목록에서 바로 동네를 볼 수 있다
+                        - 기준 지점은 원형 구역이면 중심, 다각형 구역이면 무게중심이다
+                        - 커뮤니티 주소 조회를 그대로 쓰고, 찾은 이름은 좌표(약 100m 단위)별로 저장해 같은 곳은 다시 조회하지 않는다
+                          - placeName 필드 하나를 조회할 때 새로 찾는 곳은 최대 5곳이고, 3초 안에 못 찾으면 이번 응답은 null 이다. 나머지는 다음 조회에서 채워진다
+                          - 주소가 없거나 조회에 실패하면 null 이고, 실패한 곳은 10분 동안 다시 조회하지 않는다. 어드민 조회는 실패하지 않는다
+                        - **앱 영향** — 없음. 어드민 GraphQL 에만 추가했다
+
                         ## v4.0.0 업데이트 내역
 
                         ### ✨ 추가 — 술래잡기 모드
