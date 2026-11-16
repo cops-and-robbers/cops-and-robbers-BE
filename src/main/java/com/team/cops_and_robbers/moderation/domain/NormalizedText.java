@@ -5,10 +5,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 public final class NormalizedText {
 
     private static final char TOKEN_SEPARATOR = ' ';
+    private static final Set<Character.UnicodeScript> SUBSTRING_MATCH_SCRIPTS = Set.of(
+            Character.UnicodeScript.HANGUL,
+            Character.UnicodeScript.HIRAGANA,
+            Character.UnicodeScript.KATAKANA,
+            Character.UnicodeScript.HAN
+    );
 
     private final String text;
     private final int[] sourceStarts;
@@ -61,6 +68,7 @@ public final class NormalizedText {
     // leet 표기를 알파벳으로 되돌린 단어 단위 검사용 텍스트
     public static NormalizedText forWordMatch(String original) {
         List<MappedChar> chars = fold(original, 0, original.length());
+        separateSubstringScripts(chars);
         int tokenStart = skipNonWord(chars, 0);
 
         while (tokenStart < chars.size()) {
@@ -69,6 +77,17 @@ public final class NormalizedText {
             tokenStart = skipNonWord(chars, tokenEnd);
         }
         return new NormalizedText(chars);
+    }
+
+    public static boolean isSubstringMatchScript(int codePoint) {
+        return SUBSTRING_MATCH_SCRIPTS.contains(Character.UnicodeScript.of(codePoint));
+    }
+
+    // "fuck과"처럼 비속어 뒤에 붙은 한글·일본어·한자를 단어 경계로 바꿈
+    private static void separateSubstringScripts(List<MappedChar> chars) {
+        chars.replaceAll(mappedChar -> isSubstringMatchScript(mappedChar.codePoint())
+                ? mappedChar.withCodePoint(TOKEN_SEPARATOR)
+                : mappedChar);
     }
 
     public String text() {

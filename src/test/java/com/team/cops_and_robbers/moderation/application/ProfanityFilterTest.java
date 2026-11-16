@@ -40,7 +40,9 @@ class ProfanityFilterTest {
                 "ㅋㅋㅅㅂ|ㅋㅋ**",
                 "sh1t|****",
                 "a$$|***",
-                "ｆｕｃｋ|****"
+                "ｆｕｃｋ|****",
+                "fuck과 shit|****과 ****",
+                "sh1t같네|****같네"
         })
         void 기호_숫자_공백_자모_전각으로_우회한_금칙어도_바꾼다(String text, String expected) {
             assertThat(profanityFilter.mask(text)).isEqualTo(expected);
@@ -57,7 +59,10 @@ class ProfanityFilterTest {
                 "폰이 망가졌어",
                 "그거 보지 마",
                 "class assassin",
-                "costs $5 for 100"
+                "costs $5 for 100",
+                "A조 B조 C조",
+                "class에서 만나",
+                "455명"
         })
         void 금칙어가_우연히_들어간_정상_문장은_그대로_둔다(String text) {
             assertThat(profanityFilter.mask(text)).isEqualTo(text);

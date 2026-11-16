@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -19,12 +18,6 @@ import java.util.function.Function;
 public class ProfanityFilter {
 
     private static final char MASK = '*';
-    private static final Set<Character.UnicodeScript> SUBSTRING_MATCH_SCRIPTS = Set.of(
-            Character.UnicodeScript.HANGUL,
-            Character.UnicodeScript.HIRAGANA,
-            Character.UnicodeScript.KATAKANA,
-            Character.UnicodeScript.HAN
-    );
 
     private final Trie substringTrie;
     private final Trie wholeWordTrie;
@@ -98,7 +91,7 @@ public class ProfanityFilter {
     }
 
     private static boolean isSubstringMatchWord(String word) {
-        return word.codePoints().anyMatch(codePoint -> SUBSTRING_MATCH_SCRIPTS.contains(Character.UnicodeScript.of(codePoint)));
+        return word.codePoints().anyMatch(NormalizedText::isSubstringMatchScript);
     }
 
     private static List<String> normalize(List<String> words, Function<String, NormalizedText> normalizer) {
