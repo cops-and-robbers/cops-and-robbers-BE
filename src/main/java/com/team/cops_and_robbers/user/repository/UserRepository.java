@@ -4,9 +4,11 @@ import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.user.domain.SocialType;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.exception.UserException;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -52,8 +54,17 @@ public interface UserRepository extends JpaRepository<User, Long>, UserRepositor
             """)
     List<UserProfileProjection> findProfilesByIds(@Param("userIds") Collection<Long> userIds);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select u from User u where u.id = :userId")
+    Optional<User> findByUserIdForUpdate(@Param("userId") Long userId);
+
     default User getByUserId(Long userId) {
         return findById(userId)
+                .orElseThrow(() -> new ApplicationException(UserException.USER_NOT_FOUND));
+    }
+
+    default User getByUserIdForUpdate(Long userId) {
+        return findByUserIdForUpdate(userId)
                 .orElseThrow(() -> new ApplicationException(UserException.USER_NOT_FOUND));
     }
 }
