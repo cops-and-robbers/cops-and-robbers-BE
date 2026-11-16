@@ -321,6 +321,25 @@ class UserControllerTest extends ControllerTest {
         }
 
         @Test
+        void 금칙어가_포함된_닉네임이라면_isAvailable이_false여야_한다() {
+            // when
+            ExtractableResponse<Response> extract = unauthenticated()
+                    .param("nickname", "씨발경찰")
+                    .when()
+                    .get("/api/user/check-nickname")
+                    .then()
+                    .extract();
+
+            // then
+            NicknameCheckResponse response = extract.as(NicknameCheckResponse.class);
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(200);
+                softly.assertThat(response.isAvailable()).isFalse();
+                softly.assertThat(response.message()).contains("부적절한 표현");
+            });
+        }
+
+        @Test
         void 닉네임_파라미터가_누락되면_400_BAD_REQUEST를_응답해야_한다() {
             // when
             ExtractableResponse<Response> extract = unauthenticated()
@@ -434,6 +453,32 @@ class UserControllerTest extends ControllerTest {
                 softly.assertThat(extract.statusCode()).isEqualTo(400);
                 softly.assertThat(response.title()).isEqualTo(CommonException.INVALID_INPUT_VALUE.getTitle());
                 softly.assertThat(response.detail()).contains("최대 20자");
+            });
+        }
+
+        @Test
+        void 닉네임에_금칙어가_포함되면_400_BAD_REQUEST를_응답하고_닉네임을_바꾸지_않는다() {
+            // given
+            User user = givenUser();
+            String accessToken = givenAccessToken(user);
+            NicknameUpdateRequest request = new NicknameUpdateRequest("시.발경찰");
+
+            // when
+            ExtractableResponse<Response> extract = authenticated(accessToken)
+                    .body(request)
+                    .when()
+                    .patch("/api/user/me/nickname")
+                    .then()
+                    .extract();
+
+            // then
+            ErrorResponse response = extract.as(ErrorResponse.class);
+            User unchangedUser = userRepository.getByUserId(user.getId());
+            assertSoftly(softly -> {
+                softly.assertThat(extract.statusCode()).isEqualTo(400);
+                softly.assertThat(response.title()).isEqualTo(CommonException.INVALID_INPUT_VALUE.getTitle());
+                softly.assertThat(response.detail()).contains("부적절한 표현");
+                softly.assertThat(unchangedUser.getNickname()).isEqualTo(user.getNickname());
             });
         }
 
