@@ -257,6 +257,57 @@ class AdminUserResolverTest extends ControllerTest {
     }
 
     @Nested
+    @DisplayName("유저 플레이 국가 조회")
+    class PlayCountries {
+
+        @Test
+        void 끝난_게임을_플레이_구역의_국가로_묶어_센다() {
+            // given
+            User user = givenUser("countryUser");
+            Game game = gameRepository.save(GameFixture.FINISHED_GAME());
+            givenPlayed(gameResultRepository.save(GameResultFixture.POLICE_WIN_RESULT(game.getId())), user);
+            givenPlayed(gameResultRepository.save(GameResultFixture.ROBBER_WIN_RESULT(game.getId())), user);
+
+            // when
+            ExtractableResponse<Response> response = executeQuery(
+                    adminToken,
+                    "{ adminUser(id: " + user.getId() + ") { playCountries { countryCode games lastPlayedAt } } }");
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(200);
+                softly.assertThat((Object) response.jsonPath().get("errors")).isNull();
+                softly.assertThat(response.jsonPath().getList("data.adminUser.playCountries")).hasSize(1);
+                softly.assertThat(response.jsonPath().getString("data.adminUser.playCountries[0].countryCode")).isEqualTo("KR");
+                softly.assertThat(response.jsonPath().getInt("data.adminUser.playCountries[0].games")).isEqualTo(2);
+                softly.assertThat(response.jsonPath().getString("data.adminUser.playCountries[0].lastPlayedAt")).isNotNull();
+            });
+        }
+
+        @Test
+        void 끝난_게임이_없으면_빈_목록이다() {
+            // given
+            User user = givenUser("noCountryUser");
+
+            // when
+            ExtractableResponse<Response> response = executeQuery(
+                    adminToken,
+                    "{ adminUser(id: " + user.getId() + ") { playCountries { countryCode games } } }");
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(200);
+                softly.assertThat(response.jsonPath().getList("data.adminUser.playCountries")).isEmpty();
+            });
+        }
+
+        private void givenPlayed(GameResult gameResult, User user) {
+            gameResultParticipantRepository.save(GameResultParticipantFixture.POLICE_PARTICIPANT(
+                    gameResult, user.getId(), user.getNickname()));
+        }
+    }
+
+    @Nested
     @DisplayName("유저 끝난 게임 이력 조회")
     class GameHistories {
 
