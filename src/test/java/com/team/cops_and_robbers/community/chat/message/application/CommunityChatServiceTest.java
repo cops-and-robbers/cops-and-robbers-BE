@@ -95,6 +95,15 @@ class CommunityChatServiceTest extends ServiceUnitTest {
         }
 
         @Test
+        void 텍스트_메시지의_금칙어는_마스킹해서_저장한다() {
+            givenChatMember();
+
+            communityChatService.send(textCommand("key-1", "ㅅㅂ 어디야"));
+
+            assertThat(captureSavedMessage().getMessage()).isEqualTo("** 어디야");
+        }
+
+        @Test
         void 멤버가_아니면_전송할_수_없다() {
             given(communityChatMemberRepository.findSenderProfileByPostIdAndUserId(POST_ID, SENDER_ID))
                     .willReturn(Optional.empty());

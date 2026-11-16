@@ -99,6 +99,18 @@ class CommunityCommentServiceTest extends ServiceUnitTest {
         }
 
         @Test
+        void 댓글_내용의_금칙어는_마스킹해서_저장한다() {
+            givenWriter();
+            givenPost();
+            given(communityCommentRepository.save(any())).willReturn(comment(10L, null, WRITER_ID, "** 뭐야"));
+
+            communityCommentService.createComment(
+                    CommunityCommentCreateCommand.of(WRITER_ID, POST_ID, null, "씨발 뭐야"));
+
+            assertThat(captureSavedComment().getContent()).isEqualTo("** 뭐야");
+        }
+
+        @Test
         void 존재하지_않는_게시글에는_작성할_수_없다() {
             givenWriter();
             given(communityPostRepository.getByPostId(POST_ID))
