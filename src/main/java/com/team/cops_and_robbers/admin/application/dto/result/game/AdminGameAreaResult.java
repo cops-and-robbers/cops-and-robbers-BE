@@ -83,13 +83,6 @@ public record AdminGameAreaResult(
         };
     }
 
-    /**
-     * 동네 이름을 찾을 때 기준으로 쓰는 지점입니다. 원형은 중심, 다각형은 무게중심을 씁니다.
-     * 다각형은 꼭짓점 평균을 쓰면 꼭짓점이 한쪽에 몰린 구역에서 기준이 그쪽으로 치우칩니다.
-     * ㄷ자처럼 오목한 구역은 무게중심이 구역 밖에 떨어질 수 있어, 그때는 구역 안의 한 점을 씁니다.
-     *
-     * @return 좌표가 비어 있는 기록이면 null
-     */
     public AdminCoordinateResult representativePoint() {
         if (areaType == AreaType.CIRCLE) {
             if (playgroundCenterLat == null || playgroundCenterLng == null) {
@@ -103,6 +96,7 @@ public record AdminGameAreaResult(
         }
         Polygon polygon = toPolygon(playgroundPolygon);
         Point centroid = polygon.getCentroid();
+        // ㄷ자처럼 오목한 구역은 무게중심이 구역 밖에 떨어질 수 있어, 그때는 구역 안의 한 점을 쓴다
         Point point = polygon.contains(centroid) ? centroid : polygon.getInteriorPoint();
         return new AdminCoordinateResult(point.getY(), point.getX());
     }

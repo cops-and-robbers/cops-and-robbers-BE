@@ -136,9 +136,6 @@ public class AdminGameService {
                 ));
     }
 
-    /**
-     * 게임 목록에는 구역 필드가 없어 동네 이름을 붙일 때 따로 구역을 조회합니다.
-     */
     public Map<AdminGameSummaryResult, AdminGameAreaResult> getAreasByGameSummary(List<AdminGameSummaryResult> games) {
         List<Long> gameIds = games.stream().map(AdminGameSummaryResult::id).toList();
         Map<Long, AdminGameAreaResult> areaByGameId = findAreaByGameId(gameIds);

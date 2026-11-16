@@ -15,10 +15,7 @@ public interface AreaPlaceNameRepository extends JpaRepository<AreaPlaceName, Lo
 
     List<AreaPlaceName> findByCoordinateKeyIn(Collection<String> coordinateKeys);
 
-    /**
-     * 같은 곳을 동시에 처음 보면 같은 키가 두 번 들어올 수 있어, 이미 있으면 먼저 들어간 이름을 남깁니다.
-     * save 로 넣으면 중복 키 예외가 에러 로그로 남아 실제 장애와 구분되지 않습니다.
-     */
+    // save 로 넣으면 동시에 들어온 같은 키가 중복 키 에러 로그로 남아 실제 장애와 구분되지 않는다
     @Transactional
     @Modifying
     @Query(value = """
