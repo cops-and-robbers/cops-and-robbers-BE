@@ -12,6 +12,7 @@ import com.team.cops_and_robbers.community.comment.domain.CommunityComment;
 import com.team.cops_and_robbers.community.comment.exception.CommunityCommentException;
 import com.team.cops_and_robbers.community.comment.repository.CommunityCommentRepository;
 import com.team.cops_and_robbers.community.post.repository.CommunityPostRepository;
+import com.team.cops_and_robbers.moderation.application.ProfanityFilter;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class CommunityCommentService {
     private final CommunityCommentRepository communityCommentRepository;
     private final CommunityPostRepository communityPostRepository;
     private final UserRepository userRepository;
+    private final ProfanityFilter profanityFilter;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -46,7 +48,7 @@ public class CommunityCommentService {
                         command.postId(),
                         command.parentId(),
                         command.writerId(),
-                        command.content()
+                        profanityFilter.mask(command.content())
                 )
         );
         eventPublisher.publishEvent(new CommunityCommentCreatedEvent(saved));

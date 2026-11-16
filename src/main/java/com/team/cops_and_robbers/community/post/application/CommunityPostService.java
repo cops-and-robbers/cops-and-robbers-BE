@@ -32,6 +32,7 @@ import com.team.cops_and_robbers.community.post.repository.CommunityPostReposito
 import com.team.cops_and_robbers.community.reaction.application.dto.CommunityPostReactionCounts;
 import com.team.cops_and_robbers.community.reaction.repository.CommunityPostLikeRepository;
 import com.team.cops_and_robbers.community.reaction.repository.CommunityPostScrapRepository;
+import com.team.cops_and_robbers.moderation.application.ProfanityFilter;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -62,6 +63,7 @@ public class CommunityPostService {
     private final CommunityPostNotificationSettingRepository communityPostNotificationSettingRepository;
     private final UserRepository userRepository;
     private final GeocodingClient geocodingClient;
+    private final ProfanityFilter profanityFilter;
     private final Clock clock;
 
     @Transactional
@@ -70,7 +72,8 @@ public class CommunityPostService {
         User writer = userRepository.getByUserId(command.writerId());
 
         PostAddress postAddress = resolveAddress(command.latitude(), command.longitude());
-        CommunityPost post = communityPostRepository.save(CommunityPost.createPost(command, postAddress));
+        CommunityPost post = communityPostRepository.save(
+                CommunityPost.createPost(command.withMaskedText(profanityFilter::mask), postAddress));
         communityChatMemberRepository.save(CommunityChatMember.createMember(post.getId(), command.writerId()));
         return CommunityPostResult.from(post, writer, true, CommunityPostReactionCounts.EMPTY);
     }
@@ -122,7 +125,7 @@ public class CommunityPostService {
         User writer = userRepository.getByUserId(command.writerId());
 
         PostAddress postAddress = resolveUpdatedAddress(post, command);
-        post.updatePost(command, postAddress);
+        post.updatePost(command.withMaskedText(profanityFilter::mask), postAddress);
         return CommunityPostResult.from(
                 post, writer, true, reactionCountsFor(post.getId(), command.writerId()));
     }
