@@ -10,6 +10,7 @@ import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateComm
 import com.team.cops_and_robbers.user.application.dto.command.ProfileIconUpdateCommand;
 import com.team.cops_and_robbers.user.application.dto.result.CommunityPushAgreementResult;
 import com.team.cops_and_robbers.user.application.dto.result.GamePushAgreementResult;
+import com.team.cops_and_robbers.user.application.dto.result.NicknameAvailability;
 import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.presentation.dto.request.AgreementRequest;
@@ -63,8 +64,8 @@ public class UserController implements UserControllerDocs {
      */
     @GetMapping("/check-nickname")
     public ResponseEntity<NicknameCheckResponse> checkDuplicate(@RequestParam String nickname) {
-        boolean isDuplicated = userService.isDuplicate(nickname);
-        return ResponseEntity.ok().body(NicknameCheckResponse.from(isDuplicated));
+        NicknameAvailability availability = userService.checkNicknameAvailability(nickname);
+        return ResponseEntity.ok().body(NicknameCheckResponse.from(availability));
     }
 
     /**

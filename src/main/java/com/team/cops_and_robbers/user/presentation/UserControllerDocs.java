@@ -41,7 +41,7 @@ public interface UserControllerDocs {
     ResponseEntity<UserGameInfoResponse> getUserGameInfo(@Parameter(hidden = true) LoginUser loginUser);
 
     @Operation(summary = "닉네임 중복 확인",
-            description = "닉네임 변경 전, 해당 닉네임이 이미 사용 중인지 확인합니다. (쿼리 파라미터로 요청)"
+            description = "닉네임 변경 전, 해당 닉네임이 이미 사용 중이거나 부적절한 표현을 포함하는지 확인합니다. (쿼리 파라미터로 요청)"
     )
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {

@@ -16,6 +16,7 @@ import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.history.repository.GameResultParticipantRepository;
 import com.team.cops_and_robbers.history.repository.GameResultRepository;
+import com.team.cops_and_robbers.moderation.application.ProfanityFilter;
 import com.team.cops_and_robbers.user.application.dto.command.AgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.CommunityPushAgreementCommand;
 import com.team.cops_and_robbers.user.application.dto.command.GamePushAgreementCommand;
@@ -23,6 +24,7 @@ import com.team.cops_and_robbers.user.application.dto.command.NicknameUpdateComm
 import com.team.cops_and_robbers.user.application.dto.command.ProfileIconUpdateCommand;
 import com.team.cops_and_robbers.user.application.dto.result.CommunityPushAgreementResult;
 import com.team.cops_and_robbers.user.application.dto.result.GamePushAgreementResult;
+import com.team.cops_and_robbers.user.application.dto.result.NicknameAvailability;
 import com.team.cops_and_robbers.user.application.dto.result.UserGameInfoResult;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.exception.UserException;
@@ -56,6 +58,7 @@ public class UserService {
     private final GameResultRepository gameResultRepository;
     private final GameResultParticipantRepository gameResultParticipantRepository;
     private final CommunityPostRepository communityPostRepository;
+    private final ProfanityFilter profanityFilter;
 
     @Transactional(readOnly = true)
     public User getUserInfo(Long loginUserId) {
@@ -89,8 +92,14 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public boolean isDuplicate(String nickname) {
-        return userRepository.existsByNickname(nickname);
+    public NicknameAvailability checkNicknameAvailability(String nickname) {
+        if (profanityFilter.containsBannedWord(nickname)) {
+            return NicknameAvailability.BANNED_WORD;
+        }
+        if (userRepository.existsByNickname(nickname)) {
+            return NicknameAvailability.DUPLICATED;
+        }
+        return NicknameAvailability.AVAILABLE;
     }
 
     @Transactional

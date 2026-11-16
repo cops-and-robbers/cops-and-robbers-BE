@@ -1,5 +1,6 @@
 package com.team.cops_and_robbers.user.presentation.dto.response;
 
+import com.team.cops_and_robbers.user.application.dto.result.NicknameAvailability;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record NicknameCheckResponse(
@@ -8,21 +9,11 @@ public record NicknameCheckResponse(
         @Schema(description = "결과 메시지", example = "이미 사용 중인 닉네임입니다.")
         String message
 ) {
-    public static NicknameCheckResponse from(boolean isDuplicated) {
-        return isDuplicated ? unavailable() : available();
-    }
-
-    private static NicknameCheckResponse available() {
-        return new NicknameCheckResponse(
-                true,
-                "사용 가능한 닉네임 입니다!"
-        );
-    }
-
-    private static NicknameCheckResponse unavailable() {
-        return new NicknameCheckResponse(
-                false,
-                "이미 사용 중인 닉네임입니다."
-        );
+    public static NicknameCheckResponse from(NicknameAvailability availability) {
+        return switch (availability) {
+            case AVAILABLE -> new NicknameCheckResponse(true, "사용 가능한 닉네임 입니다!");
+            case DUPLICATED -> new NicknameCheckResponse(false, "이미 사용 중인 닉네임입니다.");
+            case BANNED_WORD -> new NicknameCheckResponse(false, "닉네임에 부적절한 표현이 포함되어 있습니다.");
+        };
     }
 }
