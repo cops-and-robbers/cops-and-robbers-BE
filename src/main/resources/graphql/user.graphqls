@@ -42,7 +42,14 @@ type AdminUser {
   device: UserDevice
   participations: [GameParticipation!]!
   radioSeconds: Int!
+  playCountries: [PlayCountry!]!
   gameHistories(limit: Int = 20): [UserGameHistory!]!
+}
+
+type PlayCountry {
+  countryCode: String
+  games: Int!
+  lastPlayedAt: String
 }
 
 enum TermsType {

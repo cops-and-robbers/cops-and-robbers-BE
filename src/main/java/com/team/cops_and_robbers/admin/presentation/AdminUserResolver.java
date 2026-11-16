@@ -1,9 +1,11 @@
 package com.team.cops_and_robbers.admin.presentation;
 
+import com.team.cops_and_robbers.admin.application.AdminPlaceNameService;
 import com.team.cops_and_robbers.admin.application.AdminUserService;
 import com.team.cops_and_robbers.admin.application.dto.SortDirection;
 import com.team.cops_and_robbers.admin.application.dto.command.user.AdminTermsResetCommand;
 import com.team.cops_and_robbers.admin.application.dto.command.user.AdminUserListCommand;
+import com.team.cops_and_robbers.admin.application.dto.result.user.AdminPlayCountryResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.AdminTermsResetPreviewResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.AdminTermsResetResult;
 import com.team.cops_and_robbers.admin.application.dto.result.user.AdminUserPageResult;
@@ -35,6 +37,7 @@ import java.util.Map;
 public class AdminUserResolver {
 
     private final AdminUserService adminUserService;
+    private final AdminPlaceNameService adminPlaceNameService;
 
     @QueryMapping
     public AdminUserPageResult adminUsers(
@@ -83,6 +86,11 @@ public class AdminUserResolver {
     @BatchMapping(typeName = "AdminUser", field = "radioSeconds")
     public Map<AdminUserResult, Long> radioSeconds(List<AdminUserResult> users) {
         return adminUserService.getRadioSecondsByUsers(users);
+    }
+
+    @BatchMapping(typeName = "AdminUser", field = "playCountries")
+    public Map<AdminUserResult, List<AdminPlayCountryResult>> playCountries(List<AdminUserResult> users) {
+        return adminPlaceNameService.getPlayCountriesByUser(users);
     }
 
     @SchemaMapping(typeName = "AdminUser", field = "gameHistories")

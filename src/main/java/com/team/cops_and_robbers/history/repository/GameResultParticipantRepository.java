@@ -48,6 +48,14 @@ public interface GameResultParticipantRepository extends JpaRepository<GameResul
     List<GameResultParticipant> findLatestCompletedByUserId(@Param("userId") Long userId, Pageable pageable);
 
     @Query("""
+            select p from GameResultParticipant p
+            join fetch p.gameResult r
+            where p.userId in :userIds
+            and r.endReason is not null
+            """)
+    List<GameResultParticipant> findCompletedWithResultByUserIdIn(@Param("userIds") List<Long> userIds);
+
+    @Query("""
             select p.userId as userId, sum(p.radioSeconds) as radioSeconds
             from GameResultParticipant p
             where p.userId in :userIds
