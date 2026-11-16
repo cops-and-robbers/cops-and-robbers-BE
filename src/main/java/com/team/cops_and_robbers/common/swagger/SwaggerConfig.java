@@ -30,8 +30,27 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("4.1.0")
+                .version("4.2.0")
                 .description("""
+                        ## v4.2.0 업데이트 내역
+
+                        ### ✨ 추가 — 욕설 필터링
+                        - 한국어, 일본어, 영어 금칙어를 언어 구분 없이 검사한다
+                          - 기호·숫자 끼워 넣기(시.발), 띄어쓰기(시 발), 자모 풀어 쓰기(ㅅㅣㅂㅏㄹ), 전각, leet(sh1t) 우회도 잡는다
+                          - 금칙어가 들어간 정상 단어(시발점, 시바견 등)는 걸러내지 않는다
+                        - 닉네임 변경 PATCH /api/user/me/nickname
+                          - 금칙어가 있으면 400 INVALID_INPUT_VALUE (detail "nickname: 닉네임에 부적절한 표현이 포함되어 있습니다.")
+                        - 닉네임 확인 GET /api/user/check-nickname
+                          - 금칙어가 있으면 isAvailable false, message "닉네임에 부적절한 표현이 포함되어 있습니다."
+                          - 응답 형식은 그대로다
+                        - 아래 텍스트는 금칙어를 같은 길이의 * 로 바꿔 저장하거나 전송한다 (에러 없음)
+                          - 커뮤니티 게시글 작성·수정의 title, content, placeName
+                          - 커뮤니티 댓글, 커뮤니티 채팅(TEXT), 고정 채팅
+                          - 인게임 채팅
+                          - 게임 초대 메시지(GAME_INVITE)는 바꾸지 않는다
+                        - 이미 저장된 닉네임, 게시글, 댓글에는 적용하지 않는다
+                        - **앱 영향** — 닉네임 확인 문구가 하나 늘어난다. 그 외 바꿀 것은 없다
+
                         ## v4.1.0 업데이트 내역
 
                         ### ✨ 추가 — 어드민 게임 구역 동네 이름
