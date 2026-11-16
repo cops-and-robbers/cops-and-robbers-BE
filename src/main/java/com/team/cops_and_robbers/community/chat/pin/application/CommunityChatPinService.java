@@ -17,6 +17,7 @@ import com.team.cops_and_robbers.community.chat.pin.domain.CommunityChatPin;
 import com.team.cops_and_robbers.community.chat.pin.repository.CommunityChatPinRepository;
 import com.team.cops_and_robbers.community.post.domain.CommunityPost;
 import com.team.cops_and_robbers.community.post.repository.CommunityPostRepository;
+import com.team.cops_and_robbers.moderation.application.ProfanityFilter;
 import com.team.cops_and_robbers.user.domain.User;
 import com.team.cops_and_robbers.user.repository.UserProfileProjection;
 import com.team.cops_and_robbers.user.repository.UserRepository;
@@ -36,6 +37,7 @@ public class CommunityChatPinService {
     private final CommunityChatMessageRepository communityChatMessageRepository;
     private final CommunityChatSystemMessageFactory communityChatSystemMessageFactory;
     private final UserRepository userRepository;
+    private final ProfanityFilter profanityFilter;
     private final ApplicationEventPublisher eventPublisher;
 
     /**
@@ -49,7 +51,7 @@ public class CommunityChatPinService {
 
         communityChatPinRepository.deleteByCommunityPostId(command.postId());
         CommunityChatPin pin = communityChatPinRepository.save(
-                CommunityChatPin.createPin(command.postId(), command.userId(), command.content()));
+                CommunityChatPin.createPin(command.postId(), command.userId(), profanityFilter.mask(command.content())));
 
         User host = userRepository.getByUserId(command.userId());
         CommunityChatMessage systemMessage = communityChatMessageRepository.save(
@@ -65,7 +67,7 @@ public class CommunityChatPinService {
         validateHost(post, command.userId());
 
         CommunityChatPin pin = getPin(command.postId());
-        pin.updateContent(command.content());
+        pin.updateContent(profanityFilter.mask(command.content()));
 
         User host = userRepository.getByUserId(command.userId());
         CommunityChatMessage systemMessage = communityChatMessageRepository.save(

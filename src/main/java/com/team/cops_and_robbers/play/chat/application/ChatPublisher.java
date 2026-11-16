@@ -4,6 +4,7 @@ import com.team.cops_and_robbers.common.constant.RedisChannel;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.exception.GameParticipantException;
+import com.team.cops_and_robbers.moderation.application.ProfanityFilter;
 import com.team.cops_and_robbers.play.chat.application.dto.ChatCommand;
 import com.team.cops_and_robbers.play.chat.domain.ChatMessage;
 import com.team.cops_and_robbers.play.chat.domain.ChatScope;
@@ -24,6 +25,7 @@ public class ChatPublisher {
     private final RedisTemplate<String, Object> redisTemplate;
     private final InGameParticipantCacheRepository inGameParticipantCacheRepository;
     private final GameFcmNotifier gameFcmNotifier;
+    private final ProfanityFilter profanityFilter;
 
     /**
      * 1. 채팅 메세지를 받아 적절한 토픽에 라우팅
@@ -32,7 +34,8 @@ public class ChatPublisher {
         InGameParticipantCache participant = inGameParticipantCacheRepository.findByParticipantId(command.gameId(), command.participantId())
                 .orElseThrow(() -> new ApplicationException(GameParticipantException.PARTICIPANT_NOT_FOUND));
         ChatSender sender = ChatSender.of(command.participantId(), participant.nickname(), participant.team());
-        ChatMessage chatMessage = ChatMessage.of(command.gameId(), sender, command.message(), command.scope());
+        ChatMessage chatMessage = ChatMessage.of(
+                command.gameId(), sender, profanityFilter.mask(command.message()), command.scope());
 
         RedisChannel targetChannel = routeTopic(command.scope(), participant.team());
         String destinationTopic = targetChannel.getTopic(command.gameId());

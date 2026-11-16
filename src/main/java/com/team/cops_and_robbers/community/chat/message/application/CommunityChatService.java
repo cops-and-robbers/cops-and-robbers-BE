@@ -15,6 +15,7 @@ import com.team.cops_and_robbers.community.chat.message.application.dto.command.
 import com.team.cops_and_robbers.community.chat.message.application.dto.command.CommunityChatSendCommand;
 import com.team.cops_and_robbers.community.chat.message.application.dto.result.CommunityChatHistoryResult;
 import com.team.cops_and_robbers.community.chat.message.application.dto.result.CommunityChatMessageResult;
+import com.team.cops_and_robbers.moderation.application.ProfanityFilter;
 import com.team.cops_and_robbers.user.exception.UserException;
 import com.team.cops_and_robbers.user.repository.UserProfileProjection;
 import com.team.cops_and_robbers.user.repository.UserRepository;
@@ -42,6 +43,7 @@ public class CommunityChatService {
     private final CommunityChatMemberRepository communityChatMemberRepository;
     private final CommunityChatMessageRepository communityChatMessageRepository;
     private final UserRepository userRepository;
+    private final ProfanityFilter profanityFilter;
     private final ApplicationEventPublisher eventPublisher;
     private final ObjectMapper objectMapper;
 
@@ -131,7 +133,7 @@ public class CommunityChatService {
         if (command.messageType() == CommunityChatMessageType.GAME_INVITE) {
             return serialize(validatedInvite(command.gameInvite()));
         }
-        return validatedText(command.message());
+        return profanityFilter.mask(validatedText(command.message()));
     }
 
     private String validatedText(String message) {
