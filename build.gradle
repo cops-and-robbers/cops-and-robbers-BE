@@ -75,6 +75,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
 
+    // profanity filter
+    implementation 'org.ahocorasick:ahocorasick:0.6.3'
+
     // p6spy (local SQL logging)
     implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.2'
 }
