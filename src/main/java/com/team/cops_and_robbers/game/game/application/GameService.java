@@ -61,7 +61,7 @@ public class GameService {
 
     @Transactional
     public GameCreateResult createGame(GameCreateCommand command) {
-        User host = userRepository.getByUserId(command.hostUserId());
+        User host = userRepository.getByUserIdForUpdate(command.hostUserId());
         if (gameParticipantRepository.existsActiveGameByUserId(host.getId())) {
             throw new ApplicationException(GameParticipantException.ALREADY_PARTICIPATING);
         }

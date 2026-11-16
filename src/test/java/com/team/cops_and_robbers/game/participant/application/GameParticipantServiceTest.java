@@ -118,7 +118,7 @@ class GameParticipantServiceTest extends ServiceUnitTest {
             given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(waitingGame);
             given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(false);
             given(gameParticipantRepository.countByGameId(waitingGame.getId())).willReturn(0);
-            given(userRepository.getByUserId(user.getId())).willReturn(user);
+            given(userRepository.getByUserIdForUpdate(user.getId())).willReturn(user);
             given(gameParticipantRepository.save(any(GameParticipant.class))).willReturn(guestParticipant);
             given(lobbyEventFactory.createEnterEvent(any(), any(GameParticipant.class), anyInt(), anyInt())).willReturn(lobbyEvent);
 
@@ -191,7 +191,7 @@ class GameParticipantServiceTest extends ServiceUnitTest {
 
                 given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(eventGame);
                 given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(false);
-                given(userRepository.getByUserId(user.getId())).willReturn(user);
+                given(userRepository.getByUserIdForUpdate(user.getId())).willReturn(user);
                 given(gameParticipantRepository.save(any(GameParticipant.class))).willReturn(eventPolice);
 
                 // when
@@ -215,7 +215,7 @@ class GameParticipantServiceTest extends ServiceUnitTest {
 
                 given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(eventGame);
                 given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(false);
-                given(userRepository.getByUserId(user.getId())).willReturn(user);
+                given(userRepository.getByUserIdForUpdate(user.getId())).willReturn(user);
                 given(gameParticipantRepository.save(any(GameParticipant.class))).willReturn(eventPolice);
                 given(gameParticipantRepository.findCacheProjectionById(any())).willReturn(Optional.of(projection));
 
@@ -236,7 +236,7 @@ class GameParticipantServiceTest extends ServiceUnitTest {
 
                 given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(eventGame);
                 given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(false);
-                given(userRepository.getByUserId(user.getId())).willReturn(user);
+                given(userRepository.getByUserIdForUpdate(user.getId())).willReturn(user);
                 given(gameParticipantRepository.save(any(GameParticipant.class))).willReturn(eventPolice);
                 given(gameParticipantRepository.findCacheProjectionById(any())).willReturn(Optional.empty());
 
