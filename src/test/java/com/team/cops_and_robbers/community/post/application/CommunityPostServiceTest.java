@@ -82,6 +82,27 @@ class CommunityPostServiceTest extends ServiceUnitTest {
         }
 
         @Test
+        void 제목_내용_장소명의_금칙어는_마스킹해서_저장한다() {
+            CommunityPost post = POST(1L);
+            setId(post, 1L);
+            given(userRepository.getByUserId(1L)).willReturn(USER());
+            given(geocodingClient.reverseGeocode(37.4979, 127.0276)).willReturn(GeocodingResult.resolved(PostAddress.of(
+                            "서울특별시 광진구 화양동 1-20", "서울특별시 광진구 능동로 216", null,
+                            "서울특별시 광진구 화양동", "KR")));
+            given(communityPostRepository.save(any())).willReturn(post);
+
+            communityPostService.createPost(
+                    new CommunityPostCreateCommand(1L, "씨발 같이 하실 분", "병신 말고 와주세요",
+                            LocalDateTime.now().plusDays(3), 37.4979, 127.0276, "fuck 공원", 6));
+
+            ArgumentCaptor<CommunityPost> captor = ArgumentCaptor.forClass(CommunityPost.class);
+            then(communityPostRepository).should().save(captor.capture());
+            assertThat(captor.getValue().getTitle()).isEqualTo("** 같이 하실 분");
+            assertThat(captor.getValue().getContent()).isEqualTo("** 말고 와주세요");
+            assertThat(captor.getValue().getPlaceName()).isEqualTo("**** 공원");
+        }
+
+        @Test
         void 게시글을_생성하면_작성자가_채팅방_멤버로_자동_등록된다() {
             CommunityPost post = POST(1L);
             setId(post, 1L);
@@ -531,6 +552,25 @@ class CommunityPostServiceTest extends ServiceUnitTest {
             assertThat(result.title()).isEqualTo("수정된 제목");
             assertThat(result.content()).isEqualTo("수정된 내용");
             assertThat(result.maxParticipants()).isEqualTo(8);
+        }
+
+        @Test
+        void 수정한_제목_내용_장소명의_금칙어는_마스킹해서_반영한다() {
+            CommunityPost post = POST(1L);
+            setId(post, 1L);
+            given(communityPostRepository.getByPostId(1L)).willReturn(post);
+            given(userRepository.getByUserId(1L)).willReturn(USER());
+            given(geocodingClient.reverseGeocode(37.5665, 126.9780)).willReturn(GeocodingResult.resolved(PostAddress.of(
+                            "서울특별시 광진구 화양동 1-20", "서울특별시 광진구 능동로 216", null,
+                            "서울특별시 광진구 화양동", "KR")));
+
+            communityPostService.updatePost(
+                    new CommunityPostUpdateCommand(1L, 1L, "씨발 수정", "병신 수정",
+                            LocalDateTime.now().plusDays(5), 37.5665, 126.9780, "fuck 공원", 8));
+
+            assertThat(post.getTitle()).isEqualTo("** 수정");
+            assertThat(post.getContent()).isEqualTo("** 수정");
+            assertThat(post.getPlaceName()).isEqualTo("**** 공원");
         }
 
         @Test

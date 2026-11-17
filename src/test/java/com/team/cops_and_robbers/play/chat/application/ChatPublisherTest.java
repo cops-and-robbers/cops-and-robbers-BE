@@ -96,6 +96,27 @@ class ChatPublisherTest extends ServiceUnitTest {
         }
 
         @Test
+        void 금칙어는_마스킹해서_발행하고_FCM_알림에도_마스킹된_메시지를_보낸다() {
+            // given
+            givenSenderInCache(Team.POLICE);
+            ChatCommand command = new ChatCommand(
+                    TEST_GAME_ID, SENDER_USER_ID, SENDER_PARTICIPANT_ID, "씨발 어디야", ChatScope.ALL);
+
+            // when
+            chatPublisher.processAndRouteMessage(command);
+
+            // then
+            ArgumentCaptor<Object> published = ArgumentCaptor.forClass(Object.class);
+            then(redisTemplate).should().convertAndSend(any(String.class), published.capture());
+            ArgumentCaptor<ChatMessage> notified = ArgumentCaptor.forClass(ChatMessage.class);
+            then(gameFcmNotifier).should().notifyChatMessage(notified.capture());
+            assertSoftly(softly -> {
+                softly.assertThat(((ChatMessage) published.getValue()).message()).isEqualTo("** 어디야");
+                softly.assertThat(notified.getValue().message()).isEqualTo("** 어디야");
+            });
+        }
+
+        @Test
         void 캐시에_없는_참가자는_예외가_나고_FCM도_보내지_않는다() {
             // given
             given(inGameParticipantCacheRepository.findByParticipantId(TEST_GAME_ID, SENDER_PARTICIPANT_ID))

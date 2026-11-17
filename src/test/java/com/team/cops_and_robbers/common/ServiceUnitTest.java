@@ -18,6 +18,8 @@ import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.history.repository.GameResultParticipantRepository;
 import com.team.cops_and_robbers.history.repository.GameResultRepository;
+import com.team.cops_and_robbers.moderation.application.ProfanityFilter;
+import com.team.cops_and_robbers.moderation.infrastructure.BannedWordLoader;
 import com.team.cops_and_robbers.notice.repository.NoticeRepository;
 import com.team.cops_and_robbers.notice.repository.NoticeTranslationRepository;
 import com.team.cops_and_robbers.report.repository.AdminReportQueryRepository;
@@ -28,11 +30,17 @@ import com.team.cops_and_robbers.user.repository.UserDeviceRepository;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 public abstract class ServiceUnitTest {
+
+    private static final ProfanityFilter PROFANITY_FILTER = new ProfanityFilter(new BannedWordLoader());
+
+    @Spy
+    protected ProfanityFilter profanityFilter = PROFANITY_FILTER;
 
     @Mock
     protected GameRepository gameRepository;

@@ -115,6 +115,19 @@ class CommunityChatPinServiceTest extends ServiceUnitTest {
         }
 
         @Test
+        void 등록_내용의_금칙어는_마스킹해서_저장한다() {
+            given(communityPostRepository.getByPostId(POST_ID)).willReturn(givenPost());
+            given(userRepository.getByUserId(AUTHOR_ID)).willReturn(USER());
+            givenSaveEchoesArgument();
+            givenRegisteredMessage();
+
+            CommunityChatPinResult result = communityChatPinService.register(
+                    CommunityChatPinRegisterCommand.of(AUTHOR_ID, POST_ID, "씨발 늦지 마세요"));
+
+            assertThat(result.content()).isEqualTo("** 늦지 마세요");
+        }
+
+        @Test
         void 이미_등록된_것이_있으면_삭제_후_새로_등록한다() {
             given(communityPostRepository.getByPostId(POST_ID)).willReturn(givenPost());
             given(userRepository.getByUserId(AUTHOR_ID)).willReturn(USER());
@@ -159,6 +172,20 @@ class CommunityChatPinServiceTest extends ServiceUnitTest {
             assertThat(result.content()).isEqualTo("바뀐 내용");
             then(communityChatMessageRepository).should().save(any(CommunityChatMessage.class));
             then(eventPublisher).should(times(2)).publishEvent(any(Object.class));
+        }
+
+        @Test
+        void 수정_내용의_금칙어는_마스킹해서_반영한다() {
+            CommunityChatPin pin = CommunityChatPin.createPin(POST_ID, AUTHOR_ID, "기존 내용");
+            stampTimestamps(pin);
+            given(communityPostRepository.getByPostId(POST_ID)).willReturn(givenPost());
+            given(communityChatPinRepository.findByCommunityPostId(POST_ID)).willReturn(Optional.of(pin));
+            given(userRepository.getByUserId(AUTHOR_ID)).willReturn(USER());
+            givenUpdatedMessage();
+
+            communityChatPinService.update(CommunityChatPinUpdateCommand.of(AUTHOR_ID, POST_ID, "병신들 모여"));
+
+            assertThat(pin.getContent()).isEqualTo("**들 모여");
         }
 
         @Test

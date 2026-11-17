@@ -1,0 +1,5 @@
+ko.txt, ja.txt, en.txt의 "LDNOOBW" 구간은 아래 목록에서 일부 단어를 빼고 가져왔다.
+
+List of Dirty, Naughty, Obscene, and Otherwise Bad Words
+https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words
+Licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
