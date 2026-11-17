@@ -12,6 +12,9 @@ import com.team.cops_and_robbers.user.presentation.dto.request.ProfileIconUpdate
 import com.team.cops_and_robbers.user.presentation.dto.response.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -45,7 +48,33 @@ public interface UserControllerDocs {
     )
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "확인 완료")
+            @ApiResponse(responseCode = "200", description = "확인 완료",
+                    content = @Content(
+                            schema = @Schema(implementation = NicknameCheckResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "AVAILABLE",
+                                            summary = "사용 가능",
+                                            value = """
+                                                    {"isAvailable": true, "code": "AVAILABLE", "message": "사용 가능한 닉네임 입니다!"}
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "DUPLICATED_NICKNAME",
+                                            summary = "이미 사용 중",
+                                            value = """
+                                                    {"isAvailable": false, "code": "DUPLICATED_NICKNAME", "message": "이미 사용 중인 닉네임입니다."}
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "BANNED_WORD_NICKNAME",
+                                            summary = "금칙어 포함 — 이미 쓰는 닉네임이어도 이 결과",
+                                            value = """
+                                                    {"isAvailable": false, "code": "BANNED_WORD_NICKNAME", "message": "닉네임에 부적절한 표현이 포함되어 있습니다."}
+                                                    """
+                                    )
+                            }
+                    ))
     })
     ResponseEntity<NicknameCheckResponse> checkDuplicate(
             @Parameter(description = "확인할 닉네임", required = true, example = "민첩한괴도5308")
