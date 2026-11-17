@@ -296,6 +296,8 @@ class UserControllerTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
                 softly.assertThat(response.isAvailable()).isFalse();
+                softly.assertThat(extract.jsonPath().getString("code")).isEqualTo("DUPLICATED_NICKNAME");
+                softly.assertThat(response.message()).isEqualTo("이미 사용 중인 닉네임입니다.");
             });
         }
 
@@ -317,6 +319,8 @@ class UserControllerTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
                 softly.assertThat(response.isAvailable()).isTrue();
+                softly.assertThat(extract.jsonPath().getString("code")).isEqualTo("AVAILABLE");
+                softly.assertThat(response.message()).isEqualTo("사용 가능한 닉네임 입니다!");
             });
         }
 
@@ -335,7 +339,8 @@ class UserControllerTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(extract.statusCode()).isEqualTo(200);
                 softly.assertThat(response.isAvailable()).isFalse();
-                softly.assertThat(response.message()).contains("부적절한 표현");
+                softly.assertThat(extract.jsonPath().getString("code")).isEqualTo("BANNED_WORD_NICKNAME");
+                softly.assertThat(response.message()).isEqualTo("닉네임에 부적절한 표현이 포함되어 있습니다.");
             });
         }
 
