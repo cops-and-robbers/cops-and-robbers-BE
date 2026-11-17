@@ -30,8 +30,19 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("4.2.0")
+                .version("4.3.0")
                 .description("""
+                        ## v4.3.0 업데이트 내역
+
+                        ### ✨ 추가 — 닉네임 확인 결과 코드
+                        - 닉네임 확인 GET /api/user/check-nickname 응답에 code(String) 추가
+                          - 사용 가능 — isAvailable true, code "AVAILABLE"
+                          - 이미 사용 중 — isAvailable false, code "DUPLICATED_NICKNAME"
+                          - 금칙어 포함 — isAvailable false, code "BANNED_WORD_NICKNAME"
+                        - 금칙어 검사가 중복 검사보다 먼저다. 금칙어가 있으면 이미 쓰는 닉네임이어도 BANNED_WORD_NICKNAME 이다
+                        - isAvailable, message 는 그대로다
+                        - **앱 영향** — code 로 금칙어와 중복을 구분해 ko·en·ja 문구를 직접 보여 줄 수 있다. code 를 읽지 않는 이전 앱은 그대로 동작한다
+
                         ## v4.2.0 업데이트 내역
 
                         ### ✨ 추가 — 욕설 필터링
