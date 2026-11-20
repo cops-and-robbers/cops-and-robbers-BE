@@ -1,0 +1,49 @@
+server {
+    listen 80;
+    server_name ${DOMAIN};
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${DOMAIN};
+
+    ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    # Grafana 컨테이너를 다시 만들면 IP가 바뀌므로 매번 docker DNS로 조회
+    resolver 127.0.0.11 valid=10s;
+    set $grafana http://grafana:3000;
+
+    location / {
+        proxy_pass $grafana;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Grafana Live (웹소켓)
+    location /api/live/ {
+        proxy_pass $grafana;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+    }
+}
+
+# IP로 직접 들어오거나 다른 이름이면 끊는다
+server {
+    listen 443 ssl default_server;
+    ssl_reject_handshake on;
+}
