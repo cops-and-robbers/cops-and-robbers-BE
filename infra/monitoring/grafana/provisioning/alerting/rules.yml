@@ -1,0 +1,217 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: 운영 BE
+    folder: 알림
+    interval: 1m
+    rules:
+      - uid: prod-be-down
+        title: 운영 BE 다운
+        condition: C
+        for: 2m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: critical}
+        annotations:
+          summary: 운영 BE blue·green 둘 다 응답 없음
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: max(up{job="be",env="prod"})
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions: [{evaluator: {type: lt, params: [1]}}]
+
+      - uid: prod-be-5xx
+        title: 운영 BE 5xx 비율
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: critical}
+        annotations:
+          summary: '운영 BE 5xx 비율 {{ humanizePercentage .Values.A.Value }} (기준 5%)'
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: sum(rate(http_server_requests_seconds_count{env="prod",status=~"5.."}[5m])) / sum(rate(http_server_requests_seconds_count{env="prod"}[5m]))
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions: [{evaluator: {type: gt, params: [0.05]}}]
+
+      - uid: prod-be-heap
+        title: 운영 BE 힙
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: critical}
+        annotations:
+          summary: '운영 BE Old Gen 힙 {{ humanizePercentage .Values.A.Value }} (기준 85%)'
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: max(jvm_memory_used_bytes{env="prod",id="G1 Old Gen"} / jvm_memory_max_bytes{env="prod",id="G1 Old Gen"})
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions: [{evaluator: {type: gt, params: [0.85]}}]
+
+  - orgId: 1
+    name: 운영 호스트
+    folder: 알림
+    interval: 1m
+    rules:
+      - uid: prod-host-cpu
+        title: 운영 호스트 CPU
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: critical}
+        annotations:
+          summary: '운영 호스트 CPU {{ humanizePercentage .Values.A.Value }} (기준 85%)'
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: max(1 - avg by (instance) (rate(node_cpu_seconds_total{env="prod",mode="idle"}[5m])))
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions: [{evaluator: {type: gt, params: [0.85]}}]
+
+      - uid: prod-host-mem
+        title: 운영 호스트 메모리
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: critical}
+        annotations:
+          summary: '운영 호스트 메모리 {{ humanizePercentage .Values.A.Value }} (기준 95%)'
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: max(1 - node_memory_MemAvailable_bytes{env="prod"} / node_memory_MemTotal_bytes{env="prod"})
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions: [{evaluator: {type: gt, params: [0.95]}}]
+
+      - uid: prod-host-oom
+        title: 운영 호스트 OOM kill
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: critical}
+        annotations:
+          summary: '운영 호스트 메모리 부족으로 프로세스 강제 종료 (최근 5분 {{ printf "%.0f" .Values.A.Value }}회)'
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: sum(increase(node_vmstat_oom_kill{env="prod"}[5m]))
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions: [{evaluator: {type: gt, params: [0]}}]
+
+      - uid: prod-host-disk
+        title: 운영 호스트 디스크
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: critical}
+        annotations:
+          summary: '운영 호스트 디스크 {{ humanizePercentage .Values.A.Value }} (기준 85%)'
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: max(1 - node_filesystem_avail_bytes{env="prod",mountpoint="/"} / node_filesystem_size_bytes{env="prod",mountpoint="/"})
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions: [{evaluator: {type: gt, params: [0.85]}}]
+
+  - orgId: 1
+    name: 무전
+    folder: 알림
+    interval: 1m
+    rules:
+      - uid: voice-down
+        title: 무전 서버 다운
+        condition: C
+        for: 2m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: critical}
+        annotations:
+          summary: 무전 서버(LiveKit) 응답 없음
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: max(up{job="livekit"})
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions: [{evaluator: {type: lt, params: [1]}}]
