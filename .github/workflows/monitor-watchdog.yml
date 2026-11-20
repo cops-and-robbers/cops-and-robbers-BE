@@ -1,0 +1,63 @@
+name: 👀 모니터링 서버 감시
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+env:
+  URL: https://monitor.copsandrobbers.app
+  HOST: monitor.copsandrobbers.app
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: 🩺 Grafana 응답 확인
+        id: check
+        run: |
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$URL/api/health" || true)
+            [ "$code" = "200" ] && exit 0
+            sleep 20
+          done
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          exit 1
+
+      - name: 🚨 디스코드 알림
+        if: failure()
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_ALERT }}
+          CODE: ${{ steps.check.outputs.code }}
+        run: |
+          jq -n --arg url "$URL/api/health" --arg code "${CODE:-없음} (3회 재시도 실패)" --arg at "$(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M:%S')" \
+            '{username:"서버 알림봇", embeds:[{title:"🚨 서버 알림", description:"모니터링 서버가 응답하지 않습니다.", color:16753922,
+              fields:[{name:"대상", value:$url, inline:false}, {name:"응답", value:$code, inline:false}, {name:"시각", value:$at, inline:false}]}]}' \
+            | curl -s -H 'Content-Type: application/json' -d @- "$WEBHOOK"
+
+  cert:
+    if: github.event.schedule == '0 0 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: 🔒 인증서 만료 확인
+        id: check
+        run: |
+          end=$(echo | openssl s_client -connect "$HOST:443" -servername "$HOST" 2>/dev/null | openssl x509 -noout -enddate | cut -d= -f2)
+          days=$(( ($(date -d "$end" +%s) - $(date +%s)) / 86400 ))
+          echo "남은 일수: $days"
+          echo "days=$days" >> "$GITHUB_OUTPUT"
+          [ "$days" -ge 14 ]
+
+      - name: 🚨 디스코드 알림
+        if: failure()
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_ALERT }}
+          DAYS: ${{ steps.check.outputs.days }}
+        run: |
+          jq -n --arg host "$HOST" --arg days "${DAYS:-?}일" --arg at "$(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M:%S')" \
+            '{username:"서버 알림봇", embeds:[{title:"🚨 서버 알림", description:"모니터링 서버 인증서 만료가 임박했습니다.", color:16753922,
+              fields:[{name:"대상", value:$host, inline:false}, {name:"남은 기간", value:$days, inline:false}, {name:"확인", value:"certbot-renew.timer", inline:false}, {name:"시각", value:$at, inline:false}]}]}' \
+            | curl -s -H 'Content-Type: application/json' -d @- "$WEBHOOK"
