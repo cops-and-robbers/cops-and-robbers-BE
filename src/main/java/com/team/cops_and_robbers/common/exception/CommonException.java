@@ -22,7 +22,8 @@ public enum CommonException implements ExceptionCode {
     FIREBASE_CONFIG_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "설정 파일 누락", "지정된 경로에서 파이어베이스 서비스 계정 키(JSON)를 찾을 수 없습니다."),
     ENCRYPTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "암호화 실패", "데이터 암호화 중 오류가 발생했습니다."),
     DECRYPTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "복호화 실패", "데이터 복호화 중 오류가 발생했습니다."),
-    INVALID_ENCRYPTION_KEY(HttpStatus.INTERNAL_SERVER_ERROR, "잘못된 암호화 키", "암호화 키는 256bit(32바이트)여야 합니다.");
+    INVALID_ENCRYPTION_KEY(HttpStatus.INTERNAL_SERVER_ERROR, "잘못된 암호화 키", "암호화 키는 256bit(32바이트)여야 합니다."),
+    INVALID_INTERNAL_API_KEY(HttpStatus.UNAUTHORIZED, "내부 API 인증 실패", "내부 API 키가 올바르지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final String title;
