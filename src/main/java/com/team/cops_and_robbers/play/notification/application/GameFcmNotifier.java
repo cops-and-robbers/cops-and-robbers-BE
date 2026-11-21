@@ -63,7 +63,7 @@ public class GameFcmNotifier {
 
     private FcmPayload resolveSystemPayload(SystemEvent event) {
         SystemEventType type = event.type();
-        Map<String, String> data = Map.of("type", type.name(), "gameId", String.valueOf(event.gameId()));
+        Map<String, String> data = Map.of("type", type.legacyName(), "gameId", String.valueOf(event.gameId()));
         GameFcmWording wording = GameFcmWording.of(findGameMode(event.gameId()));
         return switch (type) {
             case ARREST -> new FcmPayload(wording.arrestTitle(), wording.arrestBody(), data);

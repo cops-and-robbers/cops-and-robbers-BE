@@ -34,7 +34,7 @@ public interface GameStateControllerDocs {
 
                     | 게임 단계 | runnerLocations |
                     |---|---|
-                    | 경찰 대기 시간 중 (CHASER_WAITING) | 빈 배열 |
+                    | 경찰 대기 시간 중 (POLICE_WAITING) | 빈 배열 |
                     | 경찰 출동 후 첫 위치 공개 전 | 빈 배열 |
                     | 첫 위치 공개 이후 | 생존 도둑 위치 목록 (JAILED 제외) |
 
@@ -49,7 +49,7 @@ public interface GameStateControllerDocs {
                             schema = @Schema(implementation = GameStateResponse.class),
                             examples = {
                                     @ExampleObject(
-                                            name = "경찰 대기 단계 (CHASER_WAITING)",
+                                            name = "경찰 대기 단계 (POLICE_WAITING)",
                                             summary = "경찰이 아직 출동하지 않은 상태 — 누구도 도둑 위치를 볼 수 없음",
                                             value = """
                                                     {

@@ -13,7 +13,7 @@ public record GameParticipantListResult(
             return new ParticipantInfo(
                     participant.getId(),
                     participant.getUser().getNickname(),
-                    participant.getStatus().name()
+                    participant.getStatus().legacyName()
             );
         }
     }
