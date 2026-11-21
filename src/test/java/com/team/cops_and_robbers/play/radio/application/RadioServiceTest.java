@@ -12,6 +12,7 @@ import com.team.cops_and_robbers.play.radio.application.dto.result.RadioTokenRes
 import com.team.cops_and_robbers.play.radio.exception.RadioException;
 import com.team.cops_and_robbers.play.radio.infrastructure.RadioToken;
 import com.team.cops_and_robbers.play.radio.infrastructure.RadioTokenProvider;
+import com.team.cops_and_robbers.play.radio.repository.RadioOverloadRepository;
 import com.team.cops_and_robbers.user.domain.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,9 +20,14 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
+import org.springframework.data.redis.RedisConnectionFailureException;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Optional;
 
 import static com.team.cops_and_robbers.common.fixture.GameFixture.EVENT_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.FINISHED_GAME;
@@ -33,10 +39,12 @@ import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.WA
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
 class RadioServiceTest extends ServiceUnitTest {
 
@@ -49,7 +57,14 @@ class RadioServiceTest extends ServiceUnitTest {
     @Mock
     private RadioTokenProvider radioTokenProvider;
 
+    @Mock
+    private RadioOverloadRepository radioOverloadRepository;
+
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 11, 9, 17, 0);
+
+    @Spy
+    private Clock clock = Clock.fixed(NOW.atZone(KST).toInstant(), KST);
 
     private static final Long TEST_USER_ID = 1L;
     private static final Long TEST_GAME_ID = 1L;
@@ -178,6 +193,89 @@ class RadioServiceTest extends ServiceUnitTest {
             assertThatThrownBy(() -> radioService.issueToken(command))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessage(RadioException.RADIO_POLICE_WAITING_TIME.getDetail());
+        }
+    }
+
+    @Nested
+    @DisplayName("무전 서버 과부하")
+    class Overload {
+
+        @Test
+        void 과부하_중_신규_입장이면_예외가_발생한다() {
+            // given
+            givenGameAndParticipant(inProgressGame, createParticipant(ALIVE_POLICE(inProgressGame, user)));
+            given(radioOverloadRepository.isActive()).willReturn(true);
+            given(radioTokenProvider.tokenTtl()).willReturn(TOKEN_TTL);
+            given(gameResultService.findRadioLastIssuedAt(TEST_GAME_ID, TEST_USER_ID)).willReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> radioService.issueToken(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessage(RadioException.RADIO_SERVER_BUSY.getDetail());
+            then(gameResultService).should(never()).recordRadioUsage(any(), any(), any());
+        }
+
+        @Test
+        void 과부하_중이라도_토큰_수명과_여유_시간_안의_재발급이면_토큰을_발급한다() {
+            // given
+            givenGameAndParticipant(inProgressGame, createParticipant(ALIVE_POLICE(inProgressGame, user)));
+            given(radioOverloadRepository.isActive()).willReturn(true);
+            given(gameResultService.findRadioLastIssuedAt(TEST_GAME_ID, TEST_USER_ID))
+                    .willReturn(Optional.of(NOW.minusMinutes(2).minusSeconds(50)));
+            givenToken();
+
+            // when
+            RadioTokenResult result = radioService.issueToken(command);
+
+            // then
+            assertSoftly(softly -> softly.assertThat(result.token()).isEqualTo("signed-token"));
+        }
+
+        @Test
+        void 과부하_중_마지막_발급이_여유_시간을_넘었으면_예외가_발생한다() {
+            // given
+            givenGameAndParticipant(inProgressGame, createParticipant(ALIVE_POLICE(inProgressGame, user)));
+            given(radioOverloadRepository.isActive()).willReturn(true);
+            given(radioTokenProvider.tokenTtl()).willReturn(TOKEN_TTL);
+            given(gameResultService.findRadioLastIssuedAt(TEST_GAME_ID, TEST_USER_ID))
+                    .willReturn(Optional.of(NOW.minusMinutes(3).minusSeconds(1)));
+
+            // when & then
+            assertThatThrownBy(() -> radioService.issueToken(command))
+                    .isInstanceOf(ApplicationException.class)
+                    .hasMessage(RadioException.RADIO_SERVER_BUSY.getDetail());
+        }
+
+        @Test
+        void 과부하_플래그를_읽지_못하면_토큰을_발급한다() {
+            // given
+            givenGameAndParticipant(inProgressGame, createParticipant(ALIVE_POLICE(inProgressGame, user)));
+            given(radioOverloadRepository.isActive()).willThrow(new RedisConnectionFailureException("down"));
+            givenToken();
+
+            // when
+            RadioTokenResult result = radioService.issueToken(command);
+
+            // then
+            assertSoftly(softly -> softly.assertThat(result.token()).isEqualTo("signed-token"));
+        }
+
+        @Test
+        void 과부하_신호를_받으면_10분짜리_플래그를_저장한다() {
+            // when
+            radioService.startOverload();
+
+            // then
+            then(radioOverloadRepository).should().activate(Duration.ofMinutes(10));
+        }
+
+        @Test
+        void 해제_신호를_받으면_플래그를_지운다() {
+            // when
+            radioService.endOverload();
+
+            // then
+            then(radioOverloadRepository).should().deactivate();
         }
     }
 

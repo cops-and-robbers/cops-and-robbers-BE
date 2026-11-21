@@ -5,14 +5,19 @@ import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.play.radio.presentation.dto.response.RadioTokenResponse;
+import com.team.cops_and_robbers.play.radio.repository.RadioOverloadRepository;
 import com.team.cops_and_robbers.user.domain.User;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+
+import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
@@ -29,6 +34,9 @@ class RadioControllerTest extends ControllerTest {
     private String policeToken;
     private String robberToken;
 
+    @Autowired
+    private RadioOverloadRepository radioOverloadRepository;
+
     @BeforeEach
     void setUp() {
         police = givenUser("police");
@@ -40,6 +48,11 @@ class RadioControllerTest extends ControllerTest {
         game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
         policeParticipant = givenPolice(game, police);
         givenRobber(game, robber);
+    }
+
+    @AfterEach
+    void tearDown() {
+        radioOverloadRepository.deactivate();
     }
 
     @Nested
@@ -80,6 +93,23 @@ class RadioControllerTest extends ControllerTest {
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
+        }
+
+        @Test
+        void 무전_서버_과부하_중_신규_입장이면_503_Service_Unavailable을_응답한다() {
+            // given
+            radioOverloadRepository.activate(Duration.ofMinutes(10));
+
+            // when
+            ExtractableResponse<Response> response = authenticated(policeToken)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(RADIO_TOKEN_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertThat(response.statusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE.value());
         }
     }
 }
