@@ -1,0 +1,30 @@
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: be
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["161.33.207.217:9091"]
+        labels: {env: dev}
+      - targets: ["3.37.157.233:9091", "3.37.157.233:9092"]
+        labels: {env: prod}
+
+  - job_name: node
+    static_configs:
+      - targets: ["161.33.207.217:9100"]
+        labels: {env: dev, host: dev}
+      - targets: ["161.33.144.26:9100"]
+        labels: {env: shared, host: voice}
+      - targets: ["3.37.157.233:9100"]
+        labels: {env: prod, host: prod}
+
+  - job_name: livekit
+    static_configs:
+      - targets: ["161.33.144.26:6789"]
+        labels: {env: shared}
