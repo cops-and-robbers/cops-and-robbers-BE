@@ -235,7 +235,7 @@ public abstract class ControllerTest {
 
     protected GameParticipant givenWaitingPolice(Game game, User user) {
         GameParticipant participant = gameParticipantRepository.getByGameIdAndUserId(game.getId(), user.getId());
-        participant.updateStatus(ParticipantStatus.POLICE_WAITING);
+        participant.updateStatus(ParticipantStatus.CHASER_WAITING);
         return gameParticipantRepository.save(participant);
     }
 

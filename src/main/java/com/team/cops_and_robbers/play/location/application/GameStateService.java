@@ -69,7 +69,7 @@ public class GameStateService {
      */
     private List<GameStateResult.RunnerLocationInfo> buildRunnerLocations(
             Long gameId, List<GameParticipant> allParticipants) {
-        if (isPoliceWaitingPhase(allParticipants)) {
+        if (isChaserWaitingPhase(allParticipants)) {
             return List.of();
         }
         Set<Long> aliveRunnerIds = extractAliveRunnerIds(allParticipants);
@@ -82,9 +82,9 @@ public class GameStateService {
     /**
      * Waiting 중인 경찰있는지 검증합니다.
      */
-    private boolean isPoliceWaitingPhase(List<GameParticipant> participants) {
+    private boolean isChaserWaitingPhase(List<GameParticipant> participants) {
         return participants.stream()
-                .anyMatch(GameParticipant::isPoliceWaiting);
+                .anyMatch(GameParticipant::isChaserWaiting);
     }
 
     /**

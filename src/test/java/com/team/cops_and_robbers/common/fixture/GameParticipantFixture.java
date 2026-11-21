@@ -63,7 +63,7 @@ public class GameParticipantFixture {
                 .game(game)
                 .user(user)
                 .team(Team.POLICE)
-                .status(ParticipantStatus.POLICE_WAITING)
+                .status(ParticipantStatus.CHASER_WAITING)
                 .isHost(false)
                 .build();
     }
@@ -93,17 +93,17 @@ public class GameParticipantFixture {
                 .game(game)
                 .user(user)
                 .team(Team.POLICE)
-                .status(ParticipantStatus.POLICE_WAITING)
+                .status(ParticipantStatus.CHASER_WAITING)
                 .isHost(true)
                 .build();
     }
 
-    public static GameParticipant EVENT_POLICE_WAITING(Game game, User user) {
+    public static GameParticipant EVENT_CHASER_WAITING(Game game, User user) {
         return GameParticipant.builder()
                 .game(game)
                 .user(user)
                 .team(Team.POLICE)
-                .status(ParticipantStatus.POLICE_WAITING)
+                .status(ParticipantStatus.CHASER_WAITING)
                 .isHost(false)
                 .build();
     }

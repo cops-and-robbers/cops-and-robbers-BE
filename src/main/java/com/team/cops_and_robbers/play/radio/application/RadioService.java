@@ -89,7 +89,7 @@ public class RadioService {
         if (!police.isPolice()) {
             throw new ApplicationException(RadioException.ONLY_CHASER_CAN_USE_RADIO);
         }
-        if (police.isPoliceWaiting()) {
+        if (police.isChaserWaiting()) {
             throw new ApplicationException(RadioException.RADIO_CHASER_WAITING_TIME);
         }
     }

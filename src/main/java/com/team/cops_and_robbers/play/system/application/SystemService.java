@@ -129,7 +129,7 @@ public class SystemService {
         if (!police.isPolice()) {
             throw new ApplicationException(GameParticipantException.ONLY_CHASER_CAN_ARREST);
         }
-        if (police.isPoliceWaiting()) {
+        if (police.isChaserWaiting()) {
             throw new ApplicationException(GameParticipantException.CHASER_WAITING_TIME);
         }
         if (!robber.isRobber()) {

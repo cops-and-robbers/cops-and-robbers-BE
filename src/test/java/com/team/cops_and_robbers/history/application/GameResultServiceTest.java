@@ -347,7 +347,7 @@ class GameResultServiceTest extends ServiceUnitTest {
             // then
             assertThat(snapshot.hasLeft()).isTrue();
             assertThat(snapshot.getLeftAt()).isEqualTo(NOW);
-            assertThat(snapshot.getStatus()).isEqualTo(ParticipantStatus.POLICE_WAITING);
+            assertThat(snapshot.getStatus()).isEqualTo(ParticipantStatus.CHASER_WAITING);
         }
 
         @Test
@@ -787,7 +787,7 @@ class GameResultServiceTest extends ServiceUnitTest {
             given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
 
             // when
-            gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ROBBER_FORFEITED, List.of());
+            gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.RUNNER_FORFEITED, List.of());
 
             // then
             assertThat(leftSnapshot.getStatus()).isEqualTo(ParticipantStatus.ALIVE);

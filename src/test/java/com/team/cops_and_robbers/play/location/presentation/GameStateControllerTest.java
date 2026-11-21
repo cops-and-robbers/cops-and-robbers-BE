@@ -124,7 +124,7 @@ class GameStateControllerTest extends ControllerTest {
 
         @Test
         void 경찰_대기시간_중에는_경찰과_도둑_모두_위치가_빈_목록으로_반환된다() {
-            // given: 스냅샷이 존재하더라도 경찰이 한 명이라도 POLICE_WAITING이면 빈 배열
+            // given: 스냅샷이 존재하더라도 경찰이 한 명이라도 CHASER_WAITING이면 빈 배열
             runnerLocationService.updateLocation(
                     new LocationUpdateCommand(game.getId(), robberParticipant1.getId(), 37.5665, 126.9780)
             );

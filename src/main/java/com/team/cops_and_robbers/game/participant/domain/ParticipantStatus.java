@@ -4,5 +4,5 @@ public enum ParticipantStatus {
     WAITING,
     ALIVE,
     JAILED,
-    POLICE_WAITING
+    CHASER_WAITING
 }

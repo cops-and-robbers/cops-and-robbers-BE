@@ -113,7 +113,7 @@ public interface GameParticipantControllerDocs {
                       "data": {
                         "gameResultId": 1,
                         "winnerTeam": "POLICE 또는 ROBBER",
-                        "reason": "POLICE_FORFEITED 또는 ROBBER_FORFEITED"
+                        "reason": "CHASER_FORFEITED 또는 RUNNER_FORFEITED"
                       }
                     }
                     ```
@@ -143,7 +143,7 @@ public interface GameParticipantControllerDocs {
 
                     - 게임이 진행 중(IN_PROGRESS) 상태에서만 조회 가능
                     - 해당 게임의 참가자만 조회 가능
-                    - 경찰 상태: POLICE_WAITING(대기 중), ALIVE(활성)
+                    - 경찰 상태: CHASER_WAITING(대기 중), ALIVE(활성)
                     - 도둑 상태: ALIVE(생존), JAILED(잡힘)
                     """
     )

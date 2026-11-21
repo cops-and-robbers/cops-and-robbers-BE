@@ -189,7 +189,7 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 경찰이_대기_상태이면_체포할_수_없으며_400_BadRequest를_응답한다() {
             // given
-            policeParticipant.updateStatus(ParticipantStatus.POLICE_WAITING);
+            policeParticipant.updateStatus(ParticipantStatus.CHASER_WAITING);
             gameParticipantRepository.save(policeParticipant);
 
             ArrestRequest request = new ArrestRequest(robberParticipant.getId());
@@ -340,7 +340,7 @@ class SystemControllerTest extends ControllerTest {
             // given
             User secondRobber = givenUser("robber2");
             givenRobber(game, secondRobber);
-            policeParticipant.updateStatus(ParticipantStatus.POLICE_WAITING);
+            policeParticipant.updateStatus(ParticipantStatus.CHASER_WAITING);
             gameParticipantRepository.save(policeParticipant);
 
             // when

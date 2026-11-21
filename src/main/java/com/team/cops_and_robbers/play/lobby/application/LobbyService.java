@@ -70,7 +70,7 @@ public class LobbyService {
         game.startGame(now);
 
         gameParticipantRepository.updateStatusByGameIdAndTeam(command.gameId(), Team.ROBBER, ParticipantStatus.ALIVE);
-        gameParticipantRepository.updateStatusByGameIdAndTeam(command.gameId(), Team.POLICE, ParticipantStatus.POLICE_WAITING);
+        gameParticipantRepository.updateStatusByGameIdAndTeam(command.gameId(), Team.POLICE, ParticipantStatus.CHASER_WAITING);
 
         gameResultService.openGameResult(game);
 

@@ -64,8 +64,8 @@ public class GameParticipant extends BaseTimeEntity {
         return this.status == ParticipantStatus.JAILED;
     }
 
-    public boolean isPoliceWaiting() {
-        return this.status == ParticipantStatus.POLICE_WAITING;
+    public boolean isChaserWaiting() {
+        return this.status == ParticipantStatus.CHASER_WAITING;
     }
 
     public boolean isRobber() {

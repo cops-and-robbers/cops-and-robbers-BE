@@ -105,7 +105,7 @@ public class GameEventConsumer {
     }
 
     /**
-     * 경찰 출동: 경찰 참여자 상태를 POLICE_WAITING → ALIVE로 전환 후 이벤트 발행
+     * 경찰 출동: 경찰 참여자 상태를 CHASER_WAITING → ALIVE로 전환 후 이벤트 발행
      */
     private void executeChaserMoveStart(Long gameId) {
         transactionTemplate.executeWithoutResult(status ->

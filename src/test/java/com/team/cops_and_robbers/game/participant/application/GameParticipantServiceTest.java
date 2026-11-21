@@ -186,7 +186,7 @@ class GameParticipantServiceTest extends ServiceUnitTest {
                 // given
                 Game eventGame = EVENT_GAME(INVITE_CODE);
                 setId(eventGame, TEST_GAME_ID);
-                GameParticipant eventPolice = EVENT_POLICE_WAITING(eventGame, user);
+                GameParticipant eventPolice = EVENT_CHASER_WAITING(eventGame, user);
                 GameJoinCommand command = createGameJoinCommand(user.getId(), INVITE_CODE);
 
                 given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(eventGame);
@@ -207,7 +207,7 @@ class GameParticipantServiceTest extends ServiceUnitTest {
                 // given
                 Game eventGame = EVENT_GAME(INVITE_CODE);
                 setId(eventGame, TEST_GAME_ID);
-                GameParticipant eventPolice = EVENT_POLICE_WAITING(eventGame, user);
+                GameParticipant eventPolice = EVENT_CHASER_WAITING(eventGame, user);
                 GameJoinCommand command = createGameJoinCommand(user.getId(), INVITE_CODE);
                 GameParticipantCacheProjection projection = new GameParticipantCacheProjection(
                         TEST_PARTICIPANT_ID, user.getNickname(), Team.POLICE, "token"
@@ -231,7 +231,7 @@ class GameParticipantServiceTest extends ServiceUnitTest {
                 // given
                 Game eventGame = EVENT_GAME(INVITE_CODE);
                 setId(eventGame, TEST_GAME_ID);
-                GameParticipant eventPolice = EVENT_POLICE_WAITING(eventGame, user);
+                GameParticipant eventPolice = EVENT_CHASER_WAITING(eventGame, user);
                 GameJoinCommand command = createGameJoinCommand(user.getId(), INVITE_CODE);
 
                 given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(eventGame);
@@ -303,7 +303,7 @@ class GameParticipantServiceTest extends ServiceUnitTest {
                 gameParticipantService.leaveGame(command);
 
                 // then
-                then(gameTerminationService).should(never()).endGameByPoliceForfeited(any());
+                then(gameTerminationService).should(never()).endGameByChaserForfeited(any());
                 then(eventPublisher).should().publishEvent(any(SystemEvent.class));
             }
         }
@@ -376,13 +376,13 @@ class GameParticipantServiceTest extends ServiceUnitTest {
 
             // then
             then(inGameParticipantCacheRepository).should().deleteByParticipantId(any(), any());
-            then(gameTerminationService).should(never()).endGameByPoliceForfeited(any());
+            then(gameTerminationService).should(never()).endGameByChaserForfeited(any());
             then(eventPublisher).should().publishEvent(any(SystemEvent.class));
             then(gameResultService).should().recordParticipantLeft(TEST_GAME_ID, user.getId());
         }
 
         @Test
-        void 마지막_경찰이_퇴장하면_POLICE_FORFEITED로_게임이_종료된다() {
+        void 마지막_경찰이_퇴장하면_CHASER_FORFEITED로_게임이_종료된다() {
             // given
             GameLeaveCommand command = createGameLeaveCommand(user.getId(), TEST_GAME_ID);
             given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user.getId())).willReturn(policeParticipant);
@@ -394,7 +394,7 @@ class GameParticipantServiceTest extends ServiceUnitTest {
             gameParticipantService.leaveGame(command);
 
             // then
-            then(gameTerminationService).should().endGameByPoliceForfeited(TEST_GAME_ID);
+            then(gameTerminationService).should().endGameByChaserForfeited(TEST_GAME_ID);
             then(eventPublisher).should().publishEvent(any(SystemEvent.class));
         }
 
@@ -411,12 +411,12 @@ class GameParticipantServiceTest extends ServiceUnitTest {
             gameParticipantService.leaveGame(command);
 
             // then
-            then(gameTerminationService).should(never()).endGameByRobberForfeited(any());
+            then(gameTerminationService).should(never()).endGameByRunnerForfeited(any());
             then(eventPublisher).should().publishEvent(any(SystemEvent.class));
         }
 
         @Test
-        void 마지막_생존_도둑이_퇴장하면_ROBBER_FORFEITED로_게임이_종료된다() {
+        void 마지막_생존_도둑이_퇴장하면_RUNNER_FORFEITED로_게임이_종료된다() {
             // given
             GameLeaveCommand command = createGameLeaveCommand(user2.getId(), TEST_GAME_ID);
             given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user2.getId())).willReturn(robberParticipant);
@@ -428,7 +428,7 @@ class GameParticipantServiceTest extends ServiceUnitTest {
             gameParticipantService.leaveGame(command);
 
             // then
-            then(gameTerminationService).should().endGameByRobberForfeited(TEST_GAME_ID);
+            then(gameTerminationService).should().endGameByRunnerForfeited(TEST_GAME_ID);
             then(eventPublisher).should().publishEvent(any(SystemEvent.class));
         }
 
@@ -447,8 +447,8 @@ class GameParticipantServiceTest extends ServiceUnitTest {
             // then
             then(gameParticipantRepository).should(never()).countByGameIdAndTeam(any(), any());
             then(gameParticipantRepository).should(never()).countByGameIdAndRobberStatus(any(), any());
-            then(gameTerminationService).should(never()).endGameByPoliceForfeited(any());
-            then(gameTerminationService).should(never()).endGameByRobberForfeited(any());
+            then(gameTerminationService).should(never()).endGameByChaserForfeited(any());
+            then(gameTerminationService).should(never()).endGameByRunnerForfeited(any());
             then(eventPublisher).should().publishEvent(any(SystemEvent.class));
         }
 

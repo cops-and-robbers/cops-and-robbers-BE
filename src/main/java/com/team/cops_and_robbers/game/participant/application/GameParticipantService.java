@@ -154,10 +154,10 @@ public class GameParticipantService {
     /**
      * 1-2. 인게임 중 나가기를 처리합니다.
      * - 경찰 퇴장
-     *      - 마지막 경찰이면 도둑 팀 승리로 게임 종료 (POLICE_FORFEITED)
+     *      - 마지막 경찰이면 도둑 팀 승리로 게임 종료 (CHASER_FORFEITED)
      *      - 경찰이 남아있으면 PLAYER_LEFT 이벤트 발행
      * - 도둑 퇴장
-     *      - ALIVE 상태이고 마지막 생존 도둑이면 경찰 팀 승리로 게임 종료 (ROBBER_FORFEITED)
+     *      - ALIVE 상태이고 마지막 생존 도둑이면 경찰 팀 승리로 게임 종료 (RUNNER_FORFEITED)
      *      - JAILED 상태이거나 생존 도둑이 남아있으면 PLAYER_LEFT 이벤트 발행
      */
     private GameLeaveResult leaveFromInGame(GameParticipant participant, Game game, Long gameId, Long userId) {
@@ -188,11 +188,11 @@ public class GameParticipantService {
 
     private boolean tryEndGameByForfeit(Game game, Long gameId, Team team, ParticipantStatus status) {
         if (team == Team.POLICE && game.rules().endsWhenPoliceLeave() && isLastPolice(gameId)) {
-            gameTerminationService.endGameByPoliceForfeited(gameId);
+            gameTerminationService.endGameByChaserForfeited(gameId);
             return true;
         }
         if (team == Team.ROBBER && status == ParticipantStatus.ALIVE && isLastAliveRobber(gameId)) {
-            gameTerminationService.endGameByRobberForfeited(gameId);
+            gameTerminationService.endGameByRunnerForfeited(gameId);
             return true;
         }
         return false;

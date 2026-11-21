@@ -54,25 +54,25 @@ public class GameTerminationService {
     }
 
     @Transactional
-    public void endGameByPoliceForfeited(Long gameId) {
+    public void endGameByChaserForfeited(Long gameId) {
         Game game = gameRepository.getByGameId(gameId);
 
         if (!game.isInProgress()) {
-            log.info("[GameTermination] Already finished game (GameId: {}, request: POLICE_FORFEITED)", gameId);
+            log.info("[GameTermination] Already finished game (GameId: {}, request: CHASER_FORFEITED)", gameId);
             return;
         }
-        endGame(game, Team.ROBBER, GameEndReason.POLICE_FORFEITED);
+        endGame(game, Team.ROBBER, GameEndReason.CHASER_FORFEITED);
     }
 
     @Transactional
-    public void endGameByRobberForfeited(Long gameId) {
+    public void endGameByRunnerForfeited(Long gameId) {
         Game game = gameRepository.getByGameId(gameId);
 
         if (!game.isInProgress()) {
-            log.info("[GameTermination] Already finished game (GameId: {}, request: ROBBER_FORFEITED)", gameId);
+            log.info("[GameTermination] Already finished game (GameId: {}, request: RUNNER_FORFEITED)", gameId);
             return;
         }
-        endGame(game, Team.POLICE, GameEndReason.ROBBER_FORFEITED);
+        endGame(game, Team.POLICE, GameEndReason.RUNNER_FORFEITED);
     }
 
     private void endGame(Game game, Team winner, GameEndReason reason) {
