@@ -100,7 +100,7 @@ class RadioServiceTest extends ServiceUnitTest {
             // then
             assertSoftly(softly -> {
                 softly.assertThat(result.url()).isEqualTo("wss://test.livekit.cloud");
-                softly.assertThat(result.room()).isEqualTo("dev-game-1-police");
+                softly.assertThat(result.room()).isEqualTo("dev-game-1-chaser");
                 softly.assertThat(result.identity()).isEqualTo("101");
                 softly.assertThat(result.token()).isEqualTo("signed-token");
             });
@@ -291,8 +291,8 @@ class RadioServiceTest extends ServiceUnitTest {
 
     private void givenToken() {
         given(radioTokenProvider.tokenTtl()).willReturn(TOKEN_TTL);
-        given(radioTokenProvider.createJoinToken(eq("game-1-police"), eq(TEST_PARTICIPANT_ID), anyString()))
-                .willReturn(new RadioToken("dev-game-1-police", "signed-token", NOW.plus(TOKEN_TTL)));
+        given(radioTokenProvider.createJoinToken(eq("game-1-chaser"), eq(TEST_PARTICIPANT_ID), anyString()))
+                .willReturn(new RadioToken("dev-game-1-chaser", "signed-token", NOW.plus(TOKEN_TTL)));
         given(radioTokenProvider.serverUrl()).willReturn("wss://test.livekit.cloud");
     }
 }

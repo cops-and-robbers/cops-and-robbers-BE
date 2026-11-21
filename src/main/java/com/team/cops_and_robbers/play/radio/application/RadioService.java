@@ -56,7 +56,7 @@ public class RadioService {
 
         gameResultService.recordRadioUsage(game.getId(), command.userId(), radioTokenProvider.tokenTtl());
 
-        String room = RadioRoom.policeRoomOf(game.getId());
+        String room = RadioRoom.chaserRoomOf(game.getId());
         RadioToken token = radioTokenProvider.createJoinToken(
                 room, police.getId(), police.getUser().getNickname()
         );
