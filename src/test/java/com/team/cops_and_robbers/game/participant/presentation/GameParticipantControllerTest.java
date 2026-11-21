@@ -365,7 +365,7 @@ class GameParticipantControllerTest extends ControllerTest {
         @Test
         void 마지막_경찰이_퇴장하면_게임이_종료된다() {
             // given
-            User chaser = givenUser("chasers");
+            User chaser = givenUser("chaser");
             String chaserToken = givenAccessToken(chaser);
             givenChaser(inProgressGame, chaser);
 
@@ -389,7 +389,7 @@ class GameParticipantControllerTest extends ControllerTest {
         @Test
         void ALIVE_도둑이_퇴장하고_생존_도둑이_남아있으면_성공_응답을_반환한다() {
             // given
-            User chaser = givenUser("chasers");
+            User chaser = givenUser("chaser");
             givenChaser(inProgressGame, chaser);
 
             User runner1 = givenUser("runner1");
@@ -419,7 +419,7 @@ class GameParticipantControllerTest extends ControllerTest {
         @Test
         void 마지막_ALIVE_도둑이_퇴장하면_게임이_종료된다() {
             // given
-            User chaser = givenUser("chasers");
+            User chaser = givenUser("chaser");
             givenChaser(inProgressGame, chaser);
 
             User aliveRunner = givenUser("aliveRunner");
@@ -446,7 +446,7 @@ class GameParticipantControllerTest extends ControllerTest {
         @Test
         void JAILED_도둑이_퇴장하면_게임이_종료되지_않는다() {
             // given
-            User chaser = givenUser("chasers");
+            User chaser = givenUser("chaser");
             givenChaser(inProgressGame, chaser);
 
             User aliveRunner = givenUser("aliveRunner");
@@ -668,6 +668,7 @@ class GameParticipantControllerTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
                 softly.assertThat(response.jsonPath().getList("chasers")).hasSize(1);
+                softly.assertThat(response.jsonPath().getList("police")).hasSize(1);
                 softly.assertThat(response.jsonPath().getList("runners")).hasSize(1);
                 softly.assertThat(response.jsonPath().getString("chasers[0].status")).isEqualTo("ALIVE");
                 softly.assertThat(response.jsonPath().getString("runners[0].status")).isEqualTo("ALIVE");

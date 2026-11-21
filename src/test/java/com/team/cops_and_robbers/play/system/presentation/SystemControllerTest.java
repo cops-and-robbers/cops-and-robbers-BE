@@ -21,6 +21,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
@@ -82,6 +84,31 @@ class SystemControllerTest extends ControllerTest {
 
                 GameParticipant jailedRunner = gameParticipantRepository.findById(runnerParticipant.getId()).orElseThrow();
                 softly.assertThat(jailedRunner.isJailed()).isTrue();
+            });
+        }
+
+        @Test
+        void 옛_필드명으로_요청해도_체포되고_응답에_옛_필드명이_함께_내려온다() {
+            // given
+            givenRunner(game, givenUser("runner2"));
+            Map<String, Object> request = Map.of("robberParticipantId", runnerParticipant.getId());
+
+            // when
+            ExtractableResponse<Response> response = authenticated(chaserToken)
+                    .body(request)
+                    .pathParam(GAME_ID_PARAM, game.getId())
+                    .when()
+                    .post(ARREST_URL)
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+                softly.assertThat(response.jsonPath().getString("runnerNickname")).isEqualTo(runner.getNickname());
+                softly.assertThat(response.jsonPath().getString("robberNickname")).isEqualTo(runner.getNickname());
+                softly.assertThat(response.jsonPath().getInt("remainingRunners")).isEqualTo(1);
+                softly.assertThat(response.jsonPath().getInt("remainingThieves")).isEqualTo(1);
             });
         }
 

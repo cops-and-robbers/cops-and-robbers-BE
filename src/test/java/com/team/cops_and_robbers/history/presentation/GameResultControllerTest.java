@@ -91,6 +91,37 @@ class GameResultControllerTest extends ControllerTest {
         }
 
         @Test
+        void 옛_앱_호환을_위해_옛_필드명과_옛_팀_이름이_함께_내려온다() {
+            // given
+            Game game = gameRepository.save(FINISHED_GAME());
+            givenChaser(game, user);
+            GameResult gameResult = gameResultRepository.save(CHASER_WIN_RESULT(game.getId()));
+
+            GameResultParticipant chaser = CHASER_PARTICIPANT(gameResult, user.getId(), "날쌘경찰");
+            chaser.markMvp();
+            GameResultParticipant runner = RUNNER_PARTICIPANT(gameResult, 999L, "빠른도둑");
+            runner.markMvp();
+            gameResultParticipantRepository.saveAll(List.of(chaser, runner));
+
+            // when
+            ExtractableResponse<Response> response = authenticated(accessToken)
+                    .when()
+                    .get(GAME_RESULT_API_URL, gameResult.getId())
+                    .then()
+                    .extract();
+
+            // then
+            assertSoftly(softly -> {
+                softly.assertThat(response.statusCode()).isEqualTo(200);
+                softly.assertThat(response.jsonPath().getString("winnerTeam")).isEqualTo("POLICE");
+                softly.assertThat(response.jsonPath().getString("policeMvp.nickname")).isEqualTo("날쌘경찰");
+                softly.assertThat(response.jsonPath().getString("robberMvp.nickname")).isEqualTo("빠른도둑");
+                softly.assertThat(response.jsonPath().getInt("remainingRobberCount"))
+                        .isEqualTo(response.jsonPath().getInt("remainingRunnerCount"));
+            });
+        }
+
+        @Test
         void MVP가_없으면_null로_내려온다() {
             // given
             Game game = gameRepository.save(FINISHED_GAME());
