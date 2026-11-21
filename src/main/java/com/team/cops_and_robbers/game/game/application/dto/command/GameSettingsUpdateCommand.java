@@ -9,7 +9,7 @@ public record GameSettingsUpdateCommand(
         Long userId,
         Integer roundDurationMinutes,
         Integer locationRevealIntervalMinutes,
-        Integer policeWaitMinutes,
+        Integer chaserWaitMinutes,
         Integer maxParticipants,
         Integer shrinkFinalRadiusInMeters
 ) {
@@ -18,7 +18,7 @@ public record GameSettingsUpdateCommand(
         if (locationRevealIntervalMinutes >= roundDurationMinutes) {
             throw new ApplicationException(GameException.INVALID_LOCATION_INTERVAL);
         }
-        if (policeWaitMinutes >= roundDurationMinutes) {
+        if (chaserWaitMinutes >= roundDurationMinutes) {
             throw new ApplicationException(GameException.INVALID_POLICE_WAIT_TIME);
         }
     }
@@ -29,7 +29,7 @@ public record GameSettingsUpdateCommand(
                 userId,
                 settings.roundDurationMinutes(),
                 settings.locationRevealIntervalMinutes(),
-                settings.policeWaitMinutes(),
+                settings.chaserWaitMinutes(),
                 settings.maxParticipants(),
                 settings.shrinkFinalRadiusInMeters()
         );

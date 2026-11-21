@@ -161,7 +161,7 @@ public class GameService {
         game.updateSettings(
                 command.roundDurationMinutes(),
                 command.locationRevealIntervalMinutes(),
-                command.policeWaitMinutes(),
+                command.chaserWaitMinutes(),
                 command.maxParticipants(),
                 command.shrinkFinalRadiusInMeters()
         );

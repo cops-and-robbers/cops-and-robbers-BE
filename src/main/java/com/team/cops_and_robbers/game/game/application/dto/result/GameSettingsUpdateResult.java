@@ -7,7 +7,7 @@ public record GameSettingsUpdateResult(
         GameMode gameMode,
         Integer roundDurationMinutes,
         Integer locationRevealIntervalMinutes,
-        Integer policeWaitMinutes,
+        Integer chaserWaitMinutes,
         Integer maxParticipants,
         Integer shrinkFinalRadiusInMeters
 ) {
@@ -17,7 +17,7 @@ public record GameSettingsUpdateResult(
                 game.getGameMode(),
                 game.getRoundDurationMinutes(),
                 game.getLocationRevealIntervalMinutes(),
-                game.getPoliceWaitMinutes(),
+                game.getChaserWaitMinutes(),
                 game.getMaxParticipants(),
                 game.getShrinkFinalRadiusInMeters()
         );

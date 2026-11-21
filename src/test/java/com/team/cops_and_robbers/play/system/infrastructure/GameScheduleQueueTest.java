@@ -57,7 +57,7 @@ class GameScheduleQueueTest {
 
         @Test
         void 경찰_대기_시각이_미래면_이벤트가_등록된다() {
-            // given: 방금 시작된 게임 (policeWaitMinutes=3 → 3분 후 출동)
+            // given: 방금 시작된 게임 (chaserWaitMinutes=3 → 3분 후 출동)
             Game game = IN_PROGRESS_GAME(FIXED_NOW);
 
             // when
@@ -69,7 +69,7 @@ class GameScheduleQueueTest {
 
         @Test
         void 경찰_대기_시각이_이미_지났으면_등록되지_않는다() {
-            // given: 10분 전 시작, policeWaitMinutes=3 → 7분 전에 이미 출동
+            // given: 10분 전 시작, chaserWaitMinutes=3 → 7분 전에 이미 출동
             Game game = IN_PROGRESS_GAME(FIXED_NOW.minusMinutes(10));
 
             // when

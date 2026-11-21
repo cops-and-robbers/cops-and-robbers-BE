@@ -52,7 +52,7 @@ public class LoadTestSeeder {
 
     private static final int ROUND_DURATION_MINUTES = 60;
     private static final int LOCATION_REVEAL_INTERVAL_MINUTES = 5;
-    private static final int POLICE_WAIT_MINUTES = 3;
+    private static final int CHASER_WAIT_MINUTES = 3;
 
     private static final double CENTER_LAT = 37.5665;
     private static final double CENTER_LNG = 126.978;
@@ -85,7 +85,7 @@ public class LoadTestSeeder {
                 ),
                 ROUND_DURATION_MINUTES,
                 LOCATION_REVEAL_INTERVAL_MINUTES,
-                POLICE_WAIT_MINUTES,
+                CHASER_WAIT_MINUTES,
                 size,
                 null,
                 GameMode.COPS_AND_ROBBERS

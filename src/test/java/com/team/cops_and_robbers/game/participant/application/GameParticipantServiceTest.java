@@ -271,7 +271,7 @@ class GameParticipantServiceTest extends ServiceUnitTest {
                         .status(GameStatus.WAITING)
                         .roundDurationMinutes(30)
                         .locationRevealIntervalMinutes(5)
-                        .policeWaitMinutes(3)
+                        .chaserWaitMinutes(3)
                         .maxParticipants(10)
                         .isEventGame(true)
                         .build();

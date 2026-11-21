@@ -49,7 +49,7 @@ public class Game extends BaseTimeEntity {
     private Integer locationRevealIntervalMinutes;
 
     @Column(nullable = false)
-    private Integer policeWaitMinutes;
+    private Integer chaserWaitMinutes;
 
     @Column(nullable = false)
     private Integer maxParticipants;
@@ -98,7 +98,7 @@ public class Game extends BaseTimeEntity {
                 .gameMode(command.gameMode())
                 .roundDurationMinutes(command.roundDurationMinutes())
                 .locationRevealIntervalMinutes(command.locationRevealIntervalMinutes())
-                .policeWaitMinutes(command.policeWaitMinutes())
+                .chaserWaitMinutes(command.chaserWaitMinutes())
                 .maxParticipants(command.maxParticipants())
                 .shrinkFinalRadiusInMeters(command.shrinkFinalRadiusInMeters())
                 .build();
@@ -111,13 +111,13 @@ public class Game extends BaseTimeEntity {
     public void updateSettings(
             Integer roundDurationMinutes,
             Integer locationRevealIntervalMinutes,
-            Integer policeWaitMinutes,
+            Integer chaserWaitMinutes,
             Integer maxParticipants,
             Integer shrinkFinalRadiusInMeters
     ) {
         this.roundDurationMinutes = roundDurationMinutes;
         this.locationRevealIntervalMinutes = locationRevealIntervalMinutes;
-        this.policeWaitMinutes = policeWaitMinutes;
+        this.chaserWaitMinutes = chaserWaitMinutes;
         this.maxParticipants = maxParticipants;
         this.shrinkFinalRadiusInMeters = shrinkFinalRadiusInMeters;
     }
@@ -147,7 +147,7 @@ public class Game extends BaseTimeEntity {
     }
 
     public LocalDateTime getChaserMoveStartTime() {
-        return this.startedAt.plusMinutes(this.policeWaitMinutes);
+        return this.startedAt.plusMinutes(this.chaserWaitMinutes);
     }
 
     public LocalDateTime getGameOverTime() {

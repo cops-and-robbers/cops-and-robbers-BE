@@ -411,7 +411,7 @@ class GameServiceTest extends ServiceUnitTest {
             then(eventPublisher).should().publishEvent(lobbyEvent);
             assertThat(result.roundDurationMinutes()).isEqualTo(command.roundDurationMinutes());
             assertThat(result.locationRevealIntervalMinutes()).isEqualTo(command.locationRevealIntervalMinutes());
-            assertThat(result.policeWaitMinutes()).isEqualTo(command.policeWaitMinutes());
+            assertThat(result.chaserWaitMinutes()).isEqualTo(command.chaserWaitMinutes());
             assertThat(result.maxParticipants()).isEqualTo(command.maxParticipants());
         }
 

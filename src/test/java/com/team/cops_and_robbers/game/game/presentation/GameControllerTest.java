@@ -512,7 +512,7 @@ class GameControllerTest extends ControllerTest {
                 softly.assertThat(response.statusCode()).isEqualTo(200);
                 softly.assertThat(response.jsonPath().getInt("roundDurationMinutes")).isEqualTo(game.getRoundDurationMinutes());
                 softly.assertThat(response.jsonPath().getInt("locationRevealIntervalMinutes")).isEqualTo(game.getLocationRevealIntervalMinutes());
-                softly.assertThat(response.jsonPath().getInt("policeWaitMinutes")).isEqualTo(game.getPoliceWaitMinutes());
+                softly.assertThat(response.jsonPath().getInt("chaserWaitMinutes")).isEqualTo(game.getChaserWaitMinutes());
                 softly.assertThat(response.jsonPath().getInt("maxParticipants")).isEqualTo(game.getMaxParticipants());
                 softly.assertThat(response.jsonPath().getBoolean("isStarted")).isFalse();
                 softly.assertThat((Object) response.jsonPath().get("gameStartTime")).isNull();
@@ -947,7 +947,7 @@ class GameControllerTest extends ControllerTest {
                 softly.assertThat(result.gameMode()).isEqualTo(GameMode.COPS_AND_ROBBERS);
                 softly.assertThat(result.roundDurationMinutes()).isEqualTo(60);
                 softly.assertThat(result.locationRevealIntervalMinutes()).isEqualTo(10);
-                softly.assertThat(result.policeWaitMinutes()).isEqualTo(5);
+                softly.assertThat(result.chaserWaitMinutes()).isEqualTo(5);
                 softly.assertThat(result.maxParticipants()).isEqualTo(20);
             });
         }

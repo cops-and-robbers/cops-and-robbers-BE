@@ -77,7 +77,7 @@ public sealed interface LobbyEventData permits
             GameMode gameMode,
             Integer roundDurationMinutes,
             Integer locationRevealIntervalMinutes,
-            Integer policeWaitMinutes,
+            Integer chaserWaitMinutes,
             Integer maxParticipants,
             Integer shrinkFinalRadiusInMeters
     ) implements LobbyEventData {
@@ -85,7 +85,7 @@ public sealed interface LobbyEventData permits
             return new LobbySettingsUpdatedData(
                     result.gameMode(),
                     result.roundDurationMinutes(), result.locationRevealIntervalMinutes(),
-                    result.policeWaitMinutes(), result.maxParticipants(),
+                    result.chaserWaitMinutes(), result.maxParticipants(),
                     result.shrinkFinalRadiusInMeters()
             );
         }

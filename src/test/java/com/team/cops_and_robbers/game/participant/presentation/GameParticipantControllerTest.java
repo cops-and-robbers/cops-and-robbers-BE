@@ -122,7 +122,7 @@ class GameParticipantControllerTest extends ControllerTest {
                             .status(GameStatus.WAITING)
                             .roundDurationMinutes(30)
                             .locationRevealIntervalMinutes(5)
-                            .policeWaitMinutes(3)
+                            .chaserWaitMinutes(3)
                             .maxParticipants(2) // 최대 인원 2
                             .build()
             );

@@ -17,7 +17,7 @@ public record GameCreateResponse(
         @Schema(description = "위치 공개 주기(분)", example = "5")
         Integer locationRevealIntervalMinutes,
         @Schema(description = "경찰 대기 시간(분)", example = "3")
-        Integer policeWaitMinutes,
+        Integer chaserWaitMinutes,
         @Schema(description = "최대 참가 인원", example = "10")
         Integer maxParticipants,
         @Schema(description = "구역 축소의 최종 반경(m). null 이면 축소를 쓰지 않는다", example = "200", nullable = true)
@@ -34,7 +34,7 @@ public record GameCreateResponse(
                 result.gameMode(),
                 result.roundDurationMinutes(),
                 result.locationRevealIntervalMinutes(),
-                result.policeWaitMinutes(),
+                result.chaserWaitMinutes(),
                 result.maxParticipants(),
                 result.shrinkFinalRadiusInMeters(),
                 result.createdAt()

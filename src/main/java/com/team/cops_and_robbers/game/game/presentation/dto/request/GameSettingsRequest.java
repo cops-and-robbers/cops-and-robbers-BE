@@ -20,7 +20,7 @@ public record GameSettingsRequest(
         @Schema(description = "경찰 대기 시간(분)", example = "3")
         @NotNull(message = "경찰 대기 시간을 입력해주세요.")
         @Min(value = 1, message = "경찰 대기 시간은 최소 1분입니다.")
-        Integer policeWaitMinutes,
+        Integer chaserWaitMinutes,
 
         @Schema(description = "최대 참가 인원", example = "10")
         @NotNull(message = "최대 참가 인원을 입력해주세요.")
