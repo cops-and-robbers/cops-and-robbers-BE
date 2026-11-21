@@ -2,7 +2,7 @@ package com.team.cops_and_robbers.play.location.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team.cops_and_robbers.common.util.AesEncryptor;
-import com.team.cops_and_robbers.play.location.domain.RobberLocationHash;
+import com.team.cops_and_robbers.play.location.domain.RunnerLocationHash;
 import com.team.cops_and_robbers.play.system.domain.SystemEventData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -13,18 +13,18 @@ import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
-public class RobberLocationRepository {
+public class RunnerLocationRepository {
 
     private static final String KEY_PREFIX = "game:";
-    private static final String KEY_SUFFIX = ":robber-location";
+    private static final String KEY_SUFFIX = ":runner-location";
     private static final Duration TTL = Duration.ofMinutes(10);
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
     private final AesEncryptor aesEncryptor;
 
-    public void save(Long gameId, Long participantId, SystemEventData.RobberLocation location) {
-        RobberLocationHash hash = new RobberLocationHash(
+    public void save(Long gameId, Long participantId, SystemEventData.RunnerLocation location) {
+        RunnerLocationHash hash = new RunnerLocationHash(
                 location.participantId(),
                 location.nickname(),
                 aesEncryptor.encrypt(String.valueOf(location.latitude())),
@@ -34,10 +34,10 @@ public class RobberLocationRepository {
         redisTemplate.expire(key(gameId), TTL);
     }
 
-    public List<SystemEventData.RobberLocation> findAllByGameId(Long gameId) {
+    public List<SystemEventData.RunnerLocation> findAllByGameId(Long gameId) {
         return redisTemplate.opsForHash().values(key(gameId)).stream()
-                .map(value -> objectMapper.convertValue(value, RobberLocationHash.class))
-                .map(location -> SystemEventData.RobberLocation.of(
+                .map(value -> objectMapper.convertValue(value, RunnerLocationHash.class))
+                .map(location -> SystemEventData.RunnerLocation.of(
                         location.participantId(),
                         location.nickname(),
                         Double.parseDouble(aesEncryptor.decrypt(location.encryptedLatitude())),

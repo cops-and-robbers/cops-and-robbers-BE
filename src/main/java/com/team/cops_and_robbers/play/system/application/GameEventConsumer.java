@@ -5,7 +5,7 @@ import com.team.cops_and_robbers.game.game.repository.GameRepository;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
-import com.team.cops_and_robbers.play.location.application.RobberLocationService;
+import com.team.cops_and_robbers.play.location.application.RunnerLocationService;
 import com.team.cops_and_robbers.play.notification.application.GameFcmNotifier;
 import com.team.cops_and_robbers.play.system.domain.GameScheduleEvent;
 import com.team.cops_and_robbers.play.system.domain.SystemEvent;
@@ -31,7 +31,7 @@ public class GameEventConsumer {
     private final GameScheduleQueue gameScheduleQueue;
     private final GameRepository gameRepository;
     private final GameParticipantRepository gameParticipantRepository;
-    private final RobberLocationService robberLocationService;
+    private final RunnerLocationService runnerLocationService;
     private final GameTerminationService gameTerminationService;
     private final SystemPublisher systemPublisher;
     private final SystemEventFactory systemEventFactory;
@@ -121,7 +121,7 @@ public class GameEventConsumer {
      * 도둑 위치 공개: 위치 발행 후 다음 공개 이벤트 재등록
      */
     private void executeRunnerLocationReveal(Game game) {
-        List<SystemEventData.RobberLocation> locations = robberLocationService.revealRobberLocations(game.getId());
+        List<SystemEventData.RunnerLocation> locations = runnerLocationService.revealRunnerLocations(game.getId());
         SystemEvent event = systemEventFactory.createRunnerLocationRevealEvent(game.getId(), locations);
         systemPublisher.publish(event);
         gameFcmNotifier.notifySystemEvent(event);

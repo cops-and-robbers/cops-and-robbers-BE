@@ -7,7 +7,7 @@ import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.play.common.application.InGameParticipantCacheService;
-import com.team.cops_and_robbers.play.location.application.RobberLocationService;
+import com.team.cops_and_robbers.play.location.application.RunnerLocationService;
 import com.team.cops_and_robbers.play.location.application.dto.command.LocationUpdateCommand;
 import com.team.cops_and_robbers.play.location.presentation.dto.GameStateResponse;
 import com.team.cops_and_robbers.user.domain.User;
@@ -27,7 +27,7 @@ class GameStateControllerTest extends ControllerTest {
     private static final String STATE_URL = "/api/games/{gameId}/state";
 
     @Autowired
-    private RobberLocationService robberLocationService;
+    private RunnerLocationService runnerLocationService;
 
     @Autowired
     private InGameParticipantCacheService inGameParticipantCacheService;
@@ -56,8 +56,8 @@ class GameStateControllerTest extends ControllerTest {
 
         inGameParticipantCacheService.clearCache(game.getId());
         inGameParticipantCacheService.loadCache(game.getId());
-        robberLocationService.clearRobberLocations(game.getId());
-        robberLocationService.clearRobberLocationSnapshot(game.getId());
+        runnerLocationService.clearRunnerLocations(game.getId());
+        runnerLocationService.clearRunnerLocationSnapshot(game.getId());
     }
 
     @Nested
@@ -67,13 +67,13 @@ class GameStateControllerTest extends ControllerTest {
         @Test
         void 스냅샷과_전체_참여자_현황을_함께_반환한다() {
             // given
-            robberLocationService.updateLocation(
+            runnerLocationService.updateLocation(
                     new LocationUpdateCommand(game.getId(), robberParticipant1.getId(), 37.5665, 126.9780)
             );
-            robberLocationService.updateLocation(
+            runnerLocationService.updateLocation(
                     new LocationUpdateCommand(game.getId(), robberParticipant2.getId(), 37.1234, 126.1234)
             );
-            robberLocationService.revealRobberLocations(game.getId());
+            runnerLocationService.revealRunnerLocations(game.getId());
 
             // when
             ExtractableResponse<Response> response = authenticated(policeToken)
@@ -87,7 +87,7 @@ class GameStateControllerTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(200);
                 softly.assertThat(result.gameMode()).isEqualTo(GameMode.COPS_AND_ROBBERS);
-                softly.assertThat(result.robberLocations()).hasSize(2);
+                softly.assertThat(result.runnerLocations()).hasSize(2);
                 softly.assertThat(result.participants()).hasSize(3);
             });
         }
@@ -95,15 +95,15 @@ class GameStateControllerTest extends ControllerTest {
         @Test
         void 잡힌_도둑의_위치는_응답에_포함되지_않는다() {
             // given: 두 도둑 모두 위치 업데이트, robber2를 JAILED로 변경 후 공개
-            robberLocationService.updateLocation(
+            runnerLocationService.updateLocation(
                     new LocationUpdateCommand(game.getId(), robberParticipant1.getId(), 37.5665, 126.9780)
             );
-            robberLocationService.updateLocation(
+            runnerLocationService.updateLocation(
                     new LocationUpdateCommand(game.getId(), robberParticipant2.getId(), 37.1111, 126.1111)
             );
             robberParticipant2.updateStatus(ParticipantStatus.JAILED);
             gameParticipantRepository.save(robberParticipant2);
-            robberLocationService.revealRobberLocations(game.getId());
+            runnerLocationService.revealRunnerLocations(game.getId());
 
             // when
             ExtractableResponse<Response> response = authenticated(policeToken)
@@ -116,8 +116,8 @@ class GameStateControllerTest extends ControllerTest {
             GameStateResponse result = response.as(GameStateResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(200);
-                softly.assertThat(result.robberLocations()).hasSize(1);
-                softly.assertThat(result.robberLocations().get(0).participantId()).isEqualTo(robberParticipant1.getId());
+                softly.assertThat(result.runnerLocations()).hasSize(1);
+                softly.assertThat(result.runnerLocations().get(0).participantId()).isEqualTo(robberParticipant1.getId());
                 softly.assertThat(result.participants()).hasSize(3);
             });
         }
@@ -125,10 +125,10 @@ class GameStateControllerTest extends ControllerTest {
         @Test
         void 경찰_대기시간_중에는_경찰과_도둑_모두_위치가_빈_목록으로_반환된다() {
             // given: 스냅샷이 존재하더라도 경찰이 한 명이라도 POLICE_WAITING이면 빈 배열
-            robberLocationService.updateLocation(
+            runnerLocationService.updateLocation(
                     new LocationUpdateCommand(game.getId(), robberParticipant1.getId(), 37.5665, 126.9780)
             );
-            robberLocationService.revealRobberLocations(game.getId());
+            runnerLocationService.revealRunnerLocations(game.getId());
             givenWaitingPolice(game, police);
 
             String robber1Token = givenAccessToken(robber1);
@@ -150,9 +150,9 @@ class GameStateControllerTest extends ControllerTest {
             // then: 요청자가 누구든 빈 배열
             assertSoftly(softly -> {
                 softly.assertThat(policeResponse.statusCode()).isEqualTo(200);
-                softly.assertThat(policeResponse.as(GameStateResponse.class).robberLocations()).isEmpty();
+                softly.assertThat(policeResponse.as(GameStateResponse.class).runnerLocations()).isEmpty();
                 softly.assertThat(robberResponse.statusCode()).isEqualTo(200);
-                softly.assertThat(robberResponse.as(GameStateResponse.class).robberLocations()).isEmpty();
+                softly.assertThat(robberResponse.as(GameStateResponse.class).runnerLocations()).isEmpty();
             });
         }
 

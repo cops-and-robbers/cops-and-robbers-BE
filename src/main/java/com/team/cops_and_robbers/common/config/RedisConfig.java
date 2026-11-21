@@ -9,7 +9,7 @@ import com.team.cops_and_robbers.play.chat.application.PoliceChatSubscriber;
 import com.team.cops_and_robbers.play.chat.application.RobberChatSubscriber;
 import com.team.cops_and_robbers.play.lobby.application.LobbySubscriber;
 import com.team.cops_and_robbers.play.location.application.PoliceLocationSubscriber;
-import com.team.cops_and_robbers.play.location.application.RobberLocationSubscriber;
+import com.team.cops_and_robbers.play.location.application.RunnerLocationSubscriber;
 import com.team.cops_and_robbers.play.ping.application.PolicePingSubscriber;
 import com.team.cops_and_robbers.play.ping.application.RobberPingSubscriber;
 import com.team.cops_and_robbers.play.system.application.SystemSubscriber;
@@ -121,7 +121,7 @@ public class RedisConfig {
             MessageListenerAdapter policeChatAdapter,
             MessageListenerAdapter robberChatAdapter,
             MessageListenerAdapter policeLocationAdapter,
-            MessageListenerAdapter robberLocationAdapter,
+            MessageListenerAdapter runnerLocationAdapter,
             MessageListenerAdapter policePingAdapter,
             MessageListenerAdapter robberPingAdapter,
             MessageListenerAdapter communityChatAdapter,
@@ -134,7 +134,7 @@ public class RedisConfig {
                 Map.entry(RedisChannel.CHAT_POLICE.getPattern(), policeChatAdapter),
                 Map.entry(RedisChannel.CHAT_ROBBER.getPattern(), robberChatAdapter),
                 Map.entry(RedisChannel.LOCATION_POLICE.getPattern(), policeLocationAdapter),
-                Map.entry(RedisChannel.LOCATION_ROBBER.getPattern(), robberLocationAdapter),
+                Map.entry(RedisChannel.LOCATION_ROBBER.getPattern(), runnerLocationAdapter),
                 Map.entry(RedisChannel.PING_POLICE.getPattern(), policePingAdapter),
                 Map.entry(RedisChannel.PING_ROBBER.getPattern(), robberPingAdapter),
                 Map.entry(RedisChannel.COMMUNITY_CHAT.getPattern(), communityChatAdapter),
@@ -177,7 +177,7 @@ public class RedisConfig {
     }
 
     @Bean
-    public MessageListenerAdapter robberLocationAdapter(RobberLocationSubscriber subscriber) {
+    public MessageListenerAdapter runnerLocationAdapter(RunnerLocationSubscriber subscriber) {
         return new MessageListenerAdapter(subscriber, LISTENER_METHOD_NAME);
     }
 

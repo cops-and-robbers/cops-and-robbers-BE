@@ -92,7 +92,7 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
         and gp.team = 'ROBBER'
         and gp.status = 'ALIVE'
         """)
-    Set<Long> findAliveRobberIdsByGameId(@Param("gameId") Long gameId);
+    Set<Long> findAliveRunnerIdsByGameId(@Param("gameId") Long gameId);
 
     /**
      * 게임의 모든 참가자 상태를 업데이트

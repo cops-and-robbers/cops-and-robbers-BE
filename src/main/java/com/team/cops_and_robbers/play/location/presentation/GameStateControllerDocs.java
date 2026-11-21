@@ -27,12 +27,12 @@ public interface GameStateControllerDocs {
                     - 가장 최근 도둑 위치 공개 시점의 위치를 기준으로 목록을 응답합니다.
 
                     **응답 내용**
-                    - `robberLocations`: 마지막 위치 공개 주기에 찍힌 생존 도둑들의 위치
+                    - `runnerLocations`: 마지막 위치 공개 주기에 찍힌 생존 도둑들의 위치
                     - `participants`: 전체 참가자의 팀·상태 현황
 
-                    **robberLocations 반환 조건**
+                    **runnerLocations 반환 조건**
 
-                    | 게임 단계 | robberLocations |
+                    | 게임 단계 | runnerLocations |
                     |---|---|
                     | 경찰 대기 시간 중 (POLICE_WAITING) | 빈 배열 |
                     | 경찰 출동 후 첫 위치 공개 전 | 빈 배열 |
@@ -53,7 +53,7 @@ public interface GameStateControllerDocs {
                                             summary = "경찰이 아직 출동하지 않은 상태 — 누구도 도둑 위치를 볼 수 없음",
                                             value = """
                                                     {
-                                                      "robberLocations": [],
+                                                      "runnerLocations": [],
                                                       "participants": [
                                                         {"participantId": 1, "nickname": "빠른경찰1", "team": "POLICE", "status": "POLICE_WAITING"},
                                                         {"participantId": 2, "nickname": "민첩한괴도1", "team": "ROBBER", "status": "ALIVE"},
@@ -67,7 +67,7 @@ public interface GameStateControllerDocs {
                                             summary = "경찰 출동 완료, 아직 위치 공개 주기가 도래하지 않아 스냅샷 없음",
                                             value = """
                                                     {
-                                                      "robberLocations": [],
+                                                      "runnerLocations": [],
                                                       "participants": [
                                                         {"participantId": 1, "nickname": "빠른경찰1", "team": "POLICE", "status": "ALIVE"},
                                                         {"participantId": 2, "nickname": "민첩한괴도1", "team": "ROBBER", "status": "ALIVE"},
@@ -81,7 +81,7 @@ public interface GameStateControllerDocs {
                                             summary = "최소 1회 위치 공개 완료, JAILED 도둑은 위치 목록에서 제외되고 participants에만 포함",
                                             value = """
                                                     {
-                                                      "robberLocations": [
+                                                      "runnerLocations": [
                                                         {"participantId": 2, "nickname": "민첩한괴도1", "latitude": 37.5665, "longitude": 126.9780}
                                                       ],
                                                       "participants": [

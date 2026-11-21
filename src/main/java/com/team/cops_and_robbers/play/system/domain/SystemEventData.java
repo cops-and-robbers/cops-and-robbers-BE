@@ -31,14 +31,14 @@ public sealed interface SystemEventData permits
         }
     }
 
-    record RobberLocation(Long participantId, String nickname, Double latitude, Double longitude) {
-        public static RobberLocation of(Long participantId, String nickname, Double latitude, Double longitude) {
-            return new RobberLocation(participantId, nickname, latitude, longitude);
+    record RunnerLocation(Long participantId, String nickname, Double latitude, Double longitude) {
+        public static RunnerLocation of(Long participantId, String nickname, Double latitude, Double longitude) {
+            return new RunnerLocation(participantId, nickname, latitude, longitude);
         }
     }
 
-    record RunnerLocationRevealData(List<RobberLocation> locations) implements SystemEventData {
-        public static RunnerLocationRevealData of(List<RobberLocation> locations) {
+    record RunnerLocationRevealData(List<RunnerLocation> locations) implements SystemEventData {
+        public static RunnerLocationRevealData of(List<RunnerLocation> locations) {
             return new RunnerLocationRevealData(locations);
         }
     }

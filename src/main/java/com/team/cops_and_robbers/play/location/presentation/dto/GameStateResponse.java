@@ -13,19 +13,19 @@ public record GameStateResponse(
         GameMode gameMode,
 
         @Schema(description = "마지막 공개된 생존 도둑 위치 목록")
-        List<RobberLocationInfo> robberLocations,
+        List<RunnerLocationInfo> runnerLocations,
 
         @Schema(description = "전체 참여자 현황")
         List<ParticipantInfo> participants
 ) {
-    public record RobberLocationInfo(
+    public record RunnerLocationInfo(
             @Schema(description = "참여자 ID") Long participantId,
             @Schema(description = "닉네임") String nickname,
             @Schema(description = "위도") Double latitude,
             @Schema(description = "경도") Double longitude
     ) {
-        public static RobberLocationInfo from(GameStateResult.RobberLocationInfo result) {
-            return new RobberLocationInfo(
+        public static RunnerLocationInfo from(GameStateResult.RunnerLocationInfo result) {
+            return new RunnerLocationInfo(
                     result.participantId(),
                     result.nickname(),
                     result.latitude(),
@@ -53,7 +53,7 @@ public record GameStateResponse(
     public static GameStateResponse from(GameStateResult result) {
         return new GameStateResponse(
                 result.gameMode(),
-                result.robberLocations().stream().map(RobberLocationInfo::from).toList(),
+                result.runnerLocations().stream().map(RunnerLocationInfo::from).toList(),
                 result.participants().stream().map(ParticipantInfo::from).toList()
         );
     }

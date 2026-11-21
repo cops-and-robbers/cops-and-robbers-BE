@@ -8,7 +8,7 @@ import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
-import com.team.cops_and_robbers.play.location.application.RobberLocationService;
+import com.team.cops_and_robbers.play.location.application.RunnerLocationService;
 import com.team.cops_and_robbers.play.location.application.dto.command.LocationUpdateCommand;
 import com.team.cops_and_robbers.play.system.application.SystemEventFactory;
 import com.team.cops_and_robbers.play.system.application.SystemPublisher;
@@ -39,7 +39,7 @@ class SystemE2ETest extends WebSocketE2ETest {
     private SystemEventFactory systemEventFactory;
 
     @Autowired
-    private RobberLocationService robberLocationService;
+    private RunnerLocationService runnerLocationService;
 
     private record SystemSetup(
             Game game,
@@ -95,12 +95,12 @@ class SystemE2ETest extends WebSocketE2ETest {
         // given
         SystemSetup setup = givenSystemSetup();
 
-        robberLocationService.updateLocation(
+        runnerLocationService.updateLocation(
                 new LocationUpdateCommand(setup.game().getId(), setup.robberParticipant().getId(), 37.5, 127.0)
         );
 
         // when
-        List<SystemEventData.RobberLocation> locations = robberLocationService.revealRobberLocations(setup.game().getId());
+        List<SystemEventData.RunnerLocation> locations = runnerLocationService.revealRunnerLocations(setup.game().getId());
         SystemEvent event = systemEventFactory.createRunnerLocationRevealEvent(setup.game().getId(), locations);
         systemPublisher.publish(event);
 

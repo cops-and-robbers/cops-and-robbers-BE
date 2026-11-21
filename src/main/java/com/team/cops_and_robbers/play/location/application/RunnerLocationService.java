@@ -7,8 +7,8 @@ import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepo
 import com.team.cops_and_robbers.play.common.domain.InGameParticipantCache;
 import com.team.cops_and_robbers.play.common.repository.InGameParticipantCacheRepository;
 import com.team.cops_and_robbers.play.location.application.dto.command.LocationUpdateCommand;
-import com.team.cops_and_robbers.play.location.repository.RobberLocationRepository;
-import com.team.cops_and_robbers.play.location.repository.RobberLocationSnapshotRepository;
+import com.team.cops_and_robbers.play.location.repository.RunnerLocationRepository;
+import com.team.cops_and_robbers.play.location.repository.RunnerLocationSnapshotRepository;
 import com.team.cops_and_robbers.play.system.domain.SystemEventData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,11 +20,11 @@ import java.util.Set;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class RobberLocationService {
+public class RunnerLocationService {
 
     private final GameParticipantRepository gameParticipantRepository;
-    private final RobberLocationRepository robberLocationRepository;
-    private final RobberLocationSnapshotRepository robberLocationSnapshotRepository;
+    private final RunnerLocationRepository runnerLocationRepository;
+    private final RunnerLocationSnapshotRepository runnerLocationSnapshotRepository;
     private final InGameParticipantCacheRepository inGameParticipantCacheRepository;
 
     public void updateLocation(LocationUpdateCommand command) {
@@ -35,15 +35,15 @@ public class RobberLocationService {
             throw new ApplicationException(GameParticipantException.NOT_ROBBER_TEAM);
         }
 
-        SystemEventData.RobberLocation location =
-                SystemEventData.RobberLocation.of(
+        SystemEventData.RunnerLocation location =
+                SystemEventData.RunnerLocation.of(
                         command.participantId(),
                         participant.nickname(),
                         command.latitude(),
                         command.longitude()
                 );
 
-        robberLocationRepository.save(command.gameId(), command.participantId(), location);
+        runnerLocationRepository.save(command.gameId(), command.participantId(), location);
     }
 
     /**
@@ -51,20 +51,20 @@ public class RobberLocationService {
      *   - ALIVE 상태의 도둑 위치만 조회
      *   - 조회 후, 스냅샷 생성
      */
-    public List<SystemEventData.RobberLocation> revealRobberLocations(Long gameId) {
-        Set<Long> aliveRobberIds = gameParticipantRepository.findAliveRobberIdsByGameId(gameId);
-        List<SystemEventData.RobberLocation> locations = robberLocationRepository.findAllByGameId(gameId).stream()
-                .filter(loc -> aliveRobberIds.contains(loc.participantId()))
+    public List<SystemEventData.RunnerLocation> revealRunnerLocations(Long gameId) {
+        Set<Long> aliveRunnerIds = gameParticipantRepository.findAliveRunnerIdsByGameId(gameId);
+        List<SystemEventData.RunnerLocation> locations = runnerLocationRepository.findAllByGameId(gameId).stream()
+                .filter(loc -> aliveRunnerIds.contains(loc.participantId()))
                 .toList();
-        robberLocationSnapshotRepository.saveAll(gameId, locations);
+        runnerLocationSnapshotRepository.saveAll(gameId, locations);
         return locations;
     }
 
-    public void clearRobberLocations(Long gameId) {
-        robberLocationRepository.deleteAllByGameId(gameId);
+    public void clearRunnerLocations(Long gameId) {
+        runnerLocationRepository.deleteAllByGameId(gameId);
     }
 
-    public void clearRobberLocationSnapshot(Long gameId) {
-        robberLocationSnapshotRepository.deleteAllByGameId(gameId);
+    public void clearRunnerLocationSnapshot(Long gameId) {
+        runnerLocationSnapshotRepository.deleteAllByGameId(gameId);
     }
 }

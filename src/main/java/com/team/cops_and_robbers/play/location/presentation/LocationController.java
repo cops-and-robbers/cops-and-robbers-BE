@@ -3,7 +3,7 @@ package com.team.cops_and_robbers.play.location.presentation;
 import com.team.cops_and_robbers.common.exception.ApplicationException;
 import com.team.cops_and_robbers.common.exception.CommonException;
 import com.team.cops_and_robbers.common.util.StompSessionHelper;
-import com.team.cops_and_robbers.play.location.application.RobberLocationService;
+import com.team.cops_and_robbers.play.location.application.RunnerLocationService;
 import com.team.cops_and_robbers.play.location.application.dto.command.LocationUpdateCommand;
 import com.team.cops_and_robbers.play.location.presentation.dto.LocationUpdateRequest;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Controller;
 @RequiredArgsConstructor
 public class LocationController {
 
-    private final RobberLocationService robberLocationService;
+    private final RunnerLocationService runnerLocationService;
 
     @MessageMapping("/game/{gameId}/location")
     public void updateLocation(
@@ -30,6 +30,6 @@ public class LocationController {
         Long participantId = StompSessionHelper.getParticipantId(accessor)
                 .orElseThrow(() -> new ApplicationException(CommonException.INVALID_SOCKET_SESSION));
 
-        robberLocationService.updateLocation(LocationUpdateCommand.of(gameId, participantId, request));
+        runnerLocationService.updateLocation(LocationUpdateCommand.of(gameId, participantId, request));
     }
 }

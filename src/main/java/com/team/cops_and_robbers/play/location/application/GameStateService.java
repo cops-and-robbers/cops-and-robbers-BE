@@ -9,7 +9,7 @@ import com.team.cops_and_robbers.game.participant.exception.GameParticipantExcep
 import com.team.cops_and_robbers.game.participant.repository.GameParticipantRepository;
 import com.team.cops_and_robbers.play.location.application.dto.command.GameStateCommand;
 import com.team.cops_and_robbers.play.location.application.dto.result.GameStateResult;
-import com.team.cops_and_robbers.play.location.repository.RobberLocationSnapshotRepository;
+import com.team.cops_and_robbers.play.location.repository.RunnerLocationSnapshotRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +23,7 @@ public class GameStateService {
 
     private final GameRepository gameRepository;
     private final GameParticipantRepository gameParticipantRepository;
-    private final RobberLocationSnapshotRepository robberLocationSnapshotRepository;
+    private final RunnerLocationSnapshotRepository runnerLocationSnapshotRepository;
 
     /**
      * 1. 진행중인 게임의 상태를 응답합니다
@@ -39,7 +39,7 @@ public class GameStateService {
 
         return new GameStateResult(
                 game.getGameMode(),
-                buildRobberLocations(command.gameId(), allParticipants),
+                buildRunnerLocations(command.gameId(), allParticipants),
                 buildParticipantInfos(allParticipants)
         );
     }
@@ -67,15 +67,15 @@ public class GameStateService {
     /**
      * 현재 ALIVE 상태의 도둑들의 위치를 최근 위치 공개 시점의 스냅샷에서 조회합니다.
      */
-    private List<GameStateResult.RobberLocationInfo> buildRobberLocations(
+    private List<GameStateResult.RunnerLocationInfo> buildRunnerLocations(
             Long gameId, List<GameParticipant> allParticipants) {
         if (isPoliceWaitingPhase(allParticipants)) {
             return List.of();
         }
-        Set<Long> aliveRobberIds = extractAliveRobberIds(allParticipants);
-        return robberLocationSnapshotRepository.findAllByGameId(gameId).stream()
-                .filter(location -> aliveRobberIds.contains(location.participantId()))
-                .map(GameStateResult.RobberLocationInfo::from)
+        Set<Long> aliveRunnerIds = extractAliveRunnerIds(allParticipants);
+        return runnerLocationSnapshotRepository.findAllByGameId(gameId).stream()
+                .filter(location -> aliveRunnerIds.contains(location.participantId()))
+                .map(GameStateResult.RunnerLocationInfo::from)
                 .toList();
     }
 
@@ -90,7 +90,7 @@ public class GameStateService {
     /**
      * 잡히지 않은 도둑들의 participantId를 반환합니다.
      */
-    private Set<Long> extractAliveRobberIds(List<GameParticipant> participants) {
+    private Set<Long> extractAliveRunnerIds(List<GameParticipant> participants) {
         return participants.stream()
                 .filter(p -> p.isRobber() && !p.isJailed())
                 .map(GameParticipant::getId)

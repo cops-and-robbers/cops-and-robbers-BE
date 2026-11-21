@@ -7,7 +7,7 @@ import com.team.cops_and_robbers.common.fixture.GameAreaFixture;
 import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
-import com.team.cops_and_robbers.play.location.application.RobberLocationService;
+import com.team.cops_and_robbers.play.location.application.RunnerLocationService;
 import com.team.cops_and_robbers.play.location.presentation.dto.LocationUpdateRequest;
 import com.team.cops_and_robbers.play.system.application.SystemEventFactory;
 import com.team.cops_and_robbers.play.system.application.SystemPublisher;
@@ -30,7 +30,7 @@ class LocationE2ETest extends WebSocketE2ETest {
     private static final String SYSTEM_CHANNEL = "/subscribe/game/%d/system";
 
     @Autowired
-    private RobberLocationService robberLocationService;
+    private RunnerLocationService runnerLocationService;
 
     @Autowired
     private SystemPublisher systemPublisher;
@@ -81,7 +81,7 @@ class LocationE2ETest extends WebSocketE2ETest {
         Thread.sleep(500);
 
         // then
-        List<SystemEventData.RobberLocation> locations = robberLocationService.revealRobberLocations(setup.game().getId());
+        List<SystemEventData.RunnerLocation> locations = runnerLocationService.revealRunnerLocations(setup.game().getId());
 
         assertThat(locations.get(0).participantId()).isEqualTo(setup.robberParticipant().getId());
         assertThat(locations.get(0).latitude()).isEqualTo(37.5);
@@ -125,7 +125,7 @@ class LocationE2ETest extends WebSocketE2ETest {
             Thread.sleep(500);
 
             // then
-            List<SystemEventData.RobberLocation> locations = robberLocationService.revealRobberLocations(setup.game().getId());
+            List<SystemEventData.RunnerLocation> locations = runnerLocationService.revealRunnerLocations(setup.game().getId());
             assertThat(locations.get(0).participantId()).isEqualTo(setup.robberParticipant().getId());
         }
     }
@@ -141,7 +141,7 @@ class LocationE2ETest extends WebSocketE2ETest {
         Thread.sleep(500);
 
         // when
-        List<SystemEventData.RobberLocation> locations = robberLocationService.revealRobberLocations(setup.game().getId());
+        List<SystemEventData.RunnerLocation> locations = runnerLocationService.revealRunnerLocations(setup.game().getId());
         systemPublisher.publish(systemEventFactory.createRunnerLocationRevealEvent(setup.game().getId(), locations));
 
         // then

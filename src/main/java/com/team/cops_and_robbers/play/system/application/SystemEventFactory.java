@@ -18,7 +18,7 @@ public class SystemEventFactory {
         return SystemEvent.of(gameId, SystemEventType.CHASER_MOVE_START, data);
     }
 
-    public SystemEvent createRunnerLocationRevealEvent(Long gameId, List<SystemEventData.RobberLocation> locations) {
+    public SystemEvent createRunnerLocationRevealEvent(Long gameId, List<SystemEventData.RunnerLocation> locations) {
         SystemEventData.RunnerLocationRevealData data = SystemEventData.RunnerLocationRevealData.of(locations);
         return SystemEvent.of(gameId, SystemEventType.RUNNER_LOCATION_REVEAL, data);
     }
