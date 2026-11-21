@@ -30,8 +30,31 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("👮 경찰과 도둑 API 🥷")
-                .version("4.4.0")
+                .version("4.5.0")
                 .description("""
+                        ## v4.5.0 업데이트 내역
+
+                        ### 🔁 변경 — 경찰·도둑 용어를 모드 공통 용어로 변경
+                        - 쫓는 쪽은 CHASER, 쫓기는 쪽은 RUNNER 로 부른다. 화면 문구(경찰/술래/좀비)는 앱이 gameMode 를 보고 정한다
+                        - 응답 필드에 새 이름을 추가한다. 옛 이름도 같은 값으로 그대로 내려간다 (deprecated)
+                          - policeWaitMinutes → chaserWaitMinutes (게임 생성·조회·설정 변경, 로비 SETTINGS_UPDATED)
+                          - policeMvp / robberMvp / remainingRobberCount → chaserMvp / runnerMvp / remainingRunnerCount (게임 결과)
+                          - police / robbers → chasers / runners (참가자 목록)
+                          - robberLocations → runnerLocations (게임 상태)
+                          - robberNickname / remainingThieves → runnerNickname / remainingRunners (체포 응답)
+                          - police / robber / remainingThieves → chaser / runner / remainingRunners (시스템 ARREST)
+                          - escapedThief / remainingThieves → escapedRunner / remainingRunners (시스템 ESCAPE)
+                        - 요청은 옛 이름과 새 이름을 모두 받는다
+                          - policeWaitMinutes → chaserWaitMinutes (게임 생성·설정 변경)
+                          - robberParticipantId → runnerParticipantId (체포)
+                          - 팀 변경 targetTeam 은 POLICE / ROBBER 와 CHASER / RUNNER 를 모두 받는다
+                        - 구독 경로를 추가한다. 옛 경로에도 같은 메시지가 같이 발행된다
+                          - /subscribe/game/{gameId}/chat/chaser, /chat/runner
+                          - /subscribe/game/{gameId}/ping/chaser, /ping/runner
+                        - 응답 enum 값, 시스템 이벤트 type, FCM type, 에러 코드는 아직 옛 이름 그대로다
+                          - 이후 버전에서 CHASER / RUNNER, CHASER_WAITING, CHASER_FORFEITED, CHASER_MOVE_START, RUNNER_LOCATION_REVEAL, ONLY_CHASER_CAN_ARREST 등으로 바뀐다
+                        - **앱 영향** — 새 앱은 새 필드와 새 구독 경로를 쓰고, enum 값과 에러 코드는 옛 이름과 새 이름을 둘 다 처리한다. 이전 앱은 그대로 동작한다
+
                         ## v4.4.0 업데이트 내역
 
                         ### ✨ 추가 — 무전 서버 혼잡 시 신규 입장 거절
