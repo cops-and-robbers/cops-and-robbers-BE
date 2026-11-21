@@ -142,10 +142,10 @@ public class GameResultService {
         applyDistances(snapshots, participants, distances);
         markTeamMvps(snapshots, result);
 
-        int totalPolice = gameParticipantRepository.countByGameIdAndTeam(
+        int totalChaser = gameParticipantRepository.countByGameIdAndTeam(
                 game.getId(), Team.POLICE
         );
-        int totalRobber = gameParticipantRepository.countByGameIdAndTeam(
+        int totalRunner = gameParticipantRepository.countByGameIdAndTeam(
                 game.getId(), Team.ROBBER
         );
         int jailedCountAtEnd = gameParticipantRepository.countByGameIdAndRobberStatus(
@@ -156,8 +156,8 @@ public class GameResultService {
                 LocalDateTime.now(clock),
                 winner,
                 reason,
-                totalPolice,
-                totalRobber,
+                totalChaser,
+                totalRunner,
                 jailedCountAtEnd,
                 game.getTotalArrestCount()
         );
@@ -226,8 +226,8 @@ public class GameResultService {
         if (Boolean.TRUE.equals(result.getEventGame())) {
             return;
         }
-        teamMvpSelector.selectPoliceMvp(snapshots).ifPresent(GameResultParticipant::markMvp);
-        teamMvpSelector.selectRobberMvp(snapshots).ifPresent(GameResultParticipant::markMvp);
+        teamMvpSelector.selectChaserMvp(snapshots).ifPresent(GameResultParticipant::markMvp);
+        teamMvpSelector.selectRunnerMvp(snapshots).ifPresent(GameResultParticipant::markMvp);
     }
 
     @Transactional(readOnly = true)

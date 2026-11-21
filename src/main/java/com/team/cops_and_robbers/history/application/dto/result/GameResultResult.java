@@ -12,12 +12,12 @@ public record GameResultResult(
         Team winnerTeam,
         Integer durationSeconds,
         Integer totalArrestCount,
-        Integer remainingRobberCount,
-        MvpInfo policeMvp,
-        MvpInfo robberMvp
+        Integer remainingRunnerCount,
+        MvpInfo chaserMvp,
+        MvpInfo runnerMvp
 ) {
     public static GameResultResult from(GameResult gameResult, List<GameResultParticipant> mvps) {
-        int remaining = gameResult.getTotalRobberCount() - gameResult.getArrestedRobberCount();
+        int remaining = gameResult.getTotalRunnerCount() - gameResult.getArrestedRunnerCount();
         return new GameResultResult(
                 gameResult.getGameMode(),
                 gameResult.getWinnerTeam(),

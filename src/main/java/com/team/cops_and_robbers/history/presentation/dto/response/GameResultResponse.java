@@ -15,11 +15,11 @@ public record GameResultResponse(
         @Schema(description = "총 체포 횟수", example = "5")
         Integer totalArrestCount,
         @Schema(description = "남은 도둑 수", example = "1")
-        Integer remainingRobberCount,
+        Integer remainingRunnerCount,
         @Schema(description = "경찰 팀 MVP. 없으면 null")
-        MvpResponse policeMvp,
+        MvpResponse chaserMvp,
         @Schema(description = "도둑 팀 MVP. 없으면 null")
-        MvpResponse robberMvp
+        MvpResponse runnerMvp
 ) {
     @Schema(name = "MvpResponse", description = "팀 MVP 정보")
     public record MvpResponse(
@@ -34,9 +34,9 @@ public record GameResultResponse(
                 result.winnerTeam(),
                 result.durationSeconds(),
                 result.totalArrestCount(),
-                result.remainingRobberCount(),
-                toMvpResponse(result.policeMvp()),
-                toMvpResponse(result.robberMvp())
+                result.remainingRunnerCount(),
+                toMvpResponse(result.chaserMvp()),
+                toMvpResponse(result.runnerMvp())
         );
     }
 

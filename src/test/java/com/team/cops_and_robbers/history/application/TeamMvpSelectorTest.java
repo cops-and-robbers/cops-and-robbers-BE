@@ -25,7 +25,7 @@ class TeamMvpSelectorTest extends ServiceUnitTest {
 
     @Nested
     @DisplayName("경찰 MVP 판정")
-    class SelectPoliceMvp {
+    class SelectChaserMvp {
 
         @Test
         void 체포_횟수가_가장_많은_경찰이_선정된다() {
@@ -35,7 +35,7 @@ class TeamMvpSelectorTest extends ServiceUnitTest {
                     police(3L, 0, 100.0)
             );
 
-            Optional<GameResultParticipant> mvp = teamMvpSelector.selectPoliceMvp(participants);
+            Optional<GameResultParticipant> mvp = teamMvpSelector.selectChaserMvp(participants);
 
             assertThat(mvp).get().extracting(GameResultParticipant::getId).isEqualTo(2L);
         }
@@ -47,7 +47,7 @@ class TeamMvpSelectorTest extends ServiceUnitTest {
                     police(2L, 2, 1500.0)
             );
 
-            Optional<GameResultParticipant> mvp = teamMvpSelector.selectPoliceMvp(participants);
+            Optional<GameResultParticipant> mvp = teamMvpSelector.selectChaserMvp(participants);
 
             assertThat(mvp).get().extracting(GameResultParticipant::getId).isEqualTo(2L);
         }
@@ -59,7 +59,7 @@ class TeamMvpSelectorTest extends ServiceUnitTest {
                     police(3L, 2, 1000.0)
             );
 
-            Optional<GameResultParticipant> mvp = teamMvpSelector.selectPoliceMvp(participants);
+            Optional<GameResultParticipant> mvp = teamMvpSelector.selectChaserMvp(participants);
 
             assertThat(mvp).get().extracting(GameResultParticipant::getId).isEqualTo(3L);
         }
@@ -71,7 +71,7 @@ class TeamMvpSelectorTest extends ServiceUnitTest {
                     police(2L, 0, 900.0)
             );
 
-            Optional<GameResultParticipant> mvp = teamMvpSelector.selectPoliceMvp(participants);
+            Optional<GameResultParticipant> mvp = teamMvpSelector.selectChaserMvp(participants);
 
             assertThat(mvp).get().extracting(GameResultParticipant::getId).isEqualTo(2L);
         }
@@ -83,7 +83,7 @@ class TeamMvpSelectorTest extends ServiceUnitTest {
                     police(2L, 0, 10.0)
             );
 
-            Optional<GameResultParticipant> mvp = teamMvpSelector.selectPoliceMvp(participants);
+            Optional<GameResultParticipant> mvp = teamMvpSelector.selectChaserMvp(participants);
 
             assertThat(mvp).get().extracting(GameResultParticipant::getId).isEqualTo(2L);
         }
@@ -95,7 +95,7 @@ class TeamMvpSelectorTest extends ServiceUnitTest {
                     police(2L, 1, 100.0)
             );
 
-            Optional<GameResultParticipant> mvp = teamMvpSelector.selectPoliceMvp(participants);
+            Optional<GameResultParticipant> mvp = teamMvpSelector.selectChaserMvp(participants);
 
             assertThat(mvp).get().extracting(GameResultParticipant::getId).isEqualTo(2L);
         }
@@ -107,7 +107,7 @@ class TeamMvpSelectorTest extends ServiceUnitTest {
                     policeLeft(2L, 1)
             );
 
-            Optional<GameResultParticipant> mvp = teamMvpSelector.selectPoliceMvp(participants);
+            Optional<GameResultParticipant> mvp = teamMvpSelector.selectChaserMvp(participants);
 
             assertThat(mvp).isEmpty();
         }
@@ -118,7 +118,7 @@ class TeamMvpSelectorTest extends ServiceUnitTest {
                     robber(1L, 0, ParticipantStatus.ALIVE, 5000.0)
             );
 
-            Optional<GameResultParticipant> mvp = teamMvpSelector.selectPoliceMvp(participants);
+            Optional<GameResultParticipant> mvp = teamMvpSelector.selectChaserMvp(participants);
 
             assertThat(mvp).isEmpty();
         }
@@ -126,7 +126,7 @@ class TeamMvpSelectorTest extends ServiceUnitTest {
 
     @Nested
     @DisplayName("도둑 MVP 판정")
-    class SelectRobberMvp {
+    class SelectRunnerMvp {
 
         @Test
         void 잡힌_횟수가_가장_적은_도둑이_선정된다() {
@@ -135,7 +135,7 @@ class TeamMvpSelectorTest extends ServiceUnitTest {
                     robber(2L, 0, ParticipantStatus.ALIVE, 100.0)
             );
 
-            Optional<GameResultParticipant> mvp = teamMvpSelector.selectRobberMvp(participants);
+            Optional<GameResultParticipant> mvp = teamMvpSelector.selectRunnerMvp(participants);
 
             assertThat(mvp).get().extracting(GameResultParticipant::getId).isEqualTo(2L);
         }
@@ -147,7 +147,7 @@ class TeamMvpSelectorTest extends ServiceUnitTest {
                     robber(2L, 1, ParticipantStatus.ALIVE, 100.0)
             );
 
-            Optional<GameResultParticipant> mvp = teamMvpSelector.selectRobberMvp(participants);
+            Optional<GameResultParticipant> mvp = teamMvpSelector.selectRunnerMvp(participants);
 
             assertThat(mvp).get().extracting(GameResultParticipant::getId).isEqualTo(2L);
         }
@@ -159,7 +159,7 @@ class TeamMvpSelectorTest extends ServiceUnitTest {
                     robber(2L, 1, ParticipantStatus.JAILED, 1200.0)
             );
 
-            Optional<GameResultParticipant> mvp = teamMvpSelector.selectRobberMvp(participants);
+            Optional<GameResultParticipant> mvp = teamMvpSelector.selectRunnerMvp(participants);
 
             assertThat(mvp).get().extracting(GameResultParticipant::getId).isEqualTo(2L);
         }
@@ -171,7 +171,7 @@ class TeamMvpSelectorTest extends ServiceUnitTest {
                     robber(2L, 1, ParticipantStatus.ALIVE, 800.0)
             );
 
-            Optional<GameResultParticipant> mvp = teamMvpSelector.selectRobberMvp(participants);
+            Optional<GameResultParticipant> mvp = teamMvpSelector.selectRunnerMvp(participants);
 
             assertThat(mvp).get().extracting(GameResultParticipant::getId).isEqualTo(2L);
         }
@@ -183,7 +183,7 @@ class TeamMvpSelectorTest extends ServiceUnitTest {
                     robber(2L, 0, ParticipantStatus.ALIVE, 700.0)
             );
 
-            Optional<GameResultParticipant> mvp = teamMvpSelector.selectRobberMvp(participants);
+            Optional<GameResultParticipant> mvp = teamMvpSelector.selectRunnerMvp(participants);
 
             assertThat(mvp).get().extracting(GameResultParticipant::getId).isEqualTo(2L);
         }
@@ -195,7 +195,7 @@ class TeamMvpSelectorTest extends ServiceUnitTest {
                     robberLeft(2L, 1)
             );
 
-            Optional<GameResultParticipant> mvp = teamMvpSelector.selectRobberMvp(participants);
+            Optional<GameResultParticipant> mvp = teamMvpSelector.selectRunnerMvp(participants);
 
             assertThat(mvp).isEmpty();
         }

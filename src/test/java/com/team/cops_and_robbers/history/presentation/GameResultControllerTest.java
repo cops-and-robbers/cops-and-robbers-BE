@@ -58,7 +58,7 @@ class GameResultControllerTest extends ControllerTest {
                 softly.assertThat(response.jsonPath().getString("winnerTeam")).isEqualTo("POLICE");
                 softly.assertThat(response.jsonPath().getInt("durationSeconds")).isEqualTo(300);
                 softly.assertThat(response.jsonPath().getInt("totalArrestCount")).isEqualTo(5);
-                softly.assertThat(response.jsonPath().getInt("remainingRobberCount")).isEqualTo(0);
+                softly.assertThat(response.jsonPath().getInt("remainingRunnerCount")).isEqualTo(0);
             });
         }
 
@@ -85,8 +85,8 @@ class GameResultControllerTest extends ControllerTest {
             // then
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(200);
-                softly.assertThat(response.jsonPath().getString("policeMvp.nickname")).isEqualTo("날쌘경찰");
-                softly.assertThat(response.jsonPath().getString("robberMvp.nickname")).isEqualTo("빠른도둑");
+                softly.assertThat(response.jsonPath().getString("chaserMvp.nickname")).isEqualTo("날쌘경찰");
+                softly.assertThat(response.jsonPath().getString("runnerMvp.nickname")).isEqualTo("빠른도둑");
             });
         }
 
@@ -108,8 +108,8 @@ class GameResultControllerTest extends ControllerTest {
             // then
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(200);
-                softly.assertThat(response.jsonPath().getString("policeMvp")).isNull();
-                softly.assertThat(response.jsonPath().getString("robberMvp")).isNull();
+                softly.assertThat(response.jsonPath().getString("chaserMvp")).isNull();
+                softly.assertThat(response.jsonPath().getString("runnerMvp")).isNull();
             });
         }
 

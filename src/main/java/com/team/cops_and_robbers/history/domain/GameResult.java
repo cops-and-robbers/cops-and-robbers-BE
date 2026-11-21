@@ -53,11 +53,11 @@ public class GameResult extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private GameEndReason endReason;
 
-    private Integer totalPoliceCount;
+    private Integer totalChaserCount;
 
-    private Integer totalRobberCount;
+    private Integer totalRunnerCount;
 
-    private Integer arrestedRobberCount;
+    private Integer arrestedRunnerCount;
 
     private Integer totalArrestCount;
 
@@ -129,8 +129,8 @@ public class GameResult extends BaseTimeEntity {
             LocalDateTime endTime,
             Team winningTeam,
             GameEndReason endReason,
-            Integer totalPolice,
-            Integer totalRobber,
+            Integer totalChaser,
+            Integer totalRunner,
             Integer jailedAtEnd,
             Integer totalArrestCount
     ) {
@@ -140,9 +140,9 @@ public class GameResult extends BaseTimeEntity {
                 .getSeconds();
         this.winnerTeam = winningTeam;
         this.endReason = endReason;
-        this.totalPoliceCount = totalPolice;
-        this.totalRobberCount = totalRobber;
-        this.arrestedRobberCount = jailedAtEnd;
+        this.totalChaserCount = totalChaser;
+        this.totalRunnerCount = totalRunner;
+        this.arrestedRunnerCount = jailedAtEnd;
         this.totalArrestCount = totalArrestCount;
     }
 

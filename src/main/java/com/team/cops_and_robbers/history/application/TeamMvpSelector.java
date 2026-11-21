@@ -35,11 +35,11 @@ public class TeamMvpSelector {
                             TeamMvpSelector::distanceOf).reversed())
                     .thenComparing(GameResultParticipant::getId);
 
-    public Optional<GameResultParticipant> selectPoliceMvp(List<GameResultParticipant> participants) {
+    public Optional<GameResultParticipant> selectChaserMvp(List<GameResultParticipant> participants) {
         return candidatesOf(participants, Team.POLICE).stream().min(POLICE_ORDER);
     }
 
-    public Optional<GameResultParticipant> selectRobberMvp(List<GameResultParticipant> participants) {
+    public Optional<GameResultParticipant> selectRunnerMvp(List<GameResultParticipant> participants) {
         return candidatesOf(participants, Team.ROBBER).stream().min(ROBBER_ORDER);
     }
 

@@ -690,9 +690,9 @@ class GameResultServiceTest extends ServiceUnitTest {
             assertThat(result.isCompleted()).isTrue();
             assertThat(result.getWinnerTeam()).isEqualTo(Team.POLICE);
             assertThat(result.getEndReason()).isEqualTo(GameEndReason.ALL_ARRESTED);
-            assertThat(result.getTotalPoliceCount()).isEqualTo(2);
-            assertThat(result.getTotalRobberCount()).isEqualTo(3);
-            assertThat(result.getArrestedRobberCount()).isEqualTo(3);
+            assertThat(result.getTotalChaserCount()).isEqualTo(2);
+            assertThat(result.getTotalRunnerCount()).isEqualTo(3);
+            assertThat(result.getArrestedRunnerCount()).isEqualTo(3);
             assertThat(result.getEndedAt()).isEqualTo(NOW);
         }
 
@@ -925,8 +925,8 @@ class GameResultServiceTest extends ServiceUnitTest {
             assertThat(result.winnerTeam()).isEqualTo(gameResult.getWinnerTeam());
             assertThat(result.durationSeconds()).isEqualTo(gameResult.getDurationSeconds());
             assertThat(result.totalArrestCount()).isEqualTo(gameResult.getTotalArrestCount());
-            assertThat(result.remainingRobberCount())
-                    .isEqualTo(gameResult.getTotalRobberCount() - gameResult.getArrestedRobberCount());
+            assertThat(result.remainingRunnerCount())
+                    .isEqualTo(gameResult.getTotalRunnerCount() - gameResult.getArrestedRunnerCount());
         }
 
         @Test
@@ -944,8 +944,8 @@ class GameResultServiceTest extends ServiceUnitTest {
             assertThat(result.winnerTeam()).isEqualTo(gameResult.getWinnerTeam());
             assertThat(result.durationSeconds()).isEqualTo(gameResult.getDurationSeconds());
             assertThat(result.totalArrestCount()).isEqualTo(gameResult.getTotalArrestCount());
-            assertThat(result.remainingRobberCount())
-                    .isEqualTo(gameResult.getTotalRobberCount() - gameResult.getArrestedRobberCount());
+            assertThat(result.remainingRunnerCount())
+                    .isEqualTo(gameResult.getTotalRunnerCount() - gameResult.getArrestedRunnerCount());
         }
 
         @Test
@@ -954,24 +954,24 @@ class GameResultServiceTest extends ServiceUnitTest {
             GameResult gameResult = POLICE_WIN_RESULT(TEST_GAME_ID);
             setId(gameResult, TEST_GAME_RESULT_ID);
 
-            GameResultParticipant withdrawnPoliceMvp = POLICE_PARTICIPANT(gameResult, null, User.UNKNOWN_NICKNAME);
-            GameResultParticipant robberMvp = ROBBER_PARTICIPANT(gameResult, TEST_USER_ID, "도둑");
-            withdrawnPoliceMvp.markMvp();
-            robberMvp.markMvp();
+            GameResultParticipant withdrawnChaserMvp = POLICE_PARTICIPANT(gameResult, null, User.UNKNOWN_NICKNAME);
+            GameResultParticipant runnerMvp = ROBBER_PARTICIPANT(gameResult, TEST_USER_ID, "도둑");
+            withdrawnChaserMvp.markMvp();
+            runnerMvp.markMvp();
 
             given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(gameResult));
             given(gameResultParticipantRepository.findByGameResultIdAndIsMvpTrue(TEST_GAME_RESULT_ID))
-                    .willReturn(List.of(withdrawnPoliceMvp, robberMvp));
+                    .willReturn(List.of(withdrawnChaserMvp, runnerMvp));
 
             // when
             GameResultResult result = gameResultService.getGameResult(GameResultCommand.of(TEST_USER_ID, TEST_GAME_RESULT_ID));
 
             // then
-            assertThat(result.policeMvp().nickname()).isEqualTo(User.UNKNOWN_NICKNAME);
-            assertThat(result.robberMvp().nickname()).isEqualTo("도둑");
+            assertThat(result.chaserMvp().nickname()).isEqualTo(User.UNKNOWN_NICKNAME);
+            assertThat(result.runnerMvp().nickname()).isEqualTo("도둑");
             assertThat(result.totalArrestCount()).isEqualTo(gameResult.getTotalArrestCount());
-            assertThat(result.remainingRobberCount())
-                    .isEqualTo(gameResult.getTotalRobberCount() - gameResult.getArrestedRobberCount());
+            assertThat(result.remainingRunnerCount())
+                    .isEqualTo(gameResult.getTotalRunnerCount() - gameResult.getArrestedRunnerCount());
         }
 
         @Test
