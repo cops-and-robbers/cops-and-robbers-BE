@@ -142,7 +142,7 @@ class LocationE2ETest extends WebSocketE2ETest {
 
         // when
         List<SystemEventData.RobberLocation> locations = robberLocationService.revealRobberLocations(setup.game().getId());
-        systemPublisher.publish(systemEventFactory.createRobberLocationRevealEvent(setup.game().getId(), locations));
+        systemPublisher.publish(systemEventFactory.createRunnerLocationRevealEvent(setup.game().getId(), locations));
 
         // then
         TestEventResponse policeEvent = setup.policeClient().waitForMessage(setup.systemChannel(), 5);

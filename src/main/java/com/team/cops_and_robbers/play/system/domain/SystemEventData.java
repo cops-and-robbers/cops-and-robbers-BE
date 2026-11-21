@@ -8,8 +8,8 @@ import com.team.cops_and_robbers.history.domain.GameEndReason;
 import java.util.List;
 
 public sealed interface SystemEventData permits
-        SystemEventData.PoliceMoveStartData,
-        SystemEventData.RobberLocationRevealData,
+        SystemEventData.ChaserMoveStartData,
+        SystemEventData.RunnerLocationRevealData,
         SystemEventData.ArrestData,
         SystemEventData.EscapeData,
         SystemEventData.GameEndData,
@@ -25,9 +25,9 @@ public sealed interface SystemEventData permits
         }
     }
 
-    record PoliceMoveStartData() implements SystemEventData {
-        public static PoliceMoveStartData create() {
-            return new PoliceMoveStartData();
+    record ChaserMoveStartData() implements SystemEventData {
+        public static ChaserMoveStartData create() {
+            return new ChaserMoveStartData();
         }
     }
 
@@ -37,9 +37,9 @@ public sealed interface SystemEventData permits
         }
     }
 
-    record RobberLocationRevealData(List<RobberLocation> locations) implements SystemEventData {
-        public static RobberLocationRevealData of(List<RobberLocation> locations) {
-            return new RobberLocationRevealData(locations);
+    record RunnerLocationRevealData(List<RobberLocation> locations) implements SystemEventData {
+        public static RunnerLocationRevealData of(List<RobberLocation> locations) {
+            return new RunnerLocationRevealData(locations);
         }
     }
 

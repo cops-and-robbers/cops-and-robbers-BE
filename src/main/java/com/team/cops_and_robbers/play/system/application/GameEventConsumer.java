@@ -98,8 +98,8 @@ public class GameEventConsumer {
 
         log.info("[GameEventConsumer] Executing {} for GameId: {}", event.type(), gameId);
         switch (event.type()) {
-            case POLICE_MOVE_START      -> executePoliceMoveStart(gameId);
-            case ROBBER_LOCATION_REVEAL -> executeRobberLocationReveal(game);
+            case CHASER_MOVE_START      -> executeChaserMoveStart(gameId);
+            case RUNNER_LOCATION_REVEAL -> executeRunnerLocationReveal(game);
             case GAME_OVER              -> executeGameOver(gameId);
         }
     }
@@ -107,12 +107,12 @@ public class GameEventConsumer {
     /**
      * 경찰 출동: 경찰 참여자 상태를 POLICE_WAITING → ALIVE로 전환 후 이벤트 발행
      */
-    private void executePoliceMoveStart(Long gameId) {
+    private void executeChaserMoveStart(Long gameId) {
         transactionTemplate.executeWithoutResult(status ->
                 gameParticipantRepository.updateStatusByGameIdAndTeam(
                         gameId, Team.POLICE, ParticipantStatus.ALIVE)
         );
-        SystemEvent event = systemEventFactory.createPoliceMoveStartEvent(gameId);
+        SystemEvent event = systemEventFactory.createChaserMoveStartEvent(gameId);
         systemPublisher.publish(event);
         gameFcmNotifier.notifySystemEvent(event);
     }
@@ -120,9 +120,9 @@ public class GameEventConsumer {
     /**
      * 도둑 위치 공개: 위치 발행 후 다음 공개 이벤트 재등록
      */
-    private void executeRobberLocationReveal(Game game) {
+    private void executeRunnerLocationReveal(Game game) {
         List<SystemEventData.RobberLocation> locations = robberLocationService.revealRobberLocations(game.getId());
-        SystemEvent event = systemEventFactory.createRobberLocationRevealEvent(game.getId(), locations);
+        SystemEvent event = systemEventFactory.createRunnerLocationRevealEvent(game.getId(), locations);
         systemPublisher.publish(event);
         gameFcmNotifier.notifySystemEvent(event);
 

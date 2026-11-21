@@ -146,7 +146,7 @@ public class Game extends BaseTimeEntity {
         return time.isBefore(getGameOverTime());
     }
 
-    public LocalDateTime getPoliceMoveStartTime() {
+    public LocalDateTime getChaserMoveStartTime() {
         return this.startedAt.plusMinutes(this.policeWaitMinutes);
     }
 
@@ -158,7 +158,7 @@ public class Game extends BaseTimeEntity {
         return this.locationRevealIntervalMinutes == 0;
     }
 
-    public LocalDateTime getFirstRobberRevealTime() {
-        return getPoliceMoveStartTime().plusMinutes(this.locationRevealIntervalMinutes);
+    public LocalDateTime getFirstRunnerRevealTime() {
+        return getChaserMoveStartTime().plusMinutes(this.locationRevealIntervalMinutes);
     }
 }

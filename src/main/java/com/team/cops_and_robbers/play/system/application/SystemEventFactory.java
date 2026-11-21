@@ -13,14 +13,14 @@ import java.util.List;
 @Component
 public class SystemEventFactory {
 
-    public SystemEvent createPoliceMoveStartEvent(Long gameId) {
-        SystemEventData.PoliceMoveStartData data = SystemEventData.PoliceMoveStartData.create();
-        return SystemEvent.of(gameId, SystemEventType.POLICE_MOVE_START, data);
+    public SystemEvent createChaserMoveStartEvent(Long gameId) {
+        SystemEventData.ChaserMoveStartData data = SystemEventData.ChaserMoveStartData.create();
+        return SystemEvent.of(gameId, SystemEventType.CHASER_MOVE_START, data);
     }
 
-    public SystemEvent createRobberLocationRevealEvent(Long gameId, List<SystemEventData.RobberLocation> locations) {
-        SystemEventData.RobberLocationRevealData data = SystemEventData.RobberLocationRevealData.of(locations);
-        return SystemEvent.of(gameId, SystemEventType.ROBBER_LOCATION_REVEAL, data);
+    public SystemEvent createRunnerLocationRevealEvent(Long gameId, List<SystemEventData.RobberLocation> locations) {
+        SystemEventData.RunnerLocationRevealData data = SystemEventData.RunnerLocationRevealData.of(locations);
+        return SystemEvent.of(gameId, SystemEventType.RUNNER_LOCATION_REVEAL, data);
     }
 
     public SystemEvent createArrestEvent(Long gameId, GameParticipant police, GameParticipant robber, int remainingThieves) {

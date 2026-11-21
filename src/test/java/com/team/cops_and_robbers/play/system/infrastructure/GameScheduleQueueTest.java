@@ -53,7 +53,7 @@ class GameScheduleQueueTest {
 
     @Nested
     @DisplayName("경찰 출동 이벤트 등록")
-    class EnqueuePoliceMoveStart {
+    class EnqueueChaserMoveStart {
 
         @Test
         void 경찰_대기_시각이_미래면_이벤트가_등록된다() {
@@ -61,7 +61,7 @@ class GameScheduleQueueTest {
             Game game = IN_PROGRESS_GAME(FIXED_NOW);
 
             // when
-            gameScheduleQueue.enqueuePoliceMoveStart(game, FIXED_NOW);
+            gameScheduleQueue.enqueueChaserMoveStart(game, FIXED_NOW);
 
             // then
             then(delayedQueue).should().offer(any(), anyLong(), any(TimeUnit.class));
@@ -73,7 +73,7 @@ class GameScheduleQueueTest {
             Game game = IN_PROGRESS_GAME(FIXED_NOW.minusMinutes(10));
 
             // when
-            gameScheduleQueue.enqueuePoliceMoveStart(game, FIXED_NOW);
+            gameScheduleQueue.enqueueChaserMoveStart(game, FIXED_NOW);
 
             // then
             then(delayedQueue).should(never()).offer(any(), anyLong(), any(TimeUnit.class));

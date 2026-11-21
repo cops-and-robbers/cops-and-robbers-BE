@@ -69,8 +69,8 @@ public class GameFcmNotifier {
             case ARREST -> new FcmPayload(wording.arrestTitle(), wording.arrestBody(), data);
             case ESCAPE -> new FcmPayload(wording.robber() + " 탈옥!", wording.robberSubject() + " 감옥에서 탈옥했습니다!", data);
             case GAME_OVER -> new FcmPayload("게임 종료", "게임이 종료되었습니다. 결과를 확인하세요!", data);
-            case ROBBER_LOCATION_REVEAL -> new FcmPayload(wording.robber() + " 위치 공개!", wording.robber() + "의 현재 위치가 공개되었습니다!", data);
-            case POLICE_MOVE_START -> new FcmPayload(wording.police() + " 이동 시작!", wording.policeSubject() + " 이동을 시작했습니다!", data);
+            case RUNNER_LOCATION_REVEAL -> new FcmPayload(wording.robber() + " 위치 공개!", wording.robber() + "의 현재 위치가 공개되었습니다!", data);
+            case CHASER_MOVE_START -> new FcmPayload(wording.police() + " 이동 시작!", wording.policeSubject() + " 이동을 시작했습니다!", data);
             case PLAYER_LEFT -> {
                 SystemEventData.PlayerLeftData playerLeft = (SystemEventData.PlayerLeftData) event.data();
                 yield new FcmPayload(wording.teamName(playerLeft.team()) + " 참가자 퇴장", playerLeft.nickname() + "님이 게임에서 퇴장했습니다.", data);

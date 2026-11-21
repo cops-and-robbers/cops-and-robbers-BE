@@ -74,12 +74,12 @@ class SystemE2ETest extends WebSocketE2ETest {
     }
 
     @Test
-    void 경찰_대기_시간이_지나면_POLICE_MOVE_START_이벤트를_수신한다() throws Exception {
+    void 경찰_대기_시간이_지나면_CHASER_MOVE_START_이벤트를_수신한다() throws Exception {
         // given
         SystemSetup setup = givenSystemSetup();
 
         // when
-        SystemEvent event = systemEventFactory.createPoliceMoveStartEvent(setup.game().getId());
+        SystemEvent event = systemEventFactory.createChaserMoveStartEvent(setup.game().getId());
         systemPublisher.publish(event);
 
         // then
@@ -91,7 +91,7 @@ class SystemE2ETest extends WebSocketE2ETest {
     }
 
     @Test
-    void 위치_공개_주기가_도달하면_경찰이_ROBBER_LOCATION_REVEAL_이벤트를_수신한다() throws Exception {
+    void 위치_공개_주기가_도달하면_경찰이_RUNNER_LOCATION_REVEAL_이벤트를_수신한다() throws Exception {
         // given
         SystemSetup setup = givenSystemSetup();
 
@@ -101,7 +101,7 @@ class SystemE2ETest extends WebSocketE2ETest {
 
         // when
         List<SystemEventData.RobberLocation> locations = robberLocationService.revealRobberLocations(setup.game().getId());
-        SystemEvent event = systemEventFactory.createRobberLocationRevealEvent(setup.game().getId(), locations);
+        SystemEvent event = systemEventFactory.createRunnerLocationRevealEvent(setup.game().getId(), locations);
         systemPublisher.publish(event);
 
         // then

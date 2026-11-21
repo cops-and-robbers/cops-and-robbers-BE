@@ -29,7 +29,7 @@ public class GameEventProducer {
 
         log.info("[Producer] Scheduling events for newly started game. GameId: {}", game.getId());
 
-        gameScheduleQueue.enqueuePoliceMoveStart(game, now);
+        gameScheduleQueue.enqueueChaserMoveStart(game, now);
         gameScheduleQueue.enqueueFirstReveal(game, now);
         scheduleGameOver(game, now);
 

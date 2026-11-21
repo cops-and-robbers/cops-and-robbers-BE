@@ -139,7 +139,7 @@ class GameFcmNotifierTest extends ServiceUnitTest {
         @Test
         void 술래잡기_게임의_이동_시작_알림은_술래_문구를_쓴다() {
             // when
-            FcmMessage sent = sendAndCapture(GameMode.TAG, SystemEventType.POLICE_MOVE_START, null);
+            FcmMessage sent = sendAndCapture(GameMode.TAG, SystemEventType.CHASER_MOVE_START, null);
 
             // then
             assertSoftly(softly -> {
@@ -151,7 +151,7 @@ class GameFcmNotifierTest extends ServiceUnitTest {
         @Test
         void 술래잡기_게임의_위치_공개_알림은_도망자_문구를_쓴다() {
             // when
-            FcmMessage sent = sendAndCapture(GameMode.TAG, SystemEventType.ROBBER_LOCATION_REVEAL, null);
+            FcmMessage sent = sendAndCapture(GameMode.TAG, SystemEventType.RUNNER_LOCATION_REVEAL, null);
 
             // then
             assertSoftly(softly -> {
@@ -181,7 +181,7 @@ class GameFcmNotifierTest extends ServiceUnitTest {
             given(gameRepository.findGameModeById(TEST_GAME_ID)).willReturn(Optional.empty());
 
             // when
-            gameFcmNotifier.notifySystemEvent(SystemEvent.of(TEST_GAME_ID, SystemEventType.POLICE_MOVE_START, null));
+            gameFcmNotifier.notifySystemEvent(SystemEvent.of(TEST_GAME_ID, SystemEventType.CHASER_MOVE_START, null));
 
             // then
             ArgumentCaptor<FcmMessage> captor = ArgumentCaptor.forClass(FcmMessage.class);
