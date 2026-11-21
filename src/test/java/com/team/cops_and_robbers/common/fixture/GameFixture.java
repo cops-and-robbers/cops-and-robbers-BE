@@ -16,7 +16,7 @@ public class GameFixture {
                 .status(GameStatus.WAITING)
                 .roundDurationMinutes(30)
                 .locationRevealIntervalMinutes(5)
-                .policeWaitMinutes(3)
+                .chaserWaitMinutes(3)
                 .maxParticipants(10)
                 .build();
         ReflectionTestUtils.setField(game, "createdAt", LocalDateTime.now());
@@ -29,7 +29,7 @@ public class GameFixture {
                 .status(GameStatus.WAITING)
                 .roundDurationMinutes(30)
                 .locationRevealIntervalMinutes(5)
-                .policeWaitMinutes(3)
+                .chaserWaitMinutes(3)
                 .maxParticipants(10)
                 .build();
         ReflectionTestUtils.setField(game, "createdAt", LocalDateTime.now());
@@ -42,7 +42,7 @@ public class GameFixture {
                 .status(GameStatus.IN_PROGRESS)
                 .roundDurationMinutes(30)
                 .locationRevealIntervalMinutes(5)
-                .policeWaitMinutes(3)
+                .chaserWaitMinutes(3)
                 .maxParticipants(10)
                 .startedAt(LocalDateTime.now())
                 .roundNumber(1)
@@ -57,7 +57,7 @@ public class GameFixture {
                 .status(GameStatus.IN_PROGRESS)
                 .roundDurationMinutes(30)
                 .locationRevealIntervalMinutes(5)
-                .policeWaitMinutes(3)
+                .chaserWaitMinutes(3)
                 .maxParticipants(10)
                 .startedAt(startedAt)
                 .roundNumber(1)
@@ -72,7 +72,7 @@ public class GameFixture {
                 .status(GameStatus.FINISHED)
                 .roundDurationMinutes(30)
                 .locationRevealIntervalMinutes(5)
-                .policeWaitMinutes(3)
+                .chaserWaitMinutes(3)
                 .maxParticipants(10)
                 .startedAt(LocalDateTime.now().minusMinutes(30))
                 .lastEndedAt(LocalDateTime.now())
@@ -87,7 +87,7 @@ public class GameFixture {
                 .status(GameStatus.CANCELED)
                 .roundDurationMinutes(30)
                 .locationRevealIntervalMinutes(5)
-                .policeWaitMinutes(3)
+                .chaserWaitMinutes(3)
                 .maxParticipants(10)
                 .build();
         ReflectionTestUtils.setField(game, "createdAt", LocalDateTime.now());
@@ -100,7 +100,7 @@ public class GameFixture {
                 .status(GameStatus.IN_PROGRESS)
                 .roundDurationMinutes(30)
                 .locationRevealIntervalMinutes(5)
-                .policeWaitMinutes(3)
+                .chaserWaitMinutes(3)
                 .maxParticipants(10)
                 .isEventGame(true)
                 .startedAt(LocalDateTime.now())
@@ -116,7 +116,7 @@ public class GameFixture {
                 .status(GameStatus.IN_PROGRESS)
                 .roundDurationMinutes(30)
                 .locationRevealIntervalMinutes(5)
-                .policeWaitMinutes(3)
+                .chaserWaitMinutes(3)
                 .maxParticipants(10)
                 .isEventGame(true)
                 .startedAt(LocalDateTime.now())
@@ -133,7 +133,7 @@ public class GameFixture {
                 .gameMode(GameMode.TAG)
                 .roundDurationMinutes(30)
                 .locationRevealIntervalMinutes(5)
-                .policeWaitMinutes(3)
+                .chaserWaitMinutes(3)
                 .maxParticipants(10)
                 .build();
         ReflectionTestUtils.setField(game, "createdAt", LocalDateTime.now());
@@ -147,7 +147,7 @@ public class GameFixture {
                 .gameMode(GameMode.TAG)
                 .roundDurationMinutes(30)
                 .locationRevealIntervalMinutes(5)
-                .policeWaitMinutes(3)
+                .chaserWaitMinutes(3)
                 .maxParticipants(10)
                 .startedAt(LocalDateTime.now())
                 .roundNumber(1)

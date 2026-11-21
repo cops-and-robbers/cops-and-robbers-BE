@@ -61,7 +61,7 @@ class ChatPublisherTest extends ServiceUnitTest {
         @Test
         void 채팅을_발행하면_FCM_알림도_함께_보낸다() {
             // given
-            givenSenderInCache(Team.POLICE);
+            givenSenderInCache(Team.CHASER);
 
             // when
             chatPublisher.processAndRouteMessage(command(ChatScope.ALL));
@@ -75,7 +75,7 @@ class ChatPublisherTest extends ServiceUnitTest {
                 softly.assertThat(notified.gameId()).isEqualTo(TEST_GAME_ID);
                 softly.assertThat(notified.sender().participantId()).isEqualTo(SENDER_PARTICIPANT_ID);
                 softly.assertThat(notified.sender().nickname()).isEqualTo("보낸사람");
-                softly.assertThat(notified.sender().team()).isEqualTo(Team.POLICE);
+                softly.assertThat(notified.sender().team()).isEqualTo(Team.CHASER);
                 softly.assertThat(notified.message()).isEqualTo("다들 어디야");
                 softly.assertThat(notified.scope()).isEqualTo(ChatScope.ALL);
             });
@@ -84,7 +84,7 @@ class ChatPublisherTest extends ServiceUnitTest {
         @Test
         void 팀_채팅도_같은_메시지로_FCM_알림을_보낸다() {
             // given
-            givenSenderInCache(Team.ROBBER);
+            givenSenderInCache(Team.RUNNER);
 
             // when
             chatPublisher.processAndRouteMessage(command(ChatScope.TEAM));
@@ -98,7 +98,7 @@ class ChatPublisherTest extends ServiceUnitTest {
         @Test
         void 금칙어는_마스킹해서_발행하고_FCM_알림에도_마스킹된_메시지를_보낸다() {
             // given
-            givenSenderInCache(Team.POLICE);
+            givenSenderInCache(Team.CHASER);
             ChatCommand command = new ChatCommand(
                     TEST_GAME_ID, SENDER_USER_ID, SENDER_PARTICIPANT_ID, "씨발 어디야", ChatScope.ALL);
 

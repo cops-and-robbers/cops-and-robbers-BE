@@ -547,7 +547,7 @@ class AdminPlaceNameServiceTest extends ServiceUnitTest {
 
         private List<GameResultParticipant> participations(GameResult... results) {
             return Arrays.stream(results)
-                    .map(result -> GameResultParticipantFixture.POLICE_PARTICIPANT(result, 10L, "냥파순경"))
+                    .map(result -> GameResultParticipantFixture.CHASER_PARTICIPANT(result, 10L, "냥파순경"))
                     .toList();
         }
 
@@ -556,11 +556,11 @@ class AdminPlaceNameServiceTest extends ServiceUnitTest {
                     .startedAt(endedAt.minusMinutes(10))
                     .endedAt(endedAt)
                     .gameId(id)
-                    .winnerTeam(Team.POLICE)
+                    .winnerTeam(Team.CHASER)
                     .endReason(GameEndReason.ALL_ARRESTED)
-                    .totalPoliceCount(1)
-                    .totalRobberCount(1)
-                    .arrestedRobberCount(1)
+                    .totalChaserCount(1)
+                    .totalRunnerCount(1)
+                    .arrestedRunnerCount(1)
                     .totalArrestCount(1)
                     .durationSeconds(600)
                     .areaType(AreaType.CIRCLE)

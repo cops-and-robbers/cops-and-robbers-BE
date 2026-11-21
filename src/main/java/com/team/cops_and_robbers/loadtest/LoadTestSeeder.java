@@ -52,7 +52,7 @@ public class LoadTestSeeder {
 
     private static final int ROUND_DURATION_MINUTES = 60;
     private static final int LOCATION_REVEAL_INTERVAL_MINUTES = 5;
-    private static final int POLICE_WAIT_MINUTES = 3;
+    private static final int CHASER_WAIT_MINUTES = 3;
 
     private static final double CENTER_LAT = 37.5665;
     private static final double CENTER_LNG = 126.978;
@@ -85,7 +85,7 @@ public class LoadTestSeeder {
                 ),
                 ROUND_DURATION_MINUTES,
                 LOCATION_REVEAL_INTERVAL_MINUTES,
-                POLICE_WAIT_MINUTES,
+                CHASER_WAIT_MINUTES,
                 size,
                 null,
                 GameMode.COPS_AND_ROBBERS
@@ -97,9 +97,9 @@ public class LoadTestSeeder {
 
         List<PlayerCredential> players = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
-            Team team = (i % 2 == 0) ? Team.POLICE : Team.ROBBER;
+            Team team = (i % 2 == 0) ? Team.CHASER : Team.RUNNER;
             String socialId = SOCIAL_ID_PREFIX + (userOffset + i);
-            String nickname = roomLabel + "-" + (team == Team.POLICE ? "P" : "R") + (i / 2 + 1);
+            String nickname = roomLabel + "-" + (team == Team.CHASER ? "P" : "R") + (i / 2 + 1);
 
             User user = createUser(socialId, nickname);
             String accessToken = issueTokens(user);

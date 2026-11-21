@@ -32,7 +32,7 @@ class LiveKitTokenProviderTest {
     @Test
     void 원문_secret으로_서명하고_LiveKit_입장_규격의_claim을_담는다() {
         // when
-        RadioToken token = liveKitTokenProvider.createJoinToken("game-1-police", 101L, "경찰1");
+        RadioToken token = liveKitTokenProvider.createJoinToken("game-1-chaser", 101L, "경찰1");
 
         // then
         Jws<Claims> jws = parse(token.token());
@@ -45,8 +45,8 @@ class LiveKitTokenProviderTest {
             softly.assertThat(claims.getSubject()).isEqualTo("101");
             softly.assertThat(claims.get("name", String.class)).isEqualTo("경찰1");
             softly.assertThat(grant.get("roomJoin")).isEqualTo(true);
-            softly.assertThat(grant.get("room")).isEqualTo("dev-game-1-police");
-            softly.assertThat(token.room()).isEqualTo("dev-game-1-police");
+            softly.assertThat(grant.get("room")).isEqualTo("dev-game-1-chaser");
+            softly.assertThat(token.room()).isEqualTo("dev-game-1-chaser");
             softly.assertThat(grant.get("canPublish")).isEqualTo(true);
             softly.assertThat(grant.get("canSubscribe")).isEqualTo(true);
             softly.assertThat(claims.getExpiration().getTime() - claims.getIssuedAt().getTime())

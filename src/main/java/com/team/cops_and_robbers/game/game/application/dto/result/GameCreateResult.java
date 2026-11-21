@@ -11,7 +11,7 @@ public record GameCreateResult(
         GameMode gameMode,
         Integer roundDurationMinutes,
         Integer locationRevealIntervalMinutes,
-        Integer policeWaitMinutes,
+        Integer chaserWaitMinutes,
         Integer maxParticipants,
         Integer shrinkFinalRadiusInMeters,
         String createdAt
@@ -25,7 +25,7 @@ public record GameCreateResult(
                 game.getGameMode(),
                 game.getRoundDurationMinutes(),
                 game.getLocationRevealIntervalMinutes(),
-                game.getPoliceWaitMinutes(),
+                game.getChaserWaitMinutes(),
                 game.getMaxParticipants(),
                 game.getShrinkFinalRadiusInMeters(),
                 TimestampUtil.toIsoString(game.getCreatedAt())

@@ -50,7 +50,7 @@ public class GameParticipant extends BaseTimeEntity {
         return GameParticipant.builder()
                 .game(game)
                 .user(user)
-                .team(Team.POLICE)
+                .team(Team.CHASER)
                 .status(ParticipantStatus.ALIVE)
                 .isHost(false)
                 .build();
@@ -64,16 +64,16 @@ public class GameParticipant extends BaseTimeEntity {
         return this.status == ParticipantStatus.JAILED;
     }
 
-    public boolean isPoliceWaiting() {
-        return this.status == ParticipantStatus.POLICE_WAITING;
+    public boolean isChaserWaiting() {
+        return this.status == ParticipantStatus.CHASER_WAITING;
     }
 
-    public boolean isRobber() {
-        return this.team == Team.ROBBER;
+    public boolean isRunner() {
+        return this.team == Team.RUNNER;
     }
 
-    public boolean isPolice() {
-        return this.team == Team.POLICE;
+    public boolean isChaser() {
+        return this.team == Team.CHASER;
     }
 
     public boolean isInGame(Long gameId) {

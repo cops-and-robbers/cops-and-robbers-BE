@@ -37,8 +37,8 @@ class AdminDashboardServiceTest extends ServiceUnitTest {
             given(userRepository.countByCreatedAtGreaterThanEqual(any())).willReturn(3L);
             given(reportRepository.countByStatus(ReportStatus.PENDING)).willReturn(7L);
             given(bugReportRepository.countByStatus(BugReportStatus.PENDING)).willReturn(4L);
-            given(gameResultRepository.countByWinnerTeam(Team.POLICE)).willReturn(60L);
-            given(gameResultRepository.countByWinnerTeam(Team.ROBBER)).willReturn(40L);
+            given(gameResultRepository.countByWinnerTeam(Team.CHASER)).willReturn(60L);
+            given(gameResultRepository.countByWinnerTeam(Team.RUNNER)).willReturn(40L);
             given(gameResultRepository.averageDurationSeconds()).willReturn(350.0);
             given(gameResultRepository.countGroupByEndReason()).willReturn(List.of(
                     projection(GameEndReason.ALL_ARRESTED, 50L),
@@ -98,8 +98,8 @@ class AdminDashboardServiceTest extends ServiceUnitTest {
             given(userRepository.countByCreatedAtGreaterThanEqual(any())).willReturn(0L);
             given(reportRepository.countByStatus(any())).willReturn(0L);
             given(bugReportRepository.countByStatus(any())).willReturn(0L);
-            given(gameResultRepository.countByWinnerTeam(Team.POLICE)).willReturn(10L);
-            given(gameResultRepository.countByWinnerTeam(Team.ROBBER)).willReturn(0L);
+            given(gameResultRepository.countByWinnerTeam(Team.CHASER)).willReturn(10L);
+            given(gameResultRepository.countByWinnerTeam(Team.RUNNER)).willReturn(0L);
             given(gameResultRepository.averageDurationSeconds()).willReturn(300.0);
             given(gameResultRepository.countGroupByEndReason()).willReturn(List.of());
 

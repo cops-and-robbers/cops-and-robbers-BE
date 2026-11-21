@@ -6,8 +6,8 @@ public record GameRules(
         boolean allowsEscape,
         boolean allowsForceArrest,
         boolean allowsRadio,
-        boolean endsWhenAllRobbersArrested,
-        boolean endsWhenPoliceLeave,
+        boolean endsWhenAllRunnersArrested,
+        boolean endsWhenChaserLeave,
         boolean validatesTeamComposition
 ) {
     public static final GameRules COPS_AND_ROBBERS = new GameRules(

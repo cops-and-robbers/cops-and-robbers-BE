@@ -35,7 +35,7 @@ public interface RadioControllerDocs {
     @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_IN_PROGRESS", "GAME_NOT_FOUND"})
     @ApiErrorCode(value = GameParticipantException.class, codes = {"PARTICIPANT_NOT_FOUND"})
     @ApiErrorCode(value = RadioException.class, codes = {
-            "RADIO_NOT_ALLOWED_IN_EVENT_GAME", "ONLY_POLICE_CAN_USE_RADIO", "RADIO_POLICE_WAITING_TIME",
+            "RADIO_NOT_ALLOWED_IN_EVENT_GAME", "ONLY_CHASER_CAN_USE_RADIO", "RADIO_CHASER_WAITING_TIME",
             "RADIO_SERVER_BUSY"
     })
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})

@@ -55,7 +55,7 @@ class GameEventProducerTest extends ServiceUnitTest {
             gameEventProducer.scheduleAllEvents(TEST_GAME_ID);
 
             // then
-            then(gameScheduleQueue).should().enqueuePoliceMoveStart(game, FIXED_NOW);
+            then(gameScheduleQueue).should().enqueueChaserMoveStart(game, FIXED_NOW);
             then(gameScheduleQueue).should().enqueueFirstReveal(game, FIXED_NOW);
             then(gameScheduleQueue).should().enqueueGameOver(game, FIXED_NOW);
         }

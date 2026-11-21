@@ -84,10 +84,10 @@ public class DataLoader implements CommandLineRunner {
         Game game = createGame(users.get(0));
 
         // 3. 참가자 등록 및 팀 배정 (2:2)
-        joinGame(game, users.get(0), Team.POLICE, true);  // 방장 (경찰)
-        joinGame(game, users.get(1), Team.POLICE, false); // 경찰
-        joinGame(game, users.get(2), Team.ROBBER, false); // 도둑
-        joinGame(game, users.get(3), Team.ROBBER, false); // 도둑
+        joinGame(game, users.get(0), Team.CHASER, true);  // 방장 (경찰)
+        joinGame(game, users.get(1), Team.CHASER, false); // 경찰
+        joinGame(game, users.get(2), Team.RUNNER, false); // 도둑
+        joinGame(game, users.get(3), Team.RUNNER, false); // 도둑
 
         // 4. 게임 시작 상태로 변경
         game.startGame(LocalDateTime.now());
@@ -328,7 +328,7 @@ public class DataLoader implements CommandLineRunner {
                         "大通公園 テレビ塔前",
                         PostAddress.of("1-12 大通西七丁目, 札幌, HK 064-0801, 日本",
                                 "1-12 大通西七丁目", null, "北海 札幌", "JP")),
-                new CommunityPostSeed("Cops and Robbers at Central Park", "Casual game after work. Beginners welcome!",
+                new CommunityPostSeed("Cops and Runners at Central Park", "Casual game after work. Beginners welcome!",
                         40.7829, -73.9654, 10,
                         "Bethesda Terrace",
                         PostAddress.of("Great Lawn Ball Field 8, 86th Street Transverse, New York, NY 11025, United States of America",

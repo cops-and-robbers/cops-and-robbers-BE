@@ -8,7 +8,7 @@ import com.team.cops_and_robbers.common.fixture.GameFixture;
 import com.team.cops_and_robbers.game.game.domain.Game;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
-import com.team.cops_and_robbers.play.location.application.RobberLocationService;
+import com.team.cops_and_robbers.play.location.application.RunnerLocationService;
 import com.team.cops_and_robbers.play.location.application.dto.command.LocationUpdateCommand;
 import com.team.cops_and_robbers.play.system.application.SystemEventFactory;
 import com.team.cops_and_robbers.play.system.application.SystemPublisher;
@@ -39,117 +39,117 @@ class SystemE2ETest extends WebSocketE2ETest {
     private SystemEventFactory systemEventFactory;
 
     @Autowired
-    private RobberLocationService robberLocationService;
+    private RunnerLocationService runnerLocationService;
 
     private record SystemSetup(
             Game game,
-            GameParticipant policeParticipant,
-            GameParticipant robberParticipant,
-            String policeToken,
-            String robberToken,
+            GameParticipant chaserParticipant,
+            GameParticipant runnerParticipant,
+            String chaserToken,
+            String runnerToken,
             String systemChannel,
-            StompTestClient policeClient,
-            StompTestClient robberClient
+            StompTestClient chaserClient,
+            StompTestClient runnerClient
     ) {}
 
     private SystemSetup givenSystemSetup() throws Exception {
-        User policeUser = givenUser("police");
-        User robberUser = givenUser("robber");
+        User chaserUser = givenUser("chaser");
+        User runnerUser = givenUser("runner");
 
         Game game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
         gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(game));
-        GameParticipant policeParticipant = givenPolice(game, policeUser);
-        GameParticipant robberParticipant = givenRobber(game, robberUser);
+        GameParticipant chaserParticipant = givenChaser(game, chaserUser);
+        GameParticipant runnerParticipant = givenRunner(game, runnerUser);
 
-        String policeToken = givenAccessToken(policeUser);
-        String robberToken = givenAccessToken(robberUser);
+        String chaserToken = givenAccessToken(chaserUser);
+        String runnerToken = givenAccessToken(runnerUser);
         String systemChannel = SYSTEM_CHANNEL.formatted(game.getId());
 
-        StompTestClient policeClient = connect(policeToken);
-        StompTestClient robberClient = connect(robberToken);
-        policeClient.subscribe(systemChannel, TestEventResponse.class);
-        robberClient.subscribe(systemChannel, TestEventResponse.class);
+        StompTestClient chaserClient = connect(chaserToken);
+        StompTestClient runnerClient = connect(runnerToken);
+        chaserClient.subscribe(systemChannel, TestEventResponse.class);
+        runnerClient.subscribe(systemChannel, TestEventResponse.class);
 
-        return new SystemSetup(game, policeParticipant, robberParticipant, policeToken, robberToken, systemChannel, policeClient, robberClient);
+        return new SystemSetup(game, chaserParticipant, runnerParticipant, chaserToken, runnerToken, systemChannel, chaserClient, runnerClient);
     }
 
     @Test
-    void 경찰_대기_시간이_지나면_POLICE_MOVE_START_이벤트를_수신한다() throws Exception {
+    void 경찰_대기_시간이_지나면_CHASER_MOVE_START_이벤트를_수신한다() throws Exception {
         // given
         SystemSetup setup = givenSystemSetup();
 
         // when
-        SystemEvent event = systemEventFactory.createPoliceMoveStartEvent(setup.game().getId());
+        SystemEvent event = systemEventFactory.createChaserMoveStartEvent(setup.game().getId());
         systemPublisher.publish(event);
 
         // then
-        TestEventResponse policeEvent = setup.policeClient().waitForMessage(setup.systemChannel(), 5);
-        TestEventResponse robberEvent = setup.robberClient().waitForMessage(setup.systemChannel(), 5);
+        TestEventResponse chaserEvent = setup.chaserClient().waitForMessage(setup.systemChannel(), 5);
+        TestEventResponse runnerEvent = setup.runnerClient().waitForMessage(setup.systemChannel(), 5);
 
-        assertThat(policeEvent.type()).isEqualTo("POLICE_MOVE_START");
-        assertThat(robberEvent.type()).isEqualTo("POLICE_MOVE_START");
+        assertThat(chaserEvent.type()).isEqualTo("POLICE_MOVE_START");
+        assertThat(runnerEvent.type()).isEqualTo("POLICE_MOVE_START");
     }
 
     @Test
-    void 위치_공개_주기가_도달하면_경찰이_ROBBER_LOCATION_REVEAL_이벤트를_수신한다() throws Exception {
+    void 위치_공개_주기가_도달하면_경찰이_RUNNER_LOCATION_REVEAL_이벤트를_수신한다() throws Exception {
         // given
         SystemSetup setup = givenSystemSetup();
 
-        robberLocationService.updateLocation(
-                new LocationUpdateCommand(setup.game().getId(), setup.robberParticipant().getId(), 37.5, 127.0)
+        runnerLocationService.updateLocation(
+                new LocationUpdateCommand(setup.game().getId(), setup.runnerParticipant().getId(), 37.5, 127.0)
         );
 
         // when
-        List<SystemEventData.RobberLocation> locations = robberLocationService.revealRobberLocations(setup.game().getId());
-        SystemEvent event = systemEventFactory.createRobberLocationRevealEvent(setup.game().getId(), locations);
+        List<SystemEventData.RunnerLocation> locations = runnerLocationService.revealRunnerLocations(setup.game().getId());
+        SystemEvent event = systemEventFactory.createRunnerLocationRevealEvent(setup.game().getId(), locations);
         systemPublisher.publish(event);
 
         // then
-        TestEventResponse policeEvent = setup.policeClient().waitForMessage(setup.systemChannel(), 5);
+        TestEventResponse chaserEvent = setup.chaserClient().waitForMessage(setup.systemChannel(), 5);
 
-        assertThat(policeEvent.type()).isEqualTo("ROBBER_LOCATION_REVEAL");
+        assertThat(chaserEvent.type()).isEqualTo("ROBBER_LOCATION_REVEAL");
     }
 
     @Test
     void 경찰이_도둑을_체포하면_모든_참가자가_ARREST_이벤트를_수신한다() throws Exception {
         // given: 도둑 2명 (체포 후에도 게임 종료 안 됨)
         SystemSetup setup = givenSystemSetup();
-        givenRobber(setup.game(), givenUser("robber2"));
+        givenRunner(setup.game(), givenUser("runner2"));
 
         // when
-        authenticated(setup.policeToken())
-                .body(new ArrestRequest(setup.robberParticipant().getId()))
+        authenticated(setup.chaserToken())
+                .body(new ArrestRequest(setup.runnerParticipant().getId()))
                 .post("/api/games/{gameId}/system/arrest", setup.game().getId())
                 .then()
                 .statusCode(200);
 
         // then
-        TestEventResponse policeEvent = setup.policeClient().waitForMessage(setup.systemChannel(), 5);
-        TestEventResponse robberEvent = setup.robberClient().waitForMessage(setup.systemChannel(), 5);
+        TestEventResponse chaserEvent = setup.chaserClient().waitForMessage(setup.systemChannel(), 5);
+        TestEventResponse runnerEvent = setup.runnerClient().waitForMessage(setup.systemChannel(), 5);
 
-        assertThat(policeEvent.type()).isEqualTo("ARREST");
-        assertThat(robberEvent.type()).isEqualTo("ARREST");
+        assertThat(chaserEvent.type()).isEqualTo("ARREST");
+        assertThat(runnerEvent.type()).isEqualTo("ARREST");
     }
 
     @Test
     void 도둑이_감옥에서_탈출하면_모든_참가자가_ESCAPE_이벤트를_수신한다() throws Exception {
         // given
         SystemSetup setup = givenSystemSetup();
-        setup.robberParticipant().updateStatus(ParticipantStatus.JAILED);
-        gameParticipantRepository.save(setup.robberParticipant());
+        setup.runnerParticipant().updateStatus(ParticipantStatus.JAILED);
+        gameParticipantRepository.save(setup.runnerParticipant());
 
         // when
-        authenticated(setup.robberToken())
+        authenticated(setup.runnerToken())
                 .post("/api/games/{gameId}/system/escape", setup.game().getId())
                 .then()
                 .statusCode(204);
 
         // then
-        TestEventResponse policeEvent = setup.policeClient().waitForMessage(setup.systemChannel(), 5);
-        TestEventResponse robberEvent = setup.robberClient().waitForMessage(setup.systemChannel(), 5);
+        TestEventResponse chaserEvent = setup.chaserClient().waitForMessage(setup.systemChannel(), 5);
+        TestEventResponse runnerEvent = setup.runnerClient().waitForMessage(setup.systemChannel(), 5);
 
-        assertThat(policeEvent.type()).isEqualTo("ESCAPE");
-        assertThat(robberEvent.type()).isEqualTo("ESCAPE");
+        assertThat(chaserEvent.type()).isEqualTo("ESCAPE");
+        assertThat(runnerEvent.type()).isEqualTo("ESCAPE");
     }
 
     @Test
@@ -158,15 +158,15 @@ class SystemE2ETest extends WebSocketE2ETest {
         SystemSetup setup = givenSystemSetup();
 
         // when: 마지막 도둑 체포 → ARREST + GAME_OVER 이벤트 발행
-        authenticated(setup.policeToken())
-                .body(new ArrestRequest(setup.robberParticipant().getId()))
+        authenticated(setup.chaserToken())
+                .body(new ArrestRequest(setup.runnerParticipant().getId()))
                 .post("/api/games/{gameId}/system/arrest", setup.game().getId())
                 .then()
                 .statusCode(200);
 
         // then: ARREST 이벤트 먼저 수신 후 GAME_OVER 수신
-        TestEventResponse arrestEvent = setup.policeClient().waitForMessage(setup.systemChannel(), 5);
-        TestEventResponse gameOverEvent = setup.policeClient().waitForMessage(setup.systemChannel(), 5);
+        TestEventResponse arrestEvent = setup.chaserClient().waitForMessage(setup.systemChannel(), 5);
+        TestEventResponse gameOverEvent = setup.chaserClient().waitForMessage(setup.systemChannel(), 5);
 
         assertThat(arrestEvent.type()).isEqualTo("ARREST");
         assertThat(gameOverEvent.type()).isEqualTo("GAME_OVER");
@@ -177,42 +177,42 @@ class SystemE2ETest extends WebSocketE2ETest {
     class WithPolygonArea {
 
         private SystemSetup givenSystemSetupPolygon() throws Exception {
-            User policeUser = givenUser("polyPolice");
-            User robberUser = givenUser("polyRobber");
+            User chaserUser = givenUser("polyChaser");
+            User runnerUser = givenUser("polyRunner");
 
             Game game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
             gameAreaRepository.save(GameAreaFixture.POLYGON_GAME_AREA(game));
-            GameParticipant policeParticipant = givenPolice(game, policeUser);
-            GameParticipant robberParticipant = givenRobber(game, robberUser);
+            GameParticipant chaserParticipant = givenChaser(game, chaserUser);
+            GameParticipant runnerParticipant = givenRunner(game, runnerUser);
 
-            String policeToken = givenAccessToken(policeUser);
-            String robberToken = givenAccessToken(robberUser);
+            String chaserToken = givenAccessToken(chaserUser);
+            String runnerToken = givenAccessToken(runnerUser);
             String systemChannel = SYSTEM_CHANNEL.formatted(game.getId());
 
-            StompTestClient policeClient = connect(policeToken);
-            StompTestClient robberClient = connect(robberToken);
-            policeClient.subscribe(systemChannel, TestEventResponse.class);
-            robberClient.subscribe(systemChannel, TestEventResponse.class);
+            StompTestClient chaserClient = connect(chaserToken);
+            StompTestClient runnerClient = connect(runnerToken);
+            chaserClient.subscribe(systemChannel, TestEventResponse.class);
+            runnerClient.subscribe(systemChannel, TestEventResponse.class);
 
-            return new SystemSetup(game, policeParticipant, robberParticipant, policeToken, robberToken, systemChannel, policeClient, robberClient);
+            return new SystemSetup(game, chaserParticipant, runnerParticipant, chaserToken, runnerToken, systemChannel, chaserClient, runnerClient);
         }
 
         @Test
         void 폴리곤_영역에서_경찰이_도둑을_체포하면_ARREST_이벤트를_수신한다() throws Exception {
             // given: 도둑 2명 (체포 후에도 게임 종료 안 됨)
             SystemSetup setup = givenSystemSetupPolygon();
-            givenRobber(setup.game(), givenUser("polyRobber2"));
+            givenRunner(setup.game(), givenUser("polyRunner2"));
 
             // when
-            authenticated(setup.policeToken())
-                    .body(new ArrestRequest(setup.robberParticipant().getId()))
+            authenticated(setup.chaserToken())
+                    .body(new ArrestRequest(setup.runnerParticipant().getId()))
                     .post("/api/games/{gameId}/system/arrest", setup.game().getId())
                     .then()
                     .statusCode(200);
 
             // then
-            TestEventResponse policeEvent = setup.policeClient().waitForMessage(setup.systemChannel(), 5);
-            assertThat(policeEvent.type()).isEqualTo("ARREST");
+            TestEventResponse chaserEvent = setup.chaserClient().waitForMessage(setup.systemChannel(), 5);
+            assertThat(chaserEvent.type()).isEqualTo("ARREST");
         }
 
         @Test
@@ -221,15 +221,15 @@ class SystemE2ETest extends WebSocketE2ETest {
             SystemSetup setup = givenSystemSetupPolygon();
 
             // when
-            authenticated(setup.policeToken())
-                    .body(new ArrestRequest(setup.robberParticipant().getId()))
+            authenticated(setup.chaserToken())
+                    .body(new ArrestRequest(setup.runnerParticipant().getId()))
                     .post("/api/games/{gameId}/system/arrest", setup.game().getId())
                     .then()
                     .statusCode(200);
 
             // then
-            TestEventResponse arrestEvent = setup.policeClient().waitForMessage(setup.systemChannel(), 5);
-            TestEventResponse gameOverEvent = setup.policeClient().waitForMessage(setup.systemChannel(), 5);
+            TestEventResponse arrestEvent = setup.chaserClient().waitForMessage(setup.systemChannel(), 5);
+            TestEventResponse gameOverEvent = setup.chaserClient().waitForMessage(setup.systemChannel(), 5);
 
             assertThat(arrestEvent.type()).isEqualTo("ARREST");
             assertThat(gameOverEvent.type()).isEqualTo("GAME_OVER");

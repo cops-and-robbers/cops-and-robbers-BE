@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 public record GameInfoResult(
         Integer roundDurationMinutes,
         Integer locationRevealIntervalMinutes,
-        Integer policeWaitMinutes,
+        Integer chaserWaitMinutes,
         Integer maxParticipants,
         Integer shrinkFinalRadiusInMeters,
         boolean isStarted,
@@ -20,7 +20,7 @@ public record GameInfoResult(
         return new GameInfoResult(
                 game.getRoundDurationMinutes(),
                 game.getLocationRevealIntervalMinutes(),
-                game.getPoliceWaitMinutes(),
+                game.getChaserWaitMinutes(),
                 game.getMaxParticipants(),
                 game.getShrinkFinalRadiusInMeters(),
                 game.isInProgress(),

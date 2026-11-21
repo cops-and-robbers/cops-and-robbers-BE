@@ -25,8 +25,8 @@ public class LobbyEventFactory {
         return LobbyEvent.of(gameId, LobbyEventType.EXIT, data);
     }
 
-    public LobbyEvent createTeamUpdateEvent(Long gameId, GameParticipant participant, int policeCount, int robberCount) {
-        LobbyEventData.LobbyTeamUpdateData data = LobbyEventData.LobbyTeamUpdateData.of(participant, policeCount, robberCount);
+    public LobbyEvent createTeamUpdateEvent(Long gameId, GameParticipant participant, int chaserCount, int runnerCount) {
+        LobbyEventData.LobbyTeamUpdateData data = LobbyEventData.LobbyTeamUpdateData.of(participant, chaserCount, runnerCount);
         return LobbyEvent.of(gameId, LobbyEventType.TEAM_UPDATE, data);
     }
 

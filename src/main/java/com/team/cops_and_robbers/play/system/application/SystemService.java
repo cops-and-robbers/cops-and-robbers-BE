@@ -41,30 +41,30 @@ public class SystemService {
      * - 남은 도둑이 없을 경우 게임 종료 이벤트가 추가로 발생합니다.
      */
     @Transactional
-    public ArrestResult arrestRobber(ArrestCommand command) {
+    public ArrestResult arrestRunner(ArrestCommand command) {
         Game game = gameRepository.getByGameId(command.gameId());
-        GameParticipant police = gameParticipantRepository.getByGameIdAndUserId(command.gameId(), command.policeUserId());
-        GameParticipant robber = gameParticipantRepository.getParticipantById(command.robberParticipantId());
+        GameParticipant chaser = gameParticipantRepository.getByGameIdAndUserId(command.gameId(), command.chaserUserId());
+        GameParticipant runner = gameParticipantRepository.getParticipantById(command.runnerParticipantId());
 
-        validateArrest(game, police, robber);
+        validateArrest(game, chaser, runner);
 
         if (game.rules().catchOutcome() == CatchOutcome.CAPTURE) {
-            robber.updateStatus(ParticipantStatus.JAILED);
+            runner.updateStatus(ParticipantStatus.JAILED);
         }
         game.incrementArrestCount();
-        gameResultService.recordArrest(game.getId(), command.policeUserId());
-        gameResultService.recordArrested(game.getId(), robber.getUser().getId());
+        gameResultService.recordArrest(game.getId(), command.chaserUserId());
+        gameResultService.recordArrested(game.getId(), runner.getUser().getId());
 
-        int remainingThieves = gameParticipantRepository.countByGameIdAndRobberStatus(
+        int remainingRunners = gameParticipantRepository.countByGameIdAndRunnerStatus(
                 game.getId(), ParticipantStatus.ALIVE
         );
 
         SystemEvent event = systemEventFactory.createArrestEvent(
-                game.getId(), police, robber, remainingThieves
+                game.getId(), chaser, runner, remainingRunners
         );
         eventPublisher.publishEvent(event);
 
-        if (game.rules().endsWhenAllRobbersArrested() && remainingThieves == 0) {
+        if (game.rules().endsWhenAllRunnersArrested() && remainingRunners == 0) {
             gameTerminationService.endGameByAllArrested(game.getId());
         }
 
@@ -72,28 +72,28 @@ public class SystemService {
     }
 
     @Transactional
-    public ArrestResult forceArrestRobber(ForceArrestCommand command) {
+    public ArrestResult forceArrestRunner(ForceArrestCommand command) {
         Game game = gameRepository.getByGameId(command.gameId());
-        GameParticipant robber = gameParticipantRepository.getByGameIdAndUserId(
-                command.gameId(), command.robberUserId()
+        GameParticipant runner = gameParticipantRepository.getByGameIdAndUserId(
+                command.gameId(), command.runnerUserId()
         );
 
-        validateForceArrest(game, robber);
+        validateForceArrest(game, runner);
 
         if (game.rules().catchOutcome() == CatchOutcome.CAPTURE) {
-            robber.updateStatus(ParticipantStatus.JAILED);
+            runner.updateStatus(ParticipantStatus.JAILED);
         }
         game.incrementArrestCount();
-        gameResultService.recordArrested(game.getId(), robber.getUser().getId());
+        gameResultService.recordArrested(game.getId(), runner.getUser().getId());
 
-        int remainingThieves = gameParticipantRepository.countByGameIdAndRobberStatus(
+        int remainingRunners = gameParticipantRepository.countByGameIdAndRunnerStatus(
                 game.getId(), ParticipantStatus.ALIVE
         );
 
-        SystemEvent event = systemEventFactory.createForceArrestEvent(game.getId(), robber, remainingThieves);
+        SystemEvent event = systemEventFactory.createForceArrestEvent(game.getId(), runner, remainingRunners);
         eventPublisher.publishEvent(event);
 
-        if (game.rules().endsWhenAllRobbersArrested() && remainingThieves == 0) {
+        if (game.rules().endsWhenAllRunnersArrested() && remainingRunners == 0) {
             gameTerminationService.endGameByAllArrested(game.getId());
         }
 
@@ -106,62 +106,62 @@ public class SystemService {
     @Transactional
     public void escapeFromPrison(EscapeCommand command) {
         Game game = gameRepository.getByGameId(command.gameId());
-        GameParticipant escapedThief = gameParticipantRepository.getByGameIdAndUserId(
-                command.gameId(), command.escapedThiefUserId()
+        GameParticipant escapedRunner = gameParticipantRepository.getByGameIdAndUserId(
+                command.gameId(), command.escapedRunnerUserId()
         );
 
-        validateEscape(game, escapedThief);
+        validateEscape(game, escapedRunner);
 
-        escapedThief.updateStatus(ParticipantStatus.ALIVE);
+        escapedRunner.updateStatus(ParticipantStatus.ALIVE);
 
-        int remainingThieves = gameParticipantRepository.countByGameIdAndRobberStatus(
+        int remainingRunners = gameParticipantRepository.countByGameIdAndRunnerStatus(
                 command.gameId(), ParticipantStatus.ALIVE
         );
 
-        SystemEvent event = systemEventFactory.createEscapeEvent(command.gameId(), escapedThief, remainingThieves);
+        SystemEvent event = systemEventFactory.createEscapeEvent(command.gameId(), escapedRunner, remainingRunners);
         eventPublisher.publishEvent(event);
     }
 
-    private void validateArrest(Game game, GameParticipant police, GameParticipant robber) {
+    private void validateArrest(Game game, GameParticipant chaser, GameParticipant runner) {
         if (!game.isInProgress()) {
             throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
         }
-        if (!police.isPolice()) {
-            throw new ApplicationException(GameParticipantException.ONLY_POLICE_CAN_ARREST);
+        if (!chaser.isChaser()) {
+            throw new ApplicationException(GameParticipantException.ONLY_CHASER_CAN_ARREST);
         }
-        if (police.isPoliceWaiting()) {
-            throw new ApplicationException(GameParticipantException.POLICE_WAITING_TIME);
+        if (chaser.isChaserWaiting()) {
+            throw new ApplicationException(GameParticipantException.CHASER_WAITING_TIME);
         }
-        if (!robber.isRobber()) {
-            throw new ApplicationException(GameParticipantException.ONLY_ROBBER_CAN_BE_ARRESTED);
+        if (!runner.isRunner()) {
+            throw new ApplicationException(GameParticipantException.ONLY_RUNNER_CAN_BE_ARRESTED);
         }
-        if (!robber.isInGame(game.getId())) {
+        if (!runner.isInGame(game.getId())) {
             throw new ApplicationException(GameParticipantException.PARTICIPANT_GAME_MISMATCH);
         }
-        if (robber.isJailed()) {
+        if (runner.isJailed()) {
             throw new ApplicationException(GameParticipantException.ALREADY_ARRESTED);
         }
     }
 
-    private void validateForceArrest(Game game, GameParticipant robber) {
+    private void validateForceArrest(Game game, GameParticipant runner) {
         if (!game.isInProgress()) {
             throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
         }
         gameRulePolicy.validateForceArrest(game);
-        if (!robber.isRobber()) {
-            throw new ApplicationException(GameParticipantException.ONLY_ROBBER_CAN_BE_ARRESTED);
+        if (!runner.isRunner()) {
+            throw new ApplicationException(GameParticipantException.ONLY_RUNNER_CAN_BE_ARRESTED);
         }
-        if (robber.isJailed()) {
+        if (runner.isJailed()) {
             throw new ApplicationException(GameParticipantException.ALREADY_ARRESTED);
         }
     }
 
-    private void validateEscape(Game game, GameParticipant escapedThief) {
+    private void validateEscape(Game game, GameParticipant escapedRunner) {
         if (!game.isInProgress()) {
             throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
         }
         gameRulePolicy.validateEscape(game);
-        if (!escapedThief.isJailed()) {
+        if (!escapedRunner.isJailed()) {
             throw new ApplicationException(GameParticipantException.NOT_JAILED);
         }
     }

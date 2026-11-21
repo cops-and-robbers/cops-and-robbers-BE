@@ -1,5 +1,6 @@
 package com.team.cops_and_robbers.play.system.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
@@ -8,8 +9,8 @@ import com.team.cops_and_robbers.history.domain.GameEndReason;
 import java.util.List;
 
 public sealed interface SystemEventData permits
-        SystemEventData.PoliceMoveStartData,
-        SystemEventData.RobberLocationRevealData,
+        SystemEventData.ChaserMoveStartData,
+        SystemEventData.RunnerLocationRevealData,
         SystemEventData.ArrestData,
         SystemEventData.EscapeData,
         SystemEventData.GameEndData,
@@ -25,38 +26,70 @@ public sealed interface SystemEventData permits
         }
     }
 
-    record PoliceMoveStartData() implements SystemEventData {
-        public static PoliceMoveStartData create() {
-            return new PoliceMoveStartData();
+    record ChaserMoveStartData() implements SystemEventData {
+        public static ChaserMoveStartData create() {
+            return new ChaserMoveStartData();
         }
     }
 
-    record RobberLocation(Long participantId, String nickname, Double latitude, Double longitude) {
-        public static RobberLocation of(Long participantId, String nickname, Double latitude, Double longitude) {
-            return new RobberLocation(participantId, nickname, latitude, longitude);
+    record RunnerLocation(Long participantId, String nickname, Double latitude, Double longitude) {
+        public static RunnerLocation of(Long participantId, String nickname, Double latitude, Double longitude) {
+            return new RunnerLocation(participantId, nickname, latitude, longitude);
         }
     }
 
-    record RobberLocationRevealData(List<RobberLocation> locations) implements SystemEventData {
-        public static RobberLocationRevealData of(List<RobberLocation> locations) {
-            return new RobberLocationRevealData(locations);
+    record RunnerLocationRevealData(List<RunnerLocation> locations) implements SystemEventData {
+        public static RunnerLocationRevealData of(List<RunnerLocation> locations) {
+            return new RunnerLocationRevealData(locations);
         }
     }
 
-    record ArrestData(SystemParticipantInfo police, SystemParticipantInfo robber,
-                      int remainingThieves) implements SystemEventData {
-        public static ArrestData of(GameParticipant police, GameParticipant robber, int remainingThieves) {
-            return new ArrestData(SystemParticipantInfo.from(police), SystemParticipantInfo.from(robber), remainingThieves);
+    record ArrestData(SystemParticipantInfo chaser, SystemParticipantInfo runner,
+                      int remainingRunners) implements SystemEventData {
+        // 옛 앱 호환: 옛 이름으로도 내보낸다. 강제 업데이트 후 제거
+        @Deprecated
+        @JsonProperty(value = "police", access = JsonProperty.Access.READ_ONLY)
+        public SystemParticipantInfo police() {
+            return chaser;
         }
 
-        public static ArrestData ofForced(GameParticipant robber, int remainingThieves) {
-            return new ArrestData(null, SystemParticipantInfo.from(robber), remainingThieves);
+        @Deprecated
+        @JsonProperty(value = "robber", access = JsonProperty.Access.READ_ONLY)
+        public SystemParticipantInfo robber() {
+            return runner;
+        }
+
+        @Deprecated
+        @JsonProperty(value = "remainingThieves", access = JsonProperty.Access.READ_ONLY)
+        public int remainingThieves() {
+            return remainingRunners;
+        }
+
+        public static ArrestData of(GameParticipant chaser, GameParticipant runner, int remainingRunners) {
+            return new ArrestData(SystemParticipantInfo.from(chaser), SystemParticipantInfo.from(runner), remainingRunners);
+        }
+
+        public static ArrestData ofForced(GameParticipant runner, int remainingRunners) {
+            return new ArrestData(null, SystemParticipantInfo.from(runner), remainingRunners);
         }
     }
 
-    record EscapeData(SystemParticipantInfo escapedThief, int remainingThieves) implements SystemEventData {
-        public static EscapeData of(GameParticipant escapedThief, int remainingThieves) {
-            return new EscapeData(SystemParticipantInfo.from(escapedThief), remainingThieves);
+    record EscapeData(SystemParticipantInfo escapedRunner, int remainingRunners) implements SystemEventData {
+        // 옛 앱 호환: 옛 이름으로도 내보낸다. 강제 업데이트 후 제거
+        @Deprecated
+        @JsonProperty(value = "escapedThief", access = JsonProperty.Access.READ_ONLY)
+        public SystemParticipantInfo escapedThief() {
+            return escapedRunner;
+        }
+
+        @Deprecated
+        @JsonProperty(value = "remainingThieves", access = JsonProperty.Access.READ_ONLY)
+        public int remainingThieves() {
+            return remainingRunners;
+        }
+
+        public static EscapeData of(GameParticipant escapedRunner, int remainingRunners) {
+            return new EscapeData(SystemParticipantInfo.from(escapedRunner), remainingRunners);
         }
     }
 

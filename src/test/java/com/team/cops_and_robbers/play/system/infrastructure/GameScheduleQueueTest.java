@@ -53,15 +53,15 @@ class GameScheduleQueueTest {
 
     @Nested
     @DisplayName("경찰 출동 이벤트 등록")
-    class EnqueuePoliceMoveStart {
+    class EnqueueChaserMoveStart {
 
         @Test
         void 경찰_대기_시각이_미래면_이벤트가_등록된다() {
-            // given: 방금 시작된 게임 (policeWaitMinutes=3 → 3분 후 출동)
+            // given: 방금 시작된 게임 (chaserWaitMinutes=3 → 3분 후 출동)
             Game game = IN_PROGRESS_GAME(FIXED_NOW);
 
             // when
-            gameScheduleQueue.enqueuePoliceMoveStart(game, FIXED_NOW);
+            gameScheduleQueue.enqueueChaserMoveStart(game, FIXED_NOW);
 
             // then
             then(delayedQueue).should().offer(any(), anyLong(), any(TimeUnit.class));
@@ -69,11 +69,11 @@ class GameScheduleQueueTest {
 
         @Test
         void 경찰_대기_시각이_이미_지났으면_등록되지_않는다() {
-            // given: 10분 전 시작, policeWaitMinutes=3 → 7분 전에 이미 출동
+            // given: 10분 전 시작, chaserWaitMinutes=3 → 7분 전에 이미 출동
             Game game = IN_PROGRESS_GAME(FIXED_NOW.minusMinutes(10));
 
             // when
-            gameScheduleQueue.enqueuePoliceMoveStart(game, FIXED_NOW);
+            gameScheduleQueue.enqueueChaserMoveStart(game, FIXED_NOW);
 
             // then
             then(delayedQueue).should(never()).offer(any(), anyLong(), any(TimeUnit.class));
@@ -86,7 +86,7 @@ class GameScheduleQueueTest {
 
         @Test
         void 첫_공개_시각이_미래면_이벤트가_등록된다() {
-            // given: 방금 시작 (policeWait=3 + interval=5 → 8분 후 첫 공개)
+            // given: 방금 시작 (chaserWait=3 + interval=5 → 8분 후 첫 공개)
             Game game = IN_PROGRESS_GAME(FIXED_NOW);
 
             // when

@@ -17,12 +17,12 @@ class GameResultParticipantTest {
     private static final Duration TOKEN_TTL = Duration.ofMinutes(2);
     private static final LocalDateTime FIRST_ISSUED_AT = LocalDateTime.of(2026, 11, 9, 17, 0, 0);
 
-    private GameResultParticipant police;
+    private GameResultParticipant chaser;
 
     @BeforeEach
     void setUp() {
-        police = GameResultParticipantFixture.POLICE_PARTICIPANT(
-                GameResultFixture.POLICE_WIN_RESULT(1L), 1L, "police"
+        chaser = GameResultParticipantFixture.CHASER_PARTICIPANT(
+                GameResultFixture.CHASER_WIN_RESULT(1L), 1L, "chaser"
         );
     }
 
@@ -33,53 +33,53 @@ class GameResultParticipantTest {
         @Test
         void 첫_발급이면_기준_시각만_남긴다() {
             // when
-            police.accumulateRadioSeconds(FIRST_ISSUED_AT, TOKEN_TTL);
+            chaser.accumulateRadioSeconds(FIRST_ISSUED_AT, TOKEN_TTL);
 
             // then
             assertSoftly(softly -> {
-                softly.assertThat(police.getRadioSeconds()).isZero();
-                softly.assertThat(police.getRadioLastIssuedAt()).isEqualTo(FIRST_ISSUED_AT);
+                softly.assertThat(chaser.getRadioSeconds()).isZero();
+                softly.assertThat(chaser.getRadioLastIssuedAt()).isEqualTo(FIRST_ISSUED_AT);
             });
         }
 
         @Test
         void 직전_발급_이후_흐른_시간을_더한다() {
             // given
-            police.accumulateRadioSeconds(FIRST_ISSUED_AT, TOKEN_TTL);
+            chaser.accumulateRadioSeconds(FIRST_ISSUED_AT, TOKEN_TTL);
             LocalDateTime reissuedAt = FIRST_ISSUED_AT.plusSeconds(90);
 
             // when
-            police.accumulateRadioSeconds(reissuedAt, TOKEN_TTL);
+            chaser.accumulateRadioSeconds(reissuedAt, TOKEN_TTL);
 
             // then
             assertSoftly(softly -> {
-                softly.assertThat(police.getRadioSeconds()).isEqualTo(90);
-                softly.assertThat(police.getRadioLastIssuedAt()).isEqualTo(reissuedAt);
+                softly.assertThat(chaser.getRadioSeconds()).isEqualTo(90);
+                softly.assertThat(chaser.getRadioLastIssuedAt()).isEqualTo(reissuedAt);
             });
         }
 
         @Test
         void 토큰_수명을_넘긴_구간은_수명만큼만_더한다() {
             // given
-            police.accumulateRadioSeconds(FIRST_ISSUED_AT, TOKEN_TTL);
+            chaser.accumulateRadioSeconds(FIRST_ISSUED_AT, TOKEN_TTL);
 
             // when
-            police.accumulateRadioSeconds(FIRST_ISSUED_AT.plusMinutes(10), TOKEN_TTL);
+            chaser.accumulateRadioSeconds(FIRST_ISSUED_AT.plusMinutes(10), TOKEN_TTL);
 
             // then
-            assertSoftly(softly -> softly.assertThat(police.getRadioSeconds()).isEqualTo(120));
+            assertSoftly(softly -> softly.assertThat(chaser.getRadioSeconds()).isEqualTo(120));
         }
 
         @Test
         void 직전_발급과_같은_시각이면_더하지_않는다() {
             // given
-            police.accumulateRadioSeconds(FIRST_ISSUED_AT, TOKEN_TTL);
+            chaser.accumulateRadioSeconds(FIRST_ISSUED_AT, TOKEN_TTL);
 
             // when
-            police.accumulateRadioSeconds(FIRST_ISSUED_AT, TOKEN_TTL);
+            chaser.accumulateRadioSeconds(FIRST_ISSUED_AT, TOKEN_TTL);
 
             // then
-            assertSoftly(softly -> softly.assertThat(police.getRadioSeconds()).isZero());
+            assertSoftly(softly -> softly.assertThat(chaser.getRadioSeconds()).isZero());
         }
     }
 }

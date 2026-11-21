@@ -32,25 +32,25 @@ public class GameScheduleQueue {
         this.delayedQueue = redissonClient.getDelayedQueue(blockingQueue);
     }
 
-    public void enqueuePoliceMoveStart(Game game, LocalDateTime now) {
-        long delayMs = delayMillis(now, game.getPoliceMoveStartTime());
+    public void enqueueChaserMoveStart(Game game, LocalDateTime now) {
+        long delayMs = delayMillis(now, game.getChaserMoveStartTime());
         if (delayMs <= 0) {
             return;
         }
-        enqueue(new GameScheduleEvent(game.getId(), GameScheduleEventType.POLICE_MOVE_START, game.getRoundNumber()), delayMs);
-        log.info("[Queue] POLICE_MOVE_START enqueued in {}ms for GameId: {}", delayMs, game.getId());
+        enqueue(new GameScheduleEvent(game.getId(), GameScheduleEventType.CHASER_MOVE_START, game.getRoundNumber()), delayMs);
+        log.info("[Queue] CHASER_MOVE_START enqueued in {}ms for GameId: {}", delayMs, game.getId());
     }
 
     public void enqueueFirstReveal(Game game, LocalDateTime now) {
         if (game.isLocationRevealDisabled()) {
             return;
         }
-        long delayMs = delayMillis(now, game.getFirstRobberRevealTime());
+        long delayMs = delayMillis(now, game.getFirstRunnerRevealTime());
         if (delayMs <= 0) {
             return;
         }
-        enqueue(new GameScheduleEvent(game.getId(), GameScheduleEventType.ROBBER_LOCATION_REVEAL, game.getRoundNumber()), delayMs);
-        log.info("[Queue] First ROBBER_LOCATION_REVEAL enqueued in {}ms for GameId: {}", delayMs, game.getId());
+        enqueue(new GameScheduleEvent(game.getId(), GameScheduleEventType.RUNNER_LOCATION_REVEAL, game.getRoundNumber()), delayMs);
+        log.info("[Queue] First RUNNER_LOCATION_REVEAL enqueued in {}ms for GameId: {}", delayMs, game.getId());
     }
 
     public void enqueueNextReveal(Game game) {
@@ -61,10 +61,10 @@ public class GameScheduleQueue {
 
         if (game.isBeforeGameOver(nextReveal)) {
             long delayMs = Duration.ofMinutes(game.getLocationRevealIntervalMinutes()).toMillis();
-            enqueue(new GameScheduleEvent(game.getId(), GameScheduleEventType.ROBBER_LOCATION_REVEAL, game.getRoundNumber()), delayMs);
-            log.info("[Queue] Next ROBBER_LOCATION_REVEAL enqueued in {}ms for GameId: {}", delayMs, game.getId());
+            enqueue(new GameScheduleEvent(game.getId(), GameScheduleEventType.RUNNER_LOCATION_REVEAL, game.getRoundNumber()), delayMs);
+            log.info("[Queue] Next RUNNER_LOCATION_REVEAL enqueued in {}ms for GameId: {}", delayMs, game.getId());
         } else {
-            log.info("[Queue] No more ROBBER_LOCATION_REVEAL for GameId: {}", game.getId());
+            log.info("[Queue] No more RUNNER_LOCATION_REVEAL for GameId: {}", game.getId());
         }
     }
 

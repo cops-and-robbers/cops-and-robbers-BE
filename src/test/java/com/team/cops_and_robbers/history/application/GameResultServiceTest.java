@@ -40,13 +40,13 @@ import static com.team.cops_and_robbers.common.fixture.GameAreaFixture.POLYGON_G
 import static com.team.cops_and_robbers.common.fixture.GameFixture.EVENT_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_TAG_GAME;
-import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_ROBBER;
+import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_RUNNER;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.HOST_PARTICIPANT;
-import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.WAITING_POLICE;
-import static com.team.cops_and_robbers.common.fixture.GameResultFixture.POLICE_WIN_RESULT;
-import static com.team.cops_and_robbers.common.fixture.GameResultParticipantFixture.POLICE_PARTICIPANT;
-import static com.team.cops_and_robbers.common.fixture.GameResultParticipantFixture.ROBBER_PARTICIPANT;
-import static com.team.cops_and_robbers.common.fixture.GameResultFixture.POLICE_WIN_RESULT_POLYGON;
+import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.WAITING_CHASER;
+import static com.team.cops_and_robbers.common.fixture.GameResultFixture.CHASER_WIN_RESULT;
+import static com.team.cops_and_robbers.common.fixture.GameResultParticipantFixture.CHASER_PARTICIPANT;
+import static com.team.cops_and_robbers.common.fixture.GameResultParticipantFixture.RUNNER_PARTICIPANT;
+import static com.team.cops_and_robbers.common.fixture.GameResultFixture.CHASER_WIN_RESULT_POLYGON;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -73,32 +73,32 @@ class GameResultServiceTest extends ServiceUnitTest {
     private static final Long TEST_USER_ID = 1L;
     private static final Long TEST_GAME_ID = 1L;
     private static final Long TEST_GAME_RESULT_ID = 1L;
-    private static final Long POLICE_USER_ID = 101L;
-    private static final Long ROBBER_USER_ID = 102L;
+    private static final Long CHASER_USER_ID = 101L;
+    private static final Long RUNNER_USER_ID = 102L;
 
-    private User police;
-    private User robber;
+    private User chaser;
+    private User runner;
     private Game inProgressGame;
     private GameArea gameArea;
     private GameResult openedResult;
-    private GameParticipant policeParticipant;
-    private GameParticipant robberParticipant;
+    private GameParticipant chaserParticipant;
+    private GameParticipant runnerParticipant;
 
     @BeforeEach
     void setUp() {
-        police = USER("police");
-        robber = USER("robber");
+        chaser = USER("chaser");
+        runner = USER("runner");
         inProgressGame = IN_PROGRESS_GAME();
-        setId(police, POLICE_USER_ID);
-        setId(robber, ROBBER_USER_ID);
+        setId(chaser, CHASER_USER_ID);
+        setId(runner, RUNNER_USER_ID);
         setId(inProgressGame, TEST_GAME_ID);
 
         gameArea = CIRCLE_GAME_AREA(inProgressGame);
-        openedResult = GameResult.openSnapshot(inProgressGame, gameArea, POLICE_USER_ID);
+        openedResult = GameResult.openSnapshot(inProgressGame, gameArea, CHASER_USER_ID);
         setId(openedResult, TEST_GAME_RESULT_ID);
 
-        policeParticipant = WAITING_POLICE(inProgressGame, police);
-        robberParticipant = ALIVE_ROBBER(inProgressGame, robber);
+        chaserParticipant = WAITING_CHASER(inProgressGame, chaser);
+        runnerParticipant = ALIVE_RUNNER(inProgressGame, runner);
     }
 
     @Nested
@@ -209,7 +209,7 @@ class GameResultServiceTest extends ServiceUnitTest {
             given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(gameArea);
             given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
             given(gameParticipantRepository.findAllByGameIdWithUser(TEST_GAME_ID))
-                    .willReturn(List.of(policeParticipant, robberParticipant));
+                    .willReturn(List.of(chaserParticipant, runnerParticipant));
 
             // when
             gameResultService.openGameResult(inProgressGame);
@@ -218,7 +218,7 @@ class GameResultServiceTest extends ServiceUnitTest {
             ArgumentCaptor<List<GameResultParticipant>> captor = ArgumentCaptor.forClass(List.class);
             then(gameResultParticipantRepository).should().saveAll(captor.capture());
             assertThat(captor.getValue()).extracting(GameResultParticipant::getUserId)
-                    .containsExactlyInAnyOrder(POLICE_USER_ID, ROBBER_USER_ID);
+                    .containsExactlyInAnyOrder(CHASER_USER_ID, RUNNER_USER_ID);
             assertThat(captor.getValue()).allMatch(snapshot -> !snapshot.hasLeft());
         }
 
@@ -232,14 +232,14 @@ class GameResultServiceTest extends ServiceUnitTest {
             given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(CIRCLE_GAME_AREA(eventGame));
             given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
             given(gameParticipantRepository.findAllByGameIdWithUser(TEST_GAME_ID))
-                    .willReturn(List.of(ALIVE_ROBBER(eventGame, robber), HOST_PARTICIPANT(eventGame, police)));
+                    .willReturn(List.of(ALIVE_RUNNER(eventGame, runner), HOST_PARTICIPANT(eventGame, chaser)));
 
             // when
             GameResult result = gameResultService.openGameResult(eventGame);
 
             // then
             assertThat(result.getEventGame()).isTrue();
-            assertThat(result.getHostUserId()).isEqualTo(POLICE_USER_ID);
+            assertThat(result.getHostUserId()).isEqualTo(CHASER_USER_ID);
         }
 
         @Test
@@ -315,7 +315,7 @@ class GameResultServiceTest extends ServiceUnitTest {
             given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(gameArea);
             given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
             given(gameParticipantRepository.findAllByGameIdWithUser(TEST_GAME_ID))
-                    .willReturn(List.of(policeParticipant, robberParticipant));
+                    .willReturn(List.of(chaserParticipant, runnerParticipant));
 
             // when
             gameResultService.openGameResult(inProgressGame);
@@ -333,21 +333,21 @@ class GameResultServiceTest extends ServiceUnitTest {
         void 게임_중_퇴장하면_명단에서_지우지_않고_퇴장_시각만_찍힌다() {
             // given
             GameResultParticipant snapshot =
-                    GameResultParticipant.createSnapshot(openedResult, policeParticipant);
+                    GameResultParticipant.createSnapshot(openedResult, chaserParticipant);
 
             given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
                     .willReturn(Optional.of(openedResult));
             given(gameResultParticipantRepository
-                    .findByGameResultIdAndUserIdAndLeftAtIsNull(TEST_GAME_RESULT_ID, POLICE_USER_ID))
+                    .findByGameResultIdAndUserIdAndLeftAtIsNull(TEST_GAME_RESULT_ID, CHASER_USER_ID))
                     .willReturn(Optional.of(snapshot));
 
             // when
-            gameResultService.recordParticipantLeft(TEST_GAME_ID, POLICE_USER_ID);
+            gameResultService.recordParticipantLeft(TEST_GAME_ID, CHASER_USER_ID);
 
             // then
             assertThat(snapshot.hasLeft()).isTrue();
             assertThat(snapshot.getLeftAt()).isEqualTo(NOW);
-            assertThat(snapshot.getStatus()).isEqualTo(ParticipantStatus.POLICE_WAITING);
+            assertThat(snapshot.getStatus()).isEqualTo(ParticipantStatus.CHASER_WAITING);
         }
 
         @Test
@@ -357,7 +357,7 @@ class GameResultServiceTest extends ServiceUnitTest {
                     .willReturn(Optional.empty());
 
             // when
-            gameResultService.recordParticipantLeft(TEST_GAME_ID, POLICE_USER_ID);
+            gameResultService.recordParticipantLeft(TEST_GAME_ID, CHASER_USER_ID);
 
             // then
             then(gameResultParticipantRepository).should(never()).save(any());
@@ -371,72 +371,72 @@ class GameResultServiceTest extends ServiceUnitTest {
         @Test
         void 내_체포수와_팀을_반환한다() {
             // given
-            GameResult completed = POLICE_WIN_RESULT(TEST_GAME_ID);
+            GameResult completed = CHASER_WIN_RESULT(TEST_GAME_ID);
             setId(completed, TEST_GAME_RESULT_ID);
             GameResultParticipant snapshot =
-                    GameResultParticipant.createSnapshot(completed, policeParticipant);
+                    GameResultParticipant.createSnapshot(completed, chaserParticipant);
             snapshot.incrementArrestCount();
             snapshot.incrementArrestCount();
 
             given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(completed));
             given(gameResultParticipantRepository
-                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(TEST_GAME_RESULT_ID, POLICE_USER_ID))
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(TEST_GAME_RESULT_ID, CHASER_USER_ID))
                     .willReturn(Optional.of(snapshot));
 
             // when
             GameResultParticipantResult result = gameResultService.getMyGameRecord(
-                    GameResultCommand.of(POLICE_USER_ID, TEST_GAME_RESULT_ID));
+                    GameResultCommand.of(CHASER_USER_ID, TEST_GAME_RESULT_ID));
 
             // then
             assertThat(result.arrestCount()).isEqualTo(2);
             assertThat(result.arrestedCount()).isZero();
-            assertThat(result.team()).isEqualTo(Team.POLICE);
+            assertThat(result.team()).isEqualTo(Team.CHASER);
         }
 
         @Test
         void 도둑은_잡힌_횟수를_반환한다() {
             // given
-            GameResult completed = POLICE_WIN_RESULT(TEST_GAME_ID);
+            GameResult completed = CHASER_WIN_RESULT(TEST_GAME_ID);
             setId(completed, TEST_GAME_RESULT_ID);
             GameResultParticipant snapshot =
-                    GameResultParticipant.createSnapshot(completed, robberParticipant);
+                    GameResultParticipant.createSnapshot(completed, runnerParticipant);
             snapshot.incrementArrestedCount();
             snapshot.incrementArrestedCount();
 
             given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(completed));
             given(gameResultParticipantRepository
-                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(TEST_GAME_RESULT_ID, ROBBER_USER_ID))
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(TEST_GAME_RESULT_ID, RUNNER_USER_ID))
                     .willReturn(Optional.of(snapshot));
 
             // when
             GameResultParticipantResult result = gameResultService.getMyGameRecord(
-                    GameResultCommand.of(ROBBER_USER_ID, TEST_GAME_RESULT_ID));
+                    GameResultCommand.of(RUNNER_USER_ID, TEST_GAME_RESULT_ID));
 
             // then
             assertThat(result.arrestedCount()).isEqualTo(2);
             assertThat(result.arrestCount()).isZero();
-            assertThat(result.team()).isEqualTo(Team.ROBBER);
+            assertThat(result.team()).isEqualTo(Team.RUNNER);
         }
 
         /** 이벤트 게임은 퇴장 시 참가자 행이 지워져 재입장이 되므로 스냅샷이 여러 개 쌓인다. */
         @Test
         void 퇴장_후_재입장했으면_재입장_이후_기록만_반환한다() {
             // given
-            GameResult completed = POLICE_WIN_RESULT(TEST_GAME_ID);
+            GameResult completed = CHASER_WIN_RESULT(TEST_GAME_ID);
             setId(completed, TEST_GAME_RESULT_ID);
 
-            GameResultParticipant after = GameResultParticipant.createSnapshot(completed, policeParticipant);
+            GameResultParticipant after = GameResultParticipant.createSnapshot(completed, chaserParticipant);
             after.incrementArrestCount();
             after.incrementArrestCount();
 
             given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(completed));
             given(gameResultParticipantRepository
-                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(TEST_GAME_RESULT_ID, POLICE_USER_ID))
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(TEST_GAME_RESULT_ID, CHASER_USER_ID))
                     .willReturn(Optional.of(after));
 
             // when
             GameResultParticipantResult result = gameResultService.getMyGameRecord(
-                    GameResultCommand.of(POLICE_USER_ID, TEST_GAME_RESULT_ID));
+                    GameResultCommand.of(CHASER_USER_ID, TEST_GAME_RESULT_ID));
 
             // then
             assertThat(result.arrestCount()).isEqualTo(2);
@@ -446,17 +446,17 @@ class GameResultServiceTest extends ServiceUnitTest {
         @Test
         void 그_게임_참가자가_아니면_예외가_발생한다() {
             // given
-            GameResult completed = POLICE_WIN_RESULT(TEST_GAME_ID);
+            GameResult completed = CHASER_WIN_RESULT(TEST_GAME_ID);
             setId(completed, TEST_GAME_RESULT_ID);
 
             given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(completed));
             given(gameResultParticipantRepository
-                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(TEST_GAME_RESULT_ID, POLICE_USER_ID))
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(TEST_GAME_RESULT_ID, CHASER_USER_ID))
                     .willReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> gameResultService.getMyGameRecord(
-                    GameResultCommand.of(POLICE_USER_ID, TEST_GAME_RESULT_ID)))
+                    GameResultCommand.of(CHASER_USER_ID, TEST_GAME_RESULT_ID)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(GameResultException.GAME_RESULT_NOT_FOUND.getDetail());
         }
@@ -468,7 +468,7 @@ class GameResultServiceTest extends ServiceUnitTest {
 
             // when & then
             assertThatThrownBy(() -> gameResultService.getMyGameRecord(
-                    GameResultCommand.of(POLICE_USER_ID, TEST_GAME_RESULT_ID)))
+                    GameResultCommand.of(CHASER_USER_ID, TEST_GAME_RESULT_ID)))
                     .isInstanceOf(ApplicationException.class)
                     .hasMessageContaining(GameResultException.GAME_RESULT_NOT_FOUND.getDetail());
         }
@@ -482,16 +482,16 @@ class GameResultServiceTest extends ServiceUnitTest {
         void 체포하면_해당_경찰의_체포수가_올라간다() {
             // given
             GameResultParticipant snapshot =
-                    GameResultParticipant.createSnapshot(openedResult, policeParticipant);
+                    GameResultParticipant.createSnapshot(openedResult, chaserParticipant);
 
             given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
                     .willReturn(Optional.of(openedResult));
             given(gameResultParticipantRepository
-                    .findByGameResultIdAndUserIdAndLeftAtIsNull(TEST_GAME_RESULT_ID, POLICE_USER_ID))
+                    .findByGameResultIdAndUserIdAndLeftAtIsNull(TEST_GAME_RESULT_ID, CHASER_USER_ID))
                     .willReturn(Optional.of(snapshot));
 
             // when
-            gameResultService.recordArrest(TEST_GAME_ID, POLICE_USER_ID);
+            gameResultService.recordArrest(TEST_GAME_ID, CHASER_USER_ID);
 
             // then
             assertThat(snapshot.getArrestCount()).isEqualTo(1);
@@ -502,18 +502,18 @@ class GameResultServiceTest extends ServiceUnitTest {
         void 여러_번_체포하면_누적된다() {
             // given
             GameResultParticipant snapshot =
-                    GameResultParticipant.createSnapshot(openedResult, policeParticipant);
+                    GameResultParticipant.createSnapshot(openedResult, chaserParticipant);
 
             given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
                     .willReturn(Optional.of(openedResult));
             given(gameResultParticipantRepository
-                    .findByGameResultIdAndUserIdAndLeftAtIsNull(TEST_GAME_RESULT_ID, POLICE_USER_ID))
+                    .findByGameResultIdAndUserIdAndLeftAtIsNull(TEST_GAME_RESULT_ID, CHASER_USER_ID))
                     .willReturn(Optional.of(snapshot));
 
             // when
-            gameResultService.recordArrest(TEST_GAME_ID, POLICE_USER_ID);
-            gameResultService.recordArrest(TEST_GAME_ID, POLICE_USER_ID);
-            gameResultService.recordArrest(TEST_GAME_ID, POLICE_USER_ID);
+            gameResultService.recordArrest(TEST_GAME_ID, CHASER_USER_ID);
+            gameResultService.recordArrest(TEST_GAME_ID, CHASER_USER_ID);
+            gameResultService.recordArrest(TEST_GAME_ID, CHASER_USER_ID);
 
             // then
             assertThat(snapshot.getArrestCount()).isEqualTo(3);
@@ -526,7 +526,7 @@ class GameResultServiceTest extends ServiceUnitTest {
                     .willReturn(Optional.empty());
 
             // when
-            gameResultService.recordArrest(TEST_GAME_ID, POLICE_USER_ID);
+            gameResultService.recordArrest(TEST_GAME_ID, CHASER_USER_ID);
 
             // then
             then(gameResultParticipantRepository).should(never())
@@ -542,16 +542,16 @@ class GameResultServiceTest extends ServiceUnitTest {
         void 잡히면_해당_도둑의_잡힌_횟수가_올라간다() {
             // given
             GameResultParticipant snapshot =
-                    GameResultParticipant.createSnapshot(openedResult, robberParticipant);
+                    GameResultParticipant.createSnapshot(openedResult, runnerParticipant);
 
             given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
                     .willReturn(Optional.of(openedResult));
             given(gameResultParticipantRepository
-                    .findByGameResultIdAndUserIdAndLeftAtIsNull(TEST_GAME_RESULT_ID, ROBBER_USER_ID))
+                    .findByGameResultIdAndUserIdAndLeftAtIsNull(TEST_GAME_RESULT_ID, RUNNER_USER_ID))
                     .willReturn(Optional.of(snapshot));
 
             // when
-            gameResultService.recordArrested(TEST_GAME_ID, ROBBER_USER_ID);
+            gameResultService.recordArrested(TEST_GAME_ID, RUNNER_USER_ID);
 
             // then
             assertThat(snapshot.getArrestedCount()).isEqualTo(1);
@@ -563,18 +563,18 @@ class GameResultServiceTest extends ServiceUnitTest {
         void 여러_번_잡히면_누적된다() {
             // given
             GameResultParticipant snapshot =
-                    GameResultParticipant.createSnapshot(openedResult, robberParticipant);
+                    GameResultParticipant.createSnapshot(openedResult, runnerParticipant);
 
             given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
                     .willReturn(Optional.of(openedResult));
             given(gameResultParticipantRepository
-                    .findByGameResultIdAndUserIdAndLeftAtIsNull(TEST_GAME_RESULT_ID, ROBBER_USER_ID))
+                    .findByGameResultIdAndUserIdAndLeftAtIsNull(TEST_GAME_RESULT_ID, RUNNER_USER_ID))
                     .willReturn(Optional.of(snapshot));
 
             // when
-            gameResultService.recordArrested(TEST_GAME_ID, ROBBER_USER_ID);
-            gameResultService.recordArrested(TEST_GAME_ID, ROBBER_USER_ID);
-            gameResultService.recordArrested(TEST_GAME_ID, ROBBER_USER_ID);
+            gameResultService.recordArrested(TEST_GAME_ID, RUNNER_USER_ID);
+            gameResultService.recordArrested(TEST_GAME_ID, RUNNER_USER_ID);
+            gameResultService.recordArrested(TEST_GAME_ID, RUNNER_USER_ID);
 
             // then
             assertThat(snapshot.getArrestedCount()).isEqualTo(3);
@@ -587,7 +587,7 @@ class GameResultServiceTest extends ServiceUnitTest {
                     .willReturn(Optional.empty());
 
             // when
-            gameResultService.recordArrested(TEST_GAME_ID, ROBBER_USER_ID);
+            gameResultService.recordArrested(TEST_GAME_ID, RUNNER_USER_ID);
 
             // then
             then(gameResultParticipantRepository).should(never())
@@ -603,16 +603,16 @@ class GameResultServiceTest extends ServiceUnitTest {
         void 무전_토큰을_발급하면_해당_경찰의_사용_기록이_시작된다() {
             // given
             GameResultParticipant snapshot =
-                    GameResultParticipant.createSnapshot(openedResult, policeParticipant);
+                    GameResultParticipant.createSnapshot(openedResult, chaserParticipant);
 
             given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
                     .willReturn(Optional.of(openedResult));
             given(gameResultParticipantRepository
-                    .findByGameResultIdAndUserIdAndLeftAtIsNull(TEST_GAME_RESULT_ID, POLICE_USER_ID))
+                    .findByGameResultIdAndUserIdAndLeftAtIsNull(TEST_GAME_RESULT_ID, CHASER_USER_ID))
                     .willReturn(Optional.of(snapshot));
 
             // when
-            gameResultService.recordRadioUsage(TEST_GAME_ID, POLICE_USER_ID, Duration.ofMinutes(2));
+            gameResultService.recordRadioUsage(TEST_GAME_ID, CHASER_USER_ID, Duration.ofMinutes(2));
 
             // then
             assertThat(snapshot.getRadioLastIssuedAt()).isEqualTo(NOW);
@@ -626,7 +626,7 @@ class GameResultServiceTest extends ServiceUnitTest {
                     .willReturn(Optional.empty());
 
             // when
-            gameResultService.recordRadioUsage(TEST_GAME_ID, POLICE_USER_ID, Duration.ofMinutes(2));
+            gameResultService.recordRadioUsage(TEST_GAME_ID, CHASER_USER_ID, Duration.ofMinutes(2));
 
             // then
             then(gameResultParticipantRepository).should(never())
@@ -645,12 +645,12 @@ class GameResultServiceTest extends ServiceUnitTest {
                     .willReturn(Optional.of(openedResult));
 
             // when
-            gameResultService.recordParticipantJoined(TEST_GAME_ID, policeParticipant);
+            gameResultService.recordParticipantJoined(TEST_GAME_ID, chaserParticipant);
 
             // then
             ArgumentCaptor<GameResultParticipant> captor = ArgumentCaptor.forClass(GameResultParticipant.class);
             then(gameResultParticipantRepository).should().save(captor.capture());
-            assertThat(captor.getValue().getUserId()).isEqualTo(POLICE_USER_ID);
+            assertThat(captor.getValue().getUserId()).isEqualTo(CHASER_USER_ID);
             assertThat(captor.getValue().hasLeft()).isFalse();
         }
 
@@ -661,7 +661,7 @@ class GameResultServiceTest extends ServiceUnitTest {
                     .willReturn(Optional.empty());
 
             // when
-            gameResultService.recordParticipantJoined(TEST_GAME_ID, policeParticipant);
+            gameResultService.recordParticipantJoined(TEST_GAME_ID, chaserParticipant);
 
             // then
             then(gameResultParticipantRepository).should(never()).save(any());
@@ -677,22 +677,22 @@ class GameResultServiceTest extends ServiceUnitTest {
             // given
             given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
                     .willReturn(Optional.of(openedResult));
-            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.POLICE)).willReturn(2);
-            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.ROBBER)).willReturn(3);
-            given(gameParticipantRepository.countByGameIdAndRobberStatus(TEST_GAME_ID, ParticipantStatus.JAILED)).willReturn(3);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.CHASER)).willReturn(2);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.RUNNER)).willReturn(3);
+            given(gameParticipantRepository.countByGameIdAndRunnerStatus(TEST_GAME_ID, ParticipantStatus.JAILED)).willReturn(3);
             given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
 
             // when
-            GameResult result = gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ALL_ARRESTED, List.of());
+            GameResult result = gameResultService.recordGameResult(inProgressGame, Team.CHASER, GameEndReason.ALL_ARRESTED, List.of());
 
             // then
             assertThat(result).isSameAs(openedResult);
             assertThat(result.isCompleted()).isTrue();
-            assertThat(result.getWinnerTeam()).isEqualTo(Team.POLICE);
+            assertThat(result.getWinnerTeam()).isEqualTo(Team.CHASER);
             assertThat(result.getEndReason()).isEqualTo(GameEndReason.ALL_ARRESTED);
-            assertThat(result.getTotalPoliceCount()).isEqualTo(2);
-            assertThat(result.getTotalRobberCount()).isEqualTo(3);
-            assertThat(result.getArrestedRobberCount()).isEqualTo(3);
+            assertThat(result.getTotalChaserCount()).isEqualTo(2);
+            assertThat(result.getTotalRunnerCount()).isEqualTo(3);
+            assertThat(result.getArrestedRunnerCount()).isEqualTo(3);
             assertThat(result.getEndedAt()).isEqualTo(NOW);
         }
 
@@ -704,18 +704,18 @@ class GameResultServiceTest extends ServiceUnitTest {
             Game longGame = IN_PROGRESS_GAME(startedAt);
             setId(longGame, TEST_GAME_ID);
             GameResult longOpenedResult =
-                    GameResult.openSnapshot(longGame, CIRCLE_GAME_AREA(longGame), POLICE_USER_ID);
+                    GameResult.openSnapshot(longGame, CIRCLE_GAME_AREA(longGame), CHASER_USER_ID);
             setId(longOpenedResult, TEST_GAME_RESULT_ID);
 
             given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
                     .willReturn(Optional.of(longOpenedResult));
-            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.POLICE)).willReturn(2);
-            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.ROBBER)).willReturn(3);
-            given(gameParticipantRepository.countByGameIdAndRobberStatus(TEST_GAME_ID, ParticipantStatus.JAILED)).willReturn(3);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.CHASER)).willReturn(2);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.RUNNER)).willReturn(3);
+            given(gameParticipantRepository.countByGameIdAndRunnerStatus(TEST_GAME_ID, ParticipantStatus.JAILED)).willReturn(3);
             given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
 
             // when
-            GameResult result = gameResultService.recordGameResult(longGame, Team.POLICE, GameEndReason.ALL_ARRESTED, List.of());
+            GameResult result = gameResultService.recordGameResult(longGame, Team.CHASER, GameEndReason.ALL_ARRESTED, List.of());
 
             // then
             assertThat(result.getStartedAt()).isEqualTo(startedAt);
@@ -729,12 +729,12 @@ class GameResultServiceTest extends ServiceUnitTest {
             // given
             given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
                     .willReturn(Optional.of(openedResult));
-            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.POLICE)).willReturn(2);
-            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.ROBBER)).willReturn(3);
-            given(gameParticipantRepository.countByGameIdAndRobberStatus(TEST_GAME_ID, ParticipantStatus.JAILED)).willReturn(3);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.CHASER)).willReturn(2);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.RUNNER)).willReturn(3);
+            given(gameParticipantRepository.countByGameIdAndRunnerStatus(TEST_GAME_ID, ParticipantStatus.JAILED)).willReturn(3);
             given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
 
-            GameResult result = gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ALL_ARRESTED, List.of());
+            GameResult result = gameResultService.recordGameResult(inProgressGame, Team.CHASER, GameEndReason.ALL_ARRESTED, List.of());
             Integer recordedInterval = result.getLocationRevealIntervalMinutes();
 
             // when
@@ -751,20 +751,20 @@ class GameResultServiceTest extends ServiceUnitTest {
         void 끝까지_남은_참가자는_종료_시점_상태로_갱신된다() {
             // given
             GameResultParticipant snapshot =
-                    GameResultParticipant.createSnapshot(openedResult, robberParticipant);
-            robberParticipant.updateStatus(ParticipantStatus.JAILED);
+                    GameResultParticipant.createSnapshot(openedResult, runnerParticipant);
+            runnerParticipant.updateStatus(ParticipantStatus.JAILED);
 
             given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
                     .willReturn(Optional.of(openedResult));
-            given(gameParticipantRepository.findAllByGameIdWithUser(TEST_GAME_ID)).willReturn(List.of(robberParticipant));
+            given(gameParticipantRepository.findAllByGameIdWithUser(TEST_GAME_ID)).willReturn(List.of(runnerParticipant));
             given(gameResultParticipantRepository.findByGameResultId(TEST_GAME_RESULT_ID)).willReturn(List.of(snapshot));
-            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.POLICE)).willReturn(0);
-            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.ROBBER)).willReturn(1);
-            given(gameParticipantRepository.countByGameIdAndRobberStatus(TEST_GAME_ID, ParticipantStatus.JAILED)).willReturn(1);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.CHASER)).willReturn(0);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.RUNNER)).willReturn(1);
+            given(gameParticipantRepository.countByGameIdAndRunnerStatus(TEST_GAME_ID, ParticipantStatus.JAILED)).willReturn(1);
             given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
 
             // when
-            gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ALL_ARRESTED, List.of());
+            gameResultService.recordGameResult(inProgressGame, Team.CHASER, GameEndReason.ALL_ARRESTED, List.of());
 
             // then
             assertThat(snapshot.getStatus()).isEqualTo(ParticipantStatus.JAILED);
@@ -774,20 +774,20 @@ class GameResultServiceTest extends ServiceUnitTest {
         void 퇴장한_참가자는_명단에_남고_상태도_덮이지_않는다() {
             // given
             GameResultParticipant leftSnapshot =
-                    GameResultParticipant.createSnapshot(openedResult, robberParticipant);
+                    GameResultParticipant.createSnapshot(openedResult, runnerParticipant);
             leftSnapshot.markLeft(LocalDateTime.now());
 
             given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID))
                     .willReturn(Optional.of(openedResult));
             given(gameParticipantRepository.findAllByGameIdWithUser(TEST_GAME_ID)).willReturn(List.of());
             given(gameResultParticipantRepository.findByGameResultId(TEST_GAME_RESULT_ID)).willReturn(List.of(leftSnapshot));
-            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.POLICE)).willReturn(0);
-            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.ROBBER)).willReturn(0);
-            given(gameParticipantRepository.countByGameIdAndRobberStatus(TEST_GAME_ID, ParticipantStatus.JAILED)).willReturn(0);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.CHASER)).willReturn(0);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.RUNNER)).willReturn(0);
+            given(gameParticipantRepository.countByGameIdAndRunnerStatus(TEST_GAME_ID, ParticipantStatus.JAILED)).willReturn(0);
             given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
 
             // when
-            gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ROBBER_FORFEITED, List.of());
+            gameResultService.recordGameResult(inProgressGame, Team.CHASER, GameEndReason.RUNNER_FORFEITED, List.of());
 
             // then
             assertThat(leftSnapshot.getStatus()).isEqualTo(ParticipantStatus.ALIVE);
@@ -799,13 +799,13 @@ class GameResultServiceTest extends ServiceUnitTest {
             // given
             given(gameResultRepository.findByGameIdAndEndReasonIsNull(TEST_GAME_ID)).willReturn(Optional.empty());
             given(gameAreaRepository.getByGameId(TEST_GAME_ID)).willReturn(gameArea);
-            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.POLICE)).willReturn(2);
-            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.ROBBER)).willReturn(3);
-            given(gameParticipantRepository.countByGameIdAndRobberStatus(TEST_GAME_ID, ParticipantStatus.JAILED)).willReturn(3);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.CHASER)).willReturn(2);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.RUNNER)).willReturn(3);
+            given(gameParticipantRepository.countByGameIdAndRunnerStatus(TEST_GAME_ID, ParticipantStatus.JAILED)).willReturn(3);
             given(gameResultRepository.save(any(GameResult.class))).willAnswer(inv -> inv.getArgument(0));
 
             // when
-            GameResult result = gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ALL_ARRESTED, List.of());
+            GameResult result = gameResultService.recordGameResult(inProgressGame, Team.CHASER, GameEndReason.ALL_ARRESTED, List.of());
 
             // then
             assertThat(result.isCompleted()).isTrue();
@@ -818,67 +818,67 @@ class GameResultServiceTest extends ServiceUnitTest {
     @DisplayName("종료 시 MVP 판정과 이동 거리 반영")
     class MarkTeamMvps {
 
-        private static final Long POLICE_PARTICIPANT_ID = 201L;
-        private static final Long ROBBER_PARTICIPANT_ID = 202L;
+        private static final Long CHASER_PARTICIPANT_ID = 201L;
+        private static final Long RUNNER_PARTICIPANT_ID = 202L;
 
-        private GameResultParticipant policeSnapshot;
-        private GameResultParticipant robberSnapshot;
+        private GameResultParticipant chaserSnapshot;
+        private GameResultParticipant runnerSnapshot;
 
         @BeforeEach
         void setUpSnapshots() {
-            setId(policeParticipant, POLICE_PARTICIPANT_ID);
-            setId(robberParticipant, ROBBER_PARTICIPANT_ID);
+            setId(chaserParticipant, CHASER_PARTICIPANT_ID);
+            setId(runnerParticipant, RUNNER_PARTICIPANT_ID);
 
-            policeSnapshot = GameResultParticipant.createSnapshot(openedResult, policeParticipant);
-            robberSnapshot = GameResultParticipant.createSnapshot(openedResult, robberParticipant);
-            setId(policeSnapshot, 1L);
-            setId(robberSnapshot, 2L);
+            chaserSnapshot = GameResultParticipant.createSnapshot(openedResult, chaserParticipant);
+            runnerSnapshot = GameResultParticipant.createSnapshot(openedResult, runnerParticipant);
+            setId(chaserSnapshot, 1L);
+            setId(runnerSnapshot, 2L);
         }
 
         @Test
         void 팀별로_MVP가_한_명씩_선정된다() {
-            givenEndOfGame(List.of(policeParticipant, robberParticipant), List.of(policeSnapshot, robberSnapshot));
+            givenEndOfGame(List.of(chaserParticipant, runnerParticipant), List.of(chaserSnapshot, runnerSnapshot));
 
-            gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ALL_ARRESTED, List.of());
+            gameResultService.recordGameResult(inProgressGame, Team.CHASER, GameEndReason.ALL_ARRESTED, List.of());
 
-            assertThat(policeSnapshot.isMvp()).isTrue();
-            assertThat(robberSnapshot.isMvp()).isTrue();
+            assertThat(chaserSnapshot.isMvp()).isTrue();
+            assertThat(runnerSnapshot.isMvp()).isTrue();
         }
 
         @Test
         void 수신된_이동_거리가_참가자_행에_저장된다() {
-            givenEndOfGame(List.of(policeParticipant, robberParticipant), List.of(policeSnapshot, robberSnapshot));
+            givenEndOfGame(List.of(chaserParticipant, runnerParticipant), List.of(chaserSnapshot, runnerSnapshot));
 
             gameResultService.recordGameResult(
                     inProgressGame,
-                    Team.POLICE,
+                    Team.CHASER,
                     GameEndReason.ALL_ARRESTED,
                     List.of(
-                            new ParticipantDistance(POLICE_PARTICIPANT_ID, 1500.0),
-                            new ParticipantDistance(ROBBER_PARTICIPANT_ID, 900.0)
+                            new ParticipantDistance(CHASER_PARTICIPANT_ID, 1500.0),
+                            new ParticipantDistance(RUNNER_PARTICIPANT_ID, 900.0)
                     )
             );
 
-            assertThat(policeSnapshot.getDistanceMeters()).isEqualTo(1500.0);
-            assertThat(robberSnapshot.getDistanceMeters()).isEqualTo(900.0);
+            assertThat(chaserSnapshot.getDistanceMeters()).isEqualTo(1500.0);
+            assertThat(runnerSnapshot.getDistanceMeters()).isEqualTo(900.0);
         }
 
         @Test
         void 이벤트_게임은_MVP를_판정하지_않는다() {
             openedResult.updateEventGame(true);
-            givenEndOfGame(List.of(policeParticipant, robberParticipant), List.of(policeSnapshot, robberSnapshot));
+            givenEndOfGame(List.of(chaserParticipant, runnerParticipant), List.of(chaserSnapshot, runnerSnapshot));
 
-            gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ALL_ARRESTED, List.of());
+            gameResultService.recordGameResult(inProgressGame, Team.CHASER, GameEndReason.ALL_ARRESTED, List.of());
 
-            assertThat(policeSnapshot.isMvp()).isFalse();
-            assertThat(robberSnapshot.isMvp()).isFalse();
+            assertThat(chaserSnapshot.isMvp()).isFalse();
+            assertThat(runnerSnapshot.isMvp()).isFalse();
         }
 
         @Test
         void 중도_퇴장자는_체포_횟수가_가장_많아도_MVP가_되지_않는다() {
             User leaver = USER("leaver");
             setId(leaver, 103L);
-            GameParticipant leaverParticipant = WAITING_POLICE(inProgressGame, leaver);
+            GameParticipant leaverParticipant = WAITING_CHASER(inProgressGame, leaver);
             setId(leaverParticipant, 203L);
 
             GameResultParticipant leftSnapshot = GameResultParticipant.createSnapshot(openedResult, leaverParticipant);
@@ -887,14 +887,14 @@ class GameResultServiceTest extends ServiceUnitTest {
             leftSnapshot.markLeft(NOW.minusMinutes(5));
 
             givenEndOfGame(
-                    List.of(policeParticipant, leaverParticipant),
-                    List.of(policeSnapshot, leftSnapshot)
+                    List.of(chaserParticipant, leaverParticipant),
+                    List.of(chaserSnapshot, leftSnapshot)
             );
 
-            gameResultService.recordGameResult(inProgressGame, Team.POLICE, GameEndReason.ALL_ARRESTED, List.of());
+            gameResultService.recordGameResult(inProgressGame, Team.CHASER, GameEndReason.ALL_ARRESTED, List.of());
 
             assertThat(leftSnapshot.isMvp()).isFalse();
-            assertThat(policeSnapshot.isMvp()).isTrue();
+            assertThat(chaserSnapshot.isMvp()).isTrue();
         }
 
         private void givenEndOfGame(List<GameParticipant> participants, List<GameResultParticipant> snapshots) {
@@ -913,7 +913,7 @@ class GameResultServiceTest extends ServiceUnitTest {
         @Test
         void CIRCLE_영역_게임_결과_조회에_성공한다() {
             // given
-            GameResult gameResult = POLICE_WIN_RESULT(TEST_GAME_ID);
+            GameResult gameResult = CHASER_WIN_RESULT(TEST_GAME_ID);
             setId(gameResult, TEST_GAME_RESULT_ID);
 
             given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(gameResult));
@@ -925,14 +925,14 @@ class GameResultServiceTest extends ServiceUnitTest {
             assertThat(result.winnerTeam()).isEqualTo(gameResult.getWinnerTeam());
             assertThat(result.durationSeconds()).isEqualTo(gameResult.getDurationSeconds());
             assertThat(result.totalArrestCount()).isEqualTo(gameResult.getTotalArrestCount());
-            assertThat(result.remainingRobberCount())
-                    .isEqualTo(gameResult.getTotalRobberCount() - gameResult.getArrestedRobberCount());
+            assertThat(result.remainingRunnerCount())
+                    .isEqualTo(gameResult.getTotalRunnerCount() - gameResult.getArrestedRunnerCount());
         }
 
         @Test
         void POLYGON_영역_게임_결과_조회에_성공한다() {
             // given
-            GameResult gameResult = POLICE_WIN_RESULT_POLYGON(TEST_GAME_ID);
+            GameResult gameResult = CHASER_WIN_RESULT_POLYGON(TEST_GAME_ID);
             setId(gameResult, TEST_GAME_RESULT_ID);
 
             given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(gameResult));
@@ -944,34 +944,34 @@ class GameResultServiceTest extends ServiceUnitTest {
             assertThat(result.winnerTeam()).isEqualTo(gameResult.getWinnerTeam());
             assertThat(result.durationSeconds()).isEqualTo(gameResult.getDurationSeconds());
             assertThat(result.totalArrestCount()).isEqualTo(gameResult.getTotalArrestCount());
-            assertThat(result.remainingRobberCount())
-                    .isEqualTo(gameResult.getTotalRobberCount() - gameResult.getArrestedRobberCount());
+            assertThat(result.remainingRunnerCount())
+                    .isEqualTo(gameResult.getTotalRunnerCount() - gameResult.getArrestedRunnerCount());
         }
 
         @Test
         void 탈퇴한_사용자가_MVP면_닉네임만_알수없음으로_나오고_수치는_그대로다() {
             // given
-            GameResult gameResult = POLICE_WIN_RESULT(TEST_GAME_ID);
+            GameResult gameResult = CHASER_WIN_RESULT(TEST_GAME_ID);
             setId(gameResult, TEST_GAME_RESULT_ID);
 
-            GameResultParticipant withdrawnPoliceMvp = POLICE_PARTICIPANT(gameResult, null, User.UNKNOWN_NICKNAME);
-            GameResultParticipant robberMvp = ROBBER_PARTICIPANT(gameResult, TEST_USER_ID, "도둑");
-            withdrawnPoliceMvp.markMvp();
-            robberMvp.markMvp();
+            GameResultParticipant withdrawnChaserMvp = CHASER_PARTICIPANT(gameResult, null, User.UNKNOWN_NICKNAME);
+            GameResultParticipant runnerMvp = RUNNER_PARTICIPANT(gameResult, TEST_USER_ID, "도둑");
+            withdrawnChaserMvp.markMvp();
+            runnerMvp.markMvp();
 
             given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(gameResult));
             given(gameResultParticipantRepository.findByGameResultIdAndIsMvpTrue(TEST_GAME_RESULT_ID))
-                    .willReturn(List.of(withdrawnPoliceMvp, robberMvp));
+                    .willReturn(List.of(withdrawnChaserMvp, runnerMvp));
 
             // when
             GameResultResult result = gameResultService.getGameResult(GameResultCommand.of(TEST_USER_ID, TEST_GAME_RESULT_ID));
 
             // then
-            assertThat(result.policeMvp().nickname()).isEqualTo(User.UNKNOWN_NICKNAME);
-            assertThat(result.robberMvp().nickname()).isEqualTo("도둑");
+            assertThat(result.chaserMvp().nickname()).isEqualTo(User.UNKNOWN_NICKNAME);
+            assertThat(result.runnerMvp().nickname()).isEqualTo("도둑");
             assertThat(result.totalArrestCount()).isEqualTo(gameResult.getTotalArrestCount());
-            assertThat(result.remainingRobberCount())
-                    .isEqualTo(gameResult.getTotalRobberCount() - gameResult.getArrestedRobberCount());
+            assertThat(result.remainingRunnerCount())
+                    .isEqualTo(gameResult.getTotalRunnerCount() - gameResult.getArrestedRunnerCount());
         }
 
         @Test
@@ -999,7 +999,7 @@ class GameResultServiceTest extends ServiceUnitTest {
         @Test
         void 해당_게임의_참가자가_아니면_예외가_발생한다() {
             // given
-            GameResult gameResult = POLICE_WIN_RESULT(TEST_GAME_ID);
+            GameResult gameResult = CHASER_WIN_RESULT(TEST_GAME_ID);
             setId(gameResult, TEST_GAME_RESULT_ID);
 
             given(gameResultRepository.findById(TEST_GAME_RESULT_ID)).willReturn(Optional.of(gameResult));

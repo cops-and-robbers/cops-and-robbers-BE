@@ -76,10 +76,10 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
         select count(p)
         from GameParticipant p
         where p.game.id = :gameId
-        and p.team = 'ROBBER'
+        and p.team = 'RUNNER'
         and p.status = :status
         """)
-    int countByGameIdAndRobberStatus(@Param("gameId") Long gameId, @Param("status") ParticipantStatus status);
+    int countByGameIdAndRunnerStatus(@Param("gameId") Long gameId, @Param("status") ParticipantStatus status);
 
 
     /**
@@ -89,10 +89,10 @@ public interface GameParticipantRepository extends JpaRepository<GameParticipant
         select gp.id
         from GameParticipant gp
         where gp.game.id = :gameId
-        and gp.team = 'ROBBER'
+        and gp.team = 'RUNNER'
         and gp.status = 'ALIVE'
         """)
-    Set<Long> findAliveRobberIdsByGameId(@Param("gameId") Long gameId);
+    Set<Long> findAliveRunnerIdsByGameId(@Param("gameId") Long gameId);
 
     /**
      * 게임의 모든 참가자 상태를 업데이트

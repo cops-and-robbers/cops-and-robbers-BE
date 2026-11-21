@@ -72,7 +72,7 @@ class LobbyControllerTest extends ControllerTest {
         @Test
         void 팀_변경_성공() {
             // given
-            TeamChangeRequest request = new TeamChangeRequest(Team.POLICE);
+            TeamChangeRequest request = new TeamChangeRequest(Team.CHASER);
 
             // when
             ExtractableResponse<Response> response = authenticated(guestToken)
@@ -87,7 +87,7 @@ class LobbyControllerTest extends ControllerTest {
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
 
             GameParticipant updatedParticipant = gameParticipantRepository.findById(guestParticipant.getId()).orElseThrow();
-            assertThat(updatedParticipant.getTeam()).isEqualTo(Team.POLICE);
+            assertThat(updatedParticipant.getTeam()).isEqualTo(Team.CHASER);
         }
 
         @Test
@@ -99,7 +99,7 @@ class LobbyControllerTest extends ControllerTest {
 
             gameParticipantRepository.save(GameParticipantFixture.GUEST_PARTICIPANT(waitingGame, guest));
 
-            TeamChangeRequest request = new TeamChangeRequest(Team.POLICE);
+            TeamChangeRequest request = new TeamChangeRequest(Team.CHASER);
 
             // when
             ExtractableResponse<Response> response = authenticated(guestToken)
@@ -117,7 +117,7 @@ class LobbyControllerTest extends ControllerTest {
         @Test
         void 인증_토큰_없이_요청하면_401_Unauthorized를_응답한다() {
             // given
-            TeamChangeRequest request = new TeamChangeRequest(Team.POLICE);
+            TeamChangeRequest request = new TeamChangeRequest(Team.CHASER);
 
             // when
             ExtractableResponse<Response> response = unauthenticated()
@@ -135,7 +135,7 @@ class LobbyControllerTest extends ControllerTest {
         @Test
         void 존재하지_않는_게임이면_404_NotFound를_응답한다() {
             // given
-            TeamChangeRequest request = new TeamChangeRequest(Team.POLICE);
+            TeamChangeRequest request = new TeamChangeRequest(Team.CHASER);
 
             // when
             ExtractableResponse<Response> response = authenticated(guestToken)
@@ -189,10 +189,10 @@ class LobbyControllerTest extends ControllerTest {
         @Test
         void 경찰이_없으면_400_BadRequest를_응답한다() {
             // given
-            guestParticipant.changeTeam(Team.ROBBER);
+            guestParticipant.changeTeam(Team.RUNNER);
             gameParticipantRepository.save(guestParticipant);
 
-            hostParticipant.changeTeam(Team.ROBBER);
+            hostParticipant.changeTeam(Team.RUNNER);
             gameParticipantRepository.save(hostParticipant);
 
             // when
@@ -213,10 +213,10 @@ class LobbyControllerTest extends ControllerTest {
             game.updateEventGame(true);
             gameRepository.save(game);
 
-            guestParticipant.changeTeam(Team.ROBBER);
+            guestParticipant.changeTeam(Team.RUNNER);
             gameParticipantRepository.save(guestParticipant);
 
-            hostParticipant.changeTeam(Team.ROBBER);
+            hostParticipant.changeTeam(Team.RUNNER);
             gameParticipantRepository.save(hostParticipant);
 
             // when
@@ -269,10 +269,10 @@ class LobbyControllerTest extends ControllerTest {
         @Test
         void 팀을_바꾼_뒤에도_준비_없이_게임이_시작된다() {
             // given
-            guestParticipant.changeTeam(Team.POLICE);
+            guestParticipant.changeTeam(Team.CHASER);
             gameParticipantRepository.save(guestParticipant);
 
-            hostParticipant.changeTeam(Team.ROBBER);
+            hostParticipant.changeTeam(Team.RUNNER);
             gameParticipantRepository.save(hostParticipant);
 
             // when

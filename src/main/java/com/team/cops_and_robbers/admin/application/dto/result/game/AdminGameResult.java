@@ -30,7 +30,7 @@ public record AdminGameResult(
                 game.getStatus(),
                 game.getRoundDurationMinutes(),
                 game.getLocationRevealIntervalMinutes(),
-                game.getPoliceWaitMinutes(),
+                game.getChaserWaitMinutes(),
                 game.getMaxParticipants(),
                 game.getShrinkFinalRadiusInMeters(),
                 game.getGameMode(),

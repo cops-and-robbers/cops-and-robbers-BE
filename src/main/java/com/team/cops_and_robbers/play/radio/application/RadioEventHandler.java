@@ -20,6 +20,6 @@ public class RadioEventHandler {
         if (event.type() != SystemEventType.GAME_OVER) {
             return;
         }
-        radioRoomClient.closeRoom(RadioRoom.policeRoomOf(event.gameId()));
+        radioRoomClient.closeRoom(RadioRoom.chaserRoomOf(event.gameId()));
     }
 }

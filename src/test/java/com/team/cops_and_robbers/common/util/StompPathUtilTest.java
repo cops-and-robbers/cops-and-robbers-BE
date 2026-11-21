@@ -19,7 +19,7 @@ class StompPathUtilTest {
         void 게임_경로에서_gameId를_추출한다() {
             assertThat(StompPathUtil.getGameId("/publish/game/42/chat")).contains(42L);
             assertThat(StompPathUtil.getGameId("/subscribe/game/7/chat/all")).contains(7L);
-            assertThat(StompPathUtil.getGameId("/subscribe/game/1/location/police")).contains(1L);
+            assertThat(StompPathUtil.getGameId("/subscribe/game/1/location/chaser")).contains(1L);
         }
 
         @ParameterizedTest
@@ -98,7 +98,7 @@ class StompPathUtilTest {
                 "/publish/game/1/chat",
                 "/subscribe/game/1/chat/all",
                 "/subscribe/game/1/system",
-                "/subscribe/game/1/ping/police"
+                "/subscribe/game/1/ping/chaser"
         })
         void 게임_경로는_커뮤니티로_분기되지_않는다(String destination) {
             assertThat(StompPathUtil.isCommunityPath(destination)).isFalse();

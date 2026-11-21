@@ -7,12 +7,12 @@ import com.team.cops_and_robbers.history.domain.GameResultParticipant;
 
 public class GameResultParticipantFixture {
 
-    public static GameResultParticipant POLICE_PARTICIPANT(GameResult gameResult, Long userId, String nickname) {
+    public static GameResultParticipant CHASER_PARTICIPANT(GameResult gameResult, Long userId, String nickname) {
         return GameResultParticipant.builder()
                 .gameResult(gameResult)
                 .userId(userId)
                 .nickname(nickname)
-                .team(Team.POLICE)
+                .team(Team.CHASER)
                 .status(ParticipantStatus.ALIVE)
                 .arrestCount(0)
                 .arrestedCount(0)
@@ -20,12 +20,12 @@ public class GameResultParticipantFixture {
                 .build();
     }
 
-    public static GameResultParticipant ROBBER_PARTICIPANT(GameResult gameResult, Long userId, String nickname) {
+    public static GameResultParticipant RUNNER_PARTICIPANT(GameResult gameResult, Long userId, String nickname) {
         return GameResultParticipant.builder()
                 .gameResult(gameResult)
                 .userId(userId)
                 .nickname(nickname)
-                .team(Team.ROBBER)
+                .team(Team.RUNNER)
                 .status(ParticipantStatus.JAILED)
                 .arrestCount(0)
                 .arrestedCount(0)

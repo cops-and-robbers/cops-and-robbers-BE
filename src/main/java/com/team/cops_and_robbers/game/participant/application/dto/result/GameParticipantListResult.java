@@ -5,28 +5,28 @@ import com.team.cops_and_robbers.game.participant.domain.GameParticipant;
 import java.util.List;
 
 public record GameParticipantListResult(
-        List<ParticipantInfo> police,
-        List<ParticipantInfo> robbers
+        List<ParticipantInfo> chasers,
+        List<ParticipantInfo> runners
 ) {
     public record ParticipantInfo(Long participantId, String nickname, String status) {
         public static ParticipantInfo from(GameParticipant participant) {
             return new ParticipantInfo(
                     participant.getId(),
                     participant.getUser().getNickname(),
-                    participant.getStatus().name()
+                    participant.getStatus().legacyName()
             );
         }
     }
 
     public static GameParticipantListResult from(List<GameParticipant> participants) {
-        List<ParticipantInfo> police = participants.stream()
-                .filter(GameParticipant::isPolice)
+        List<ParticipantInfo> chasers = participants.stream()
+                .filter(GameParticipant::isChaser)
                 .map(ParticipantInfo::from)
                 .toList();
-        List<ParticipantInfo> robbers = participants.stream()
-                .filter(GameParticipant::isRobber)
+        List<ParticipantInfo> runners = participants.stream()
+                .filter(GameParticipant::isRunner)
                 .map(ParticipantInfo::from)
                 .toList();
-        return new GameParticipantListResult(police, robbers);
+        return new GameParticipantListResult(chasers, runners);
     }
 }

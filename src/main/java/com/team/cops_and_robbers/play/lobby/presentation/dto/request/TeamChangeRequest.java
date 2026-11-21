@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
 public record TeamChangeRequest(
-        @Schema(description = "변경할 팀", example = "POLICE")
+        @Schema(description = "변경할 팀. 옛 이름 POLICE / ROBBER 도 받는다", example = "CHASER")
         @NotNull(message = "변경할 팀 정보는 필수입니다.")
         Team targetTeam
 ) {

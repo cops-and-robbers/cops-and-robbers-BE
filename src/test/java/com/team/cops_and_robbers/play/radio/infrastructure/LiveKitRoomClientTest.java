@@ -26,7 +26,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 class LiveKitRoomClientTest {
 
     private static final String DELETE_ROOM_URL = "https://test.livekit.cloud/twirp/livekit.RoomService/DeleteRoom";
-    private static final String ROOM = "game-1-police";
+    private static final String ROOM = "game-1-chaser";
 
     private MockRestServiceServer server;
     private LiveKitRoomClient client;
@@ -46,7 +46,7 @@ class LiveKitRoomClientTest {
         server.expect(requestTo(DELETE_ROOM_URL))
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(header("Authorization", startsWith("Bearer ")))
-                .andExpect(content().json("{\"room\":\"dev-game-1-police\"}"))
+                .andExpect(content().json("{\"room\":\"dev-game-1-chaser\"}"))
                 .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
 
         client.closeRoom(ROOM);

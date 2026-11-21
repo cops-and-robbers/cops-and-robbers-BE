@@ -10,17 +10,17 @@ import java.util.List;
 
 public record GameStateResult(
         GameMode gameMode,
-        List<RobberLocationInfo> robberLocations,
+        List<RunnerLocationInfo> runnerLocations,
         List<ParticipantInfo> participants
 ) {
-    public record RobberLocationInfo(
+    public record RunnerLocationInfo(
             Long participantId,
             String nickname,
             Double latitude,
             Double longitude
     ) {
-        public static RobberLocationInfo from(SystemEventData.RobberLocation location) {
-            return new RobberLocationInfo(
+        public static RunnerLocationInfo from(SystemEventData.RunnerLocation location) {
+            return new RunnerLocationInfo(
                     location.participantId(),
                     location.nickname(),
                     location.latitude(),

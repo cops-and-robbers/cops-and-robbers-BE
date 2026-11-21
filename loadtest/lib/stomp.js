@@ -64,7 +64,7 @@ export const HEARTBEAT = '\n';
  * 게임 입장 시 구독 채널 목록
  */
 export function gameSubscriptions(gameId, team) {
-  const t = team === 'POLICE' ? 'police' : 'robber';
+  const t = team === 'CHASER' ? 'chaser' : 'runner';
   return [
     `/subscribe/game/${gameId}/lobby`,
     `/subscribe/game/${gameId}/system`,

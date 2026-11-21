@@ -21,7 +21,7 @@ public class GameResultFixture {
     public static final LocalDateTime ENDED_AT = LocalDateTime.of(2026, 9, 2, 12, 54);
     public static final int REVEAL_INTERVAL_MINUTES = 3;
 
-    public static GameResult POLICE_WIN_RESULT(Long gameId) {
+    public static GameResult CHASER_WIN_RESULT(Long gameId) {
         Point center = GEOMETRY_FACTORY.createPoint(new Coordinate(127.0276, 37.4979));
         Point jailCenter = GEOMETRY_FACTORY.createPoint(new Coordinate(127.0286, 37.4989));
         return GameResult.builder()
@@ -29,11 +29,11 @@ public class GameResultFixture {
                 .endedAt(ENDED_AT)
                 .locationRevealIntervalMinutes(REVEAL_INTERVAL_MINUTES)
                 .gameId(gameId)
-                .winnerTeam(Team.POLICE)
+                .winnerTeam(Team.CHASER)
                 .endReason(GameEndReason.ALL_ARRESTED)
-                .totalPoliceCount(2)
-                .totalRobberCount(3)
-                .arrestedRobberCount(3)
+                .totalChaserCount(2)
+                .totalRunnerCount(3)
+                .arrestedRunnerCount(3)
                 .totalArrestCount(5)
                 .durationSeconds(300)
                 .areaType(AreaType.CIRCLE)
@@ -44,7 +44,7 @@ public class GameResultFixture {
                 .build();
     }
 
-    public static GameResult ROBBER_WIN_RESULT(Long gameId) {
+    public static GameResult RUNNER_WIN_RESULT(Long gameId) {
         Point center = GEOMETRY_FACTORY.createPoint(new Coordinate(127.0276, 37.4979));
         Point jailCenter = GEOMETRY_FACTORY.createPoint(new Coordinate(127.0286, 37.4989));
         return GameResult.builder()
@@ -52,11 +52,11 @@ public class GameResultFixture {
                 .endedAt(ENDED_AT)
                 .locationRevealIntervalMinutes(REVEAL_INTERVAL_MINUTES)
                 .gameId(gameId)
-                .winnerTeam(Team.ROBBER)
+                .winnerTeam(Team.RUNNER)
                 .endReason(GameEndReason.TIME_OVER)
-                .totalPoliceCount(2)
-                .totalRobberCount(3)
-                .arrestedRobberCount(1)
+                .totalChaserCount(2)
+                .totalRunnerCount(3)
+                .arrestedRunnerCount(1)
                 .totalArrestCount(2)
                 .durationSeconds(1800)
                 .areaType(AreaType.CIRCLE)
@@ -67,15 +67,15 @@ public class GameResultFixture {
                 .build();
     }
 
-    public static GameResult POLICE_WIN_RESULT_WITHOUT_JAIL(Long gameId) {
+    public static GameResult CHASER_WIN_RESULT_WITHOUT_JAIL(Long gameId) {
         Point center = GEOMETRY_FACTORY.createPoint(new Coordinate(127.0276, 37.4979));
         return GameResult.builder()
                 .gameId(gameId)
-                .winnerTeam(Team.POLICE)
+                .winnerTeam(Team.CHASER)
                 .endReason(GameEndReason.ALL_ARRESTED)
-                .totalPoliceCount(2)
-                .totalRobberCount(3)
-                .arrestedRobberCount(3)
+                .totalChaserCount(2)
+                .totalRunnerCount(3)
+                .arrestedRunnerCount(3)
                 .totalArrestCount(5)
                 .durationSeconds(300)
                 .areaType(AreaType.CIRCLE)
@@ -84,7 +84,7 @@ public class GameResultFixture {
                 .build();
     }
 
-    public static GameResult POLICE_WIN_RESULT_POLYGON(Long gameId) {
+    public static GameResult CHASER_WIN_RESULT_POLYGON(Long gameId) {
         Polygon polygon = createPolygon(new double[][]{
                 {127.0276, 37.4979}, {127.0296, 37.4979},
                 {127.0296, 37.4999}, {127.0276, 37.4999}
@@ -95,11 +95,11 @@ public class GameResultFixture {
         });
         return GameResult.builder()
                 .gameId(gameId)
-                .winnerTeam(Team.POLICE)
+                .winnerTeam(Team.CHASER)
                 .endReason(GameEndReason.ALL_ARRESTED)
-                .totalPoliceCount(2)
-                .totalRobberCount(3)
-                .arrestedRobberCount(3)
+                .totalChaserCount(2)
+                .totalRunnerCount(3)
+                .arrestedRunnerCount(3)
                 .totalArrestCount(5)
                 .durationSeconds(300)
                 .areaType(AreaType.POLYGON)
@@ -111,11 +111,11 @@ public class GameResultFixture {
     public static GameResult LEGACY_RESULT_WITHOUT_AREA(Long gameId) {
         return GameResult.builder()
                 .gameId(gameId)
-                .winnerTeam(Team.POLICE)
+                .winnerTeam(Team.CHASER)
                 .endReason(GameEndReason.ALL_ARRESTED)
-                .totalPoliceCount(2)
-                .totalRobberCount(3)
-                .arrestedRobberCount(3)
+                .totalChaserCount(2)
+                .totalRunnerCount(3)
+                .arrestedRunnerCount(3)
                 .totalArrestCount(5)
                 .durationSeconds(300)
                 .areaType(AreaType.CIRCLE)

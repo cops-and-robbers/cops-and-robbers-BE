@@ -140,7 +140,7 @@ export default function () {
 function startLoops(socket, player, marker, startedAt) {
   socket.setInterval(() => socket.send(HEARTBEAT), 8000);
 
-  if (player.team === 'ROBBER') {
+  if (player.team === 'RUNNER') {
     // 도둑만 위치를 보낸다. 경찰은 게임 중 위치를 서버로 보내지 않는다 (계획 §2).
     socket.setInterval(() => {
       socket.send(sendFrame(`/publish/game/${player.gameId}/location`, jitterLocation()));

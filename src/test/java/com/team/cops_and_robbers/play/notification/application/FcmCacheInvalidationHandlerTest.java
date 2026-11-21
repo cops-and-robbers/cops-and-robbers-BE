@@ -46,7 +46,7 @@ class FcmCacheInvalidationHandlerTest extends ServiceUnitTest {
             Game game = GameFixture.IN_PROGRESS_GAME();
             setId(game, 100L);
             
-            GameParticipant participant = GameParticipantFixture.ALIVE_POLICE(game, user);
+            GameParticipant participant = GameParticipantFixture.ALIVE_CHASER(game, user);
 
             given(gameParticipantRepository.findActiveParticipantByUserId(TEST_USER_ID))
                     .willReturn(Optional.of(participant));

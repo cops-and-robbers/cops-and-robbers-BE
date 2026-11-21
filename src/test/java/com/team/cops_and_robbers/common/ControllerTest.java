@@ -1,6 +1,7 @@
 package com.team.cops_and_robbers.common;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team.cops_and_robbers.auth.domain.Tokens;
 import com.team.cops_and_robbers.auth.infrastructure.jwt.JwtTokenProvider;
 import com.team.cops_and_robbers.auth.infrastructure.social.strategy.AppleLoginStrategy;
@@ -45,6 +46,8 @@ import com.team.cops_and_robbers.user.domain.UserDevice;
 import com.team.cops_and_robbers.user.repository.UserDeviceRepository;
 import com.team.cops_and_robbers.user.repository.UserRepository;
 import io.restassured.RestAssured;
+import io.restassured.config.ObjectMapperConfig;
+import io.restassured.config.RestAssuredConfig;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.BeforeEach;
@@ -164,6 +167,9 @@ public abstract class ControllerTest {
     @Autowired
     protected JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @LocalServerPort
     protected int port;
 
@@ -171,6 +177,9 @@ public abstract class ControllerTest {
     void setUp() {
         RestAssured.port = port;
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+        // 응답 역직렬화를 앱과 같은 ObjectMapper로 맞춘다 (옛 앱 호환 필드는 무시)
+        RestAssured.config = RestAssuredConfig.config().objectMapperConfig(
+                ObjectMapperConfig.objectMapperConfig().jackson2ObjectMapperFactory((type, charset) -> objectMapper));
         doReturn(GeocodingResult.resolved(PostAddress.of(
                 "서울특별시 광진구 화양동 1-20", "서울특별시 광진구 능동로 216", null,
                 "서울특별시 광진구 화양동", "KR")))
@@ -217,25 +226,25 @@ public abstract class ControllerTest {
         return gameParticipantRepository.save(GameParticipantFixture.GUEST_PARTICIPANT(game, user));
     }
 
-    protected GameParticipant givenPolice(Game game, User user) {
-        return gameParticipantRepository.save(GameParticipantFixture.ALIVE_POLICE(game, user));
+    protected GameParticipant givenChaser(Game game, User user) {
+        return gameParticipantRepository.save(GameParticipantFixture.ALIVE_CHASER(game, user));
     }
 
-    protected GameParticipant givenRobber(Game game, User user) {
-        return gameParticipantRepository.save(GameParticipantFixture.ALIVE_ROBBER(game, user));
+    protected GameParticipant givenRunner(Game game, User user) {
+        return gameParticipantRepository.save(GameParticipantFixture.ALIVE_RUNNER(game, user));
     }
 
-    protected GameParticipant givenJailedRobber(Game game, User user) {
-        return gameParticipantRepository.save(GameParticipantFixture.JAILED_ROBBER(game, user));
+    protected GameParticipant givenJailedRunner(Game game, User user) {
+        return gameParticipantRepository.save(GameParticipantFixture.JAILED_RUNNER(game, user));
     }
 
     protected GameParticipant givenInGameHost(Game game, User user) {
-        return gameParticipantRepository.save(GameParticipantFixture.HOST_WAITING_POLICE(game, user));
+        return gameParticipantRepository.save(GameParticipantFixture.HOST_WAITING_CHASER(game, user));
     }
 
-    protected GameParticipant givenWaitingPolice(Game game, User user) {
+    protected GameParticipant givenWaitingChaser(Game game, User user) {
         GameParticipant participant = gameParticipantRepository.getByGameIdAndUserId(game.getId(), user.getId());
-        participant.updateStatus(ParticipantStatus.POLICE_WAITING);
+        participant.updateStatus(ParticipantStatus.CHASER_WAITING);
         return gameParticipantRepository.save(participant);
     }
 

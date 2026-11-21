@@ -1,9 +1,8 @@
-package com.team.cops_and_robbers.play.chat.application;
-
+package com.team.cops_and_robbers.play.ping.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team.cops_and_robbers.common.constant.StompSubscribeChannel;
-import com.team.cops_and_robbers.play.chat.domain.ChatMessage;
+import com.team.cops_and_robbers.play.ping.domain.PingMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
@@ -14,7 +13,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class RobberChatSubscriber implements MessageListener {
+public class ChaserPingSubscriber implements MessageListener {
 
     private final ObjectMapper objectMapper;
     private final SimpMessageSendingOperations messagingTemplate;
@@ -22,12 +21,13 @@ public class RobberChatSubscriber implements MessageListener {
     @Override
     public void onMessage(Message message, byte[] pattern) {
         try {
-            ChatMessage chatMessage = objectMapper.readValue(message.getBody(), ChatMessage.class);
-            String destination = StompSubscribeChannel.CHAT_ROBBER.getUrl(chatMessage.gameId());
-
-            messagingTemplate.convertAndSend(destination, chatMessage);
+            PingMessage pingMessage = objectMapper.readValue(message.getBody(), PingMessage.class);
+            String destination = StompSubscribeChannel.PING_CHASER.getUrl(pingMessage.gameId());
+            messagingTemplate.convertAndSend(destination, pingMessage);
+            // 옛 앱 호환. 강제 업데이트 후 제거
+            messagingTemplate.convertAndSend(StompSubscribeChannel.PING_POLICE.getUrl(pingMessage.gameId()), pingMessage);
         } catch (Exception e) {
-            log.error("[RobberChatSubscriber] Message processing failed", e);
+            log.error("[ChaserPingSubscriber] Message processing failed", e);
         }
     }
 }

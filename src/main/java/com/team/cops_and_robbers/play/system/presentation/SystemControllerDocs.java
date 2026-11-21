@@ -33,14 +33,14 @@ public interface SystemControllerDocs {
     )
     @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_IN_PROGRESS", "GAME_NOT_FOUND"})
     @ApiErrorCode(value = GameParticipantException.class, codes = {
-            "ONLY_POLICE_CAN_ARREST", "POLICE_WAITING_TIME", "ONLY_ROBBER_CAN_BE_ARRESTED",
+            "ONLY_CHASER_CAN_ARREST", "CHASER_WAITING_TIME", "ONLY_RUNNER_CAN_BE_ARRESTED",
             "PARTICIPANT_GAME_MISMATCH", "ALREADY_ARRESTED", "PARTICIPANT_NOT_FOUND"
     })
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "체포 성공")
     })
-    ResponseEntity<ArrestResponse> arrestRobber(
+    ResponseEntity<ArrestResponse> arrestRunner(
             @Parameter(hidden = true) LoginUser loginUser,
             @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId,
             @RequestBody @Valid ArrestRequest request
@@ -56,18 +56,18 @@ public interface SystemControllerDocs {
                     - 이미 수감된 도둑은 체포 불가
                     - 이벤트 게임에서는 체포 불가
                     - 경찰 대기 시간 중에도 요청 가능
-                    - 경찰의 체포 수는 올라가지 않고, ARREST 이벤트의 police 가 null 로 전송됨
+                    - 경찰의 체포 수는 올라가지 않고, ARREST 이벤트의 chaser 가 null 로 전송됨
                     """
     )
     @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_IN_PROGRESS", "FORCE_ARREST_NOT_ALLOWED_IN_EVENT_GAME", "GAME_NOT_FOUND"})
     @ApiErrorCode(value = GameParticipantException.class, codes = {
-            "ONLY_ROBBER_CAN_BE_ARRESTED", "ALREADY_ARRESTED", "PARTICIPANT_NOT_FOUND"
+            "ONLY_RUNNER_CAN_BE_ARRESTED", "ALREADY_ARRESTED", "PARTICIPANT_NOT_FOUND"
     })
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "강제 체포 성공")
     })
-    ResponseEntity<ArrestResponse> forceArrestRobber(
+    ResponseEntity<ArrestResponse> forceArrestRunner(
             @Parameter(hidden = true) LoginUser loginUser,
             @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId
     );

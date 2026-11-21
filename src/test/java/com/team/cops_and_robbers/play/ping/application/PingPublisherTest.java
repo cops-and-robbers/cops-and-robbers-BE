@@ -76,7 +76,7 @@ class PingPublisherTest extends ServiceUnitTest {
             // given
             PingCommand command = new PingCommand(GAME_ID, PARTICIPANT_ID, PingType.FOUND, OUTSIDE_LAT, OUTSIDE_LON);
             given(inGameParticipantCacheRepository.findByParticipantId(GAME_ID, PARTICIPANT_ID))
-                    .willReturn(Optional.of(cacheOf(Team.POLICE)));
+                    .willReturn(Optional.of(cacheOf(Team.CHASER)));
             given(gameAreaService.isInsidePlayground(GAME_ID, OUTSIDE_LON, OUTSIDE_LAT))
                     .willReturn(false);
 
@@ -93,11 +93,11 @@ class PingPublisherTest extends ServiceUnitTest {
     class ChannelRouting {
 
         @Test
-        void 경찰팀_참여자는_PING_POLICE_채널로_publish된다() {
+        void 경찰팀_참여자는_PING_CHASER_채널로_publish된다() {
             // given
             PingCommand command = commandInsideZone(PARTICIPANT_ID);
             given(inGameParticipantCacheRepository.findByParticipantId(GAME_ID, PARTICIPANT_ID))
-                    .willReturn(Optional.of(cacheOf(Team.POLICE)));
+                    .willReturn(Optional.of(cacheOf(Team.CHASER)));
             given(gameAreaService.isInsidePlayground(GAME_ID, INSIDE_LON, INSIDE_LAT))
                     .willReturn(true);
 
@@ -105,15 +105,15 @@ class PingPublisherTest extends ServiceUnitTest {
             pingPublisher.route(command);
 
             // then
-            verify(redisTemplate).convertAndSend(eq(RedisChannel.PING_POLICE.getTopic(GAME_ID)), any());
+            verify(redisTemplate).convertAndSend(eq(RedisChannel.PING_CHASER.getTopic(GAME_ID)), any());
         }
 
         @Test
-        void 도둑팀_참여자는_PING_ROBBER_채널로_publish된다() {
+        void 도둑팀_참여자는_PING_RUNNER_채널로_publish된다() {
             // given
             PingCommand command = commandInsideZone(PARTICIPANT_ID);
             given(inGameParticipantCacheRepository.findByParticipantId(GAME_ID, PARTICIPANT_ID))
-                    .willReturn(Optional.of(cacheOf(Team.ROBBER)));
+                    .willReturn(Optional.of(cacheOf(Team.RUNNER)));
             given(gameAreaService.isInsidePlayground(GAME_ID, INSIDE_LON, INSIDE_LAT))
                     .willReturn(true);
 
@@ -121,7 +121,7 @@ class PingPublisherTest extends ServiceUnitTest {
             pingPublisher.route(command);
 
             // then
-            verify(redisTemplate).convertAndSend(eq(RedisChannel.PING_ROBBER.getTopic(GAME_ID)), any());
+            verify(redisTemplate).convertAndSend(eq(RedisChannel.PING_RUNNER.getTopic(GAME_ID)), any());
         }
     }
 }

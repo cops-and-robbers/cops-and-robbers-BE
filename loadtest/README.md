@@ -294,7 +294,7 @@ done
 > - `redis-cli --scan --pattern 'refresh_token:*' | xargs redis-cli DEL`
 >   → 개발자 전원이 로그아웃된다
 > - `redis-cli DEL 'redisson_delay_queue:{game:schedule:events}'`
->   → **공유 큐다.** 다른 게임의 `POLICE_MOVE_START` / `ROBBER_LOCATION_REVEAL` /
+>   → **공유 큐다.** 다른 게임의 `CHASER_MOVE_START` / `RUNNER_LOCATION_REVEAL` /
 >     `GAME_OVER` 예약까지 사라져서 그 게임들이 영원히 끝나지 않는다
 
 ### 예약 이벤트는 어떻게 하나

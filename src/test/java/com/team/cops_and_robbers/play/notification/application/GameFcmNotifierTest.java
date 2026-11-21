@@ -51,8 +51,8 @@ class GameFcmNotifierTest extends ServiceUnitTest {
 
     private static final Long TEST_GAME_ID = 1L;
     private static final Long SENDER_PARTICIPANT_ID = 10L;
-    private static final Long POLICE_PARTICIPANT_ID = 11L;
-    private static final Long ROBBER_PARTICIPANT_ID = 12L;
+    private static final Long CHASER_PARTICIPANT_ID = 11L;
+    private static final Long RUNNER_PARTICIPANT_ID = 12L;
 
     @Nested
     @DisplayName("시스템 이벤트 알림 발송")
@@ -63,8 +63,8 @@ class GameFcmNotifierTest extends ServiceUnitTest {
             // given
             SystemEvent event = SystemEvent.of(TEST_GAME_ID, SystemEventType.ARREST, null);
             List<InGameParticipantCache> caches = List.of(
-                    new InGameParticipantCache("nick1", Team.POLICE, "token1"),
-                    new InGameParticipantCache("nick2", Team.ROBBER, "token2")
+                    new InGameParticipantCache("nick1", Team.CHASER, "token1"),
+                    new InGameParticipantCache("nick2", Team.RUNNER, "token2")
             );
             given(inGameParticipantCacheRepository.findAllByGameId(TEST_GAME_ID)).willReturn(caches);
 
@@ -80,8 +80,8 @@ class GameFcmNotifierTest extends ServiceUnitTest {
             // given
             SystemEvent event = SystemEvent.of(TEST_GAME_ID, SystemEventType.ARREST, null);
             List<InGameParticipantCache> caches = List.of(
-                    new InGameParticipantCache("nick1", Team.POLICE, null),
-                    new InGameParticipantCache("nick2", Team.ROBBER, null)
+                    new InGameParticipantCache("nick1", Team.CHASER, null),
+                    new InGameParticipantCache("nick2", Team.RUNNER, null)
             );
             given(inGameParticipantCacheRepository.findAllByGameId(TEST_GAME_ID)).willReturn(caches);
 
@@ -100,7 +100,7 @@ class GameFcmNotifierTest extends ServiceUnitTest {
         @BeforeEach
         void setUp() {
             given(inGameParticipantCacheRepository.findAllByGameId(TEST_GAME_ID))
-                    .willReturn(List.of(new InGameParticipantCache("nick1", Team.POLICE, "token1")));
+                    .willReturn(List.of(new InGameParticipantCache("nick1", Team.CHASER, "token1")));
         }
 
         private FcmMessage sendAndCapture(GameMode gameMode, SystemEventType type, SystemEventData data) {
@@ -139,7 +139,7 @@ class GameFcmNotifierTest extends ServiceUnitTest {
         @Test
         void 술래잡기_게임의_이동_시작_알림은_술래_문구를_쓴다() {
             // when
-            FcmMessage sent = sendAndCapture(GameMode.TAG, SystemEventType.POLICE_MOVE_START, null);
+            FcmMessage sent = sendAndCapture(GameMode.TAG, SystemEventType.CHASER_MOVE_START, null);
 
             // then
             assertSoftly(softly -> {
@@ -151,7 +151,7 @@ class GameFcmNotifierTest extends ServiceUnitTest {
         @Test
         void 술래잡기_게임의_위치_공개_알림은_도망자_문구를_쓴다() {
             // when
-            FcmMessage sent = sendAndCapture(GameMode.TAG, SystemEventType.ROBBER_LOCATION_REVEAL, null);
+            FcmMessage sent = sendAndCapture(GameMode.TAG, SystemEventType.RUNNER_LOCATION_REVEAL, null);
 
             // then
             assertSoftly(softly -> {
@@ -163,7 +163,7 @@ class GameFcmNotifierTest extends ServiceUnitTest {
         @Test
         void 술래잡기_게임의_퇴장_알림은_모드별_팀_이름을_쓴다() {
             // given
-            SystemEventData data = new SystemEventData.PlayerLeftData(1L, "도망가는사람", Team.ROBBER);
+            SystemEventData data = new SystemEventData.PlayerLeftData(1L, "도망가는사람", Team.RUNNER);
 
             // when
             FcmMessage sent = sendAndCapture(GameMode.TAG, SystemEventType.PLAYER_LEFT, data);
@@ -181,7 +181,7 @@ class GameFcmNotifierTest extends ServiceUnitTest {
             given(gameRepository.findGameModeById(TEST_GAME_ID)).willReturn(Optional.empty());
 
             // when
-            gameFcmNotifier.notifySystemEvent(SystemEvent.of(TEST_GAME_ID, SystemEventType.POLICE_MOVE_START, null));
+            gameFcmNotifier.notifySystemEvent(SystemEvent.of(TEST_GAME_ID, SystemEventType.CHASER_MOVE_START, null));
 
             // then
             ArgumentCaptor<FcmMessage> captor = ArgumentCaptor.forClass(FcmMessage.class);
@@ -200,14 +200,14 @@ class GameFcmNotifierTest extends ServiceUnitTest {
             lenient().when(chatPushDebouncer.tryOpenWindow(eq(TEST_GAME_ID), anyString())).thenReturn(true);
             // 발신자(경찰) + 경찰 1명 + 도둑 1명, 전원 오프라인
             lenient().when(inGameParticipantCacheRepository.findAllEntriesByGameId(TEST_GAME_ID)).thenReturn(Map.of(
-                    SENDER_PARTICIPANT_ID, new InGameParticipantCache("보낸사람", Team.POLICE, "sender-token"),
-                    POLICE_PARTICIPANT_ID, new InGameParticipantCache("경찰", Team.POLICE, "police-token"),
-                    ROBBER_PARTICIPANT_ID, new InGameParticipantCache("도둑", Team.ROBBER, "robber-token")
+                    SENDER_PARTICIPANT_ID, new InGameParticipantCache("보낸사람", Team.CHASER, "sender-token"),
+                    CHASER_PARTICIPANT_ID, new InGameParticipantCache("경찰", Team.CHASER, "chaser-token"),
+                    RUNNER_PARTICIPANT_ID, new InGameParticipantCache("도둑", Team.RUNNER, "runner-token")
             ));
         }
 
         private ChatMessage chatMessage(ChatScope scope) {
-            ChatSender sender = ChatSender.of(SENDER_PARTICIPANT_ID, "보낸사람", Team.POLICE);
+            ChatSender sender = ChatSender.of(SENDER_PARTICIPANT_ID, "보낸사람", Team.CHASER);
             return ChatMessage.of(TEST_GAME_ID, sender, "다들 어디야", scope);
         }
 
@@ -225,7 +225,7 @@ class GameFcmNotifierTest extends ServiceUnitTest {
             // then
             assertSoftly(softly -> {
                 FcmMessage sent = captureSent();
-                softly.assertThat(sent.tokens()).containsExactlyInAnyOrder("police-token", "robber-token");
+                softly.assertThat(sent.tokens()).containsExactlyInAnyOrder("chaser-token", "runner-token");
                 // 방 단위 발송이라 특정 메시지 내용이 아니라 고정 문구를 쓴다
                 softly.assertThat(sent.title()).isEqualTo("새 채팅");
                 softly.assertThat(sent.body()).isEqualTo("새 채팅이 도착했습니다.");
@@ -244,7 +244,7 @@ class GameFcmNotifierTest extends ServiceUnitTest {
             // then
             assertSoftly(softly -> {
                 FcmMessage sent = captureSent();
-                softly.assertThat(sent.tokens()).containsExactly("police-token");
+                softly.assertThat(sent.tokens()).containsExactly("chaser-token");
                 softly.assertThat(sent.data()).containsEntry("scope", "TEAM");
             });
         }
@@ -269,16 +269,16 @@ class GameFcmNotifierTest extends ServiceUnitTest {
             // then
             ArgumentCaptor<String> scope = ArgumentCaptor.forClass(String.class);
             then(chatPushDebouncer).should().tryOpenWindow(eq(TEST_GAME_ID), scope.capture());
-            assertThat(scope.getValue()).isEqualTo("TEAM:POLICE");
+            assertThat(scope.getValue()).isEqualTo("TEAM:CHASER");
         }
 
         @Test
         void 토큰이_없는_참가자는_수신자에서_제외된다() {
             // given
             given(inGameParticipantCacheRepository.findAllEntriesByGameId(TEST_GAME_ID)).willReturn(Map.of(
-                    SENDER_PARTICIPANT_ID, new InGameParticipantCache("보낸사람", Team.POLICE, "sender-token"),
-                    POLICE_PARTICIPANT_ID, new InGameParticipantCache("경찰", Team.POLICE, "police-token"),
-                    ROBBER_PARTICIPANT_ID, new InGameParticipantCache("도둑", Team.ROBBER, null)
+                    SENDER_PARTICIPANT_ID, new InGameParticipantCache("보낸사람", Team.CHASER, "sender-token"),
+                    CHASER_PARTICIPANT_ID, new InGameParticipantCache("경찰", Team.CHASER, "chaser-token"),
+                    RUNNER_PARTICIPANT_ID, new InGameParticipantCache("도둑", Team.RUNNER, null)
             ));
 
             // when
@@ -286,7 +286,7 @@ class GameFcmNotifierTest extends ServiceUnitTest {
 
             // then
             FcmMessage sent = captureSent();
-            assertSoftly(softly -> softly.assertThat(sent.tokens()).containsExactly("police-token"));
+            assertSoftly(softly -> softly.assertThat(sent.tokens()).containsExactly("chaser-token"));
         }
 
         @Test

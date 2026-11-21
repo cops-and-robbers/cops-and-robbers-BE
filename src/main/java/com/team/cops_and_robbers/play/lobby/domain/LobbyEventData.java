@@ -1,5 +1,6 @@
 package com.team.cops_and_robbers.play.lobby.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.team.cops_and_robbers.game.area.application.dto.GameAreaData;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameAreaUpdateResult;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameModeUpdateResult;
@@ -42,10 +43,10 @@ public sealed interface LobbyEventData permits
         }
     }
 
-    record LobbyTeamUpdateData(LobbyParticipantInfo participant, int policeCount,
-                               int robberCount) implements LobbyEventData {
-        public static LobbyTeamUpdateData of(GameParticipant participant, int policeCount, int robberCount) {
-            return new LobbyTeamUpdateData(LobbyParticipantInfo.from(participant), policeCount, robberCount);
+    record LobbyTeamUpdateData(LobbyParticipantInfo participant, int chaserCount,
+                               int runnerCount) implements LobbyEventData {
+        public static LobbyTeamUpdateData of(GameParticipant participant, int chaserCount, int runnerCount) {
+            return new LobbyTeamUpdateData(LobbyParticipantInfo.from(participant), chaserCount, runnerCount);
         }
     }
 
@@ -77,15 +78,22 @@ public sealed interface LobbyEventData permits
             GameMode gameMode,
             Integer roundDurationMinutes,
             Integer locationRevealIntervalMinutes,
-            Integer policeWaitMinutes,
+            Integer chaserWaitMinutes,
             Integer maxParticipants,
             Integer shrinkFinalRadiusInMeters
     ) implements LobbyEventData {
+        // 옛 앱 호환: 옛 이름으로도 내보낸다. 강제 업데이트 후 제거
+        @Deprecated
+        @JsonProperty(value = "policeWaitMinutes", access = JsonProperty.Access.READ_ONLY)
+        public Integer policeWaitMinutes() {
+            return chaserWaitMinutes;
+        }
+
         public static LobbySettingsUpdatedData from(GameSettingsUpdateResult result) {
             return new LobbySettingsUpdatedData(
                     result.gameMode(),
                     result.roundDurationMinutes(), result.locationRevealIntervalMinutes(),
-                    result.policeWaitMinutes(), result.maxParticipants(),
+                    result.chaserWaitMinutes(), result.maxParticipants(),
                     result.shrinkFinalRadiusInMeters()
             );
         }

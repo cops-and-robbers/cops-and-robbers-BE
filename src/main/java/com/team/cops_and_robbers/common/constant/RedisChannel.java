@@ -11,14 +11,14 @@ public enum RedisChannel {
     SYSTEM("game:%s:system"),
 
     CHAT_ALL("game:%s:chat:all"),
-    CHAT_POLICE("game:%s:chat:police"),
-    CHAT_ROBBER("game:%s:chat:robber"),
+    CHAT_CHASER("game:%s:chat:chaser"),
+    CHAT_RUNNER("game:%s:chat:runner"),
 
-    LOCATION_POLICE("game:%s:location:police"),
-    LOCATION_ROBBER("game:%s:location:robber"),
+    LOCATION_CHASER("game:%s:location:chaser"),
+    LOCATION_RUNNER("game:%s:location:runner"),
 
-    PING_POLICE("game:%s:ping:police"),
-    PING_ROBBER("game:%s:ping:robber"),
+    PING_CHASER("game:%s:ping:chaser"),
+    PING_RUNNER("game:%s:ping:runner"),
 
     COMMUNITY_CHAT("community:%s:chat"),
     COMMUNITY_CHAT_PIN("community:%s:chat:pin");

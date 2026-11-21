@@ -13,28 +13,28 @@ import java.util.List;
 @Component
 public class SystemEventFactory {
 
-    public SystemEvent createPoliceMoveStartEvent(Long gameId) {
-        SystemEventData.PoliceMoveStartData data = SystemEventData.PoliceMoveStartData.create();
-        return SystemEvent.of(gameId, SystemEventType.POLICE_MOVE_START, data);
+    public SystemEvent createChaserMoveStartEvent(Long gameId) {
+        SystemEventData.ChaserMoveStartData data = SystemEventData.ChaserMoveStartData.create();
+        return SystemEvent.of(gameId, SystemEventType.CHASER_MOVE_START, data);
     }
 
-    public SystemEvent createRobberLocationRevealEvent(Long gameId, List<SystemEventData.RobberLocation> locations) {
-        SystemEventData.RobberLocationRevealData data = SystemEventData.RobberLocationRevealData.of(locations);
-        return SystemEvent.of(gameId, SystemEventType.ROBBER_LOCATION_REVEAL, data);
+    public SystemEvent createRunnerLocationRevealEvent(Long gameId, List<SystemEventData.RunnerLocation> locations) {
+        SystemEventData.RunnerLocationRevealData data = SystemEventData.RunnerLocationRevealData.of(locations);
+        return SystemEvent.of(gameId, SystemEventType.RUNNER_LOCATION_REVEAL, data);
     }
 
-    public SystemEvent createArrestEvent(Long gameId, GameParticipant police, GameParticipant robber, int remainingThieves) {
-        SystemEventData.ArrestData data = SystemEventData.ArrestData.of(police, robber, remainingThieves);
+    public SystemEvent createArrestEvent(Long gameId, GameParticipant chaser, GameParticipant runner, int remainingRunners) {
+        SystemEventData.ArrestData data = SystemEventData.ArrestData.of(chaser, runner, remainingRunners);
         return SystemEvent.of(gameId, SystemEventType.ARREST, data);
     }
 
-    public SystemEvent createForceArrestEvent(Long gameId, GameParticipant robber, int remainingThieves) {
-        SystemEventData.ArrestData data = SystemEventData.ArrestData.ofForced(robber, remainingThieves);
+    public SystemEvent createForceArrestEvent(Long gameId, GameParticipant runner, int remainingRunners) {
+        SystemEventData.ArrestData data = SystemEventData.ArrestData.ofForced(runner, remainingRunners);
         return SystemEvent.of(gameId, SystemEventType.ARREST, data);
     }
 
-    public SystemEvent createEscapeEvent(Long gameId, GameParticipant escapedThief, int remainingThieves) {
-        SystemEventData.EscapeData data = SystemEventData.EscapeData.of(escapedThief, remainingThieves);
+    public SystemEvent createEscapeEvent(Long gameId, GameParticipant escapedRunner, int remainingRunners) {
+        SystemEventData.EscapeData data = SystemEventData.EscapeData.of(escapedRunner, remainingRunners);
         return SystemEvent.of(gameId, SystemEventType.ESCAPE, data);
     }
 

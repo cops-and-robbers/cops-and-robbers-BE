@@ -16,7 +16,7 @@ public record GameCreateCommand(
         GameAreaData areaData,
         Integer roundDurationMinutes,
         Integer locationRevealIntervalMinutes,
-        Integer policeWaitMinutes,
+        Integer chaserWaitMinutes,
         Integer maxParticipants,
         Integer shrinkFinalRadiusInMeters,
         GameMode gameMode
@@ -26,8 +26,8 @@ public record GameCreateCommand(
         if (locationRevealIntervalMinutes >= roundDurationMinutes) {
             throw new ApplicationException(GameException.INVALID_LOCATION_INTERVAL);
         }
-        if (policeWaitMinutes >= roundDurationMinutes) {
-            throw new ApplicationException(GameException.INVALID_POLICE_WAIT_TIME);
+        if (chaserWaitMinutes >= roundDurationMinutes) {
+            throw new ApplicationException(GameException.INVALID_CHASER_WAIT_TIME);
         }
         if (gameMode == null) {
             gameMode = GameMode.COPS_AND_ROBBERS;
@@ -45,7 +45,7 @@ public record GameCreateCommand(
                 resolveAreaData(area),
                 settings.roundDurationMinutes(),
                 settings.locationRevealIntervalMinutes(),
-                settings.policeWaitMinutes(),
+                settings.chaserWaitMinutes(),
                 settings.maxParticipants(),
                 settings.shrinkFinalRadiusInMeters(),
                 gameMode

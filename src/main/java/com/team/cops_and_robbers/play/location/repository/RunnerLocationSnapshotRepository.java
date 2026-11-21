@@ -2,7 +2,7 @@ package com.team.cops_and_robbers.play.location.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team.cops_and_robbers.common.util.AesEncryptor;
-import com.team.cops_and_robbers.play.location.domain.RobberLocationHash;
+import com.team.cops_and_robbers.play.location.domain.RunnerLocationHash;
 import com.team.cops_and_robbers.play.system.domain.SystemEventData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -15,21 +15,21 @@ import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
-public class RobberLocationSnapshotRepository {
+public class RunnerLocationSnapshotRepository {
 
     private static final String KEY_PREFIX = "game:";
-    private static final String KEY_SUFFIX = ":robber-location-snapshot";
+    private static final String KEY_SUFFIX = ":runner-location-snapshot";
     private static final Duration TTL = Duration.ofMinutes(35);
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
     private final AesEncryptor aesEncryptor;
 
-    public void saveAll(Long gameId, List<SystemEventData.RobberLocation> locations) {
-        Map<String, RobberLocationHash> entries = locations.stream()
+    public void saveAll(Long gameId, List<SystemEventData.RunnerLocation> locations) {
+        Map<String, RunnerLocationHash> entries = locations.stream()
                 .collect(Collectors.toMap(
                         location -> field(location.participantId()),
-                        location -> new RobberLocationHash(
+                        location -> new RunnerLocationHash(
                                 location.participantId(),
                                 location.nickname(),
                                 aesEncryptor.encrypt(String.valueOf(location.latitude())),
@@ -40,10 +40,10 @@ public class RobberLocationSnapshotRepository {
         redisTemplate.expire(key(gameId), TTL);
     }
 
-    public List<SystemEventData.RobberLocation> findAllByGameId(Long gameId) {
+    public List<SystemEventData.RunnerLocation> findAllByGameId(Long gameId) {
         return redisTemplate.opsForHash().values(key(gameId)).stream()
-                .map(value -> objectMapper.convertValue(value, RobberLocationHash.class))
-                .map(location -> SystemEventData.RobberLocation.of(
+                .map(value -> objectMapper.convertValue(value, RunnerLocationHash.class))
+                .map(location -> SystemEventData.RunnerLocation.of(
                         location.participantId(),
                         location.nickname(),
                         Double.parseDouble(aesEncryptor.decrypt(location.encryptedLatitude())),

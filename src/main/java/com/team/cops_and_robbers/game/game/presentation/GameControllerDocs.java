@@ -37,7 +37,7 @@ public interface GameControllerDocs {
             "JAIL_AREA_REQUIRED", "JAIL_AREA_NOT_ALLOWED"
     })
     @ApiErrorCode(value = UserException.class, codes = {"REQUIRED_TERMS_NOT_AGREED"})
-    @ApiErrorCode(value = GameException.class, codes = {"INVALID_LOCATION_INTERVAL", "INVALID_POLICE_WAIT_TIME"})
+    @ApiErrorCode(value = GameException.class, codes = {"INVALID_LOCATION_INTERVAL", "INVALID_CHASER_WAIT_TIME"})
     @ApiErrorCode(value = GameParticipantException.class, codes = {"ALREADY_PARTICIPATING"})
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {
@@ -115,7 +115,7 @@ public interface GameControllerDocs {
                     """
     )
     @ApiErrorCode(value = GameParticipantException.class, codes = {"NOT_HOST"})
-    @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_WAITING", "INVALID_LOCATION_INTERVAL", "INVALID_POLICE_WAIT_TIME"})
+    @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_WAITING", "INVALID_LOCATION_INTERVAL", "INVALID_CHASER_WAIT_TIME"})
     @ApiErrorCode(value = GameAreaException.class, codes = {
             "GAME_AREA_NOT_FOUND", "SHRINK_REQUIRES_CIRCLE_AREA", "INVALID_SHRINK_FINAL_RADIUS"
     })

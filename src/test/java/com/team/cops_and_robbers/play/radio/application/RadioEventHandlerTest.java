@@ -34,7 +34,7 @@ class RadioEventHandlerTest extends ServiceUnitTest {
             radioEventHandler.handleSystemEvent(SystemEvent.of(TEST_GAME_ID, SystemEventType.GAME_OVER, null));
 
             // then
-            then(radioRoomClient).should().closeRoom("game-1-police");
+            then(radioRoomClient).should().closeRoom("game-1-chaser");
         }
 
         @Test

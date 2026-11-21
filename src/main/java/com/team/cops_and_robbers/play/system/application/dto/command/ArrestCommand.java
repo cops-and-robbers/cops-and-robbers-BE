@@ -2,10 +2,10 @@ package com.team.cops_and_robbers.play.system.application.dto.command;
 
 public record ArrestCommand(
         Long gameId,
-        Long policeUserId,
-        Long robberParticipantId
+        Long chaserUserId,
+        Long runnerParticipantId
 ) {
-    public static ArrestCommand of(Long gameId, Long policeUserId, Long robberParticipantId) {
-        return new ArrestCommand(gameId, policeUserId, robberParticipantId);
+    public static ArrestCommand of(Long gameId, Long chaserUserId, Long runnerParticipantId) {
+        return new ArrestCommand(gameId, chaserUserId, runnerParticipantId);
     }
 }

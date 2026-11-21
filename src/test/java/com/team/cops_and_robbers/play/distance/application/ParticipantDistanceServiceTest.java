@@ -57,7 +57,7 @@ class ParticipantDistanceServiceTest extends ServiceUnitTest {
         @BeforeEach
         void 참가자로_인정한다() {
             given(inGameParticipantCacheRepository.findByParticipantId(GAME_ID, PARTICIPANT_ID))
-                    .willReturn(Optional.of(new InGameParticipantCache("달리는사람", Team.ROBBER, null)));
+                    .willReturn(Optional.of(new InGameParticipantCache("달리는사람", Team.RUNNER, null)));
         }
 
         @Test

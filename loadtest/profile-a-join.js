@@ -99,7 +99,7 @@ export default function () {
           );
 
           // 도둑은 입장 직후 조건 없이 위치 1회를 보낸다 (FE 정책, 계획 §2).
-          if (player.team === 'ROBBER') {
+          if (player.team === 'RUNNER') {
             socket.send(
               sendFrame(`/publish/game/${player.gameId}/location`, jitterLocation())
             );

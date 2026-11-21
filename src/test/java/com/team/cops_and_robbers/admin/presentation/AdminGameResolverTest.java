@@ -152,9 +152,9 @@ class AdminGameResolverTest extends ControllerTest {
             // given
             Game game = gameRepository.save(GameFixture.FINISHED_GAME());
             Game tagGame = gameRepository.save(GameFixture.FINISHED_GAME());
-            GameResult tagResult = GameResultFixture.POLICE_WIN_RESULT_WITHOUT_JAIL(tagGame.getId());
+            GameResult tagResult = GameResultFixture.CHASER_WIN_RESULT_WITHOUT_JAIL(tagGame.getId());
             ReflectionTestUtils.setField(tagResult, "gameMode", GameMode.TAG);
-            gameResultRepository.save(GameResultFixture.POLICE_WIN_RESULT(game.getId()));
+            gameResultRepository.save(GameResultFixture.CHASER_WIN_RESULT(game.getId()));
             gameResultRepository.save(tagResult);
 
             // when
@@ -219,7 +219,7 @@ class AdminGameResolverTest extends ControllerTest {
         void 게임_결과를_포함하여_조회한다() {
             // given
             Game game = gameRepository.save(GameFixture.FINISHED_GAME());
-            gameResultRepository.save(GameResultFixture.POLICE_WIN_RESULT(game.getId()));
+            gameResultRepository.save(GameResultFixture.CHASER_WIN_RESULT(game.getId()));
 
             // when
             ExtractableResponse<Response> response = executeQuery(
@@ -365,7 +365,7 @@ class AdminGameResolverTest extends ControllerTest {
         void 지난_게임_기록의_구역에도_동네_이름이_내려온다() {
             // given
             Game game = gameRepository.save(GameFixture.FINISHED_GAME());
-            GameResult gameResult = gameResultRepository.save(GameResultFixture.POLICE_WIN_RESULT(game.getId()));
+            GameResult gameResult = gameResultRepository.save(GameResultFixture.CHASER_WIN_RESULT(game.getId()));
 
             // when
             ExtractableResponse<Response> response = executeQuery(
