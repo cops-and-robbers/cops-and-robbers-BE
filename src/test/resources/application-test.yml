@@ -55,6 +55,9 @@ livekit:
   token-ttl: 2m
   room-prefix: dev
 
+internal-api:
+  key: "test-internal-api-key"
+
 discord:
   webhook:
     bug: ""

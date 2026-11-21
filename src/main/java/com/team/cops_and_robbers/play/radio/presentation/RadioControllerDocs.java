@@ -29,12 +29,14 @@ public interface RadioControllerDocs {
                     - 토큰 수명은 2분입니다. 수명의 70~90% 지점에서 다시 호출해 재발급받습니다
                     - 재발급 때마다 자격을 다시 검증하므로 게임이 끝났거나 나갔으면 거절됩니다
                     - 음성은 서버를 거치지 않고 무전 서버와 앱 사이에서만 흐릅니다
+                    - 무전 서버가 혼잡하면 신규 입장은 503 RADIO_SERVER_BUSY로 거절됩니다 (이미 무전 중인 경찰의 재발급은 그대로 가능)
                     """
     )
     @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_IN_PROGRESS", "GAME_NOT_FOUND"})
     @ApiErrorCode(value = GameParticipantException.class, codes = {"PARTICIPANT_NOT_FOUND"})
     @ApiErrorCode(value = RadioException.class, codes = {
-            "RADIO_NOT_ALLOWED_IN_EVENT_GAME", "ONLY_POLICE_CAN_USE_RADIO", "RADIO_POLICE_WAITING_TIME"
+            "RADIO_NOT_ALLOWED_IN_EVENT_GAME", "ONLY_POLICE_CAN_USE_RADIO", "RADIO_POLICE_WAITING_TIME",
+            "RADIO_SERVER_BUSY"
     })
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {

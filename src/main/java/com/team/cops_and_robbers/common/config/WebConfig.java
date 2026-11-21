@@ -3,6 +3,7 @@ package com.team.cops_and_robbers.common.config;
 import com.team.cops_and_robbers.admin.presentation.interceptor.AdminInterceptor;
 import com.team.cops_and_robbers.auth.presentation.interceptor.AuthInterceptor;
 import com.team.cops_and_robbers.auth.presentation.resolver.LoginUserArgumentResolver;
+import com.team.cops_and_robbers.common.presentation.interceptor.InternalApiInterceptor;
 import com.team.cops_and_robbers.common.presentation.interceptor.QueryParameterInterceptor;
 import com.team.cops_and_robbers.common.presentation.interceptor.TermsAgreementInterceptor;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class WebConfig implements WebMvcConfigurer {
     private final AdminInterceptor adminInterceptor;
     private final QueryParameterInterceptor queryParameterInterceptor;
     private final TermsAgreementInterceptor termsAgreementInterceptor;
+    private final InternalApiInterceptor internalApiInterceptor;
     private final LoginUserArgumentResolver loginUserArgumentResolver;
 
     @Override
@@ -62,6 +64,9 @@ public class WebConfig implements WebMvcConfigurer {
 
         registry.addInterceptor(adminInterceptor)
                 .addPathPatterns("/graphql");
+
+        registry.addInterceptor(internalApiInterceptor)
+                .addPathPatterns("/internal/**");
     }
 
     @Override

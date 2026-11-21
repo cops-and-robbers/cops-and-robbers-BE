@@ -112,6 +112,17 @@ public class GameResultService {
     }
 
     /**
+     * 경찰이 마지막으로 무전 토큰을 발급받은 시각을 조회합니다.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Optional<LocalDateTime> findRadioLastIssuedAt(Long gameId, Long policeUserId) {
+        return findInProgressResult(gameId)
+                .flatMap(result -> gameResultParticipantRepository
+                        .findByGameResultIdAndUserIdAndLeftAtIsNull(result.getId(), policeUserId))
+                .map(GameResultParticipant::getRadioLastIssuedAt);
+    }
+
+    /**
      * 게임 종료 시점의 통계를 수집해 열어 둔 GameResult 를 완성합니다.
      */
     @Transactional(propagation = Propagation.MANDATORY)

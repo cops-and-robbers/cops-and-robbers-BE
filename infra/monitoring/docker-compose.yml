@@ -29,6 +29,7 @@ services:
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
       GF_PLUGINS_PREINSTALL_DISABLED: "true"
       DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:?}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?}
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - grafana-data:/var/lib/grafana
