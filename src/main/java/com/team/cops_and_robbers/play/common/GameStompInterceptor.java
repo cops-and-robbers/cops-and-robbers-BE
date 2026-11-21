@@ -28,6 +28,9 @@ public class GameStompInterceptor implements ChannelInterceptor {
 
     private static final String CHASER_CHANNEL_SUFFIX = "/chaser";
     private static final String RUNNER_CHANNEL_SUFFIX = "/runner";
+    // 옛 앱 호환: 옛 구독 경로. 강제 업데이트 후 제거
+    private static final String LEGACY_CHASER_CHANNEL_SUFFIX = "/police";
+    private static final String LEGACY_RUNNER_CHANNEL_SUFFIX = "/robber";
 
     private final GameParticipantRepository gameParticipantRepository;
 
@@ -78,14 +81,14 @@ public class GameStompInterceptor implements ChannelInterceptor {
     }
 
     private void validateSubscriptionPermission(String destination, Team participantTeam) {
-        if (destination.endsWith(CHASER_CHANNEL_SUFFIX)) {
+        if (destination.endsWith(CHASER_CHANNEL_SUFFIX) || destination.endsWith(LEGACY_CHASER_CHANNEL_SUFFIX)) {
             if (participantTeam != Team.CHASER) {
                 log.warn("[Wed Socket] Unauthorized subscription attempt to CHASER channel. Actual participant Team: {}", participantTeam);
                 throw new ApplicationException(CommonException.UNAUTHORIZED_SUBSCRIPTION);
             }
         }
 
-        else if (destination.endsWith(RUNNER_CHANNEL_SUFFIX)) {
+        else if (destination.endsWith(RUNNER_CHANNEL_SUFFIX) || destination.endsWith(LEGACY_RUNNER_CHANNEL_SUFFIX)) {
             if (participantTeam != Team.RUNNER) {
                 log.warn("[Wed Socket] Unauthorized subscription attempt to RUNNER channel. Actual participant Team: {}", participantTeam);
                 throw new ApplicationException(CommonException.UNAUTHORIZED_SUBSCRIPTION);

@@ -24,6 +24,8 @@ public class ChaserPingSubscriber implements MessageListener {
             PingMessage pingMessage = objectMapper.readValue(message.getBody(), PingMessage.class);
             String destination = StompSubscribeChannel.PING_CHASER.getUrl(pingMessage.gameId());
             messagingTemplate.convertAndSend(destination, pingMessage);
+            // 옛 앱 호환. 강제 업데이트 후 제거
+            messagingTemplate.convertAndSend(StompSubscribeChannel.PING_POLICE.getUrl(pingMessage.gameId()), pingMessage);
         } catch (Exception e) {
             log.error("[ChaserPingSubscriber] Message processing failed", e);
         }

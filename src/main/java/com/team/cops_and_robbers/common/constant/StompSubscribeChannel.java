@@ -21,6 +21,16 @@ public enum StompSubscribeChannel {
     PING_CHASER("/subscribe/game/%s/ping/chaser"),
     PING_RUNNER("/subscribe/game/%s/ping/runner"),
 
+    // 옛 앱 호환: 옛 구독 경로에도 같이 발행한다. 강제 업데이트 후 제거
+    @Deprecated
+    CHAT_POLICE("/subscribe/game/%s/chat/police"),
+    @Deprecated
+    CHAT_ROBBER("/subscribe/game/%s/chat/robber"),
+    @Deprecated
+    PING_POLICE("/subscribe/game/%s/ping/police"),
+    @Deprecated
+    PING_ROBBER("/subscribe/game/%s/ping/robber"),
+
     COMMUNITY_CHAT("/subscribe/community/%s/chat"),
     COMMUNITY_CHAT_USER("/subscribe/user/%s/community/chat"),
     COMMUNITY_CHAT_PIN("/subscribe/community/%s/chat/pin");

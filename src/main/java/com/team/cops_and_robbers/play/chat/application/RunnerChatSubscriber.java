@@ -26,6 +26,8 @@ public class RunnerChatSubscriber implements MessageListener {
             String destination = StompSubscribeChannel.CHAT_RUNNER.getUrl(chatMessage.gameId());
 
             messagingTemplate.convertAndSend(destination, chatMessage);
+            // 옛 앱 호환. 강제 업데이트 후 제거
+            messagingTemplate.convertAndSend(StompSubscribeChannel.CHAT_ROBBER.getUrl(chatMessage.gameId()), chatMessage);
         } catch (Exception e) {
             log.error("[RunnerChatSubscriber] Message processing failed", e);
         }

@@ -26,6 +26,8 @@ public class ChaserChatSubscriber implements MessageListener {
             String destination = StompSubscribeChannel.CHAT_CHASER.getUrl(chatMessage.gameId());
 
             messagingTemplate.convertAndSend(destination, chatMessage);
+            // 옛 앱 호환. 강제 업데이트 후 제거
+            messagingTemplate.convertAndSend(StompSubscribeChannel.CHAT_POLICE.getUrl(chatMessage.gameId()), chatMessage);
         } catch (Exception e) {
             log.error("[ChaserChatSubscriber] Message processing failed", e);
         }
