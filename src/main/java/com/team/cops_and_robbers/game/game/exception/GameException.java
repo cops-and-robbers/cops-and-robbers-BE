@@ -23,4 +23,13 @@ public enum GameException implements ExceptionCode {
     private final HttpStatus httpStatus;
     private final String title;
     private final String detail;
+
+    // 옛 앱 호환: 응답 코드는 옛 이름으로 내보낸다. 강제 업데이트 후 제거
+    @Override
+    public String getErrorCode() {
+        return switch (this) {
+            case INVALID_CHASER_WAIT_TIME -> "INVALID_POLICE_WAIT_TIME";
+            default -> name();
+        };
+    }
 }

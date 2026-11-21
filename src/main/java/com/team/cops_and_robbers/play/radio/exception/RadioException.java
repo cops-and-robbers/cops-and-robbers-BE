@@ -17,4 +17,14 @@ public enum RadioException implements ExceptionCode {
     private final HttpStatus httpStatus;
     private final String title;
     private final String detail;
+
+    // 옛 앱 호환: 응답 코드는 옛 이름으로 내보낸다. 강제 업데이트 후 제거
+    @Override
+    public String getErrorCode() {
+        return switch (this) {
+            case ONLY_CHASER_CAN_USE_RADIO -> "ONLY_POLICE_CAN_USE_RADIO";
+            case RADIO_CHASER_WAITING_TIME -> "RADIO_POLICE_WAITING_TIME";
+            default -> name();
+        };
+    }
 }

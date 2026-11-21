@@ -33,4 +33,17 @@ public enum GameParticipantException implements ExceptionCode {
     private final HttpStatus httpStatus;
     private final String title;
     private final String detail;
+
+    // 옛 앱 호환: 응답 코드는 옛 이름으로 내보낸다. 강제 업데이트 후 제거
+    @Override
+    public String getErrorCode() {
+        return switch (this) {
+            case NOT_RUNNER_TEAM -> "NOT_ROBBER_TEAM";
+            case ONLY_CHASER_CAN_ARREST -> "ONLY_POLICE_CAN_ARREST";
+            case ONLY_RUNNER_CAN_BE_ARRESTED -> "ONLY_ROBBER_CAN_BE_ARRESTED";
+            case ONLY_RUNNER_CAN_ESCAPE -> "ONLY_ROBBER_CAN_ESCAPE";
+            case CHASER_WAITING_TIME -> "POLICE_WAITING_TIME";
+            default -> name();
+        };
+    }
 }
