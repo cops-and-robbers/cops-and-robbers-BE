@@ -28,3 +28,12 @@ policies:
     group_wait: 30s
     group_interval: 5m
     repeat_interval: 4h
+    routes:
+      - receiver: radio-overload
+        object_matchers: [["radio_overload", "=", "true"]]
+        group_wait: 0s
+        group_interval: 1m
+        repeat_interval: 5m
+        continue: true
+      - receiver: discord
+        object_matchers: [["radio_overload", "=", "true"]]

@@ -215,3 +215,29 @@ groups:
               type: threshold
               expression: A
               conditions: [{evaluator: {type: lt, params: [1]}}]
+
+      - uid: voice-overload
+        title: 무전 서버 과부하
+        condition: C
+        for: 2m
+        keepFiringFor: 5m
+        noDataState: OK
+        execErrState: OK
+        labels: {severity: warning, radio_overload: "true"}
+        annotations:
+          summary: '무전 서버 CPU {{ humanizePercentage .Values.A.Value }} (차단 80%, 해제 60%)'
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: 1 - avg(rate(node_cpu_seconds_total{host="voice",mode="idle"}[2m]))
+              instant: true
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions: [{evaluator: {type: gt, params: [0.8]}, unloadEvaluator: {type: lt, params: [0.6]}}]
