@@ -5,14 +5,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 public record ArrestResponse(
         @Schema(description = "체포된 도둑 닉네임", example = "잡힌도둑")
-        String robberNickname,
+        String runnerNickname,
         @Schema(description = "남은 도둑 수", example = "2")
-        int remainingThieves
+        int remainingRunners
 ) {
     public static ArrestResponse from(ArrestResult result) {
         return new ArrestResponse(
-                result.robberNickname(),
-                result.remainingThieves()
+                result.runnerNickname(),
+                result.remainingRunners()
         );
     }
 }

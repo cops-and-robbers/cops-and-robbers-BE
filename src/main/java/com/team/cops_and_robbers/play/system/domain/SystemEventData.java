@@ -44,19 +44,19 @@ public sealed interface SystemEventData permits
     }
 
     record ArrestData(SystemParticipantInfo police, SystemParticipantInfo robber,
-                      int remainingThieves) implements SystemEventData {
-        public static ArrestData of(GameParticipant police, GameParticipant robber, int remainingThieves) {
-            return new ArrestData(SystemParticipantInfo.from(police), SystemParticipantInfo.from(robber), remainingThieves);
+                      int remainingRunners) implements SystemEventData {
+        public static ArrestData of(GameParticipant police, GameParticipant robber, int remainingRunners) {
+            return new ArrestData(SystemParticipantInfo.from(police), SystemParticipantInfo.from(robber), remainingRunners);
         }
 
-        public static ArrestData ofForced(GameParticipant robber, int remainingThieves) {
-            return new ArrestData(null, SystemParticipantInfo.from(robber), remainingThieves);
+        public static ArrestData ofForced(GameParticipant robber, int remainingRunners) {
+            return new ArrestData(null, SystemParticipantInfo.from(robber), remainingRunners);
         }
     }
 
-    record EscapeData(SystemParticipantInfo escapedThief, int remainingThieves) implements SystemEventData {
-        public static EscapeData of(GameParticipant escapedThief, int remainingThieves) {
-            return new EscapeData(SystemParticipantInfo.from(escapedThief), remainingThieves);
+    record EscapeData(SystemParticipantInfo escapedRunner, int remainingRunners) implements SystemEventData {
+        public static EscapeData of(GameParticipant escapedRunner, int remainingRunners) {
+            return new EscapeData(SystemParticipantInfo.from(escapedRunner), remainingRunners);
         }
     }
 

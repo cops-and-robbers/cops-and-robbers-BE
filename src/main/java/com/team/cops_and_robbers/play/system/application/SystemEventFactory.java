@@ -23,18 +23,18 @@ public class SystemEventFactory {
         return SystemEvent.of(gameId, SystemEventType.RUNNER_LOCATION_REVEAL, data);
     }
 
-    public SystemEvent createArrestEvent(Long gameId, GameParticipant police, GameParticipant robber, int remainingThieves) {
-        SystemEventData.ArrestData data = SystemEventData.ArrestData.of(police, robber, remainingThieves);
+    public SystemEvent createArrestEvent(Long gameId, GameParticipant police, GameParticipant robber, int remainingRunners) {
+        SystemEventData.ArrestData data = SystemEventData.ArrestData.of(police, robber, remainingRunners);
         return SystemEvent.of(gameId, SystemEventType.ARREST, data);
     }
 
-    public SystemEvent createForceArrestEvent(Long gameId, GameParticipant robber, int remainingThieves) {
-        SystemEventData.ArrestData data = SystemEventData.ArrestData.ofForced(robber, remainingThieves);
+    public SystemEvent createForceArrestEvent(Long gameId, GameParticipant robber, int remainingRunners) {
+        SystemEventData.ArrestData data = SystemEventData.ArrestData.ofForced(robber, remainingRunners);
         return SystemEvent.of(gameId, SystemEventType.ARREST, data);
     }
 
-    public SystemEvent createEscapeEvent(Long gameId, GameParticipant escapedThief, int remainingThieves) {
-        SystemEventData.EscapeData data = SystemEventData.EscapeData.of(escapedThief, remainingThieves);
+    public SystemEvent createEscapeEvent(Long gameId, GameParticipant escapedRunner, int remainingRunners) {
+        SystemEventData.EscapeData data = SystemEventData.EscapeData.of(escapedRunner, remainingRunners);
         return SystemEvent.of(gameId, SystemEventType.ESCAPE, data);
     }
 

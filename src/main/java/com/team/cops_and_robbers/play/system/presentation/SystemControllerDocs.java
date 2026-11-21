@@ -40,7 +40,7 @@ public interface SystemControllerDocs {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "체포 성공")
     })
-    ResponseEntity<ArrestResponse> arrestRobber(
+    ResponseEntity<ArrestResponse> arrestRunner(
             @Parameter(hidden = true) LoginUser loginUser,
             @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId,
             @RequestBody @Valid ArrestRequest request
@@ -67,7 +67,7 @@ public interface SystemControllerDocs {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "강제 체포 성공")
     })
-    ResponseEntity<ArrestResponse> forceArrestRobber(
+    ResponseEntity<ArrestResponse> forceArrestRunner(
             @Parameter(hidden = true) LoginUser loginUser,
             @Parameter(description = "게임 ID", required = true, example = "1") @PathVariable Long gameId
     );

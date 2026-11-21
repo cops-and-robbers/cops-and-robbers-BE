@@ -55,7 +55,7 @@ class SystemControllerTest extends ControllerTest {
 
     @Nested
     @DisplayName("도둑 체포 API")
-    class ArrestRobber {
+    class ArrestRunner {
 
         @Test
         void 도둑_체포_성공() {
@@ -77,8 +77,8 @@ class SystemControllerTest extends ControllerTest {
             ArrestResponse result = response.as(ArrestResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-                softly.assertThat(result.robberNickname()).isEqualTo(robber.getNickname());
-                softly.assertThat(result.remainingThieves()).isEqualTo(1);
+                softly.assertThat(result.runnerNickname()).isEqualTo(robber.getNickname());
+                softly.assertThat(result.remainingRunners()).isEqualTo(1);
 
                 GameParticipant jailedRobber = gameParticipantRepository.findById(robberParticipant.getId()).orElseThrow();
                 softly.assertThat(jailedRobber.isJailed()).isTrue();
@@ -103,8 +103,8 @@ class SystemControllerTest extends ControllerTest {
             ArrestResponse result = response.as(ArrestResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-                softly.assertThat(result.robberNickname()).isEqualTo(robber.getNickname());
-                softly.assertThat(result.remainingThieves()).isEqualTo(0);
+                softly.assertThat(result.runnerNickname()).isEqualTo(robber.getNickname());
+                softly.assertThat(result.remainingRunners()).isEqualTo(0);
 
                 GameParticipant jailedRobber = gameParticipantRepository.findById(robberParticipant.getId()).orElseThrow();
                 softly.assertThat(jailedRobber.isWaiting()).isTrue();
@@ -138,7 +138,7 @@ class SystemControllerTest extends ControllerTest {
             // then
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-                softly.assertThat(response.as(ArrestResponse.class).remainingThieves()).isZero();
+                softly.assertThat(response.as(ArrestResponse.class).remainingRunners()).isZero();
                 softly.assertThat(gameRepository.findById(tagGame.getId()).orElseThrow().getStatus())
                         .isEqualTo(GameStatus.WAITING);
                 softly.assertThat(gameResultRepository.findByGameId(tagGame.getId()).orElseThrow().getEndReason())
@@ -307,7 +307,7 @@ class SystemControllerTest extends ControllerTest {
 
     @Nested
     @DisplayName("도둑 강제 체포 API")
-    class ForceArrestRobber {
+    class ForceArrestRunner {
 
         @Test
         void 강제_체포_성공() {
@@ -327,8 +327,8 @@ class SystemControllerTest extends ControllerTest {
             ArrestResponse result = response.as(ArrestResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-                softly.assertThat(result.robberNickname()).isEqualTo(robber.getNickname());
-                softly.assertThat(result.remainingThieves()).isEqualTo(1);
+                softly.assertThat(result.runnerNickname()).isEqualTo(robber.getNickname());
+                softly.assertThat(result.remainingRunners()).isEqualTo(1);
 
                 GameParticipant jailedRobber = gameParticipantRepository.findById(robberParticipant.getId()).orElseThrow();
                 softly.assertThat(jailedRobber.isJailed()).isTrue();
@@ -369,7 +369,7 @@ class SystemControllerTest extends ControllerTest {
             ArrestResponse result = response.as(ArrestResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-                softly.assertThat(result.remainingThieves()).isEqualTo(0);
+                softly.assertThat(result.remainingRunners()).isEqualTo(0);
 
                 GameParticipant endedRobber = gameParticipantRepository.findById(robberParticipant.getId()).orElseThrow();
                 softly.assertThat(endedRobber.isWaiting()).isTrue();
@@ -500,9 +500,9 @@ class SystemControllerTest extends ControllerTest {
             return openedResult;
         }
 
-        private void arrest(String token, Game targetGame, Long robberParticipantId) {
+        private void arrest(String token, Game targetGame, Long runnerParticipantId) {
             authenticated(token)
-                    .body(new ArrestRequest(robberParticipantId))
+                    .body(new ArrestRequest(runnerParticipantId))
                     .pathParam(GAME_ID_PARAM, targetGame.getId())
                     .when()
                     .post(ARREST_URL)
@@ -642,8 +642,8 @@ class SystemControllerTest extends ControllerTest {
             ArrestResponse result = response.as(ArrestResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-                softly.assertThat(result.robberNickname()).isEqualTo(polygonRobber.getNickname());
-                softly.assertThat(result.remainingThieves()).isEqualTo(1);
+                softly.assertThat(result.runnerNickname()).isEqualTo(polygonRobber.getNickname());
+                softly.assertThat(result.remainingRunners()).isEqualTo(1);
             });
         }
 

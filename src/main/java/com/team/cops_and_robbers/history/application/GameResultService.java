@@ -82,10 +82,10 @@ public class GameResultService {
      * 체포한 경찰의 체포수를 1 올립니다.
      */
     @Transactional(propagation = Propagation.MANDATORY)
-    public void recordArrest(Long gameId, Long policeUserId) {
+    public void recordArrest(Long gameId, Long chaserUserId) {
         findInProgressResult(gameId)
                 .flatMap(result -> gameResultParticipantRepository
-                        .findByGameResultIdAndUserIdAndLeftAtIsNull(result.getId(), policeUserId))
+                        .findByGameResultIdAndUserIdAndLeftAtIsNull(result.getId(), chaserUserId))
                 .ifPresent(GameResultParticipant::incrementArrestCount);
     }
 
@@ -104,10 +104,10 @@ public class GameResultService {
      * 무전 토큰을 발급받은 경찰의 무전 사용 시간을 누적합니다.
      */
     @Transactional(propagation = Propagation.MANDATORY)
-    public void recordRadioUsage(Long gameId, Long policeUserId, Duration tokenTtl) {
+    public void recordRadioUsage(Long gameId, Long chaserUserId, Duration tokenTtl) {
         findInProgressResult(gameId)
                 .flatMap(result -> gameResultParticipantRepository
-                        .findByGameResultIdAndUserIdAndLeftAtIsNull(result.getId(), policeUserId))
+                        .findByGameResultIdAndUserIdAndLeftAtIsNull(result.getId(), chaserUserId))
                 .ifPresent(snapshot -> snapshot.accumulateRadioSeconds(LocalDateTime.now(clock), tokenTtl));
     }
 
@@ -115,10 +115,10 @@ public class GameResultService {
      * 경찰이 마지막으로 무전 토큰을 발급받은 시각을 조회합니다.
      */
     @Transactional(propagation = Propagation.MANDATORY)
-    public Optional<LocalDateTime> findRadioLastIssuedAt(Long gameId, Long policeUserId) {
+    public Optional<LocalDateTime> findRadioLastIssuedAt(Long gameId, Long chaserUserId) {
         return findInProgressResult(gameId)
                 .flatMap(result -> gameResultParticipantRepository
-                        .findByGameResultIdAndUserIdAndLeftAtIsNull(result.getId(), policeUserId))
+                        .findByGameResultIdAndUserIdAndLeftAtIsNull(result.getId(), chaserUserId))
                 .map(GameResultParticipant::getRadioLastIssuedAt);
     }
 

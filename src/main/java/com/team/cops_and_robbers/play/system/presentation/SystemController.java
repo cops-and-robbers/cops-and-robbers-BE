@@ -29,13 +29,13 @@ public class SystemController implements SystemControllerDocs {
      * 1. 경찰이 도둑을 체포합니다.
      */
     @PostMapping("/arrest")
-    public ResponseEntity<ArrestResponse> arrestRobber(
+    public ResponseEntity<ArrestResponse> arrestRunner(
             @AuthUser LoginUser loginUser,
             @PathVariable Long gameId,
             @RequestBody @Valid ArrestRequest request
     ) {
-        ArrestCommand command = ArrestCommand.of(gameId, loginUser.userId(), request.robberParticipantId());
-        ArrestResult result = systemService.arrestRobber(command);
+        ArrestCommand command = ArrestCommand.of(gameId, loginUser.userId(), request.runnerParticipantId());
+        ArrestResult result = systemService.arrestRunner(command);
         return ResponseEntity.ok(ArrestResponse.from(result));
     }
 
@@ -43,12 +43,12 @@ public class SystemController implements SystemControllerDocs {
      * 2. 구역 밖에 오래 머문 도둑이 스스로 체포됩니다.
      */
     @PostMapping("/force-arrest")
-    public ResponseEntity<ArrestResponse> forceArrestRobber(
+    public ResponseEntity<ArrestResponse> forceArrestRunner(
             @AuthUser LoginUser loginUser,
             @PathVariable Long gameId
     ) {
         ForceArrestCommand command = ForceArrestCommand.of(gameId, loginUser.userId());
-        ArrestResult result = systemService.forceArrestRobber(command);
+        ArrestResult result = systemService.forceArrestRunner(command);
         return ResponseEntity.ok(ArrestResponse.from(result));
     }
 
