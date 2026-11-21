@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PoliceLocationSubscriber implements MessageListener {
+public class ChaserLocationSubscriber implements MessageListener {
 
     @Override
     public void onMessage(Message message, byte[] pattern) {

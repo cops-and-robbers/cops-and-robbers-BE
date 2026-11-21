@@ -48,8 +48,8 @@ public class ChatPublisher {
     private RedisChannel routeTopic(ChatScope scope, Team participantTeam) {
         if (scope == ChatScope.TEAM) {
             return switch (participantTeam) {
-                case POLICE -> RedisChannel.CHAT_POLICE;
-                case ROBBER -> RedisChannel.CHAT_ROBBER;
+                case POLICE -> RedisChannel.CHAT_CHASER;
+                case ROBBER -> RedisChannel.CHAT_RUNNER;
             };
         }
         return RedisChannel.CHAT_ALL;

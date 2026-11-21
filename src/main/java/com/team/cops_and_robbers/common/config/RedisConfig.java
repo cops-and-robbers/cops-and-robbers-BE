@@ -5,13 +5,13 @@ import com.team.cops_and_robbers.common.constant.RedisProperties;
 import com.team.cops_and_robbers.community.chat.message.application.CommunityChatSubscriber;
 import com.team.cops_and_robbers.community.chat.pin.application.CommunityChatPinSubscriber;
 import com.team.cops_and_robbers.play.chat.application.AllChatSubscriber;
-import com.team.cops_and_robbers.play.chat.application.PoliceChatSubscriber;
-import com.team.cops_and_robbers.play.chat.application.RobberChatSubscriber;
+import com.team.cops_and_robbers.play.chat.application.ChaserChatSubscriber;
+import com.team.cops_and_robbers.play.chat.application.RunnerChatSubscriber;
 import com.team.cops_and_robbers.play.lobby.application.LobbySubscriber;
-import com.team.cops_and_robbers.play.location.application.PoliceLocationSubscriber;
+import com.team.cops_and_robbers.play.location.application.ChaserLocationSubscriber;
 import com.team.cops_and_robbers.play.location.application.RunnerLocationSubscriber;
-import com.team.cops_and_robbers.play.ping.application.PolicePingSubscriber;
-import com.team.cops_and_robbers.play.ping.application.RobberPingSubscriber;
+import com.team.cops_and_robbers.play.ping.application.ChaserPingSubscriber;
+import com.team.cops_and_robbers.play.ping.application.RunnerPingSubscriber;
 import com.team.cops_and_robbers.play.system.application.SystemSubscriber;
 import lombok.RequiredArgsConstructor;
 import org.redisson.Redisson;
@@ -118,12 +118,12 @@ public class RedisConfig {
             MessageListenerAdapter lobbyListenerAdapter,
             MessageListenerAdapter systemListenerAdapter,
             MessageListenerAdapter allChatAdapter,
-            MessageListenerAdapter policeChatAdapter,
-            MessageListenerAdapter robberChatAdapter,
-            MessageListenerAdapter policeLocationAdapter,
+            MessageListenerAdapter chaserChatAdapter,
+            MessageListenerAdapter runnerChatAdapter,
+            MessageListenerAdapter chaserLocationAdapter,
             MessageListenerAdapter runnerLocationAdapter,
-            MessageListenerAdapter policePingAdapter,
-            MessageListenerAdapter robberPingAdapter,
+            MessageListenerAdapter chaserPingAdapter,
+            MessageListenerAdapter runnerPingAdapter,
             MessageListenerAdapter communityChatAdapter,
             MessageListenerAdapter communityChatPinAdapter
     ) {
@@ -131,12 +131,12 @@ public class RedisConfig {
                 Map.entry(RedisChannel.LOBBY.getPattern(), lobbyListenerAdapter),
                 Map.entry(RedisChannel.SYSTEM.getPattern(), systemListenerAdapter),
                 Map.entry(RedisChannel.CHAT_ALL.getPattern(), allChatAdapter),
-                Map.entry(RedisChannel.CHAT_POLICE.getPattern(), policeChatAdapter),
-                Map.entry(RedisChannel.CHAT_ROBBER.getPattern(), robberChatAdapter),
-                Map.entry(RedisChannel.LOCATION_POLICE.getPattern(), policeLocationAdapter),
-                Map.entry(RedisChannel.LOCATION_ROBBER.getPattern(), runnerLocationAdapter),
-                Map.entry(RedisChannel.PING_POLICE.getPattern(), policePingAdapter),
-                Map.entry(RedisChannel.PING_ROBBER.getPattern(), robberPingAdapter),
+                Map.entry(RedisChannel.CHAT_CHASER.getPattern(), chaserChatAdapter),
+                Map.entry(RedisChannel.CHAT_RUNNER.getPattern(), runnerChatAdapter),
+                Map.entry(RedisChannel.LOCATION_CHASER.getPattern(), chaserLocationAdapter),
+                Map.entry(RedisChannel.LOCATION_RUNNER.getPattern(), runnerLocationAdapter),
+                Map.entry(RedisChannel.PING_CHASER.getPattern(), chaserPingAdapter),
+                Map.entry(RedisChannel.PING_RUNNER.getPattern(), runnerPingAdapter),
                 Map.entry(RedisChannel.COMMUNITY_CHAT.getPattern(), communityChatAdapter),
                 Map.entry(RedisChannel.COMMUNITY_CHAT_PIN.getPattern(), communityChatPinAdapter)
         );
@@ -162,17 +162,17 @@ public class RedisConfig {
     }
 
     @Bean
-    public MessageListenerAdapter policeChatAdapter(PoliceChatSubscriber subscriber) {
+    public MessageListenerAdapter chaserChatAdapter(ChaserChatSubscriber subscriber) {
         return new MessageListenerAdapter(subscriber, LISTENER_METHOD_NAME);
     }
 
     @Bean
-    public MessageListenerAdapter robberChatAdapter(RobberChatSubscriber subscriber) {
+    public MessageListenerAdapter runnerChatAdapter(RunnerChatSubscriber subscriber) {
         return new MessageListenerAdapter(subscriber, LISTENER_METHOD_NAME);
     }
 
     @Bean
-    public MessageListenerAdapter policeLocationAdapter(PoliceLocationSubscriber subscriber) {
+    public MessageListenerAdapter chaserLocationAdapter(ChaserLocationSubscriber subscriber) {
         return new MessageListenerAdapter(subscriber, LISTENER_METHOD_NAME);
     }
 
@@ -182,12 +182,12 @@ public class RedisConfig {
     }
 
     @Bean
-    public MessageListenerAdapter policePingAdapter(PolicePingSubscriber subscriber) {
+    public MessageListenerAdapter chaserPingAdapter(ChaserPingSubscriber subscriber) {
         return new MessageListenerAdapter(subscriber, LISTENER_METHOD_NAME);
     }
 
     @Bean
-    public MessageListenerAdapter robberPingAdapter(RobberPingSubscriber subscriber) {
+    public MessageListenerAdapter runnerPingAdapter(RunnerPingSubscriber subscriber) {
         return new MessageListenerAdapter(subscriber, LISTENER_METHOD_NAME);
     }
 

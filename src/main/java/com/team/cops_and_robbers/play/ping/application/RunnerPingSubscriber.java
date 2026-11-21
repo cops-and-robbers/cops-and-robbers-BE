@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class RobberPingSubscriber implements MessageListener {
+public class RunnerPingSubscriber implements MessageListener {
 
     private final ObjectMapper objectMapper;
     private final SimpMessageSendingOperations messagingTemplate;
@@ -22,10 +22,10 @@ public class RobberPingSubscriber implements MessageListener {
     public void onMessage(Message message, byte[] pattern) {
         try {
             PingMessage pingMessage = objectMapper.readValue(message.getBody(), PingMessage.class);
-            String destination = StompSubscribeChannel.PING_ROBBER.getUrl(pingMessage.gameId());
+            String destination = StompSubscribeChannel.PING_RUNNER.getUrl(pingMessage.gameId());
             messagingTemplate.convertAndSend(destination, pingMessage);
         } catch (Exception e) {
-            log.error("[RobberPingSubscriber] Message processing failed", e);
+            log.error("[RunnerPingSubscriber] Message processing failed", e);
         }
     }
 }

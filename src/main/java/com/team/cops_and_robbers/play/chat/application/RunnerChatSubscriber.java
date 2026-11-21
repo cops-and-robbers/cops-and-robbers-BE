@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class RobberChatSubscriber implements MessageListener {
+public class RunnerChatSubscriber implements MessageListener {
 
     private final ObjectMapper objectMapper;
     private final SimpMessageSendingOperations messagingTemplate;
@@ -23,11 +23,11 @@ public class RobberChatSubscriber implements MessageListener {
     public void onMessage(Message message, byte[] pattern) {
         try {
             ChatMessage chatMessage = objectMapper.readValue(message.getBody(), ChatMessage.class);
-            String destination = StompSubscribeChannel.CHAT_ROBBER.getUrl(chatMessage.gameId());
+            String destination = StompSubscribeChannel.CHAT_RUNNER.getUrl(chatMessage.gameId());
 
             messagingTemplate.convertAndSend(destination, chatMessage);
         } catch (Exception e) {
-            log.error("[RobberChatSubscriber] Message processing failed", e);
+            log.error("[RunnerChatSubscriber] Message processing failed", e);
         }
     }
 }

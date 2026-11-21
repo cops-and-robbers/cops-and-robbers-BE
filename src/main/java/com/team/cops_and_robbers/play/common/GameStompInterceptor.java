@@ -26,8 +26,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class GameStompInterceptor implements ChannelInterceptor {
 
-    private static final String POLICE_CHANNEL_SUFFIX = "/police";
-    private static final String ROBBER_CHANNEL_SUFFIX = "/robber";
+    private static final String CHASER_CHANNEL_SUFFIX = "/chaser";
+    private static final String RUNNER_CHANNEL_SUFFIX = "/runner";
 
     private final GameParticipantRepository gameParticipantRepository;
 
@@ -78,16 +78,16 @@ public class GameStompInterceptor implements ChannelInterceptor {
     }
 
     private void validateSubscriptionPermission(String destination, Team participantTeam) {
-        if (destination.endsWith(POLICE_CHANNEL_SUFFIX)) {
+        if (destination.endsWith(CHASER_CHANNEL_SUFFIX)) {
             if (participantTeam != Team.POLICE) {
-                log.warn("[Wed Socket] Unauthorized subscription attempt to POLICE channel. Actual participant Team: {}", participantTeam);
+                log.warn("[Wed Socket] Unauthorized subscription attempt to CHASER channel. Actual participant Team: {}", participantTeam);
                 throw new ApplicationException(CommonException.UNAUTHORIZED_SUBSCRIPTION);
             }
         }
 
-        else if (destination.endsWith(ROBBER_CHANNEL_SUFFIX)) {
+        else if (destination.endsWith(RUNNER_CHANNEL_SUFFIX)) {
             if (participantTeam != Team.ROBBER) {
-                log.warn("[Wed Socket] Unauthorized subscription attempt to ROBBER channel. Actual participant Team: {}", participantTeam);
+                log.warn("[Wed Socket] Unauthorized subscription attempt to RUNNER channel. Actual participant Team: {}", participantTeam);
                 throw new ApplicationException(CommonException.UNAUTHORIZED_SUBSCRIPTION);
             }
         }

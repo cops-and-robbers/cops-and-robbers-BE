@@ -93,7 +93,7 @@ class PingPublisherTest extends ServiceUnitTest {
     class ChannelRouting {
 
         @Test
-        void 경찰팀_참여자는_PING_POLICE_채널로_publish된다() {
+        void 경찰팀_참여자는_PING_CHASER_채널로_publish된다() {
             // given
             PingCommand command = commandInsideZone(PARTICIPANT_ID);
             given(inGameParticipantCacheRepository.findByParticipantId(GAME_ID, PARTICIPANT_ID))
@@ -105,11 +105,11 @@ class PingPublisherTest extends ServiceUnitTest {
             pingPublisher.route(command);
 
             // then
-            verify(redisTemplate).convertAndSend(eq(RedisChannel.PING_POLICE.getTopic(GAME_ID)), any());
+            verify(redisTemplate).convertAndSend(eq(RedisChannel.PING_CHASER.getTopic(GAME_ID)), any());
         }
 
         @Test
-        void 도둑팀_참여자는_PING_ROBBER_채널로_publish된다() {
+        void 도둑팀_참여자는_PING_RUNNER_채널로_publish된다() {
             // given
             PingCommand command = commandInsideZone(PARTICIPANT_ID);
             given(inGameParticipantCacheRepository.findByParticipantId(GAME_ID, PARTICIPANT_ID))
@@ -121,7 +121,7 @@ class PingPublisherTest extends ServiceUnitTest {
             pingPublisher.route(command);
 
             // then
-            verify(redisTemplate).convertAndSend(eq(RedisChannel.PING_ROBBER.getTopic(GAME_ID)), any());
+            verify(redisTemplate).convertAndSend(eq(RedisChannel.PING_RUNNER.getTopic(GAME_ID)), any());
         }
     }
 }

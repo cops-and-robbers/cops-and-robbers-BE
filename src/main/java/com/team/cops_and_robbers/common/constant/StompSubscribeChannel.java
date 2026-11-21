@@ -12,14 +12,14 @@ public enum StompSubscribeChannel {
     SYSTEM_FOOTPRINT("/subscribe/game/%s/system/footprint"),
 
     CHAT_ALL("/subscribe/game/%s/chat/all"),
-    CHAT_POLICE("/subscribe/game/%s/chat/police"),
-    CHAT_ROBBER("/subscribe/game/%s/chat/robber"),
+    CHAT_CHASER("/subscribe/game/%s/chat/chaser"),
+    CHAT_RUNNER("/subscribe/game/%s/chat/runner"),
 
-    LOCATION_POLICE("/subscribe/game/%s/location/police"),
-    LOCATION_ROBBER("/subscribe/game/%s/location/robber"),
+    LOCATION_CHASER("/subscribe/game/%s/location/chaser"),
+    LOCATION_RUNNER("/subscribe/game/%s/location/runner"),
 
-    PING_POLICE("/subscribe/game/%s/ping/police"),
-    PING_ROBBER("/subscribe/game/%s/ping/robber"),
+    PING_CHASER("/subscribe/game/%s/ping/chaser"),
+    PING_RUNNER("/subscribe/game/%s/ping/runner"),
 
     COMMUNITY_CHAT("/subscribe/community/%s/chat"),
     COMMUNITY_CHAT_USER("/subscribe/user/%s/community/chat"),
