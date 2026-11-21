@@ -181,7 +181,7 @@ class RadioServiceTest extends ServiceUnitTest {
             // when & then
             assertThatThrownBy(() -> radioService.issueToken(command))
                     .isInstanceOf(ApplicationException.class)
-                    .hasMessage(RadioException.ONLY_POLICE_CAN_USE_RADIO.getDetail());
+                    .hasMessage(RadioException.ONLY_CHASER_CAN_USE_RADIO.getDetail());
         }
 
         @Test
@@ -192,7 +192,7 @@ class RadioServiceTest extends ServiceUnitTest {
             // when & then
             assertThatThrownBy(() -> radioService.issueToken(command))
                     .isInstanceOf(ApplicationException.class)
-                    .hasMessage(RadioException.RADIO_POLICE_WAITING_TIME.getDetail());
+                    .hasMessage(RadioException.RADIO_CHASER_WAITING_TIME.getDetail());
         }
     }
 

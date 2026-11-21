@@ -33,7 +33,7 @@ public interface SystemControllerDocs {
     )
     @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_IN_PROGRESS", "GAME_NOT_FOUND"})
     @ApiErrorCode(value = GameParticipantException.class, codes = {
-            "ONLY_POLICE_CAN_ARREST", "POLICE_WAITING_TIME", "ONLY_ROBBER_CAN_BE_ARRESTED",
+            "ONLY_CHASER_CAN_ARREST", "CHASER_WAITING_TIME", "ONLY_RUNNER_CAN_BE_ARRESTED",
             "PARTICIPANT_GAME_MISMATCH", "ALREADY_ARRESTED", "PARTICIPANT_NOT_FOUND"
     })
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
@@ -61,7 +61,7 @@ public interface SystemControllerDocs {
     )
     @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_IN_PROGRESS", "FORCE_ARREST_NOT_ALLOWED_IN_EVENT_GAME", "GAME_NOT_FOUND"})
     @ApiErrorCode(value = GameParticipantException.class, codes = {
-            "ONLY_ROBBER_CAN_BE_ARRESTED", "ALREADY_ARRESTED", "PARTICIPANT_NOT_FOUND"
+            "ONLY_RUNNER_CAN_BE_ARRESTED", "ALREADY_ARRESTED", "PARTICIPANT_NOT_FOUND"
     })
     @ApiErrorCode(value = CommonException.class, codes = {"INVALID_INPUT_VALUE"})
     @ApiResponses(value = {

@@ -27,7 +27,7 @@ public record GameCreateCommand(
             throw new ApplicationException(GameException.INVALID_LOCATION_INTERVAL);
         }
         if (chaserWaitMinutes >= roundDurationMinutes) {
-            throw new ApplicationException(GameException.INVALID_POLICE_WAIT_TIME);
+            throw new ApplicationException(GameException.INVALID_CHASER_WAIT_TIME);
         }
         if (gameMode == null) {
             gameMode = GameMode.COPS_AND_ROBBERS;

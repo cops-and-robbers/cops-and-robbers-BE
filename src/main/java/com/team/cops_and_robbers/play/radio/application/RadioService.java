@@ -87,10 +87,10 @@ public class RadioService {
             throw new ApplicationException(RadioException.RADIO_NOT_ALLOWED_IN_EVENT_GAME);
         }
         if (!police.isPolice()) {
-            throw new ApplicationException(RadioException.ONLY_POLICE_CAN_USE_RADIO);
+            throw new ApplicationException(RadioException.ONLY_CHASER_CAN_USE_RADIO);
         }
         if (police.isPoliceWaiting()) {
-            throw new ApplicationException(RadioException.RADIO_POLICE_WAITING_TIME);
+            throw new ApplicationException(RadioException.RADIO_CHASER_WAITING_TIME);
         }
     }
 

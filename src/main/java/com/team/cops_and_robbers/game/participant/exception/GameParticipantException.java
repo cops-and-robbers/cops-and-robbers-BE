@@ -19,15 +19,15 @@ public enum GameParticipantException implements ExceptionCode {
     LOBBY_ACTION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "로비 조작 불가", "게임이 시작된 이후에는 로비 상태를 변경할 수 없습니다."),
     NOT_HOST(HttpStatus.FORBIDDEN, "호스트 권한 필요", "게임을 시작할 수 있는 권한이 없습니다. 방장만 게임을 시작할 수 있습니다."),
     INVALID_TEAM_COMPOSITION(HttpStatus.BAD_REQUEST, "팀 구성 오류", "게임을 시작하려면 경찰과 도둑 팀에 각각 최소 1명 이상의 참가자가 필요합니다."),
-    NOT_ROBBER_TEAM(HttpStatus.BAD_REQUEST, "도둑 팀이 아님", "도둑 팀만 위치를 전송할 수 있습니다."),
+    NOT_RUNNER_TEAM(HttpStatus.BAD_REQUEST, "도둑 팀이 아님", "도둑 팀만 위치를 전송할 수 있습니다."),
 
     PARTICIPANT_GAME_MISMATCH(HttpStatus.BAD_REQUEST, "참가자 게임 불일치", "경찰과 도둑이 서로 다른 게임에 참여하고 있습니다."),
-    ONLY_POLICE_CAN_ARREST(HttpStatus.BAD_REQUEST, "경찰만이 체포 가능", "경찰 팀만 도둑을 체포할 수 있습니다."),
-    ONLY_ROBBER_CAN_BE_ARRESTED(HttpStatus.BAD_REQUEST, "도둑만을 체포 가능", "도둑 팀만 체포될 수 있습니다."),
-    ONLY_ROBBER_CAN_ESCAPE(HttpStatus.BAD_REQUEST, "도둑만 탈옥 가능", "도둑 팀만 탈옥할 수 있습니다."),
+    ONLY_CHASER_CAN_ARREST(HttpStatus.BAD_REQUEST, "경찰만이 체포 가능", "경찰 팀만 도둑을 체포할 수 있습니다."),
+    ONLY_RUNNER_CAN_BE_ARRESTED(HttpStatus.BAD_REQUEST, "도둑만을 체포 가능", "도둑 팀만 체포될 수 있습니다."),
+    ONLY_RUNNER_CAN_ESCAPE(HttpStatus.BAD_REQUEST, "도둑만 탈옥 가능", "도둑 팀만 탈옥할 수 있습니다."),
     ALREADY_ARRESTED(HttpStatus.BAD_REQUEST, "이미 체포됨", "이미 수감된 도둑입니다."),
     NOT_JAILED(HttpStatus.BAD_REQUEST, "수감되지 않음", "수감된 상태에서만 탈옥할 수 있습니다."),
-    POLICE_WAITING_TIME(HttpStatus.BAD_REQUEST, "경찰 대기 시간", "경찰은 대기 시간 동안 도둑을 체포할 수 없습니다."),
+    CHASER_WAITING_TIME(HttpStatus.BAD_REQUEST, "경찰 대기 시간", "경찰은 대기 시간 동안 도둑을 체포할 수 없습니다."),
     CANNOT_KICK_YOURSELF(HttpStatus.BAD_REQUEST, "자기 자신 강퇴 불가", "방장은 자기 자신을 강퇴할 수 없습니다.");
 
     private final HttpStatus httpStatus;

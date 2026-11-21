@@ -127,13 +127,13 @@ public class SystemService {
             throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
         }
         if (!police.isPolice()) {
-            throw new ApplicationException(GameParticipantException.ONLY_POLICE_CAN_ARREST);
+            throw new ApplicationException(GameParticipantException.ONLY_CHASER_CAN_ARREST);
         }
         if (police.isPoliceWaiting()) {
-            throw new ApplicationException(GameParticipantException.POLICE_WAITING_TIME);
+            throw new ApplicationException(GameParticipantException.CHASER_WAITING_TIME);
         }
         if (!robber.isRobber()) {
-            throw new ApplicationException(GameParticipantException.ONLY_ROBBER_CAN_BE_ARRESTED);
+            throw new ApplicationException(GameParticipantException.ONLY_RUNNER_CAN_BE_ARRESTED);
         }
         if (!robber.isInGame(game.getId())) {
             throw new ApplicationException(GameParticipantException.PARTICIPANT_GAME_MISMATCH);
@@ -149,7 +149,7 @@ public class SystemService {
         }
         gameRulePolicy.validateForceArrest(game);
         if (!robber.isRobber()) {
-            throw new ApplicationException(GameParticipantException.ONLY_ROBBER_CAN_BE_ARRESTED);
+            throw new ApplicationException(GameParticipantException.ONLY_RUNNER_CAN_BE_ARRESTED);
         }
         if (robber.isJailed()) {
             throw new ApplicationException(GameParticipantException.ALREADY_ARRESTED);

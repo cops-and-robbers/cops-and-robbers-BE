@@ -19,7 +19,7 @@ public record GameSettingsUpdateCommand(
             throw new ApplicationException(GameException.INVALID_LOCATION_INTERVAL);
         }
         if (chaserWaitMinutes >= roundDurationMinutes) {
-            throw new ApplicationException(GameException.INVALID_POLICE_WAIT_TIME);
+            throw new ApplicationException(GameException.INVALID_CHASER_WAIT_TIME);
         }
     }
 

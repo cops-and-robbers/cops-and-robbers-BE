@@ -32,7 +32,7 @@ public class RunnerLocationService {
                 .orElseThrow(() -> new ApplicationException(GameParticipantException.NOT_A_PARTICIPANT));
 
         if (participant.team() != Team.ROBBER) {
-            throw new ApplicationException(GameParticipantException.NOT_ROBBER_TEAM);
+            throw new ApplicationException(GameParticipantException.NOT_RUNNER_TEAM);
         }
 
         SystemEventData.RunnerLocation location =
