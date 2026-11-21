@@ -75,8 +75,8 @@ public class PingPublisher {
 
     private RedisChannel channelFor(Team team) {
         return switch (team) {
-            case POLICE -> RedisChannel.PING_CHASER;
-            case ROBBER -> RedisChannel.PING_RUNNER;
+            case CHASER -> RedisChannel.PING_CHASER;
+            case RUNNER -> RedisChannel.PING_RUNNER;
         };
     }
 }

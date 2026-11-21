@@ -42,10 +42,10 @@ public sealed interface LobbyEventData permits
         }
     }
 
-    record LobbyTeamUpdateData(LobbyParticipantInfo participant, int policeCount,
-                               int robberCount) implements LobbyEventData {
-        public static LobbyTeamUpdateData of(GameParticipant participant, int policeCount, int robberCount) {
-            return new LobbyTeamUpdateData(LobbyParticipantInfo.from(participant), policeCount, robberCount);
+    record LobbyTeamUpdateData(LobbyParticipantInfo participant, int chaserCount,
+                               int runnerCount) implements LobbyEventData {
+        public static LobbyTeamUpdateData of(GameParticipant participant, int chaserCount, int runnerCount) {
+            return new LobbyTeamUpdateData(LobbyParticipantInfo.from(participant), chaserCount, runnerCount);
         }
     }
 

@@ -67,10 +67,10 @@ public class GameFcmNotifier {
         GameFcmWording wording = GameFcmWording.of(findGameMode(event.gameId()));
         return switch (type) {
             case ARREST -> new FcmPayload(wording.arrestTitle(), wording.arrestBody(), data);
-            case ESCAPE -> new FcmPayload(wording.robber() + " 탈옥!", wording.robberSubject() + " 감옥에서 탈옥했습니다!", data);
+            case ESCAPE -> new FcmPayload(wording.runner() + " 탈옥!", wording.runnerSubject() + " 감옥에서 탈옥했습니다!", data);
             case GAME_OVER -> new FcmPayload("게임 종료", "게임이 종료되었습니다. 결과를 확인하세요!", data);
-            case RUNNER_LOCATION_REVEAL -> new FcmPayload(wording.robber() + " 위치 공개!", wording.robber() + "의 현재 위치가 공개되었습니다!", data);
-            case CHASER_MOVE_START -> new FcmPayload(wording.police() + " 이동 시작!", wording.policeSubject() + " 이동을 시작했습니다!", data);
+            case RUNNER_LOCATION_REVEAL -> new FcmPayload(wording.runner() + " 위치 공개!", wording.runner() + "의 현재 위치가 공개되었습니다!", data);
+            case CHASER_MOVE_START -> new FcmPayload(wording.chaser() + " 이동 시작!", wording.chaserSubject() + " 이동을 시작했습니다!", data);
             case PLAYER_LEFT -> {
                 SystemEventData.PlayerLeftData playerLeft = (SystemEventData.PlayerLeftData) event.data();
                 yield new FcmPayload(wording.teamName(playerLeft.team()) + " 참가자 퇴장", playerLeft.nickname() + "님이 게임에서 퇴장했습니다.", data);
@@ -116,7 +116,7 @@ public class GameFcmNotifier {
                 .toList();
     }
 
-    // 전체 채팅과 팀별 채팅의 스로틀 창을 분리한다 (ALL / TEAM:POLICE / TEAM:ROBBER)
+    // 전체 채팅과 팀별 채팅의 스로틀 창을 분리한다 (ALL / TEAM:CHASER / TEAM:RUNNER)
     private String debounceScope(ChatMessage message) {
         if (message.scope() == ChatScope.TEAM) {
             return ChatScope.TEAM.name() + ":" + message.sender().team().name();

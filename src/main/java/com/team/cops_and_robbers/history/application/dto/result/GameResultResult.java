@@ -24,8 +24,8 @@ public record GameResultResult(
                 gameResult.getDurationSeconds(),
                 gameResult.getTotalArrestCount(),
                 remaining,
-                findMvp(mvps, Team.POLICE),
-                findMvp(mvps, Team.ROBBER)
+                findMvp(mvps, Team.CHASER),
+                findMvp(mvps, Team.RUNNER)
         );
     }
 

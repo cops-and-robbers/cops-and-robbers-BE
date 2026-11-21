@@ -46,7 +46,7 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
     private AdminGameHistoryService adminGameHistoryService;
 
     private GameResult createGameResult(Long gameId, Long id) {
-        return prepare(GameResultFixture.POLICE_WIN_RESULT(gameId), id);
+        return prepare(GameResultFixture.CHASER_WIN_RESULT(gameId), id);
     }
 
     private GameResult prepare(GameResult gameResult, Long id) {
@@ -166,7 +166,7 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
             AdminGameHistoryListCommand command = new AdminGameHistoryListCommand(
                     0, 10, null, null, SortDirection.DESC);
 
-            GameResult polygonResult = prepare(GameResultFixture.POLICE_WIN_RESULT_POLYGON(1L), 10L);
+            GameResult polygonResult = prepare(GameResultFixture.CHASER_WIN_RESULT_POLYGON(1L), 10L);
             Page<GameResult> resultPage = new PageImpl<>(
                     List.of(polygonResult), PageRequest.of(0, 10), 1);
             given(gameResultRepository.findAllForAdmin(isNull(), isNull(), any())).willReturn(resultPage);
@@ -194,7 +194,7 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
             AdminGameHistoryListCommand command = new AdminGameHistoryListCommand(
                     0, 10, null, null, SortDirection.DESC);
 
-            GameResult withoutJailResult = prepare(GameResultFixture.POLICE_WIN_RESULT_WITHOUT_JAIL(1L), 10L);
+            GameResult withoutJailResult = prepare(GameResultFixture.CHASER_WIN_RESULT_WITHOUT_JAIL(1L), 10L);
             Page<GameResult> resultPage = new PageImpl<>(
                     List.of(withoutJailResult), PageRequest.of(0, 10), 1);
             given(gameResultRepository.findAllForAdmin(isNull(), isNull(), any())).willReturn(resultPage);
@@ -296,7 +296,7 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
             GameResult gameResult2 = createGameResult(2L, 11L);
 
             GameResultParticipant participant =
-                    GameResultParticipantFixture.POLICE_PARTICIPANT(gameResult1, 100L, "player1");
+                    GameResultParticipantFixture.CHASER_PARTICIPANT(gameResult1, 100L, "player1");
             setId(participant, 1000L);
 
             AdminGameHistoryResult history1 = AdminGameHistoryResult.from(gameResult1);
@@ -315,7 +315,7 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
                 softly.assertThat(result).hasSize(2);
                 softly.assertThat(result.get(history1)).hasSize(1);
                 softly.assertThat(result.get(history1).get(0).nickname()).isEqualTo("player1");
-                softly.assertThat(result.get(history1).get(0).team()).isEqualTo(Team.POLICE);
+                softly.assertThat(result.get(history1).get(0).team()).isEqualTo(Team.CHASER);
                 softly.assertThat(result.get(history2)).isEmpty();
             });
         }
@@ -346,10 +346,10 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
             GameResult gameResult = createGameResult(1L, 10L);
 
             GameResultParticipant stayed =
-                    GameResultParticipantFixture.POLICE_PARTICIPANT(gameResult, 100L, "police1");
+                    GameResultParticipantFixture.CHASER_PARTICIPANT(gameResult, 100L, "chaser1");
             setId(stayed, 1000L);
             GameResultParticipant left =
-                    GameResultParticipantFixture.POLICE_PARTICIPANT(gameResult, 101L, "police2");
+                    GameResultParticipantFixture.CHASER_PARTICIPANT(gameResult, 101L, "chaser2");
             setId(left, 1001L);
             left.markLeft(LocalDateTime.now());
 
@@ -375,7 +375,7 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
             GameResult gameResult = createGameResult(1L, 10L);
 
             GameResultParticipant withdrawn =
-                    GameResultParticipantFixture.POLICE_PARTICIPANT(gameResult, null, User.UNKNOWN_NICKNAME);
+                    GameResultParticipantFixture.CHASER_PARTICIPANT(gameResult, null, User.UNKNOWN_NICKNAME);
             setId(withdrawn, 1000L);
 
             AdminGameHistoryResult history = AdminGameHistoryResult.from(gameResult);
@@ -400,10 +400,10 @@ class AdminGameHistoryServiceTest extends ServiceUnitTest {
             GameResult gameResult = createGameResult(1L, 10L);
 
             GameResultParticipant participant1 =
-                    GameResultParticipantFixture.POLICE_PARTICIPANT(gameResult, 100L, "police1");
+                    GameResultParticipantFixture.CHASER_PARTICIPANT(gameResult, 100L, "chaser1");
             setId(participant1, 1000L);
             GameResultParticipant participant2 =
-                    GameResultParticipantFixture.ROBBER_PARTICIPANT(gameResult, 101L, "robber1");
+                    GameResultParticipantFixture.RUNNER_PARTICIPANT(gameResult, 101L, "runner1");
             setId(participant2, 1001L);
 
             AdminGameHistoryResult history = AdminGameHistoryResult.from(gameResult);

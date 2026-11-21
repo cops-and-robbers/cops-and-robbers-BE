@@ -93,10 +93,10 @@ public class GameResultService {
      * 잡힌 도둑의 잡힌 횟수를 1 올립니다.
      */
     @Transactional(propagation = Propagation.MANDATORY)
-    public void recordArrested(Long gameId, Long robberUserId) {
+    public void recordArrested(Long gameId, Long runnerUserId) {
         findInProgressResult(gameId)
                 .flatMap(result -> gameResultParticipantRepository
-                        .findByGameResultIdAndUserIdAndLeftAtIsNull(result.getId(), robberUserId))
+                        .findByGameResultIdAndUserIdAndLeftAtIsNull(result.getId(), runnerUserId))
                 .ifPresent(GameResultParticipant::incrementArrestedCount);
     }
 
@@ -143,12 +143,12 @@ public class GameResultService {
         markTeamMvps(snapshots, result);
 
         int totalChaser = gameParticipantRepository.countByGameIdAndTeam(
-                game.getId(), Team.POLICE
+                game.getId(), Team.CHASER
         );
         int totalRunner = gameParticipantRepository.countByGameIdAndTeam(
-                game.getId(), Team.ROBBER
+                game.getId(), Team.RUNNER
         );
-        int jailedCountAtEnd = gameParticipantRepository.countByGameIdAndRobberStatus(
+        int jailedCountAtEnd = gameParticipantRepository.countByGameIdAndRunnerStatus(
                 game.getId(), ParticipantStatus.JAILED
         );
 

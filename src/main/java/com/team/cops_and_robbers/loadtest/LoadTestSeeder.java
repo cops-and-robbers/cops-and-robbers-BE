@@ -97,9 +97,9 @@ public class LoadTestSeeder {
 
         List<PlayerCredential> players = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
-            Team team = (i % 2 == 0) ? Team.POLICE : Team.ROBBER;
+            Team team = (i % 2 == 0) ? Team.CHASER : Team.RUNNER;
             String socialId = SOCIAL_ID_PREFIX + (userOffset + i);
-            String nickname = roomLabel + "-" + (team == Team.POLICE ? "P" : "R") + (i / 2 + 1);
+            String nickname = roomLabel + "-" + (team == Team.CHASER ? "P" : "R") + (i / 2 + 1);
 
             User user = createUser(socialId, nickname);
             String accessToken = issueTokens(user);

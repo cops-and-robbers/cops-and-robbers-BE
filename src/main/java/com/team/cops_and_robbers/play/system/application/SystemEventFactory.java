@@ -23,13 +23,13 @@ public class SystemEventFactory {
         return SystemEvent.of(gameId, SystemEventType.RUNNER_LOCATION_REVEAL, data);
     }
 
-    public SystemEvent createArrestEvent(Long gameId, GameParticipant police, GameParticipant robber, int remainingRunners) {
-        SystemEventData.ArrestData data = SystemEventData.ArrestData.of(police, robber, remainingRunners);
+    public SystemEvent createArrestEvent(Long gameId, GameParticipant chaser, GameParticipant runner, int remainingRunners) {
+        SystemEventData.ArrestData data = SystemEventData.ArrestData.of(chaser, runner, remainingRunners);
         return SystemEvent.of(gameId, SystemEventType.ARREST, data);
     }
 
-    public SystemEvent createForceArrestEvent(Long gameId, GameParticipant robber, int remainingRunners) {
-        SystemEventData.ArrestData data = SystemEventData.ArrestData.ofForced(robber, remainingRunners);
+    public SystemEvent createForceArrestEvent(Long gameId, GameParticipant runner, int remainingRunners) {
+        SystemEventData.ArrestData data = SystemEventData.ArrestData.ofForced(runner, remainingRunners);
         return SystemEvent.of(gameId, SystemEventType.ARREST, data);
     }
 

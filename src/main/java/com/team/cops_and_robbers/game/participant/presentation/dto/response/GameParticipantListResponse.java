@@ -7,9 +7,9 @@ import java.util.List;
 
 public record GameParticipantListResponse(
         @Schema(description = "경찰 참가자 목록")
-        List<InGameParticipantResponse> police,
+        List<InGameParticipantResponse> chasers,
         @Schema(description = "도둑 참가자 목록")
-        List<InGameParticipantResponse> robbers
+        List<InGameParticipantResponse> runners
 ) {
     @Schema(name = "InGameParticipantResponse", description = "인게임 참가자 정보")
     public record InGameParticipantResponse(
@@ -22,12 +22,12 @@ public record GameParticipantListResponse(
     ) {}
 
     public static GameParticipantListResponse from(GameParticipantListResult result) {
-        List<InGameParticipantResponse> police = result.police().stream()
+        List<InGameParticipantResponse> chasers = result.chasers().stream()
                 .map(p -> new InGameParticipantResponse(p.participantId(), p.nickname(), p.status()))
                 .toList();
-        List<InGameParticipantResponse> robbers = result.robbers().stream()
+        List<InGameParticipantResponse> runners = result.runners().stream()
                 .map(p -> new InGameParticipantResponse(p.participantId(), p.nickname(), p.status()))
                 .toList();
-        return new GameParticipantListResponse(police, robbers);
+        return new GameParticipantListResponse(chasers, runners);
     }
 }

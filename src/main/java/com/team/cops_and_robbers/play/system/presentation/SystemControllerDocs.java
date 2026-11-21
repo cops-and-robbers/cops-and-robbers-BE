@@ -56,7 +56,7 @@ public interface SystemControllerDocs {
                     - 이미 수감된 도둑은 체포 불가
                     - 이벤트 게임에서는 체포 불가
                     - 경찰 대기 시간 중에도 요청 가능
-                    - 경찰의 체포 수는 올라가지 않고, ARREST 이벤트의 police 가 null 로 전송됨
+                    - 경찰의 체포 수는 올라가지 않고, ARREST 이벤트의 chaser 가 null 로 전송됨
                     """
     )
     @ApiErrorCode(value = GameException.class, codes = {"GAME_NOT_IN_PROGRESS", "FORCE_ARREST_NOT_ALLOWED_IN_EVENT_GAME", "GAME_NOT_FOUND"})

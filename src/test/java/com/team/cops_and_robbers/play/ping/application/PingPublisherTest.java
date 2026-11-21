@@ -76,7 +76,7 @@ class PingPublisherTest extends ServiceUnitTest {
             // given
             PingCommand command = new PingCommand(GAME_ID, PARTICIPANT_ID, PingType.FOUND, OUTSIDE_LAT, OUTSIDE_LON);
             given(inGameParticipantCacheRepository.findByParticipantId(GAME_ID, PARTICIPANT_ID))
-                    .willReturn(Optional.of(cacheOf(Team.POLICE)));
+                    .willReturn(Optional.of(cacheOf(Team.CHASER)));
             given(gameAreaService.isInsidePlayground(GAME_ID, OUTSIDE_LON, OUTSIDE_LAT))
                     .willReturn(false);
 
@@ -97,7 +97,7 @@ class PingPublisherTest extends ServiceUnitTest {
             // given
             PingCommand command = commandInsideZone(PARTICIPANT_ID);
             given(inGameParticipantCacheRepository.findByParticipantId(GAME_ID, PARTICIPANT_ID))
-                    .willReturn(Optional.of(cacheOf(Team.POLICE)));
+                    .willReturn(Optional.of(cacheOf(Team.CHASER)));
             given(gameAreaService.isInsidePlayground(GAME_ID, INSIDE_LON, INSIDE_LAT))
                     .willReturn(true);
 
@@ -113,7 +113,7 @@ class PingPublisherTest extends ServiceUnitTest {
             // given
             PingCommand command = commandInsideZone(PARTICIPANT_ID);
             given(inGameParticipantCacheRepository.findByParticipantId(GAME_ID, PARTICIPANT_ID))
-                    .willReturn(Optional.of(cacheOf(Team.ROBBER)));
+                    .willReturn(Optional.of(cacheOf(Team.RUNNER)));
             given(gameAreaService.isInsidePlayground(GAME_ID, INSIDE_LON, INSIDE_LAT))
                     .willReturn(true);
 

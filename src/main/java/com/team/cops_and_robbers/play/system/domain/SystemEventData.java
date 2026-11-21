@@ -43,14 +43,14 @@ public sealed interface SystemEventData permits
         }
     }
 
-    record ArrestData(SystemParticipantInfo police, SystemParticipantInfo robber,
+    record ArrestData(SystemParticipantInfo chaser, SystemParticipantInfo runner,
                       int remainingRunners) implements SystemEventData {
-        public static ArrestData of(GameParticipant police, GameParticipant robber, int remainingRunners) {
-            return new ArrestData(SystemParticipantInfo.from(police), SystemParticipantInfo.from(robber), remainingRunners);
+        public static ArrestData of(GameParticipant chaser, GameParticipant runner, int remainingRunners) {
+            return new ArrestData(SystemParticipantInfo.from(chaser), SystemParticipantInfo.from(runner), remainingRunners);
         }
 
-        public static ArrestData ofForced(GameParticipant robber, int remainingRunners) {
-            return new ArrestData(null, SystemParticipantInfo.from(robber), remainingRunners);
+        public static ArrestData ofForced(GameParticipant runner, int remainingRunners) {
+            return new ArrestData(null, SystemParticipantInfo.from(runner), remainingRunners);
         }
     }
 

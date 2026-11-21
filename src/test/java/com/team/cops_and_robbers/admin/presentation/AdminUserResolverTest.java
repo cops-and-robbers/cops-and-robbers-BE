@@ -215,8 +215,8 @@ class AdminUserResolverTest extends ControllerTest {
             // given
             User user = givenUser("radioUser");
             Game game = gameRepository.save(GameFixture.FINISHED_GAME());
-            givenRadioUsage(gameResultRepository.save(GameResultFixture.POLICE_WIN_RESULT(game.getId())), user, 60);
-            givenRadioUsage(gameResultRepository.save(GameResultFixture.POLICE_WIN_RESULT(game.getId())), user, 90);
+            givenRadioUsage(gameResultRepository.save(GameResultFixture.CHASER_WIN_RESULT(game.getId())), user, 60);
+            givenRadioUsage(gameResultRepository.save(GameResultFixture.CHASER_WIN_RESULT(game.getId())), user, 90);
 
             // when
             ExtractableResponse<Response> response = executeQuery(
@@ -248,7 +248,7 @@ class AdminUserResolverTest extends ControllerTest {
         }
 
         private void givenRadioUsage(GameResult gameResult, User user, int seconds) {
-            GameResultParticipant participant = GameResultParticipantFixture.POLICE_PARTICIPANT(
+            GameResultParticipant participant = GameResultParticipantFixture.CHASER_PARTICIPANT(
                     gameResult, user.getId(), user.getNickname());
             participant.accumulateRadioSeconds(GameResultFixture.STARTED_AT, Duration.ofMinutes(2));
             participant.accumulateRadioSeconds(GameResultFixture.STARTED_AT.plusSeconds(seconds), Duration.ofMinutes(2));
@@ -265,8 +265,8 @@ class AdminUserResolverTest extends ControllerTest {
             // given
             User user = givenUser("countryUser");
             Game game = gameRepository.save(GameFixture.FINISHED_GAME());
-            givenPlayed(gameResultRepository.save(GameResultFixture.POLICE_WIN_RESULT(game.getId())), user);
-            givenPlayed(gameResultRepository.save(GameResultFixture.ROBBER_WIN_RESULT(game.getId())), user);
+            givenPlayed(gameResultRepository.save(GameResultFixture.CHASER_WIN_RESULT(game.getId())), user);
+            givenPlayed(gameResultRepository.save(GameResultFixture.RUNNER_WIN_RESULT(game.getId())), user);
 
             // when
             ExtractableResponse<Response> response = executeQuery(
@@ -302,7 +302,7 @@ class AdminUserResolverTest extends ControllerTest {
         }
 
         private void givenPlayed(GameResult gameResult, User user) {
-            gameResultParticipantRepository.save(GameResultParticipantFixture.POLICE_PARTICIPANT(
+            gameResultParticipantRepository.save(GameResultParticipantFixture.CHASER_PARTICIPANT(
                     gameResult, user.getId(), user.getNickname()));
         }
     }
@@ -318,7 +318,7 @@ class AdminUserResolverTest extends ControllerTest {
             Game game = gameRepository.save(GameFixture.WAITING_GAME());
             GameResult gameResult = givenCompletedResult(game.getId(), user.getId());
             gameResultParticipantRepository.save(
-                    GameResultParticipantFixture.POLICE_PARTICIPANT(gameResult, user.getId(), "leftUser"));
+                    GameResultParticipantFixture.CHASER_PARTICIPANT(gameResult, user.getId(), "leftUser"));
 
             // when
             ExtractableResponse<Response> response = executeQuery(
@@ -345,13 +345,13 @@ class AdminUserResolverTest extends ControllerTest {
             User user = givenUser("rejoinUser");
             Game game = gameRepository.save(GameFixture.WAITING_GAME());
             GameResult gameResult = givenCompletedResult(game.getId(), null);
-            GameResultParticipant beforeLeft = GameResultParticipantFixture.POLICE_PARTICIPANT(
+            GameResultParticipant beforeLeft = GameResultParticipantFixture.CHASER_PARTICIPANT(
                     gameResult, user.getId(), "rejoinUser");
             beforeLeft.incrementArrestCount();
             beforeLeft.markLeft(LocalDateTime.now());
             gameResultParticipantRepository.save(beforeLeft);
             gameResultParticipantRepository.save(
-                    GameResultParticipantFixture.POLICE_PARTICIPANT(gameResult, user.getId(), "rejoinUser"));
+                    GameResultParticipantFixture.CHASER_PARTICIPANT(gameResult, user.getId(), "rejoinUser"));
 
             // when
             ExtractableResponse<Response> response = executeQuery(
@@ -372,11 +372,11 @@ class AdminUserResolverTest extends ControllerTest {
             // given
             User user = givenUser("playingUser");
             Game game = gameRepository.save(GameFixture.WAITING_GAME());
-            GameResult inProgress = GameResultFixture.POLICE_WIN_RESULT(game.getId());
+            GameResult inProgress = GameResultFixture.CHASER_WIN_RESULT(game.getId());
             ReflectionTestUtils.setField(inProgress, "endReason", null);
             gameResultRepository.save(inProgress);
             gameResultParticipantRepository.save(
-                    GameResultParticipantFixture.POLICE_PARTICIPANT(inProgress, user.getId(), "playingUser"));
+                    GameResultParticipantFixture.CHASER_PARTICIPANT(inProgress, user.getId(), "playingUser"));
 
             // when
             ExtractableResponse<Response> response = executeQuery(
@@ -397,7 +397,7 @@ class AdminUserResolverTest extends ControllerTest {
             GameResult third = givenCompletedResult(game.getId(), null);
             for (GameResult gameResult : List.of(first, second, third)) {
                 gameResultParticipantRepository.save(
-                        GameResultParticipantFixture.ROBBER_PARTICIPANT(gameResult, user.getId(), "manyGamesUser"));
+                        GameResultParticipantFixture.RUNNER_PARTICIPANT(gameResult, user.getId(), "manyGamesUser"));
             }
 
             // when
@@ -428,7 +428,7 @@ class AdminUserResolverTest extends ControllerTest {
         }
 
         private GameResult givenCompletedResult(Long gameId, Long hostUserId) {
-            GameResult gameResult = GameResultFixture.POLICE_WIN_RESULT(gameId);
+            GameResult gameResult = GameResultFixture.CHASER_WIN_RESULT(gameId);
             ReflectionTestUtils.setField(gameResult, "hostUserId", hostUserId);
             ReflectionTestUtils.setField(gameResult, "eventGame", false);
             return gameResultRepository.save(gameResult);

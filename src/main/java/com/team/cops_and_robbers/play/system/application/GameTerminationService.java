@@ -39,7 +39,7 @@ public class GameTerminationService {
             log.info("[GameTermination] Already finished game (GameId: {}, request: ALL_ARRESTED)", gameId);
             return;
         }
-        endGame(game, Team.POLICE, GameEndReason.ALL_ARRESTED);
+        endGame(game, Team.CHASER, GameEndReason.ALL_ARRESTED);
     }
 
     @Transactional
@@ -50,7 +50,7 @@ public class GameTerminationService {
             log.info("[GameTermination] Already finished game (GameId: {}, request: TIME_OVER)", gameId);
             return;
         }
-        endGame(game, Team.ROBBER, GameEndReason.TIME_OVER);
+        endGame(game, Team.RUNNER, GameEndReason.TIME_OVER);
     }
 
     @Transactional
@@ -61,7 +61,7 @@ public class GameTerminationService {
             log.info("[GameTermination] Already finished game (GameId: {}, request: CHASER_FORFEITED)", gameId);
             return;
         }
-        endGame(game, Team.ROBBER, GameEndReason.CHASER_FORFEITED);
+        endGame(game, Team.RUNNER, GameEndReason.CHASER_FORFEITED);
     }
 
     @Transactional
@@ -72,7 +72,7 @@ public class GameTerminationService {
             log.info("[GameTermination] Already finished game (GameId: {}, request: RUNNER_FORFEITED)", gameId);
             return;
         }
-        endGame(game, Team.POLICE, GameEndReason.RUNNER_FORFEITED);
+        endGame(game, Team.CHASER, GameEndReason.RUNNER_FORFEITED);
     }
 
     private void endGame(Game game, Team winner, GameEndReason reason) {

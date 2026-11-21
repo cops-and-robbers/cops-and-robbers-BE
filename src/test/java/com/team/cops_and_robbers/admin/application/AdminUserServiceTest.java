@@ -390,13 +390,13 @@ class AdminUserServiceTest extends ServiceUnitTest {
         @Test
         void 끝난_게임_기록을_이력으로_변환해_반환한다() {
             // given
-            GameResult gameResult = GameResultFixture.POLICE_WIN_RESULT(10L);
+            GameResult gameResult = GameResultFixture.CHASER_WIN_RESULT(10L);
             setId(gameResult, 1L);
             ReflectionTestUtils.setField(gameResult, "hostUserId", 1L);
             ReflectionTestUtils.setField(gameResult, "eventGame", false);
 
             GameResultParticipant participant =
-                    GameResultParticipantFixture.POLICE_PARTICIPANT(gameResult, 1L, "user1");
+                    GameResultParticipantFixture.CHASER_PARTICIPANT(gameResult, 1L, "user1");
             participant.incrementArrestCount();
             participant.markMvp();
 
@@ -412,8 +412,8 @@ class AdminUserServiceTest extends ServiceUnitTest {
                 softly.assertThat(result.get(0).gameResultId()).isEqualTo(1L);
                 softly.assertThat(result.get(0).gameId()).isEqualTo(10L);
                 softly.assertThat(result.get(0).endedAt()).isNotNull();
-                softly.assertThat(result.get(0).team()).isEqualTo(Team.POLICE);
-                softly.assertThat(result.get(0).winnerTeam()).isEqualTo(Team.POLICE);
+                softly.assertThat(result.get(0).team()).isEqualTo(Team.CHASER);
+                softly.assertThat(result.get(0).winnerTeam()).isEqualTo(Team.CHASER);
                 softly.assertThat(result.get(0).endReason()).isEqualTo(GameEndReason.ALL_ARRESTED);
                 softly.assertThat(result.get(0).durationSeconds()).isEqualTo(300);
                 softly.assertThat(result.get(0).arrestCount()).isEqualTo(1);
@@ -428,16 +428,16 @@ class AdminUserServiceTest extends ServiceUnitTest {
         @Test
         void 방장_정보가_없거나_다른_유저면_방장이_아니다() {
             // given
-            GameResult noHostResult = GameResultFixture.POLICE_WIN_RESULT(10L);
+            GameResult noHostResult = GameResultFixture.CHASER_WIN_RESULT(10L);
             setId(noHostResult, 1L);
-            GameResult otherHostResult = GameResultFixture.ROBBER_WIN_RESULT(11L);
+            GameResult otherHostResult = GameResultFixture.RUNNER_WIN_RESULT(11L);
             setId(otherHostResult, 2L);
             ReflectionTestUtils.setField(otherHostResult, "hostUserId", 2L);
 
             given(gameResultParticipantRepository.findLatestCompletedByUserId(eq(1L), any()))
                     .willReturn(List.of(
-                            GameResultParticipantFixture.POLICE_PARTICIPANT(noHostResult, 1L, "user1"),
-                            GameResultParticipantFixture.ROBBER_PARTICIPANT(otherHostResult, 1L, "user1")
+                            GameResultParticipantFixture.CHASER_PARTICIPANT(noHostResult, 1L, "user1"),
+                            GameResultParticipantFixture.RUNNER_PARTICIPANT(otherHostResult, 1L, "user1")
                     ));
 
             // when
@@ -457,7 +457,7 @@ class AdminUserServiceTest extends ServiceUnitTest {
             setId(legacyResult, 1L);
 
             given(gameResultParticipantRepository.findLatestCompletedByUserId(eq(1L), any()))
-                    .willReturn(List.of(GameResultParticipantFixture.POLICE_PARTICIPANT(legacyResult, 1L, "user1")));
+                    .willReturn(List.of(GameResultParticipantFixture.CHASER_PARTICIPANT(legacyResult, 1L, "user1")));
 
             // when
             List<UserGameHistoryResult> result = adminUserService.getGameHistories(1L, 20);
@@ -472,9 +472,9 @@ class AdminUserServiceTest extends ServiceUnitTest {
         @Test
         void 게임_중_나간_기록은_퇴장_시각이_있다() {
             // given
-            GameResult gameResult = GameResultFixture.POLICE_WIN_RESULT(10L);
+            GameResult gameResult = GameResultFixture.CHASER_WIN_RESULT(10L);
             setId(gameResult, 1L);
-            GameResultParticipant left = GameResultParticipantFixture.ROBBER_PARTICIPANT(gameResult, 1L, "user1");
+            GameResultParticipant left = GameResultParticipantFixture.RUNNER_PARTICIPANT(gameResult, 1L, "user1");
             left.markLeft(LocalDateTime.now());
 
             given(gameResultParticipantRepository.findLatestCompletedByUserId(eq(1L), any()))

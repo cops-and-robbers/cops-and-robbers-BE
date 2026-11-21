@@ -86,7 +86,7 @@ class GameScheduleQueueTest {
 
         @Test
         void 첫_공개_시각이_미래면_이벤트가_등록된다() {
-            // given: 방금 시작 (policeWait=3 + interval=5 → 8분 후 첫 공개)
+            // given: 방금 시작 (chaserWait=3 + interval=5 → 8분 후 첫 공개)
             Game game = IN_PROGRESS_GAME(FIXED_NOW);
 
             // when

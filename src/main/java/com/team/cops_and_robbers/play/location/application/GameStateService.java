@@ -92,7 +92,7 @@ public class GameStateService {
      */
     private Set<Long> extractAliveRunnerIds(List<GameParticipant> participants) {
         return participants.stream()
-                .filter(p -> p.isRobber() && !p.isJailed())
+                .filter(p -> p.isRunner() && !p.isJailed())
                 .map(GameParticipant::getId)
                 .collect(Collectors.toSet());
     }

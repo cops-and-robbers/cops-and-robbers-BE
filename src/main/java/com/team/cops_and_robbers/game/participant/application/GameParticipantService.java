@@ -187,11 +187,11 @@ public class GameParticipantService {
     }
 
     private boolean tryEndGameByForfeit(Game game, Long gameId, Team team, ParticipantStatus status) {
-        if (team == Team.POLICE && game.rules().endsWhenPoliceLeave() && isLastPolice(gameId)) {
+        if (team == Team.CHASER && game.rules().endsWhenChaserLeave() && isLastChaser(gameId)) {
             gameTerminationService.endGameByChaserForfeited(gameId);
             return true;
         }
-        if (team == Team.ROBBER && status == ParticipantStatus.ALIVE && isLastAliveRobber(gameId)) {
+        if (team == Team.RUNNER && status == ParticipantStatus.ALIVE && isLastAliveRunner(gameId)) {
             gameTerminationService.endGameByRunnerForfeited(gameId);
             return true;
         }
@@ -203,12 +203,12 @@ public class GameParticipantService {
         gameParticipantRepository.delete(participant);
     }
 
-    private boolean isLastPolice(Long gameId) {
-        return gameParticipantRepository.countByGameIdAndTeam(gameId, Team.POLICE) == NO_PARTICIPANTS;
+    private boolean isLastChaser(Long gameId) {
+        return gameParticipantRepository.countByGameIdAndTeam(gameId, Team.CHASER) == NO_PARTICIPANTS;
     }
 
-    private boolean isLastAliveRobber(Long gameId) {
-        return gameParticipantRepository.countByGameIdAndRobberStatus(gameId, ParticipantStatus.ALIVE) == NO_PARTICIPANTS;
+    private boolean isLastAliveRunner(Long gameId) {
+        return gameParticipantRepository.countByGameIdAndRunnerStatus(gameId, ParticipantStatus.ALIVE) == NO_PARTICIPANTS;
     }
 
     public GameParticipantListResult getParticipantList(GameParticipantListCommand command) {

@@ -246,7 +246,7 @@ class AdminGameServiceTest extends ServiceUnitTest {
         @Test
         void 결과가_있는_게임만_결과가_담긴다() {
             // given
-            GameResult gameResult = GameResultFixture.POLICE_WIN_RESULT(1L);
+            GameResult gameResult = GameResultFixture.CHASER_WIN_RESULT(1L);
 
             AdminGameResult adminGame1 = AdminGameResult.from(game1);
             AdminGameResult adminGame2 = AdminGameResult.from(game2);
@@ -270,9 +270,9 @@ class AdminGameServiceTest extends ServiceUnitTest {
         @Test
         void 같은_방의_여러_라운드가_오래된_순으로_모두_담긴다() {
             // given
-            GameResult round1 = GameResultFixture.POLICE_WIN_RESULT(1L);
+            GameResult round1 = GameResultFixture.CHASER_WIN_RESULT(1L);
             setId(round1, 100L);
-            GameResult round2 = GameResultFixture.ROBBER_WIN_RESULT(1L);
+            GameResult round2 = GameResultFixture.RUNNER_WIN_RESULT(1L);
             setId(round2, 101L);
 
             AdminGameResult adminGame1 = AdminGameResult.from(game1);
@@ -287,7 +287,7 @@ class AdminGameServiceTest extends ServiceUnitTest {
             // then
             assertThat(result.get(adminGame1))
                     .extracting(AdminGameDetailResult::winnerTeam)
-                    .containsExactly(Team.POLICE, Team.ROBBER);
+                    .containsExactly(Team.CHASER, Team.RUNNER);
         }
 
         @Test
@@ -312,7 +312,7 @@ class AdminGameServiceTest extends ServiceUnitTest {
         @Test
         void 결과가_있는_게임만_결과_맵에_포함된다() {
             // given
-            GameResult gameResult = GameResultFixture.POLICE_WIN_RESULT(1L);
+            GameResult gameResult = GameResultFixture.CHASER_WIN_RESULT(1L);
 
             AdminGameResult adminGame1 = AdminGameResult.from(game1);
             AdminGameResult adminGame2 = AdminGameResult.from(game2);
@@ -336,9 +336,9 @@ class AdminGameServiceTest extends ServiceUnitTest {
         @Test
         void 여러_라운드를_돈_방은_마지막_라운드가_담긴다() {
             // given
-            GameResult round1 = GameResultFixture.POLICE_WIN_RESULT(1L);
+            GameResult round1 = GameResultFixture.CHASER_WIN_RESULT(1L);
             setId(round1, 100L);
-            GameResult round2 = GameResultFixture.ROBBER_WIN_RESULT(1L);
+            GameResult round2 = GameResultFixture.RUNNER_WIN_RESULT(1L);
             setId(round2, 101L);
 
             AdminGameResult adminGame1 = AdminGameResult.from(game1);

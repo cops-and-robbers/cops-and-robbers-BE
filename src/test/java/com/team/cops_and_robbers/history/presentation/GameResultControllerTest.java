@@ -15,9 +15,9 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static com.team.cops_and_robbers.common.fixture.GameFixture.FINISHED_GAME;
-import static com.team.cops_and_robbers.common.fixture.GameResultFixture.POLICE_WIN_RESULT;
-import static com.team.cops_and_robbers.common.fixture.GameResultParticipantFixture.POLICE_PARTICIPANT;
-import static com.team.cops_and_robbers.common.fixture.GameResultParticipantFixture.ROBBER_PARTICIPANT;
+import static com.team.cops_and_robbers.common.fixture.GameResultFixture.CHASER_WIN_RESULT;
+import static com.team.cops_and_robbers.common.fixture.GameResultParticipantFixture.CHASER_PARTICIPANT;
+import static com.team.cops_and_robbers.common.fixture.GameResultParticipantFixture.RUNNER_PARTICIPANT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
@@ -42,8 +42,8 @@ class GameResultControllerTest extends ControllerTest {
         void 게임_결과_조회에_성공한다() {
             // given
             Game game = gameRepository.save(FINISHED_GAME());
-            givenPolice(game, user);
-            GameResult gameResult = gameResultRepository.save(POLICE_WIN_RESULT(game.getId()));
+            givenChaser(game, user);
+            GameResult gameResult = gameResultRepository.save(CHASER_WIN_RESULT(game.getId()));
 
             // when
             ExtractableResponse<Response> response = authenticated(accessToken)
@@ -66,14 +66,14 @@ class GameResultControllerTest extends ControllerTest {
         void 팀별_MVP_닉네임이_함께_내려온다() {
             // given
             Game game = gameRepository.save(FINISHED_GAME());
-            givenPolice(game, user);
-            GameResult gameResult = gameResultRepository.save(POLICE_WIN_RESULT(game.getId()));
+            givenChaser(game, user);
+            GameResult gameResult = gameResultRepository.save(CHASER_WIN_RESULT(game.getId()));
 
-            GameResultParticipant police = POLICE_PARTICIPANT(gameResult, user.getId(), "날쌘경찰");
-            police.markMvp();
-            GameResultParticipant robber = ROBBER_PARTICIPANT(gameResult, 999L, "빠른도둑");
-            robber.markMvp();
-            gameResultParticipantRepository.saveAll(List.of(police, robber));
+            GameResultParticipant chaser = CHASER_PARTICIPANT(gameResult, user.getId(), "날쌘경찰");
+            chaser.markMvp();
+            GameResultParticipant runner = RUNNER_PARTICIPANT(gameResult, 999L, "빠른도둑");
+            runner.markMvp();
+            gameResultParticipantRepository.saveAll(List.of(chaser, runner));
 
             // when
             ExtractableResponse<Response> response = authenticated(accessToken)
@@ -94,9 +94,9 @@ class GameResultControllerTest extends ControllerTest {
         void MVP가_없으면_null로_내려온다() {
             // given
             Game game = gameRepository.save(FINISHED_GAME());
-            givenPolice(game, user);
-            GameResult gameResult = gameResultRepository.save(POLICE_WIN_RESULT(game.getId()));
-            gameResultParticipantRepository.save(POLICE_PARTICIPANT(gameResult, user.getId(), "그냥경찰"));
+            givenChaser(game, user);
+            GameResult gameResult = gameResultRepository.save(CHASER_WIN_RESULT(game.getId()));
+            gameResultParticipantRepository.save(CHASER_PARTICIPANT(gameResult, user.getId(), "그냥경찰"));
 
             // when
             ExtractableResponse<Response> response = authenticated(accessToken)
@@ -117,7 +117,7 @@ class GameResultControllerTest extends ControllerTest {
         void 해당_게임의_참가자가_아니면_404_NotFound를_응답한다() {
             // given
             Game game = gameRepository.save(FINISHED_GAME());
-            GameResult gameResult = gameResultRepository.save(POLICE_WIN_RESULT(game.getId()));
+            GameResult gameResult = gameResultRepository.save(CHASER_WIN_RESULT(game.getId()));
 
             // when
             ExtractableResponse<Response> response = authenticated(accessToken)
@@ -147,7 +147,7 @@ class GameResultControllerTest extends ControllerTest {
         void 인증_토큰_없이_요청하면_401_Unauthorized를_응답한다() {
             // given
             Game game = gameRepository.save(FINISHED_GAME());
-            GameResult gameResult = gameResultRepository.save(POLICE_WIN_RESULT(game.getId()));
+            GameResult gameResult = gameResultRepository.save(CHASER_WIN_RESULT(game.getId()));
 
             // when
             ExtractableResponse<Response> response = unauthenticated()
@@ -171,11 +171,11 @@ class GameResultControllerTest extends ControllerTest {
         void MVP로_선정되면_isMvp가_true로_내려온다() {
             // given
             Game game = gameRepository.save(FINISHED_GAME());
-            givenPolice(game, user);
-            GameResult gameResult = gameResultRepository.save(POLICE_WIN_RESULT(game.getId()));
-            GameResultParticipant police = POLICE_PARTICIPANT(gameResult, user.getId(), "날쌘경찰");
-            police.markMvp();
-            gameResultParticipantRepository.save(police);
+            givenChaser(game, user);
+            GameResult gameResult = gameResultRepository.save(CHASER_WIN_RESULT(game.getId()));
+            GameResultParticipant chaser = CHASER_PARTICIPANT(gameResult, user.getId(), "날쌘경찰");
+            chaser.markMvp();
+            gameResultParticipantRepository.save(chaser);
 
             // when
             ExtractableResponse<Response> response = authenticated(accessToken)
@@ -196,9 +196,9 @@ class GameResultControllerTest extends ControllerTest {
         void MVP가_아니면_isMvp가_false로_내려온다() {
             // given
             Game game = gameRepository.save(FINISHED_GAME());
-            givenPolice(game, user);
-            GameResult gameResult = gameResultRepository.save(POLICE_WIN_RESULT(game.getId()));
-            gameResultParticipantRepository.save(POLICE_PARTICIPANT(gameResult, user.getId(), "그냥경찰"));
+            givenChaser(game, user);
+            GameResult gameResult = gameResultRepository.save(CHASER_WIN_RESULT(game.getId()));
+            gameResultParticipantRepository.save(CHASER_PARTICIPANT(gameResult, user.getId(), "그냥경찰"));
 
             // when
             ExtractableResponse<Response> response = authenticated(accessToken)

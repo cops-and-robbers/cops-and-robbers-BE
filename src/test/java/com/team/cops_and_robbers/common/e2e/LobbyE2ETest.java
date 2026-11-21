@@ -110,9 +110,9 @@ class LobbyE2ETest extends WebSocketE2ETest {
         // given
         LobbySetup setup = givenLobbySetup();
 
-        // when: ROBBER -> POLICE
+        // when: RUNNER -> CHASER
         authenticated(setup.guestToken())
-                .body(new TeamChangeRequest(Team.POLICE))
+                .body(new TeamChangeRequest(Team.CHASER))
                 .patch("/api/games/{gameId}/lobby/team", setup.game().getId())
                 .then()
                 .statusCode(204);

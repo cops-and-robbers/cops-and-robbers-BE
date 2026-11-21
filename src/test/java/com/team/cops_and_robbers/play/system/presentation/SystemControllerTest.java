@@ -31,26 +31,26 @@ class SystemControllerTest extends ControllerTest {
     private static final String FORCE_ARREST_URL = "/api/games/{gameId}/system/force-arrest";
     private static final String ESCAPE_URL = "/api/games/{gameId}/system/escape";
 
-    private User police;
-    private User robber;
+    private User chaser;
+    private User runner;
     private Game game;
-    private GameParticipant policeParticipant;
-    private GameParticipant robberParticipant;
-    private String policeToken;
-    private String robberToken;
+    private GameParticipant chaserParticipant;
+    private GameParticipant runnerParticipant;
+    private String chaserToken;
+    private String runnerToken;
 
     @BeforeEach
     void setUp() {
-        police = givenUser("police");
-        robber = givenUser("robber");
+        chaser = givenUser("chaser");
+        runner = givenUser("runner");
 
-        policeToken = givenAccessToken(police);
-        robberToken = givenAccessToken(robber);
+        chaserToken = givenAccessToken(chaser);
+        runnerToken = givenAccessToken(runner);
 
         game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
         gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(game));
-        policeParticipant = givenPolice(game, police);
-        robberParticipant = givenRobber(game, robber);
+        chaserParticipant = givenChaser(game, chaser);
+        runnerParticipant = givenRunner(game, runner);
     }
 
     @Nested
@@ -60,12 +60,12 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 도둑_체포_성공() {
             // given
-            User secondRobber = givenUser("robber2");
-            givenRobber(game, secondRobber);
-            ArrestRequest request = new ArrestRequest(robberParticipant.getId());
+            User secondRunner = givenUser("runner2");
+            givenRunner(game, secondRunner);
+            ArrestRequest request = new ArrestRequest(runnerParticipant.getId());
 
             // when
-            ExtractableResponse<Response> response = authenticated(policeToken)
+            ExtractableResponse<Response> response = authenticated(chaserToken)
                     .body(request)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
@@ -77,21 +77,21 @@ class SystemControllerTest extends ControllerTest {
             ArrestResponse result = response.as(ArrestResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-                softly.assertThat(result.runnerNickname()).isEqualTo(robber.getNickname());
+                softly.assertThat(result.runnerNickname()).isEqualTo(runner.getNickname());
                 softly.assertThat(result.remainingRunners()).isEqualTo(1);
 
-                GameParticipant jailedRobber = gameParticipantRepository.findById(robberParticipant.getId()).orElseThrow();
-                softly.assertThat(jailedRobber.isJailed()).isTrue();
+                GameParticipant jailedRunner = gameParticipantRepository.findById(runnerParticipant.getId()).orElseThrow();
+                softly.assertThat(jailedRunner.isJailed()).isTrue();
             });
         }
 
         @Test
         void 모든_도둑이_체포되면_게임이_종료되어_게임과_유저는_WAITING_상태가_되어야한다() {
             // given
-            ArrestRequest request = new ArrestRequest(robberParticipant.getId());
+            ArrestRequest request = new ArrestRequest(runnerParticipant.getId());
 
             // when
-            ExtractableResponse<Response> response = authenticated(policeToken)
+            ExtractableResponse<Response> response = authenticated(chaserToken)
                     .body(request)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
@@ -103,11 +103,11 @@ class SystemControllerTest extends ControllerTest {
             ArrestResponse result = response.as(ArrestResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-                softly.assertThat(result.runnerNickname()).isEqualTo(robber.getNickname());
+                softly.assertThat(result.runnerNickname()).isEqualTo(runner.getNickname());
                 softly.assertThat(result.remainingRunners()).isEqualTo(0);
 
-                GameParticipant jailedRobber = gameParticipantRepository.findById(robberParticipant.getId()).orElseThrow();
-                softly.assertThat(jailedRobber.isWaiting()).isTrue();
+                GameParticipant jailedRunner = gameParticipantRepository.findById(runnerParticipant.getId()).orElseThrow();
+                softly.assertThat(jailedRunner.isWaiting()).isTrue();
 
                 gameRepository.findById(game.getId()).orElseThrow();
                 softly.assertThat(game.getStatus() == GameStatus.WAITING);
@@ -121,14 +121,14 @@ class SystemControllerTest extends ControllerTest {
             // given
             Game tagGame = gameRepository.save(GameFixture.IN_PROGRESS_TAG_GAME());
             gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA_WITHOUT_JAIL(tagGame));
-            User tagPolice = givenUser("tagPolice");
-            User tagRobber = givenUser("tagRobber");
-            givenPolice(tagGame, tagPolice);
-            GameParticipant tagRobberParticipant = givenRobber(tagGame, tagRobber);
+            User tagChaser = givenUser("tagChaser");
+            User tagRunner = givenUser("tagRunner");
+            givenChaser(tagGame, tagChaser);
+            GameParticipant tagRunnerParticipant = givenRunner(tagGame, tagRunner);
 
             // when
-            ExtractableResponse<Response> response = authenticated(givenAccessToken(tagPolice))
-                    .body(new ArrestRequest(tagRobberParticipant.getId()))
+            ExtractableResponse<Response> response = authenticated(givenAccessToken(tagChaser))
+                    .body(new ArrestRequest(tagRunnerParticipant.getId()))
                     .pathParam(GAME_ID_PARAM, tagGame.getId())
                     .when()
                     .post(ARREST_URL)
@@ -150,13 +150,13 @@ class SystemControllerTest extends ControllerTest {
         void 게임이_진행_중이_아니면_체포할_수_없으며_400_BadRequest를_응답한다() {
             // given
             Game waitingGame = gameRepository.save(GameFixture.WAITING_GAME());
-            givenPolice(waitingGame, police);
-            GameParticipant waitingRobber = givenRobber(waitingGame, robber);
+            givenChaser(waitingGame, chaser);
+            GameParticipant waitingRunner = givenRunner(waitingGame, runner);
 
-            ArrestRequest request = new ArrestRequest(waitingRobber.getId());
+            ArrestRequest request = new ArrestRequest(waitingRunner.getId());
 
             // when
-            ExtractableResponse<Response> response = authenticated(policeToken)
+            ExtractableResponse<Response> response = authenticated(chaserToken)
                     .body(request)
                     .pathParam(GAME_ID_PARAM, waitingGame.getId())
                     .when()
@@ -171,10 +171,10 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 경찰이_아니면_체포할_수_없으며_400_BadRequest를_응답한다() {
             // given (도둑이 요청)
-            ArrestRequest request = new ArrestRequest(robberParticipant.getId());
+            ArrestRequest request = new ArrestRequest(runnerParticipant.getId());
 
             // when
-            ExtractableResponse<Response> response = authenticated(robberToken)
+            ExtractableResponse<Response> response = authenticated(runnerToken)
                     .body(request)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
@@ -189,13 +189,13 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 경찰이_대기_상태이면_체포할_수_없으며_400_BadRequest를_응답한다() {
             // given
-            policeParticipant.updateStatus(ParticipantStatus.CHASER_WAITING);
-            gameParticipantRepository.save(policeParticipant);
+            chaserParticipant.updateStatus(ParticipantStatus.CHASER_WAITING);
+            gameParticipantRepository.save(chaserParticipant);
 
-            ArrestRequest request = new ArrestRequest(robberParticipant.getId());
+            ArrestRequest request = new ArrestRequest(runnerParticipant.getId());
 
             // when
-            ExtractableResponse<Response> response = authenticated(policeToken)
+            ExtractableResponse<Response> response = authenticated(chaserToken)
                     .body(request)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
@@ -210,10 +210,10 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 대상이_도둑이_아니면_체포할_수_없으며_400_BadRequest를_응답한다() {
             // given (경찰을 체포 시도)
-            ArrestRequest request = new ArrestRequest(policeParticipant.getId());
+            ArrestRequest request = new ArrestRequest(chaserParticipant.getId());
 
             // when
-            ExtractableResponse<Response> response = authenticated(policeToken)
+            ExtractableResponse<Response> response = authenticated(chaserToken)
                     .body(request)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
@@ -228,13 +228,13 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 이미_체포된_도둑은_체포할_수_없으며_400_BadRequest를_응답한다() {
             // given
-            robberParticipant.updateStatus(ParticipantStatus.JAILED);
-            gameParticipantRepository.save(robberParticipant);
+            runnerParticipant.updateStatus(ParticipantStatus.JAILED);
+            gameParticipantRepository.save(runnerParticipant);
 
-            ArrestRequest request = new ArrestRequest(robberParticipant.getId());
+            ArrestRequest request = new ArrestRequest(runnerParticipant.getId());
 
             // when
-            ExtractableResponse<Response> response = authenticated(policeToken)
+            ExtractableResponse<Response> response = authenticated(chaserToken)
                     .body(request)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
@@ -251,12 +251,12 @@ class SystemControllerTest extends ControllerTest {
             // given
             Game otherGame = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
             User otherUser = givenUser("other");
-            GameParticipant otherRobberParticipant = givenRobber(otherGame, otherUser);
+            GameParticipant otherRunnerParticipant = givenRunner(otherGame, otherUser);
 
-            ArrestRequest request = new ArrestRequest(otherRobberParticipant.getId());
+            ArrestRequest request = new ArrestRequest(otherRunnerParticipant.getId());
 
             // when
-            ExtractableResponse<Response> response = authenticated(policeToken)
+            ExtractableResponse<Response> response = authenticated(chaserToken)
                     .body(request)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
@@ -271,7 +271,7 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 인증_토큰_없이_요청하면_401_Unauthorized를_응답한다() {
             // given
-            ArrestRequest request = new ArrestRequest(robberParticipant.getId());
+            ArrestRequest request = new ArrestRequest(runnerParticipant.getId());
 
             // when
             ExtractableResponse<Response> response = unauthenticated()
@@ -292,7 +292,7 @@ class SystemControllerTest extends ControllerTest {
             ArrestRequest request = new ArrestRequest(9999L); // 존재 X
 
             // when
-            ExtractableResponse<Response> response = authenticated(policeToken)
+            ExtractableResponse<Response> response = authenticated(chaserToken)
                     .body(request)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
@@ -312,11 +312,11 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 강제_체포_성공() {
             // given
-            User secondRobber = givenUser("robber2");
-            givenRobber(game, secondRobber);
+            User secondRunner = givenUser("runner2");
+            givenRunner(game, secondRunner);
 
             // when
-            ExtractableResponse<Response> response = authenticated(robberToken)
+            ExtractableResponse<Response> response = authenticated(runnerToken)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(FORCE_ARREST_URL)
@@ -327,24 +327,24 @@ class SystemControllerTest extends ControllerTest {
             ArrestResponse result = response.as(ArrestResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-                softly.assertThat(result.runnerNickname()).isEqualTo(robber.getNickname());
+                softly.assertThat(result.runnerNickname()).isEqualTo(runner.getNickname());
                 softly.assertThat(result.remainingRunners()).isEqualTo(1);
 
-                GameParticipant jailedRobber = gameParticipantRepository.findById(robberParticipant.getId()).orElseThrow();
-                softly.assertThat(jailedRobber.isJailed()).isTrue();
+                GameParticipant jailedRunner = gameParticipantRepository.findById(runnerParticipant.getId()).orElseThrow();
+                softly.assertThat(jailedRunner.isJailed()).isTrue();
             });
         }
 
         @Test
         void 경찰이_대기_상태여도_강제_체포할_수_있다() {
             // given
-            User secondRobber = givenUser("robber2");
-            givenRobber(game, secondRobber);
-            policeParticipant.updateStatus(ParticipantStatus.CHASER_WAITING);
-            gameParticipantRepository.save(policeParticipant);
+            User secondRunner = givenUser("runner2");
+            givenRunner(game, secondRunner);
+            chaserParticipant.updateStatus(ParticipantStatus.CHASER_WAITING);
+            gameParticipantRepository.save(chaserParticipant);
 
             // when
-            ExtractableResponse<Response> response = authenticated(robberToken)
+            ExtractableResponse<Response> response = authenticated(runnerToken)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(FORCE_ARREST_URL)
@@ -358,7 +358,7 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 마지막_도둑이_강제_체포되면_게임이_종료된다() {
             // when
-            ExtractableResponse<Response> response = authenticated(robberToken)
+            ExtractableResponse<Response> response = authenticated(runnerToken)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(FORCE_ARREST_URL)
@@ -371,8 +371,8 @@ class SystemControllerTest extends ControllerTest {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
                 softly.assertThat(result.remainingRunners()).isEqualTo(0);
 
-                GameParticipant endedRobber = gameParticipantRepository.findById(robberParticipant.getId()).orElseThrow();
-                softly.assertThat(endedRobber.isWaiting()).isTrue();
+                GameParticipant endedRunner = gameParticipantRepository.findById(runnerParticipant.getId()).orElseThrow();
+                softly.assertThat(endedRunner.isWaiting()).isTrue();
                 softly.assertThat(gameRepository.findById(game.getId()).orElseThrow().getStatus())
                         .isEqualTo(GameStatus.WAITING);
             });
@@ -382,12 +382,12 @@ class SystemControllerTest extends ControllerTest {
         void 게임이_진행_중이_아니면_강제_체포할_수_없으며_400_BadRequest를_응답한다() {
             // given
             Game waitingGame = gameRepository.save(GameFixture.WAITING_GAME());
-            User waitingRobber = givenUser("waitingRobber");
-            String waitingRobberToken = givenAccessToken(waitingRobber);
-            givenRobber(waitingGame, waitingRobber);
+            User waitingRunner = givenUser("waitingRunner");
+            String waitingRunnerToken = givenAccessToken(waitingRunner);
+            givenRunner(waitingGame, waitingRunner);
 
             // when
-            ExtractableResponse<Response> response = authenticated(waitingRobberToken)
+            ExtractableResponse<Response> response = authenticated(waitingRunnerToken)
                     .pathParam(GAME_ID_PARAM, waitingGame.getId())
                     .when()
                     .post(FORCE_ARREST_URL)
@@ -405,7 +405,7 @@ class SystemControllerTest extends ControllerTest {
             gameRepository.save(game);
 
             // when
-            ExtractableResponse<Response> response = authenticated(robberToken)
+            ExtractableResponse<Response> response = authenticated(runnerToken)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(FORCE_ARREST_URL)
@@ -424,7 +424,7 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 도둑이_아니면_강제_체포할_수_없으며_400_BadRequest를_응답한다() {
             // when (경찰이 요청)
-            ExtractableResponse<Response> response = authenticated(policeToken)
+            ExtractableResponse<Response> response = authenticated(chaserToken)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(FORCE_ARREST_URL)
@@ -438,11 +438,11 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 이미_수감된_도둑은_강제_체포할_수_없으며_400_BadRequest를_응답한다() {
             // given
-            robberParticipant.updateStatus(ParticipantStatus.JAILED);
-            gameParticipantRepository.save(robberParticipant);
+            runnerParticipant.updateStatus(ParticipantStatus.JAILED);
+            gameParticipantRepository.save(runnerParticipant);
 
             // when
-            ExtractableResponse<Response> response = authenticated(robberToken)
+            ExtractableResponse<Response> response = authenticated(runnerToken)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(FORCE_ARREST_URL)
@@ -513,12 +513,12 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 강제_체포는_도둑의_잡힌_횟수만_올리고_경찰의_체포_수는_올리지_않는다() {
             // given - 도둑을 하나 더 두어 전원 체포로 게임이 끝나지 않게 한다
-            User secondRobber = givenUser("robber2");
-            givenRobber(game, secondRobber);
-            GameResult openedResult = openResultWithSnapshots(game, policeParticipant, robberParticipant);
+            User secondRunner = givenUser("runner2");
+            givenRunner(game, secondRunner);
+            GameResult openedResult = openResultWithSnapshots(game, chaserParticipant, runnerParticipant);
 
             // when
-            authenticated(robberToken)
+            authenticated(runnerToken)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(FORCE_ARREST_URL)
@@ -526,13 +526,13 @@ class SystemControllerTest extends ControllerTest {
                     .statusCode(HttpStatus.OK.value());
 
             // then
-            GameResultParticipant policeRecord = gameResultParticipantRepository
-                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(openedResult.getId(), police.getId()).orElseThrow();
-            GameResultParticipant robberRecord = gameResultParticipantRepository
-                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(openedResult.getId(), robber.getId()).orElseThrow();
+            GameResultParticipant chaserRecord = gameResultParticipantRepository
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(openedResult.getId(), chaser.getId()).orElseThrow();
+            GameResultParticipant runnerRecord = gameResultParticipantRepository
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(openedResult.getId(), runner.getId()).orElseThrow();
             assertSoftly(softly -> {
-                softly.assertThat(robberRecord.getArrestedCount()).isEqualTo(1);
-                softly.assertThat(policeRecord.getArrestCount()).isZero();
+                softly.assertThat(runnerRecord.getArrestedCount()).isEqualTo(1);
+                softly.assertThat(chaserRecord.getArrestCount()).isZero();
                 softly.assertThat(gameRepository.findById(game.getId()).orElseThrow().getTotalArrestCount())
                         .isEqualTo(1);
             });
@@ -541,58 +541,58 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 체포와_탈옥_후_재체포가_경찰과_도둑의_개인_기록에_각각_누적된다() {
             // given - 도둑을 하나 더 두어 전원 체포로 게임이 끝나지 않게 한다
-            User secondRobber = givenUser("robber2");
-            givenRobber(game, secondRobber);
-            GameResult openedResult = openResultWithSnapshots(game, policeParticipant, robberParticipant);
+            User secondRunner = givenUser("runner2");
+            givenRunner(game, secondRunner);
+            GameResult openedResult = openResultWithSnapshots(game, chaserParticipant, runnerParticipant);
 
             // when - 체포 → 탈옥 → 재체포를 전부 실제 API 로 수행
-            arrest(policeToken, game, robberParticipant.getId());
-            authenticated(robberToken)
+            arrest(chaserToken, game, runnerParticipant.getId());
+            authenticated(runnerToken)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(ESCAPE_URL)
                     .then()
                     .statusCode(HttpStatus.NO_CONTENT.value());
-            arrest(policeToken, game, robberParticipant.getId());
+            arrest(chaserToken, game, runnerParticipant.getId());
 
             // then
-            GameResultParticipant policeRecord = gameResultParticipantRepository
-                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(openedResult.getId(), police.getId()).orElseThrow();
-            GameResultParticipant robberRecord = gameResultParticipantRepository
-                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(openedResult.getId(), robber.getId()).orElseThrow();
+            GameResultParticipant chaserRecord = gameResultParticipantRepository
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(openedResult.getId(), chaser.getId()).orElseThrow();
+            GameResultParticipant runnerRecord = gameResultParticipantRepository
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(openedResult.getId(), runner.getId()).orElseThrow();
             assertSoftly(softly -> {
-                softly.assertThat(policeRecord.getArrestCount()).isEqualTo(2);
-                softly.assertThat(policeRecord.getArrestedCount()).isZero();
-                softly.assertThat(robberRecord.getArrestedCount()).isEqualTo(2);
-                softly.assertThat(robberRecord.getArrestCount()).isZero();
+                softly.assertThat(chaserRecord.getArrestCount()).isEqualTo(2);
+                softly.assertThat(chaserRecord.getArrestedCount()).isZero();
+                softly.assertThat(runnerRecord.getArrestedCount()).isEqualTo(2);
+                softly.assertThat(runnerRecord.getArrestCount()).isZero();
             });
         }
 
         @Test
         void 이벤트_게임에서_같은_도둑을_반복_체포하면_잡힌_횟수가_그대로_누적된다() {
             // given - 이벤트 게임은 체포돼도 JAILED 로 바뀌지 않아 탈옥 없이 바로 재체포된다
-            User eventPolice = givenUser("eventPolice");
-            User eventRobber = givenUser("eventRobber");
-            String eventPoliceToken = givenAccessToken(eventPolice);
+            User eventChaser = givenUser("eventChaser");
+            User eventRunner = givenUser("eventRunner");
+            String eventChaserToken = givenAccessToken(eventChaser);
 
             Game eventGame = gameRepository.save(GameFixture.EVENT_GAME());
             gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(eventGame));
-            GameParticipant eventPoliceParticipant = givenPolice(eventGame, eventPolice);
-            GameParticipant eventRobberParticipant = givenRobber(eventGame, eventRobber);
-            GameResult openedResult = openResultWithSnapshots(eventGame, eventPoliceParticipant, eventRobberParticipant);
+            GameParticipant eventChaserParticipant = givenChaser(eventGame, eventChaser);
+            GameParticipant eventRunnerParticipant = givenRunner(eventGame, eventRunner);
+            GameResult openedResult = openResultWithSnapshots(eventGame, eventChaserParticipant, eventRunnerParticipant);
 
             // when
-            arrest(eventPoliceToken, eventGame, eventRobberParticipant.getId());
-            arrest(eventPoliceToken, eventGame, eventRobberParticipant.getId());
+            arrest(eventChaserToken, eventGame, eventRunnerParticipant.getId());
+            arrest(eventChaserToken, eventGame, eventRunnerParticipant.getId());
 
             // then
-            GameResultParticipant robberRecord = gameResultParticipantRepository
-                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(openedResult.getId(), eventRobber.getId()).orElseThrow();
-            GameResultParticipant policeRecord = gameResultParticipantRepository
-                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(openedResult.getId(), eventPolice.getId()).orElseThrow();
+            GameResultParticipant runnerRecord = gameResultParticipantRepository
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(openedResult.getId(), eventRunner.getId()).orElseThrow();
+            GameResultParticipant chaserRecord = gameResultParticipantRepository
+                    .findFirstByGameResultIdAndUserIdOrderByIdDesc(openedResult.getId(), eventChaser.getId()).orElseThrow();
             assertSoftly(softly -> {
-                softly.assertThat(robberRecord.getArrestedCount()).isEqualTo(2);
-                softly.assertThat(policeRecord.getArrestCount()).isEqualTo(2);
+                softly.assertThat(runnerRecord.getArrestedCount()).isEqualTo(2);
+                softly.assertThat(chaserRecord.getArrestCount()).isEqualTo(2);
             });
         }
     }
@@ -601,36 +601,36 @@ class SystemControllerTest extends ControllerTest {
     @DisplayName("폴리곤 영역 게임에서의 체포/탈옥 API")
     class WithPolygonGameArea {
 
-        private User polygonPolice;
-        private User polygonRobber;
+        private User polygonChaser;
+        private User polygonRunner;
         private Game polygonGame;
-        private GameParticipant polygonPoliceParticipant;
-        private GameParticipant polygonRobberParticipant;
-        private String polygonPoliceToken;
-        private String polygonRobberToken;
+        private GameParticipant polygonChaserParticipant;
+        private GameParticipant polygonRunnerParticipant;
+        private String polygonChaserToken;
+        private String polygonRunnerToken;
 
         @BeforeEach
         void setUp() {
-            polygonPolice = givenUser("polygonPolice");
-            polygonRobber = givenUser("polygonRobber");
-            polygonPoliceToken = givenAccessToken(polygonPolice);
-            polygonRobberToken = givenAccessToken(polygonRobber);
+            polygonChaser = givenUser("polygonChaser");
+            polygonRunner = givenUser("polygonRunner");
+            polygonChaserToken = givenAccessToken(polygonChaser);
+            polygonRunnerToken = givenAccessToken(polygonRunner);
 
             polygonGame = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
             gameAreaRepository.save(GameAreaFixture.POLYGON_GAME_AREA(polygonGame));
-            polygonPoliceParticipant = givenPolice(polygonGame, polygonPolice);
-            polygonRobberParticipant = givenRobber(polygonGame, polygonRobber);
+            polygonChaserParticipant = givenChaser(polygonGame, polygonChaser);
+            polygonRunnerParticipant = givenRunner(polygonGame, polygonRunner);
         }
 
         @Test
         void 폴리곤_영역에서_도둑_체포_성공() {
             // given
-            User secondRobber = givenUser("polygonRobber2");
-            givenRobber(polygonGame, secondRobber);
-            ArrestRequest request = new ArrestRequest(polygonRobberParticipant.getId());
+            User secondRunner = givenUser("polygonRunner2");
+            givenRunner(polygonGame, secondRunner);
+            ArrestRequest request = new ArrestRequest(polygonRunnerParticipant.getId());
 
             // when
-            ExtractableResponse<Response> response = authenticated(polygonPoliceToken)
+            ExtractableResponse<Response> response = authenticated(polygonChaserToken)
                     .body(request)
                     .pathParam(GAME_ID_PARAM, polygonGame.getId())
                     .when()
@@ -642,7 +642,7 @@ class SystemControllerTest extends ControllerTest {
             ArrestResponse result = response.as(ArrestResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-                softly.assertThat(result.runnerNickname()).isEqualTo(polygonRobber.getNickname());
+                softly.assertThat(result.runnerNickname()).isEqualTo(polygonRunner.getNickname());
                 softly.assertThat(result.remainingRunners()).isEqualTo(1);
             });
         }
@@ -650,10 +650,10 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 폴리곤_영역에서_마지막_도둑이_체포되면_게임이_종료된다() {
             // given
-            ArrestRequest request = new ArrestRequest(polygonRobberParticipant.getId());
+            ArrestRequest request = new ArrestRequest(polygonRunnerParticipant.getId());
 
             // when
-            ExtractableResponse<Response> response = authenticated(polygonPoliceToken)
+            ExtractableResponse<Response> response = authenticated(polygonChaserToken)
                     .body(request)
                     .pathParam(GAME_ID_PARAM, polygonGame.getId())
                     .when()
@@ -673,11 +673,11 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 폴리곤_영역에서_도둑_탈옥_성공() {
             // given
-            polygonRobberParticipant.updateStatus(ParticipantStatus.JAILED);
-            gameParticipantRepository.save(polygonRobberParticipant);
+            polygonRunnerParticipant.updateStatus(ParticipantStatus.JAILED);
+            gameParticipantRepository.save(polygonRunnerParticipant);
 
             // when
-            ExtractableResponse<Response> response = authenticated(polygonRobberToken)
+            ExtractableResponse<Response> response = authenticated(polygonRunnerToken)
                     .pathParam(GAME_ID_PARAM, polygonGame.getId())
                     .when()
                     .post(ESCAPE_URL)
@@ -686,8 +686,8 @@ class SystemControllerTest extends ControllerTest {
 
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
-            GameParticipant escapedRobber = gameParticipantRepository.findById(polygonRobberParticipant.getId()).orElseThrow();
-            assertThat(escapedRobber.isJailed()).isFalse();
+            GameParticipant escapedRunner = gameParticipantRepository.findById(polygonRunnerParticipant.getId()).orElseThrow();
+            assertThat(escapedRunner.isJailed()).isFalse();
         }
     }
 
@@ -698,11 +698,11 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 도둑_탈옥_성공() {
             // given
-            robberParticipant.updateStatus(ParticipantStatus.JAILED);
-            gameParticipantRepository.save(robberParticipant);
+            runnerParticipant.updateStatus(ParticipantStatus.JAILED);
+            gameParticipantRepository.save(runnerParticipant);
 
             // when
-            ExtractableResponse<Response> response = authenticated(robberToken)
+            ExtractableResponse<Response> response = authenticated(runnerToken)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(ESCAPE_URL)
@@ -712,20 +712,20 @@ class SystemControllerTest extends ControllerTest {
             // then
             assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
 
-            GameParticipant escapedRobber = gameParticipantRepository.findById(robberParticipant.getId()).orElseThrow();
-            assertThat(escapedRobber.isJailed()).isFalse();
-            assertThat(escapedRobber.isRobber()).isTrue();
+            GameParticipant escapedRunner = gameParticipantRepository.findById(runnerParticipant.getId()).orElseThrow();
+            assertThat(escapedRunner.isJailed()).isFalse();
+            assertThat(escapedRunner.isRunner()).isTrue();
         }
 
         @Test
         void 술래잡기_게임에서는_탈옥할_수_없으며_400_BadRequest를_응답한다() {
             // given
             Game tagGame = gameRepository.save(GameFixture.IN_PROGRESS_TAG_GAME());
-            User tagRobber = givenUser("tagRobber");
-            GameParticipant jailedRobber = givenJailedRobber(tagGame, tagRobber);
+            User tagRunner = givenUser("tagRunner");
+            GameParticipant jailedRunner = givenJailedRunner(tagGame, tagRunner);
 
             // when
-            ExtractableResponse<Response> response = authenticated(givenAccessToken(tagRobber))
+            ExtractableResponse<Response> response = authenticated(givenAccessToken(tagRunner))
                     .pathParam(GAME_ID_PARAM, tagGame.getId())
                     .when()
                     .post(ESCAPE_URL)
@@ -736,7 +736,7 @@ class SystemControllerTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
                 softly.assertThat(response.jsonPath().getString("errorCode")).isEqualTo("ESCAPE_NOT_ALLOWED_IN_MODE");
-                softly.assertThat(gameParticipantRepository.findById(jailedRobber.getId()).orElseThrow().isJailed())
+                softly.assertThat(gameParticipantRepository.findById(jailedRunner.getId()).orElseThrow().isJailed())
                         .isTrue();
             });
         }
@@ -745,12 +745,12 @@ class SystemControllerTest extends ControllerTest {
         void 게임이_진행_중이_아니면_탈옥할_수_없으며_400_BadRequest를_응답한다() {
             // given
             Game waitingGame = gameRepository.save(GameFixture.WAITING_GAME());
-            GameParticipant waitingRobber = givenRobber(waitingGame, robber);
-            waitingRobber.updateStatus(ParticipantStatus.JAILED);
-            gameParticipantRepository.save(waitingRobber);
+            GameParticipant waitingRunner = givenRunner(waitingGame, runner);
+            waitingRunner.updateStatus(ParticipantStatus.JAILED);
+            gameParticipantRepository.save(waitingRunner);
 
             // when
-            ExtractableResponse<Response> response = authenticated(robberToken)
+            ExtractableResponse<Response> response = authenticated(runnerToken)
                     .pathParam(GAME_ID_PARAM, waitingGame.getId())
                     .when()
                     .post(ESCAPE_URL)
@@ -764,10 +764,10 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 도둑이_아니면_탈옥할_수_없으며_400_BadRequest를_응답한다() {
             // given
-            // policeParticipant는 경찰 팀
+            // chaserParticipant는 경찰 팀
 
             // when (경찰이 요청)
-            ExtractableResponse<Response> response = authenticated(policeToken)
+            ExtractableResponse<Response> response = authenticated(chaserToken)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(ESCAPE_URL)
@@ -781,10 +781,10 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 수감되지_않은_도둑은_탈옥할_수_없으며_400_BadRequest를_응답한다() {
             // given
-            assertThat(robberParticipant.getStatus()).isEqualTo(ParticipantStatus.ALIVE); // ALIVE 상태 확인
+            assertThat(runnerParticipant.getStatus()).isEqualTo(ParticipantStatus.ALIVE); // ALIVE 상태 확인
 
             // when
-            ExtractableResponse<Response> response = authenticated(robberToken)
+            ExtractableResponse<Response> response = authenticated(runnerToken)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(ESCAPE_URL)
@@ -812,7 +812,7 @@ class SystemControllerTest extends ControllerTest {
         @Test
         void 존재하지_않는_게임에_요청하면_404_NotFound를_응답한다() {
             // when
-            ExtractableResponse<Response> response = authenticated(robberToken)
+            ExtractableResponse<Response> response = authenticated(runnerToken)
                     .pathParam(GAME_ID_PARAM, 9999L) // 존재 X
                     .when()
                     .post(ESCAPE_URL)

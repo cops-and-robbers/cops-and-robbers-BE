@@ -176,7 +176,7 @@ class UserServiceTest extends ServiceUnitTest {
             assertThat(result.get().gameId()).isEqualTo(game.getId());
             assertThat(result.get().participantId()).isEqualTo(participant.getId());
             assertThat(result.get().gameStatus()).isEqualTo(GameStatus.WAITING);
-            assertThat(result.get().team()).isEqualTo(Team.POLICE);
+            assertThat(result.get().team()).isEqualTo(Team.CHASER);
         }
 
         @Test

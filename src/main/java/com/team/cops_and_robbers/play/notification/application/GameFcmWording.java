@@ -4,10 +4,10 @@ import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.participant.domain.Team;
 
 record GameFcmWording(
-        String police,
-        String policeSubject,
-        String robber,
-        String robberSubject,
+        String chaser,
+        String chaserSubject,
+        String runner,
+        String runnerSubject,
         String arrestTitle,
         String arrestBody
 ) {
@@ -21,8 +21,8 @@ record GameFcmWording(
 
     String teamName(Team team) {
         return switch (team) {
-            case POLICE -> police;
-            case ROBBER -> robber;
+            case CHASER -> chaser;
+            case RUNNER -> runner;
         };
     }
 }

@@ -88,8 +88,8 @@ class GameParticipantServiceTest extends ServiceUnitTest {
     private Game inProgressGame;
     private GameParticipant guestParticipant;
     private GameParticipant hostParticipant;
-    private GameParticipant policeParticipant;
-    private GameParticipant robberParticipant;
+    private GameParticipant chaserParticipant;
+    private GameParticipant runnerParticipant;
     private String INVITE_CODE = "ABCDEF";
 
     @BeforeEach
@@ -102,8 +102,8 @@ class GameParticipantServiceTest extends ServiceUnitTest {
         setId(waitingGame, TEST_GAME_ID);
         setId(inProgressGame, TEST_GAME_ID);
         guestParticipant = GUEST_PARTICIPANT(waitingGame, user);
-        policeParticipant = WAITING_POLICE(inProgressGame, user);
-        robberParticipant = ALIVE_ROBBER(inProgressGame, user2);
+        chaserParticipant = WAITING_CHASER(inProgressGame, user);
+        runnerParticipant = ALIVE_RUNNER(inProgressGame, user2);
     }
 
     @Nested
@@ -186,13 +186,13 @@ class GameParticipantServiceTest extends ServiceUnitTest {
                 // given
                 Game eventGame = EVENT_GAME(INVITE_CODE);
                 setId(eventGame, TEST_GAME_ID);
-                GameParticipant eventPolice = EVENT_CHASER_WAITING(eventGame, user);
+                GameParticipant eventChaser = EVENT_CHASER_WAITING(eventGame, user);
                 GameJoinCommand command = createGameJoinCommand(user.getId(), INVITE_CODE);
 
                 given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(eventGame);
                 given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(false);
                 given(userRepository.getByUserIdForUpdate(user.getId())).willReturn(user);
-                given(gameParticipantRepository.save(any(GameParticipant.class))).willReturn(eventPolice);
+                given(gameParticipantRepository.save(any(GameParticipant.class))).willReturn(eventChaser);
 
                 // when
                 GameJoinResult result = gameParticipantService.joinGame(command);
@@ -207,16 +207,16 @@ class GameParticipantServiceTest extends ServiceUnitTest {
                 // given
                 Game eventGame = EVENT_GAME(INVITE_CODE);
                 setId(eventGame, TEST_GAME_ID);
-                GameParticipant eventPolice = EVENT_CHASER_WAITING(eventGame, user);
+                GameParticipant eventChaser = EVENT_CHASER_WAITING(eventGame, user);
                 GameJoinCommand command = createGameJoinCommand(user.getId(), INVITE_CODE);
                 GameParticipantCacheProjection projection = new GameParticipantCacheProjection(
-                        TEST_PARTICIPANT_ID, user.getNickname(), Team.POLICE, "token"
+                        TEST_PARTICIPANT_ID, user.getNickname(), Team.CHASER, "token"
                 );
 
                 given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(eventGame);
                 given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(false);
                 given(userRepository.getByUserIdForUpdate(user.getId())).willReturn(user);
-                given(gameParticipantRepository.save(any(GameParticipant.class))).willReturn(eventPolice);
+                given(gameParticipantRepository.save(any(GameParticipant.class))).willReturn(eventChaser);
                 given(gameParticipantRepository.findCacheProjectionById(any())).willReturn(Optional.of(projection));
 
                 // when
@@ -231,13 +231,13 @@ class GameParticipantServiceTest extends ServiceUnitTest {
                 // given
                 Game eventGame = EVENT_GAME(INVITE_CODE);
                 setId(eventGame, TEST_GAME_ID);
-                GameParticipant eventPolice = EVENT_CHASER_WAITING(eventGame, user);
+                GameParticipant eventChaser = EVENT_CHASER_WAITING(eventGame, user);
                 GameJoinCommand command = createGameJoinCommand(user.getId(), INVITE_CODE);
 
                 given(gameRepository.getByInviteCode(INVITE_CODE)).willReturn(eventGame);
                 given(gameParticipantRepository.existsActiveGameByUserId(user.getId())).willReturn(false);
                 given(userRepository.getByUserIdForUpdate(user.getId())).willReturn(user);
-                given(gameParticipantRepository.save(any(GameParticipant.class))).willReturn(eventPolice);
+                given(gameParticipantRepository.save(any(GameParticipant.class))).willReturn(eventChaser);
                 given(gameParticipantRepository.findCacheProjectionById(any())).willReturn(Optional.empty());
 
                 // when
@@ -292,10 +292,10 @@ class GameParticipantServiceTest extends ServiceUnitTest {
                 // given
                 Game eventGame = EVENT_GAME(INVITE_CODE);
                 setId(eventGame, TEST_GAME_ID);
-                GameParticipant eventPolice = EVENT_POLICE_ALIVE(eventGame, user);
+                GameParticipant eventChaser = EVENT_CHASER_ALIVE(eventGame, user);
                 GameLeaveCommand command = createGameLeaveCommand(user.getId(), TEST_GAME_ID);
 
-                given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user.getId())).willReturn(eventPolice);
+                given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user.getId())).willReturn(eventChaser);
                 given(gameParticipantRepository.countByGameId(TEST_GAME_ID)).willReturn(0);
                 given(systemEventFactory.createPlayerLeftEvent(any(), any())).willReturn(mock(SystemEvent.class));
 
@@ -366,9 +366,9 @@ class GameParticipantServiceTest extends ServiceUnitTest {
         void 경찰이_퇴장하고_경찰이_남아있으면_PLAYER_LEFT_이벤트를_발행한다() {
             // given
             GameLeaveCommand command = createGameLeaveCommand(user.getId(), TEST_GAME_ID);
-            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user.getId())).willReturn(policeParticipant);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user.getId())).willReturn(chaserParticipant);
             given(gameParticipantRepository.countByGameId(TEST_GAME_ID)).willReturn(1);
-            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.POLICE)).willReturn(1);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.CHASER)).willReturn(1);
             given(systemEventFactory.createPlayerLeftEvent(any(), any())).willReturn(mock(SystemEvent.class));
 
             // when
@@ -385,9 +385,9 @@ class GameParticipantServiceTest extends ServiceUnitTest {
         void 마지막_경찰이_퇴장하면_CHASER_FORFEITED로_게임이_종료된다() {
             // given
             GameLeaveCommand command = createGameLeaveCommand(user.getId(), TEST_GAME_ID);
-            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user.getId())).willReturn(policeParticipant);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user.getId())).willReturn(chaserParticipant);
             given(gameParticipantRepository.countByGameId(TEST_GAME_ID)).willReturn(0);
-            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.POLICE)).willReturn(0);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.CHASER)).willReturn(0);
             given(systemEventFactory.createPlayerLeftEvent(any(), any())).willReturn(mock(SystemEvent.class));
 
             // when
@@ -402,9 +402,9 @@ class GameParticipantServiceTest extends ServiceUnitTest {
         void ALIVE_도둑이_퇴장하고_생존_도둑이_남아있으면_PLAYER_LEFT_이벤트를_발행한다() {
             // given
             GameLeaveCommand command = createGameLeaveCommand(user2.getId(), TEST_GAME_ID);
-            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user2.getId())).willReturn(robberParticipant);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user2.getId())).willReturn(runnerParticipant);
             given(gameParticipantRepository.countByGameId(TEST_GAME_ID)).willReturn(1);
-            given(gameParticipantRepository.countByGameIdAndRobberStatus(TEST_GAME_ID, ParticipantStatus.ALIVE)).willReturn(1);
+            given(gameParticipantRepository.countByGameIdAndRunnerStatus(TEST_GAME_ID, ParticipantStatus.ALIVE)).willReturn(1);
             given(systemEventFactory.createPlayerLeftEvent(any(), any())).willReturn(mock(SystemEvent.class));
 
             // when
@@ -419,9 +419,9 @@ class GameParticipantServiceTest extends ServiceUnitTest {
         void 마지막_생존_도둑이_퇴장하면_RUNNER_FORFEITED로_게임이_종료된다() {
             // given
             GameLeaveCommand command = createGameLeaveCommand(user2.getId(), TEST_GAME_ID);
-            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user2.getId())).willReturn(robberParticipant);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user2.getId())).willReturn(runnerParticipant);
             given(gameParticipantRepository.countByGameId(TEST_GAME_ID)).willReturn(0);
-            given(gameParticipantRepository.countByGameIdAndRobberStatus(TEST_GAME_ID, ParticipantStatus.ALIVE)).willReturn(0);
+            given(gameParticipantRepository.countByGameIdAndRunnerStatus(TEST_GAME_ID, ParticipantStatus.ALIVE)).willReturn(0);
             given(systemEventFactory.createPlayerLeftEvent(any(), any())).willReturn(mock(SystemEvent.class));
 
             // when
@@ -435,9 +435,9 @@ class GameParticipantServiceTest extends ServiceUnitTest {
         @Test
         void JAILED_도둑이_퇴장하면_forfeit_조건_체크_없이_PLAYER_LEFT_이벤트를_발행한다() {
             // given
-            GameParticipant jailedRobber = JAILED_ROBBER(inProgressGame, user);
+            GameParticipant jailedRunner = JAILED_RUNNER(inProgressGame, user);
             GameLeaveCommand command = createGameLeaveCommand(user.getId(), TEST_GAME_ID);
-            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user.getId())).willReturn(jailedRobber);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user.getId())).willReturn(jailedRunner);
             given(gameParticipantRepository.countByGameId(TEST_GAME_ID)).willReturn(1);
             given(systemEventFactory.createPlayerLeftEvent(any(), any())).willReturn(mock(SystemEvent.class));
 
@@ -446,7 +446,7 @@ class GameParticipantServiceTest extends ServiceUnitTest {
 
             // then
             then(gameParticipantRepository).should(never()).countByGameIdAndTeam(any(), any());
-            then(gameParticipantRepository).should(never()).countByGameIdAndRobberStatus(any(), any());
+            then(gameParticipantRepository).should(never()).countByGameIdAndRunnerStatus(any(), any());
             then(gameTerminationService).should(never()).endGameByChaserForfeited(any());
             then(gameTerminationService).should(never()).endGameByRunnerForfeited(any());
             then(eventPublisher).should().publishEvent(any(SystemEvent.class));
@@ -455,12 +455,12 @@ class GameParticipantServiceTest extends ServiceUnitTest {
         @Test
         void 방장이_인게임에서_퇴장하면_다음_참가자에게_방장이_위임된다() {
             // given
-            GameParticipant hostPolice = HOST_WAITING_POLICE(inProgressGame, user);
+            GameParticipant hostChaser = HOST_WAITING_CHASER(inProgressGame, user);
             GameLeaveCommand command = createGameLeaveCommand(user.getId(), TEST_GAME_ID);
-            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user.getId())).willReturn(hostPolice);
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, user.getId())).willReturn(hostChaser);
             given(gameParticipantRepository.countByGameId(TEST_GAME_ID)).willReturn(1);
-            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.POLICE)).willReturn(1);
-            given(gameParticipantRepository.getNextParticipant(TEST_GAME_ID)).willReturn(robberParticipant);
+            given(gameParticipantRepository.countByGameIdAndTeam(TEST_GAME_ID, Team.CHASER)).willReturn(1);
+            given(gameParticipantRepository.getNextParticipant(TEST_GAME_ID)).willReturn(runnerParticipant);
             given(lobbyEventFactory.createHostChangedEvent(any(), any())).willReturn(lobbyEvent);
             given(systemEventFactory.createPlayerLeftEvent(any(), any())).willReturn(mock(SystemEvent.class));
 
@@ -468,7 +468,7 @@ class GameParticipantServiceTest extends ServiceUnitTest {
             gameParticipantService.leaveGame(command);
 
             // then
-            assertThat(robberParticipant.isHost()).isTrue();
+            assertThat(runnerParticipant.isHost()).isTrue();
             then(eventPublisher).should().publishEvent(lobbyEvent);
             then(eventPublisher).should().publishEvent(any(SystemEvent.class));
         }
@@ -488,15 +488,15 @@ class GameParticipantServiceTest extends ServiceUnitTest {
             GameParticipantListCommand command = GameParticipantListCommand.of(TEST_USER_ID, TEST_GAME_ID);
 
             given(gameRepository.getByGameId(TEST_GAME_ID)).willReturn(inProgressGame);
-            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_USER_ID)).willReturn(policeParticipant);
-            given(gameParticipantRepository.findAllByGameIdWithUser(TEST_GAME_ID)).willReturn(List.of(policeParticipant, robberParticipant));
+            given(gameParticipantRepository.getByGameIdAndUserId(TEST_GAME_ID, TEST_USER_ID)).willReturn(chaserParticipant);
+            given(gameParticipantRepository.findAllByGameIdWithUser(TEST_GAME_ID)).willReturn(List.of(chaserParticipant, runnerParticipant));
 
             // when
             GameParticipantListResult result = gameParticipantService.getParticipantList(command);
 
             // then
-            assertThat(result.police()).hasSize(1);
-            assertThat(result.robbers()).hasSize(1);
+            assertThat(result.chasers()).hasSize(1);
+            assertThat(result.runners()).hasSize(1);
         }
 
         @Test

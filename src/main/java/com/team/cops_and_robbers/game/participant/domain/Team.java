@@ -3,8 +3,8 @@ package com.team.cops_and_robbers.game.participant.domain;
 import java.util.concurrent.ThreadLocalRandom;
 
 public enum Team {
-    POLICE,
-    ROBBER;
+    CHASER,
+    RUNNER;
 
     private static final Team[] VALUES = values();
 

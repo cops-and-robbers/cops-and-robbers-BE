@@ -110,7 +110,7 @@ public class GameEventConsumer {
     private void executeChaserMoveStart(Long gameId) {
         transactionTemplate.executeWithoutResult(status ->
                 gameParticipantRepository.updateStatusByGameIdAndTeam(
-                        gameId, Team.POLICE, ParticipantStatus.ALIVE)
+                        gameId, Team.CHASER, ParticipantStatus.ALIVE)
         );
         SystemEvent event = systemEventFactory.createChaserMoveStartEvent(gameId);
         systemPublisher.publish(event);

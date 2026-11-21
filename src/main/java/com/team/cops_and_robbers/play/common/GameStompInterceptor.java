@@ -79,14 +79,14 @@ public class GameStompInterceptor implements ChannelInterceptor {
 
     private void validateSubscriptionPermission(String destination, Team participantTeam) {
         if (destination.endsWith(CHASER_CHANNEL_SUFFIX)) {
-            if (participantTeam != Team.POLICE) {
+            if (participantTeam != Team.CHASER) {
                 log.warn("[Wed Socket] Unauthorized subscription attempt to CHASER channel. Actual participant Team: {}", participantTeam);
                 throw new ApplicationException(CommonException.UNAUTHORIZED_SUBSCRIPTION);
             }
         }
 
         else if (destination.endsWith(RUNNER_CHANNEL_SUFFIX)) {
-            if (participantTeam != Team.ROBBER) {
+            if (participantTeam != Team.RUNNER) {
                 log.warn("[Wed Socket] Unauthorized subscription attempt to RUNNER channel. Actual participant Team: {}", participantTeam);
                 throw new ApplicationException(CommonException.UNAUTHORIZED_SUBSCRIPTION);
             }

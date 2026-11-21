@@ -22,13 +22,13 @@ public class TeamMvpSelector {
 
     private static final double NO_DISTANCE = 0.0;
 
-    private static final Comparator<GameResultParticipant> POLICE_ORDER =
+    private static final Comparator<GameResultParticipant> CHASER_ORDER =
             Comparator.<GameResultParticipant>comparingInt(GameResultParticipant::getArrestCount).reversed()
                     .thenComparing(Comparator.<GameResultParticipant>comparingDouble(
                             TeamMvpSelector::distanceOf).reversed())
                     .thenComparing(GameResultParticipant::getId);
 
-    private static final Comparator<GameResultParticipant> ROBBER_ORDER =
+    private static final Comparator<GameResultParticipant> RUNNER_ORDER =
             Comparator.<GameResultParticipant>comparingInt(GameResultParticipant::getArrestedCount)
                     .thenComparing(TeamMvpSelector::isJailed)
                     .thenComparing(Comparator.<GameResultParticipant>comparingDouble(
@@ -36,11 +36,11 @@ public class TeamMvpSelector {
                     .thenComparing(GameResultParticipant::getId);
 
     public Optional<GameResultParticipant> selectChaserMvp(List<GameResultParticipant> participants) {
-        return candidatesOf(participants, Team.POLICE).stream().min(POLICE_ORDER);
+        return candidatesOf(participants, Team.CHASER).stream().min(CHASER_ORDER);
     }
 
     public Optional<GameResultParticipant> selectRunnerMvp(List<GameResultParticipant> participants) {
-        return candidatesOf(participants, Team.ROBBER).stream().min(ROBBER_ORDER);
+        return candidatesOf(participants, Team.RUNNER).stream().min(RUNNER_ORDER);
     }
 
     private static List<GameResultParticipant> candidatesOf(

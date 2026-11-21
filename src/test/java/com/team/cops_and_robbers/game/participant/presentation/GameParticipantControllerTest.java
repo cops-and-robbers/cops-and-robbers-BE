@@ -338,15 +338,15 @@ class GameParticipantControllerTest extends ControllerTest {
         @Test
         void 경찰이_퇴장하고_경찰이_남아있으면_성공_응답을_반환한다() {
             // given
-            User police1 = givenUser("police1");
-            String police1Token = givenAccessToken(police1);
-            givenPolice(inProgressGame, police1);
+            User chaser1 = givenUser("chaser1");
+            String chaser1Token = givenAccessToken(chaser1);
+            givenChaser(inProgressGame, chaser1);
 
-            User police2 = givenUser("police2");
-            givenPolice(inProgressGame, police2);
+            User chaser2 = givenUser("chaser2");
+            givenChaser(inProgressGame, chaser2);
 
             // when
-            ExtractableResponse<Response> response = authenticated(police1Token)
+            ExtractableResponse<Response> response = authenticated(chaser1Token)
                     .pathParam(GAME_ID_PARAM, inProgressGame.getId())
                     .when()
                     .delete(LEAVE_URL)
@@ -357,7 +357,7 @@ class GameParticipantControllerTest extends ControllerTest {
             GameLeaveResponse result = response.as(GameLeaveResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-                softly.assertThat(result.leftUserId()).isEqualTo(police1.getId());
+                softly.assertThat(result.leftUserId()).isEqualTo(chaser1.getId());
                 softly.assertThat(result.remainingCount()).isEqualTo(1);
             });
         }
@@ -365,15 +365,15 @@ class GameParticipantControllerTest extends ControllerTest {
         @Test
         void 마지막_경찰이_퇴장하면_게임이_종료된다() {
             // given
-            User police = givenUser("police");
-            String policeToken = givenAccessToken(police);
-            givenPolice(inProgressGame, police);
+            User chaser = givenUser("chasers");
+            String chaserToken = givenAccessToken(chaser);
+            givenChaser(inProgressGame, chaser);
 
-            User robber = givenUser("robber");
-            givenRobber(inProgressGame, robber);
+            User runner = givenUser("runner");
+            givenRunner(inProgressGame, runner);
 
             // when
-            ExtractableResponse<Response> response = authenticated(policeToken)
+            ExtractableResponse<Response> response = authenticated(chaserToken)
                     .pathParam(GAME_ID_PARAM, inProgressGame.getId())
                     .when()
                     .delete(LEAVE_URL)
@@ -389,18 +389,18 @@ class GameParticipantControllerTest extends ControllerTest {
         @Test
         void ALIVE_도둑이_퇴장하고_생존_도둑이_남아있으면_성공_응답을_반환한다() {
             // given
-            User police = givenUser("police");
-            givenPolice(inProgressGame, police);
+            User chaser = givenUser("chasers");
+            givenChaser(inProgressGame, chaser);
 
-            User robber1 = givenUser("robber1");
-            String robber1Token = givenAccessToken(robber1);
-            givenRobber(inProgressGame, robber1);
+            User runner1 = givenUser("runner1");
+            String runner1Token = givenAccessToken(runner1);
+            givenRunner(inProgressGame, runner1);
 
-            User robber2 = givenUser("robber2");
-            givenRobber(inProgressGame, robber2);
+            User runner2 = givenUser("runner2");
+            givenRunner(inProgressGame, runner2);
 
             // when
-            ExtractableResponse<Response> response = authenticated(robber1Token)
+            ExtractableResponse<Response> response = authenticated(runner1Token)
                     .pathParam(GAME_ID_PARAM, inProgressGame.getId())
                     .when()
                     .delete(LEAVE_URL)
@@ -411,7 +411,7 @@ class GameParticipantControllerTest extends ControllerTest {
             GameLeaveResponse result = response.as(GameLeaveResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-                softly.assertThat(result.leftUserId()).isEqualTo(robber1.getId());
+                softly.assertThat(result.leftUserId()).isEqualTo(runner1.getId());
                 softly.assertThat(result.remainingCount()).isEqualTo(2);
             });
         }
@@ -419,18 +419,18 @@ class GameParticipantControllerTest extends ControllerTest {
         @Test
         void 마지막_ALIVE_도둑이_퇴장하면_게임이_종료된다() {
             // given
-            User police = givenUser("police");
-            givenPolice(inProgressGame, police);
+            User chaser = givenUser("chasers");
+            givenChaser(inProgressGame, chaser);
 
-            User aliveRobber = givenUser("aliveRobber");
-            String aliveRobberToken = givenAccessToken(aliveRobber);
-            givenRobber(inProgressGame, aliveRobber);
+            User aliveRunner = givenUser("aliveRunner");
+            String aliveRunnerToken = givenAccessToken(aliveRunner);
+            givenRunner(inProgressGame, aliveRunner);
 
-            User jailedRobber = givenUser("jailedRobber");
-            givenJailedRobber(inProgressGame, jailedRobber);
+            User jailedRunner = givenUser("jailedRunner");
+            givenJailedRunner(inProgressGame, jailedRunner);
 
             // when
-            ExtractableResponse<Response> response = authenticated(aliveRobberToken)
+            ExtractableResponse<Response> response = authenticated(aliveRunnerToken)
                     .pathParam(GAME_ID_PARAM, inProgressGame.getId())
                     .when()
                     .delete(LEAVE_URL)
@@ -446,18 +446,18 @@ class GameParticipantControllerTest extends ControllerTest {
         @Test
         void JAILED_도둑이_퇴장하면_게임이_종료되지_않는다() {
             // given
-            User police = givenUser("police");
-            givenPolice(inProgressGame, police);
+            User chaser = givenUser("chasers");
+            givenChaser(inProgressGame, chaser);
 
-            User aliveRobber = givenUser("aliveRobber");
-            givenRobber(inProgressGame, aliveRobber);
+            User aliveRunner = givenUser("aliveRunner");
+            givenRunner(inProgressGame, aliveRunner);
 
-            User jailedRobber = givenUser("jailedRobber");
-            String jailedRobberToken = givenAccessToken(jailedRobber);
-            givenJailedRobber(inProgressGame, jailedRobber);
+            User jailedRunner = givenUser("jailedRunner");
+            String jailedRunnerToken = givenAccessToken(jailedRunner);
+            givenJailedRunner(inProgressGame, jailedRunner);
 
             // when
-            ExtractableResponse<Response> response = authenticated(jailedRobberToken)
+            ExtractableResponse<Response> response = authenticated(jailedRunnerToken)
                     .pathParam(GAME_ID_PARAM, inProgressGame.getId())
                     .when()
                     .delete(LEAVE_URL)
@@ -468,7 +468,7 @@ class GameParticipantControllerTest extends ControllerTest {
             GameLeaveResponse result = response.as(GameLeaveResponse.class);
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-                softly.assertThat(result.leftUserId()).isEqualTo(jailedRobber.getId());
+                softly.assertThat(result.leftUserId()).isEqualTo(jailedRunner.getId());
             });
             Game game = gameRepository.findById(inProgressGame.getId()).orElseThrow();
             assertThat(game.isInProgress()).isTrue();
@@ -489,15 +489,15 @@ class GameParticipantControllerTest extends ControllerTest {
             @Test
             void 폴리곤_영역에서_마지막_경찰이_퇴장하면_게임이_종료된다() {
                 // given
-                User police = givenUser("polygonPolice");
-                String policeToken = givenAccessToken(police);
-                givenPolice(polygonGame, police);
+                User chaser = givenUser("polygonChaser");
+                String chaserToken = givenAccessToken(chaser);
+                givenChaser(polygonGame, chaser);
 
-                User robber = givenUser("polygonRobber");
-                givenRobber(polygonGame, robber);
+                User runner = givenUser("polygonRunner");
+                givenRunner(polygonGame, runner);
 
                 // when
-                ExtractableResponse<Response> response = authenticated(policeToken)
+                ExtractableResponse<Response> response = authenticated(chaserToken)
                         .pathParam(GAME_ID_PARAM, polygonGame.getId())
                         .when()
                         .delete(LEAVE_URL)
@@ -513,15 +513,15 @@ class GameParticipantControllerTest extends ControllerTest {
             @Test
             void 폴리곤_영역에서_마지막_ALIVE_도둑이_퇴장하면_게임이_종료된다() {
                 // given
-                User police = givenUser("polygonPolice");
-                givenPolice(polygonGame, police);
+                User chaser = givenUser("polygonChaser");
+                givenChaser(polygonGame, chaser);
 
-                User aliveRobber = givenUser("polygonAliveRobber");
-                String aliveRobberToken = givenAccessToken(aliveRobber);
-                givenRobber(polygonGame, aliveRobber);
+                User aliveRunner = givenUser("polygonAliveRunner");
+                String aliveRunnerToken = givenAccessToken(aliveRunner);
+                givenRunner(polygonGame, aliveRunner);
 
                 // when
-                ExtractableResponse<Response> response = authenticated(aliveRobberToken)
+                ExtractableResponse<Response> response = authenticated(aliveRunnerToken)
                         .pathParam(GAME_ID_PARAM, polygonGame.getId())
                         .when()
                         .delete(LEAVE_URL)
@@ -543,7 +543,7 @@ class GameParticipantControllerTest extends ControllerTest {
             givenInGameHost(inProgressGame, inGameHost);
 
             User guest = givenUser("inGameGuest");
-            givenPolice(inProgressGame, guest);
+            givenChaser(inProgressGame, guest);
 
             // when
             ExtractableResponse<Response> response = authenticated(inGameHostToken)
@@ -622,15 +622,15 @@ class GameParticipantControllerTest extends ControllerTest {
             // given
             gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(eventGame));
 
-            User police = givenUser("eventPolice");
-            String policeToken = givenAccessToken(police);
-            gameParticipantRepository.save(GameParticipantFixture.EVENT_POLICE_ALIVE(eventGame, police));
+            User chaser = givenUser("eventChaser");
+            String chaserToken = givenAccessToken(chaser);
+            gameParticipantRepository.save(GameParticipantFixture.EVENT_CHASER_ALIVE(eventGame, chaser));
 
-            User robber = givenUser("eventRobber");
-            givenRobber(eventGame, robber);
+            User runner = givenUser("eventRunner");
+            givenRunner(eventGame, runner);
 
             // when
-            ExtractableResponse<Response> response = authenticated(policeToken)
+            ExtractableResponse<Response> response = authenticated(chaserToken)
                     .pathParam(GAME_ID_PARAM, eventGame.getId())
                     .when()
                     .delete(LEAVE_URL)
@@ -652,9 +652,9 @@ class GameParticipantControllerTest extends ControllerTest {
         void 게임_참가자_목록_조회_성공() {
             // given
             Game game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
-            givenPolice(game, host);
-            User robberUser = givenUser("robber");
-            givenRobber(game, robberUser);
+            givenChaser(game, host);
+            User runnerUser = givenUser("runner");
+            givenRunner(game, runnerUser);
 
             // when
             ExtractableResponse<Response> response = authenticated(hostToken)
@@ -667,10 +667,10 @@ class GameParticipantControllerTest extends ControllerTest {
             // then
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-                softly.assertThat(response.jsonPath().getList("police")).hasSize(1);
-                softly.assertThat(response.jsonPath().getList("robbers")).hasSize(1);
-                softly.assertThat(response.jsonPath().getString("police[0].status")).isEqualTo("ALIVE");
-                softly.assertThat(response.jsonPath().getString("robbers[0].status")).isEqualTo("ALIVE");
+                softly.assertThat(response.jsonPath().getList("chasers")).hasSize(1);
+                softly.assertThat(response.jsonPath().getList("runners")).hasSize(1);
+                softly.assertThat(response.jsonPath().getString("chasers[0].status")).isEqualTo("ALIVE");
+                softly.assertThat(response.jsonPath().getString("runners[0].status")).isEqualTo("ALIVE");
             });
         }
 
@@ -709,7 +709,7 @@ class GameParticipantControllerTest extends ControllerTest {
         void 인증_토큰_없이_요청하면_401_Unauthorized를_응답한다() {
             // given
             Game game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
-            givenPolice(game, host);
+            givenChaser(game, host);
 
             // when
             ExtractableResponse<Response> response = unauthenticated()

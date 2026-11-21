@@ -75,7 +75,7 @@ class AuthServiceTest extends ServiceUnitTest {
             // given
             LoginCommand command = createLoginCommand(SocialType.KAKAO);
             String socialId = "social_123";
-            String nickname = "lucky_robber";
+            String nickname = "lucky_runner";
 
             when(socialLoginStrategy.validateAndGetSocialId(anyString())).thenReturn(socialId);
             when(userRepository.findBySocialIdAndSocialType(socialId, SocialType.KAKAO))

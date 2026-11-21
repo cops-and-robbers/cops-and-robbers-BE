@@ -47,22 +47,22 @@ public class RadioService {
     @Transactional
     public RadioTokenResult issueToken(RadioTokenCommand command) {
         Game game = gameRepository.getByGameId(command.gameId());
-        GameParticipant police = gameParticipantRepository.getByGameIdAndUserId(
+        GameParticipant chaser = gameParticipantRepository.getByGameIdAndUserId(
                 command.gameId(), command.userId()
         );
 
-        validateRadioAccess(game, police);
+        validateRadioAccess(game, chaser);
         validateRadioServerAvailable(game.getId(), command.userId());
 
         gameResultService.recordRadioUsage(game.getId(), command.userId(), radioTokenProvider.tokenTtl());
 
         String room = RadioRoom.chaserRoomOf(game.getId());
         RadioToken token = radioTokenProvider.createJoinToken(
-                room, police.getId(), police.getUser().getNickname()
+                room, chaser.getId(), chaser.getUser().getNickname()
         );
 
         return RadioTokenResult.of(
-                radioTokenProvider.serverUrl(), token.room(), police.getId(), token.token(), token.expiresAt()
+                radioTokenProvider.serverUrl(), token.room(), chaser.getId(), token.token(), token.expiresAt()
         );
     }
 
@@ -79,17 +79,17 @@ public class RadioService {
         log.info("[Radio] 무전 서버 과부하 해제");
     }
 
-    private void validateRadioAccess(Game game, GameParticipant police) {
+    private void validateRadioAccess(Game game, GameParticipant chaser) {
         if (!game.isInProgress()) {
             throw new ApplicationException(GameException.GAME_NOT_IN_PROGRESS);
         }
         if (!game.rules().allowsRadio()) {
             throw new ApplicationException(RadioException.RADIO_NOT_ALLOWED_IN_EVENT_GAME);
         }
-        if (!police.isPolice()) {
+        if (!chaser.isChaser()) {
             throw new ApplicationException(RadioException.ONLY_CHASER_CAN_USE_RADIO);
         }
-        if (police.isChaserWaiting()) {
+        if (chaser.isChaserWaiting()) {
             throw new ApplicationException(RadioException.RADIO_CHASER_WAITING_TIME);
         }
     }

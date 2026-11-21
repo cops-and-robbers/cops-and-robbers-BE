@@ -32,27 +32,27 @@ class GameStateControllerTest extends ControllerTest {
     @Autowired
     private InGameParticipantCacheService inGameParticipantCacheService;
 
-    private User police;
-    private User robber1;
-    private User robber2;
+    private User chaser;
+    private User runner1;
+    private User runner2;
     private Game game;
-    private GameParticipant policeParticipant;
-    private GameParticipant robberParticipant1;
-    private GameParticipant robberParticipant2;
-    private String policeToken;
+    private GameParticipant chaserParticipant;
+    private GameParticipant runnerParticipant1;
+    private GameParticipant runnerParticipant2;
+    private String chaserToken;
 
     @BeforeEach
     void setUp() {
-        police = givenUser("police");
-        robber1 = givenUser("robber1");
-        robber2 = givenUser("robber2");
+        chaser = givenUser("chaser");
+        runner1 = givenUser("runner1");
+        runner2 = givenUser("runner2");
 
-        policeToken = givenAccessToken(police);
+        chaserToken = givenAccessToken(chaser);
 
         game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
-        policeParticipant = givenPolice(game, police);
-        robberParticipant1 = givenRobber(game, robber1);
-        robberParticipant2 = givenRobber(game, robber2);
+        chaserParticipant = givenChaser(game, chaser);
+        runnerParticipant1 = givenRunner(game, runner1);
+        runnerParticipant2 = givenRunner(game, runner2);
 
         inGameParticipantCacheService.clearCache(game.getId());
         inGameParticipantCacheService.loadCache(game.getId());
@@ -68,15 +68,15 @@ class GameStateControllerTest extends ControllerTest {
         void 스냅샷과_전체_참여자_현황을_함께_반환한다() {
             // given
             runnerLocationService.updateLocation(
-                    new LocationUpdateCommand(game.getId(), robberParticipant1.getId(), 37.5665, 126.9780)
+                    new LocationUpdateCommand(game.getId(), runnerParticipant1.getId(), 37.5665, 126.9780)
             );
             runnerLocationService.updateLocation(
-                    new LocationUpdateCommand(game.getId(), robberParticipant2.getId(), 37.1234, 126.1234)
+                    new LocationUpdateCommand(game.getId(), runnerParticipant2.getId(), 37.1234, 126.1234)
             );
             runnerLocationService.revealRunnerLocations(game.getId());
 
             // when
-            ExtractableResponse<Response> response = authenticated(policeToken)
+            ExtractableResponse<Response> response = authenticated(chaserToken)
                     .when()
                     .get(STATE_URL, game.getId())
                     .then()
@@ -94,19 +94,19 @@ class GameStateControllerTest extends ControllerTest {
 
         @Test
         void 잡힌_도둑의_위치는_응답에_포함되지_않는다() {
-            // given: 두 도둑 모두 위치 업데이트, robber2를 JAILED로 변경 후 공개
+            // given: 두 도둑 모두 위치 업데이트, runner2를 JAILED로 변경 후 공개
             runnerLocationService.updateLocation(
-                    new LocationUpdateCommand(game.getId(), robberParticipant1.getId(), 37.5665, 126.9780)
+                    new LocationUpdateCommand(game.getId(), runnerParticipant1.getId(), 37.5665, 126.9780)
             );
             runnerLocationService.updateLocation(
-                    new LocationUpdateCommand(game.getId(), robberParticipant2.getId(), 37.1111, 126.1111)
+                    new LocationUpdateCommand(game.getId(), runnerParticipant2.getId(), 37.1111, 126.1111)
             );
-            robberParticipant2.updateStatus(ParticipantStatus.JAILED);
-            gameParticipantRepository.save(robberParticipant2);
+            runnerParticipant2.updateStatus(ParticipantStatus.JAILED);
+            gameParticipantRepository.save(runnerParticipant2);
             runnerLocationService.revealRunnerLocations(game.getId());
 
             // when
-            ExtractableResponse<Response> response = authenticated(policeToken)
+            ExtractableResponse<Response> response = authenticated(chaserToken)
                     .when()
                     .get(STATE_URL, game.getId())
                     .then()
@@ -117,7 +117,7 @@ class GameStateControllerTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(200);
                 softly.assertThat(result.runnerLocations()).hasSize(1);
-                softly.assertThat(result.runnerLocations().get(0).participantId()).isEqualTo(robberParticipant1.getId());
+                softly.assertThat(result.runnerLocations().get(0).participantId()).isEqualTo(runnerParticipant1.getId());
                 softly.assertThat(result.participants()).hasSize(3);
             });
         }
@@ -126,22 +126,22 @@ class GameStateControllerTest extends ControllerTest {
         void 경찰_대기시간_중에는_경찰과_도둑_모두_위치가_빈_목록으로_반환된다() {
             // given: 스냅샷이 존재하더라도 경찰이 한 명이라도 CHASER_WAITING이면 빈 배열
             runnerLocationService.updateLocation(
-                    new LocationUpdateCommand(game.getId(), robberParticipant1.getId(), 37.5665, 126.9780)
+                    new LocationUpdateCommand(game.getId(), runnerParticipant1.getId(), 37.5665, 126.9780)
             );
             runnerLocationService.revealRunnerLocations(game.getId());
-            givenWaitingPolice(game, police);
+            givenWaitingChaser(game, chaser);
 
-            String robber1Token = givenAccessToken(robber1);
+            String runner1Token = givenAccessToken(runner1);
 
             // when: 경찰 요청
-            ExtractableResponse<Response> policeResponse = authenticated(policeToken)
+            ExtractableResponse<Response> chaserResponse = authenticated(chaserToken)
                     .when()
                     .get(STATE_URL, game.getId())
                     .then()
                     .extract();
 
             // when: 도둑 요청
-            ExtractableResponse<Response> robberResponse = authenticated(robber1Token)
+            ExtractableResponse<Response> runnerResponse = authenticated(runner1Token)
                     .when()
                     .get(STATE_URL, game.getId())
                     .then()
@@ -149,16 +149,16 @@ class GameStateControllerTest extends ControllerTest {
 
             // then: 요청자가 누구든 빈 배열
             assertSoftly(softly -> {
-                softly.assertThat(policeResponse.statusCode()).isEqualTo(200);
-                softly.assertThat(policeResponse.as(GameStateResponse.class).runnerLocations()).isEmpty();
-                softly.assertThat(robberResponse.statusCode()).isEqualTo(200);
-                softly.assertThat(robberResponse.as(GameStateResponse.class).runnerLocations()).isEmpty();
+                softly.assertThat(chaserResponse.statusCode()).isEqualTo(200);
+                softly.assertThat(chaserResponse.as(GameStateResponse.class).runnerLocations()).isEmpty();
+                softly.assertThat(runnerResponse.statusCode()).isEqualTo(200);
+                softly.assertThat(runnerResponse.as(GameStateResponse.class).runnerLocations()).isEmpty();
             });
         }
 
         @Test
         void 게임이_존재하지_않으면_404_NotFound를_응답한다() {
-            ExtractableResponse<Response> response = authenticated(policeToken)
+            ExtractableResponse<Response> response = authenticated(chaserToken)
                     .when()
                     .get(STATE_URL, game.getId() + 999)
                     .then()
@@ -184,9 +184,9 @@ class GameStateControllerTest extends ControllerTest {
         @Test
         void 게임이_진행_중이_아니면_400_BadRequest를_응답한다() {
             Game waitingGame = gameRepository.save(GameFixture.WAITING_GAME());
-            givenPolice(waitingGame, police);
+            givenChaser(waitingGame, chaser);
 
-            ExtractableResponse<Response> response = authenticated(policeToken)
+            ExtractableResponse<Response> response = authenticated(chaserToken)
                     .when()
                     .get(STATE_URL, waitingGame.getId())
                     .then()

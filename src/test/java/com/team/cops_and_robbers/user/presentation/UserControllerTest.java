@@ -199,7 +199,7 @@ class UserControllerTest extends ControllerTest {
                 softly.assertThat(response.participationInfo().gameId()).isEqualTo(game.getId());
                 softly.assertThat(response.participationInfo().participantId()).isEqualTo(participant.getId());
                 softly.assertThat(response.participationInfo().gameStatus()).isEqualTo(GameStatus.WAITING);
-                softly.assertThat(response.participationInfo().team()).isEqualTo(Team.POLICE);
+                softly.assertThat(response.participationInfo().team()).isEqualTo(Team.CHASER);
             });
         }
 

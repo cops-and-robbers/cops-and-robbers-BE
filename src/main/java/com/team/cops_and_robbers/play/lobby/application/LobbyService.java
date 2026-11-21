@@ -49,10 +49,10 @@ public class LobbyService {
 
         participant.changeTeam(command.targetTeam());
 
-        int policeCount = gameParticipantRepository.countByGameIdAndTeam(command.gameId(), Team.POLICE);
-        int robberCount = gameParticipantRepository.countByGameIdAndTeam(command.gameId(), Team.ROBBER);
+        int chaserCount = gameParticipantRepository.countByGameIdAndTeam(command.gameId(), Team.CHASER);
+        int runnerCount = gameParticipantRepository.countByGameIdAndTeam(command.gameId(), Team.RUNNER);
 
-        LobbyEvent event = lobbyEventFactory.createTeamUpdateEvent(game.getId(), participant, policeCount, robberCount);
+        LobbyEvent event = lobbyEventFactory.createTeamUpdateEvent(game.getId(), participant, chaserCount, runnerCount);
         eventPublisher.publishEvent(event);
     }
 
@@ -69,8 +69,8 @@ public class LobbyService {
         LocalDateTime now = LocalDateTime.now(clock);
         game.startGame(now);
 
-        gameParticipantRepository.updateStatusByGameIdAndTeam(command.gameId(), Team.ROBBER, ParticipantStatus.ALIVE);
-        gameParticipantRepository.updateStatusByGameIdAndTeam(command.gameId(), Team.POLICE, ParticipantStatus.CHASER_WAITING);
+        gameParticipantRepository.updateStatusByGameIdAndTeam(command.gameId(), Team.RUNNER, ParticipantStatus.ALIVE);
+        gameParticipantRepository.updateStatusByGameIdAndTeam(command.gameId(), Team.CHASER, ParticipantStatus.CHASER_WAITING);
 
         gameResultService.openGameResult(game);
 
@@ -167,9 +167,9 @@ public class LobbyService {
     }
 
     private void validateTeamComposition(Long gameId) {
-        int policeCount = gameParticipantRepository.countByGameIdAndTeam(gameId, Team.POLICE);
-        int robberCount = gameParticipantRepository.countByGameIdAndTeam(gameId, Team.ROBBER);
-        if (policeCount < MIN_TEAM_SIZE || robberCount < MIN_TEAM_SIZE) {
+        int chaserCount = gameParticipantRepository.countByGameIdAndTeam(gameId, Team.CHASER);
+        int runnerCount = gameParticipantRepository.countByGameIdAndTeam(gameId, Team.RUNNER);
+        if (chaserCount < MIN_TEAM_SIZE || runnerCount < MIN_TEAM_SIZE) {
             throw new ApplicationException(GameParticipantException.INVALID_TEAM_COMPOSITION);
         }
     }

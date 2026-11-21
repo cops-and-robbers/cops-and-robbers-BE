@@ -40,33 +40,33 @@ class LocationE2ETest extends WebSocketE2ETest {
 
     private record LocationSetup(
             Game game,
-            GameParticipant robberParticipant,
-            String policeToken,
-            String robberToken,
+            GameParticipant runnerParticipant,
+            String chaserToken,
+            String runnerToken,
             String systemChannel,
-            StompTestClient policeClient,
-            StompTestClient robberClient
+            StompTestClient chaserClient,
+            StompTestClient runnerClient
     ) {}
 
     private LocationSetup givenLocationSetup() throws Exception {
-        User policeUser = givenUser("police");
-        User robberUser = givenUser("robber");
+        User chaserUser = givenUser("chaser");
+        User runnerUser = givenUser("runner");
 
         Game game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
         gameAreaRepository.save(GameAreaFixture.CIRCLE_GAME_AREA(game));
-        givenPolice(game, policeUser);
-        GameParticipant robberParticipant = givenRobber(game, robberUser);
+        givenChaser(game, chaserUser);
+        GameParticipant runnerParticipant = givenRunner(game, runnerUser);
 
-        String policeToken = givenAccessToken(policeUser);
-        String robberToken = givenAccessToken(robberUser);
+        String chaserToken = givenAccessToken(chaserUser);
+        String runnerToken = givenAccessToken(runnerUser);
         String systemChannel = SYSTEM_CHANNEL.formatted(game.getId());
 
-        StompTestClient policeClient = connect(policeToken);
-        StompTestClient robberClient = connect(robberToken);
-        policeClient.subscribe(systemChannel, TestEventResponse.class);
-        robberClient.subscribe(systemChannel, TestEventResponse.class);
+        StompTestClient chaserClient = connect(chaserToken);
+        StompTestClient runnerClient = connect(runnerToken);
+        chaserClient.subscribe(systemChannel, TestEventResponse.class);
+        runnerClient.subscribe(systemChannel, TestEventResponse.class);
 
-        return new LocationSetup(game, robberParticipant, policeToken, robberToken, systemChannel, policeClient, robberClient);
+        return new LocationSetup(game, runnerParticipant, chaserToken, runnerToken, systemChannel, chaserClient, runnerClient);
     }
 
     @Test
@@ -75,7 +75,7 @@ class LocationE2ETest extends WebSocketE2ETest {
         LocationSetup setup = givenLocationSetup();
 
         // when
-        setup.robberClient().send("/publish/game/" + setup.game().getId() + "/location",
+        setup.runnerClient().send("/publish/game/" + setup.game().getId() + "/location",
                 new LocationUpdateRequest(37.5, 127.0));
 
         Thread.sleep(500);
@@ -83,7 +83,7 @@ class LocationE2ETest extends WebSocketE2ETest {
         // then
         List<SystemEventData.RunnerLocation> locations = runnerLocationService.revealRunnerLocations(setup.game().getId());
 
-        assertThat(locations.get(0).participantId()).isEqualTo(setup.robberParticipant().getId());
+        assertThat(locations.get(0).participantId()).isEqualTo(setup.runnerParticipant().getId());
         assertThat(locations.get(0).latitude()).isEqualTo(37.5);
         assertThat(locations.get(0).longitude()).isEqualTo(127.0);
     }
@@ -93,24 +93,24 @@ class LocationE2ETest extends WebSocketE2ETest {
     class WithPolygonArea {
 
         private LocationSetup givenLocationSetupPolygon() throws Exception {
-            User policeUser = givenUser("polyPolice");
-            User robberUser = givenUser("polyRobber");
+            User chaserUser = givenUser("polyChaser");
+            User runnerUser = givenUser("polyRunner");
 
             Game game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
             gameAreaRepository.save(GameAreaFixture.POLYGON_GAME_AREA(game));
-            givenPolice(game, policeUser);
-            GameParticipant robberParticipant = givenRobber(game, robberUser);
+            givenChaser(game, chaserUser);
+            GameParticipant runnerParticipant = givenRunner(game, runnerUser);
 
-            String policeToken = givenAccessToken(policeUser);
-            String robberToken = givenAccessToken(robberUser);
+            String chaserToken = givenAccessToken(chaserUser);
+            String runnerToken = givenAccessToken(runnerUser);
             String systemChannel = SYSTEM_CHANNEL.formatted(game.getId());
 
-            StompTestClient policeClient = connect(policeToken);
-            StompTestClient robberClient = connect(robberToken);
-            policeClient.subscribe(systemChannel, TestEventResponse.class);
-            robberClient.subscribe(systemChannel, TestEventResponse.class);
+            StompTestClient chaserClient = connect(chaserToken);
+            StompTestClient runnerClient = connect(runnerToken);
+            chaserClient.subscribe(systemChannel, TestEventResponse.class);
+            runnerClient.subscribe(systemChannel, TestEventResponse.class);
 
-            return new LocationSetup(game, robberParticipant, policeToken, robberToken, systemChannel, policeClient, robberClient);
+            return new LocationSetup(game, runnerParticipant, chaserToken, runnerToken, systemChannel, chaserClient, runnerClient);
         }
 
         @Test
@@ -119,14 +119,14 @@ class LocationE2ETest extends WebSocketE2ETest {
             LocationSetup setup = givenLocationSetupPolygon();
 
             // when
-            setup.robberClient().send("/publish/game/" + setup.game().getId() + "/location",
+            setup.runnerClient().send("/publish/game/" + setup.game().getId() + "/location",
                     new LocationUpdateRequest(37.5, 127.0));
 
             Thread.sleep(500);
 
             // then
             List<SystemEventData.RunnerLocation> locations = runnerLocationService.revealRunnerLocations(setup.game().getId());
-            assertThat(locations.get(0).participantId()).isEqualTo(setup.robberParticipant().getId());
+            assertThat(locations.get(0).participantId()).isEqualTo(setup.runnerParticipant().getId());
         }
     }
 
@@ -135,7 +135,7 @@ class LocationE2ETest extends WebSocketE2ETest {
         // given
         LocationSetup setup = givenLocationSetup();
 
-        setup.robberClient().send("/publish/game/" + setup.game().getId() + "/location",
+        setup.runnerClient().send("/publish/game/" + setup.game().getId() + "/location",
                 new LocationUpdateRequest(37.5, 127.0));
 
         Thread.sleep(500);
@@ -145,11 +145,11 @@ class LocationE2ETest extends WebSocketE2ETest {
         systemPublisher.publish(systemEventFactory.createRunnerLocationRevealEvent(setup.game().getId(), locations));
 
         // then
-        TestEventResponse policeEvent = setup.policeClient().waitForMessage(setup.systemChannel(), 5);
+        TestEventResponse chaserEvent = setup.chaserClient().waitForMessage(setup.systemChannel(), 5);
 
-        assertThat(policeEvent.type()).isEqualTo("ROBBER_LOCATION_REVEAL");
-        assertThat(policeEvent.data().get("locations").size()).isGreaterThan(0);
-        assertThat(policeEvent.data().get("locations").get(0).get("participantId").asLong())
-                .isEqualTo(setup.robberParticipant().getId());
+        assertThat(chaserEvent.type()).isEqualTo("ROBBER_LOCATION_REVEAL");
+        assertThat(chaserEvent.data().get("locations").size()).isGreaterThan(0);
+        assertThat(chaserEvent.data().get("locations").get(0).get("participantId").asLong())
+                .isEqualTo(setup.runnerParticipant().getId());
     }
 }

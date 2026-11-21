@@ -33,9 +33,9 @@ import static com.team.cops_and_robbers.common.fixture.GameFixture.EVENT_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.FINISHED_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_TAG_GAME;
-import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_POLICE;
-import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_ROBBER;
-import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.WAITING_POLICE;
+import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_CHASER;
+import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_RUNNER;
+import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.WAITING_CHASER;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
@@ -91,7 +91,7 @@ class RadioServiceTest extends ServiceUnitTest {
         @Test
         void 경찰이면_무전_사용을_기록하고_토큰을_발급한다() {
             // given
-            givenGameAndParticipant(inProgressGame, createParticipant(ALIVE_POLICE(inProgressGame, user)));
+            givenGameAndParticipant(inProgressGame, createParticipant(ALIVE_CHASER(inProgressGame, user)));
             givenToken();
 
             // when
@@ -112,7 +112,7 @@ class RadioServiceTest extends ServiceUnitTest {
             // given
             Game tagGame = IN_PROGRESS_TAG_GAME();
             setId(tagGame, TEST_GAME_ID);
-            givenGameAndParticipant(tagGame, createParticipant(ALIVE_POLICE(tagGame, user)));
+            givenGameAndParticipant(tagGame, createParticipant(ALIVE_CHASER(tagGame, user)));
             givenToken();
 
             // when
@@ -152,7 +152,7 @@ class RadioServiceTest extends ServiceUnitTest {
             // given
             Game finishedGame = FINISHED_GAME();
             setId(finishedGame, TEST_GAME_ID);
-            givenGameAndParticipant(finishedGame, createParticipant(ALIVE_POLICE(finishedGame, user)));
+            givenGameAndParticipant(finishedGame, createParticipant(ALIVE_CHASER(finishedGame, user)));
 
             // when & then
             assertThatThrownBy(() -> radioService.issueToken(command))
@@ -165,7 +165,7 @@ class RadioServiceTest extends ServiceUnitTest {
             // given
             Game eventGame = EVENT_GAME();
             setId(eventGame, TEST_GAME_ID);
-            givenGameAndParticipant(eventGame, createParticipant(ALIVE_POLICE(eventGame, user)));
+            givenGameAndParticipant(eventGame, createParticipant(ALIVE_CHASER(eventGame, user)));
 
             // when & then
             assertThatThrownBy(() -> radioService.issueToken(command))
@@ -176,7 +176,7 @@ class RadioServiceTest extends ServiceUnitTest {
         @Test
         void 도둑이면_예외가_발생한다() {
             // given
-            givenGameAndParticipant(inProgressGame, createParticipant(ALIVE_ROBBER(inProgressGame, user)));
+            givenGameAndParticipant(inProgressGame, createParticipant(ALIVE_RUNNER(inProgressGame, user)));
 
             // when & then
             assertThatThrownBy(() -> radioService.issueToken(command))
@@ -187,7 +187,7 @@ class RadioServiceTest extends ServiceUnitTest {
         @Test
         void 경찰_대기_시간_중이면_예외가_발생한다() {
             // given
-            givenGameAndParticipant(inProgressGame, createParticipant(WAITING_POLICE(inProgressGame, user)));
+            givenGameAndParticipant(inProgressGame, createParticipant(WAITING_CHASER(inProgressGame, user)));
 
             // when & then
             assertThatThrownBy(() -> radioService.issueToken(command))
@@ -203,7 +203,7 @@ class RadioServiceTest extends ServiceUnitTest {
         @Test
         void 과부하_중_신규_입장이면_예외가_발생한다() {
             // given
-            givenGameAndParticipant(inProgressGame, createParticipant(ALIVE_POLICE(inProgressGame, user)));
+            givenGameAndParticipant(inProgressGame, createParticipant(ALIVE_CHASER(inProgressGame, user)));
             given(radioOverloadRepository.isActive()).willReturn(true);
             given(radioTokenProvider.tokenTtl()).willReturn(TOKEN_TTL);
             given(gameResultService.findRadioLastIssuedAt(TEST_GAME_ID, TEST_USER_ID)).willReturn(Optional.empty());
@@ -218,7 +218,7 @@ class RadioServiceTest extends ServiceUnitTest {
         @Test
         void 과부하_중이라도_토큰_수명과_여유_시간_안의_재발급이면_토큰을_발급한다() {
             // given
-            givenGameAndParticipant(inProgressGame, createParticipant(ALIVE_POLICE(inProgressGame, user)));
+            givenGameAndParticipant(inProgressGame, createParticipant(ALIVE_CHASER(inProgressGame, user)));
             given(radioOverloadRepository.isActive()).willReturn(true);
             given(gameResultService.findRadioLastIssuedAt(TEST_GAME_ID, TEST_USER_ID))
                     .willReturn(Optional.of(NOW.minusMinutes(2).minusSeconds(50)));
@@ -234,7 +234,7 @@ class RadioServiceTest extends ServiceUnitTest {
         @Test
         void 과부하_중_마지막_발급이_여유_시간을_넘었으면_예외가_발생한다() {
             // given
-            givenGameAndParticipant(inProgressGame, createParticipant(ALIVE_POLICE(inProgressGame, user)));
+            givenGameAndParticipant(inProgressGame, createParticipant(ALIVE_CHASER(inProgressGame, user)));
             given(radioOverloadRepository.isActive()).willReturn(true);
             given(radioTokenProvider.tokenTtl()).willReturn(TOKEN_TTL);
             given(gameResultService.findRadioLastIssuedAt(TEST_GAME_ID, TEST_USER_ID))
@@ -249,7 +249,7 @@ class RadioServiceTest extends ServiceUnitTest {
         @Test
         void 과부하_플래그를_읽지_못하면_토큰을_발급한다() {
             // given
-            givenGameAndParticipant(inProgressGame, createParticipant(ALIVE_POLICE(inProgressGame, user)));
+            givenGameAndParticipant(inProgressGame, createParticipant(ALIVE_CHASER(inProgressGame, user)));
             given(radioOverloadRepository.isActive()).willThrow(new RedisConnectionFailureException("down"));
             givenToken();
 

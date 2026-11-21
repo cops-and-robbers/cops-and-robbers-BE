@@ -28,7 +28,7 @@ import java.util.List;
 
 import static com.team.cops_and_robbers.common.fixture.GameFixture.IN_PROGRESS_GAME;
 import static com.team.cops_and_robbers.common.fixture.GameFixture.WAITING_GAME;
-import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_ROBBER;
+import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.ALIVE_RUNNER;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.GUEST_PARTICIPANT;
 import static com.team.cops_and_robbers.common.fixture.GameParticipantFixture.HOST_PARTICIPANT;
 import static com.team.cops_and_robbers.common.fixture.UserFixture.USER;
@@ -77,19 +77,19 @@ class LobbyServiceTest extends ServiceUnitTest {
         void 팀_변경에_성공하면_이벤트를_발행한다() {
             // given
             GameParticipant participant = GUEST_PARTICIPANT(waitingGame, user);
-            TeamChangeCommand command = new TeamChangeCommand(user.getId(), waitingGame.getId(), Team.POLICE);
+            TeamChangeCommand command = new TeamChangeCommand(user.getId(), waitingGame.getId(), Team.CHASER);
 
             given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
             given(gameParticipantRepository.getByGameIdAndUserId(waitingGame.getId(), user.getId())).willReturn(participant);
-            given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.POLICE)).willReturn(1);
-            given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.ROBBER)).willReturn(1);
+            given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.CHASER)).willReturn(1);
+            given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.RUNNER)).willReturn(1);
             given(lobbyEventFactory.createTeamUpdateEvent(any(), any(GameParticipant.class), anyInt(), anyInt())).willReturn(lobbyEvent);
 
             // when
             lobbyService.changeTeam(command);
 
             // then
-            assertThat(participant.getTeam()).isEqualTo(Team.POLICE);
+            assertThat(participant.getTeam()).isEqualTo(Team.CHASER);
             then(eventPublisher).should().publishEvent(lobbyEvent);
         }
 
@@ -97,7 +97,7 @@ class LobbyServiceTest extends ServiceUnitTest {
         void 게임이_WAITING_상태가_아니면_예외가_발생한다() {
             // given
             Game inProgressGame = IN_PROGRESS_GAME();
-            TeamChangeCommand command = new TeamChangeCommand(user.getId(), inProgressGame.getId(), Team.POLICE);
+            TeamChangeCommand command = new TeamChangeCommand(user.getId(), inProgressGame.getId(), Team.CHASER);
 
             given(gameRepository.getByGameId(inProgressGame.getId())).willReturn(inProgressGame);
 
@@ -110,8 +110,8 @@ class LobbyServiceTest extends ServiceUnitTest {
         @Test
         void 참가자가_WAITING_상태가_아니면_예외가_발생한다() {
             // given
-            GameParticipant aliveParticipant = ALIVE_ROBBER(waitingGame, user);
-            TeamChangeCommand command = new TeamChangeCommand(user.getId(), waitingGame.getId(), Team.POLICE);
+            GameParticipant aliveParticipant = ALIVE_RUNNER(waitingGame, user);
+            TeamChangeCommand command = new TeamChangeCommand(user.getId(), waitingGame.getId(), Team.CHASER);
 
             given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
             given(gameParticipantRepository.getByGameIdAndUserId(waitingGame.getId(), user.getId())).willReturn(aliveParticipant);
@@ -135,8 +135,8 @@ class LobbyServiceTest extends ServiceUnitTest {
 
             given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
             given(gameParticipantRepository.getByGameIdAndUserId(waitingGame.getId(), user.getId())).willReturn(hostParticipant);
-            given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.POLICE)).willReturn(1);
-            given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.ROBBER)).willReturn(1);
+            given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.CHASER)).willReturn(1);
+            given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.RUNNER)).willReturn(1);
             given(lobbyEventFactory.createGameStartEvent(any(), any())).willReturn(lobbyEvent);
 
             // when
@@ -170,8 +170,8 @@ class LobbyServiceTest extends ServiceUnitTest {
 
             given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
             given(gameParticipantRepository.getByGameIdAndUserId(waitingGame.getId(), user.getId())).willReturn(hostParticipant);
-            given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.POLICE)).willReturn(0);
-            given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.ROBBER)).willReturn(1);
+            given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.CHASER)).willReturn(0);
+            given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.RUNNER)).willReturn(1);
 
             // when & then
             assertThatThrownBy(() -> lobbyService.startGame(command))
@@ -187,8 +187,8 @@ class LobbyServiceTest extends ServiceUnitTest {
 
             given(gameRepository.getByGameId(waitingGame.getId())).willReturn(waitingGame);
             given(gameParticipantRepository.getByGameIdAndUserId(waitingGame.getId(), user.getId())).willReturn(hostParticipant);
-            given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.POLICE)).willReturn(1);
-            given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.ROBBER)).willReturn(0);
+            given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.CHASER)).willReturn(1);
+            given(gameParticipantRepository.countByGameIdAndTeam(waitingGame.getId(), Team.RUNNER)).willReturn(0);
 
             // when & then
             assertThatThrownBy(() -> lobbyService.startGame(command))

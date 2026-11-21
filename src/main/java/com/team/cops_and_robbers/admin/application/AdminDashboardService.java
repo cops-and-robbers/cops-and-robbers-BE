@@ -45,8 +45,8 @@ public class AdminDashboardService {
         Double averageDuration = gameResultRepository.averageDurationSeconds();
 
         WinRateByTeamResult winRateByTeam = calculateWinRate(
-                gameResultRepository.countByWinnerTeam(Team.POLICE),
-                gameResultRepository.countByWinnerTeam(Team.ROBBER)
+                gameResultRepository.countByWinnerTeam(Team.CHASER),
+                gameResultRepository.countByWinnerTeam(Team.RUNNER)
         );
 
         return new AdminDashboardResult(
@@ -63,16 +63,16 @@ public class AdminDashboardService {
         );
     }
 
-    private WinRateByTeamResult calculateWinRate(long policeWins, long robberWins) {
-        long total = policeWins + robberWins;
+    private WinRateByTeamResult calculateWinRate(long chaserWins, long runnerWins) {
+        long total = chaserWins + runnerWins;
 
         if (total == 0) {
             return new WinRateByTeamResult(0.0, 0.0);
         }
 
         return new WinRateByTeamResult(
-                (double) policeWins / total * 100,
-                (double) robberWins / total * 100
+                (double) chaserWins / total * 100,
+                (double) runnerWins / total * 100
         );
     }
 }

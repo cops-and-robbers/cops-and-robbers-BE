@@ -217,23 +217,23 @@ public abstract class ControllerTest {
         return gameParticipantRepository.save(GameParticipantFixture.GUEST_PARTICIPANT(game, user));
     }
 
-    protected GameParticipant givenPolice(Game game, User user) {
-        return gameParticipantRepository.save(GameParticipantFixture.ALIVE_POLICE(game, user));
+    protected GameParticipant givenChaser(Game game, User user) {
+        return gameParticipantRepository.save(GameParticipantFixture.ALIVE_CHASER(game, user));
     }
 
-    protected GameParticipant givenRobber(Game game, User user) {
-        return gameParticipantRepository.save(GameParticipantFixture.ALIVE_ROBBER(game, user));
+    protected GameParticipant givenRunner(Game game, User user) {
+        return gameParticipantRepository.save(GameParticipantFixture.ALIVE_RUNNER(game, user));
     }
 
-    protected GameParticipant givenJailedRobber(Game game, User user) {
-        return gameParticipantRepository.save(GameParticipantFixture.JAILED_ROBBER(game, user));
+    protected GameParticipant givenJailedRunner(Game game, User user) {
+        return gameParticipantRepository.save(GameParticipantFixture.JAILED_RUNNER(game, user));
     }
 
     protected GameParticipant givenInGameHost(Game game, User user) {
-        return gameParticipantRepository.save(GameParticipantFixture.HOST_WAITING_POLICE(game, user));
+        return gameParticipantRepository.save(GameParticipantFixture.HOST_WAITING_CHASER(game, user));
     }
 
-    protected GameParticipant givenWaitingPolice(Game game, User user) {
+    protected GameParticipant givenWaitingChaser(Game game, User user) {
         GameParticipant participant = gameParticipantRepository.getByGameIdAndUserId(game.getId(), user.getId());
         participant.updateStatus(ParticipantStatus.CHASER_WAITING);
         return gameParticipantRepository.save(participant);

@@ -98,7 +98,7 @@ public interface GameParticipantControllerDocs {
                       "data": {
                         "participantId": 42,
                         "nickname": "닉네임",
-                        "team": "POLICE 또는 ROBBER"
+                        "team": "CHASER 또는 RUNNER"
                       }
                     }
                     ```
@@ -112,7 +112,7 @@ public interface GameParticipantControllerDocs {
                       "timestamp": "2026-06-15T10:00:05+09:00",
                       "data": {
                         "gameResultId": 1,
-                        "winnerTeam": "POLICE 또는 ROBBER",
+                        "winnerTeam": "CHASER 또는 RUNNER",
                         "reason": "CHASER_FORFEITED 또는 RUNNER_FORFEITED"
                       }
                     }

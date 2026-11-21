@@ -27,27 +27,27 @@ class RadioControllerTest extends ControllerTest {
     private static final String GAME_ID_PARAM = "gameId";
     private static final String RADIO_TOKEN_URL = "/api/games/{gameId}/radio/token";
 
-    private User police;
-    private User robber;
+    private User chaser;
+    private User runner;
     private Game game;
-    private GameParticipant policeParticipant;
-    private String policeToken;
-    private String robberToken;
+    private GameParticipant chaserParticipant;
+    private String chaserToken;
+    private String runnerToken;
 
     @Autowired
     private RadioOverloadRepository radioOverloadRepository;
 
     @BeforeEach
     void setUp() {
-        police = givenUser("police");
-        robber = givenUser("robber");
+        chaser = givenUser("chaser");
+        runner = givenUser("runner");
 
-        policeToken = givenAccessToken(police);
-        robberToken = givenAccessToken(robber);
+        chaserToken = givenAccessToken(chaser);
+        runnerToken = givenAccessToken(runner);
 
         game = gameRepository.save(GameFixture.IN_PROGRESS_GAME());
-        policeParticipant = givenPolice(game, police);
-        givenRobber(game, robber);
+        chaserParticipant = givenChaser(game, chaser);
+        givenRunner(game, runner);
     }
 
     @AfterEach
@@ -62,7 +62,7 @@ class RadioControllerTest extends ControllerTest {
         @Test
         void 무전_토큰_발급_성공() {
             // when
-            ExtractableResponse<Response> response = authenticated(policeToken)
+            ExtractableResponse<Response> response = authenticated(chaserToken)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(RADIO_TOKEN_URL)
@@ -74,8 +74,8 @@ class RadioControllerTest extends ControllerTest {
             assertSoftly(softly -> {
                 softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
                 softly.assertThat(result.url()).isEqualTo("wss://dummy.livekit.cloud");
-                softly.assertThat(result.room()).isEqualTo("dev-game-" + game.getId() + "-police");
-                softly.assertThat(result.identity()).isEqualTo(policeParticipant.getId().toString());
+                softly.assertThat(result.room()).isEqualTo("dev-game-" + game.getId() + "-chaser");
+                softly.assertThat(result.identity()).isEqualTo(chaserParticipant.getId().toString());
                 softly.assertThat(result.token()).isNotBlank();
                 softly.assertThat(result.expiresAt()).endsWith("+09:00");
             });
@@ -84,7 +84,7 @@ class RadioControllerTest extends ControllerTest {
         @Test
         void 도둑이면_무전을_쓸_수_없으며_403_Forbidden을_응답한다() {
             // when
-            ExtractableResponse<Response> response = authenticated(robberToken)
+            ExtractableResponse<Response> response = authenticated(runnerToken)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(RADIO_TOKEN_URL)
@@ -101,7 +101,7 @@ class RadioControllerTest extends ControllerTest {
             radioOverloadRepository.activate(Duration.ofMinutes(10));
 
             // when
-            ExtractableResponse<Response> response = authenticated(policeToken)
+            ExtractableResponse<Response> response = authenticated(chaserToken)
                     .pathParam(GAME_ID_PARAM, game.getId())
                     .when()
                     .post(RADIO_TOKEN_URL)

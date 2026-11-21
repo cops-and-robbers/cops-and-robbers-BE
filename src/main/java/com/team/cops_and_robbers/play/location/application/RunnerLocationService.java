@@ -31,7 +31,7 @@ public class RunnerLocationService {
         InGameParticipantCache participant = inGameParticipantCacheRepository.findByParticipantId(command.gameId(), command.participantId())
                 .orElseThrow(() -> new ApplicationException(GameParticipantException.NOT_A_PARTICIPANT));
 
-        if (participant.team() != Team.ROBBER) {
+        if (participant.team() != Team.RUNNER) {
             throw new ApplicationException(GameParticipantException.NOT_RUNNER_TEAM);
         }
 

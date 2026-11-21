@@ -8,7 +8,7 @@ public record ArrestResult(
 ) {
     public static ArrestResult from(SystemEventData.ArrestData data) {
         return new ArrestResult(
-                data.robber().nickname(),
+                data.runner().nickname(),
                 data.remainingRunners()
         );
     }
