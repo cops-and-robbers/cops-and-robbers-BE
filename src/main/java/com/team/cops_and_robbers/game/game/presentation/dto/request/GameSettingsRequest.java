@@ -1,5 +1,6 @@
 package com.team.cops_and_robbers.game.game.presentation.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -20,6 +21,7 @@ public record GameSettingsRequest(
         @Schema(description = "경찰 대기 시간(분)", example = "3")
         @NotNull(message = "경찰 대기 시간을 입력해주세요.")
         @Min(value = 1, message = "경찰 대기 시간은 최소 1분입니다.")
+        @JsonAlias("policeWaitMinutes") // 옛 앱 호환. 강제 업데이트 후 제거
         Integer chaserWaitMinutes,
 
         @Schema(description = "최대 참가 인원", example = "10")

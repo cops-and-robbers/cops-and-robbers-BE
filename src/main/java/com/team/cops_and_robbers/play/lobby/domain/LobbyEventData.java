@@ -1,5 +1,6 @@
 package com.team.cops_and_robbers.play.lobby.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.team.cops_and_robbers.game.area.application.dto.GameAreaData;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameAreaUpdateResult;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameModeUpdateResult;
@@ -81,6 +82,13 @@ public sealed interface LobbyEventData permits
             Integer maxParticipants,
             Integer shrinkFinalRadiusInMeters
     ) implements LobbyEventData {
+        // 옛 앱 호환: 옛 이름으로도 내보낸다. 강제 업데이트 후 제거
+        @Deprecated
+        @JsonProperty(value = "policeWaitMinutes", access = JsonProperty.Access.READ_ONLY)
+        public Integer policeWaitMinutes() {
+            return chaserWaitMinutes;
+        }
+
         public static LobbySettingsUpdatedData from(GameSettingsUpdateResult result) {
             return new LobbySettingsUpdatedData(
                     result.gameMode(),

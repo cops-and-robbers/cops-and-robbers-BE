@@ -1,5 +1,6 @@
 package com.team.cops_and_robbers.game.game.presentation.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.team.cops_and_robbers.common.util.TimestampUtil;
 import com.team.cops_and_robbers.game.game.application.dto.result.GameInfoResult;
@@ -27,6 +28,14 @@ public record GameInfoResponse(
         @Schema(description = "게임 모드", example = "COPS_AND_ROBBERS")
         GameMode gameMode
 ) {
+    // 옛 앱 호환: 옛 이름으로도 내보낸다. 강제 업데이트 후 제거
+    @Deprecated
+    @JsonProperty(value = "policeWaitMinutes", access = JsonProperty.Access.READ_ONLY)
+    @Schema(description = "옛 이름. chaserWaitMinutes 을 사용하세요", deprecated = true)
+    public Integer policeWaitMinutes() {
+        return chaserWaitMinutes;
+    }
+
     public static GameInfoResponse from(GameInfoResult result) {
         return new GameInfoResponse(
                 result.roundDurationMinutes(),

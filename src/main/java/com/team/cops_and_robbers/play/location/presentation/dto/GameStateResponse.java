@@ -1,5 +1,6 @@
 package com.team.cops_and_robbers.play.location.presentation.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.team.cops_and_robbers.game.game.domain.GameMode;
 import com.team.cops_and_robbers.game.participant.domain.ParticipantStatus;
 import com.team.cops_and_robbers.game.participant.domain.Team;
@@ -18,6 +19,14 @@ public record GameStateResponse(
         @Schema(description = "전체 참여자 현황")
         List<ParticipantInfo> participants
 ) {
+    // 옛 앱 호환: 옛 이름으로도 내보낸다. 강제 업데이트 후 제거
+    @Deprecated
+    @JsonProperty(value = "robberLocations", access = JsonProperty.Access.READ_ONLY)
+    @Schema(description = "옛 이름. runnerLocations 을 사용하세요", deprecated = true)
+    public List<RunnerLocationInfo> robberLocations() {
+        return runnerLocations;
+    }
+
     public record RunnerLocationInfo(
             @Schema(description = "참여자 ID") Long participantId,
             @Schema(description = "닉네임") String nickname,
